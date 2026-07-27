@@ -1,6 +1,7 @@
 node_modules/
 dist/
 dist-test/
+.gen-test/
 
 __pycache__/
 *.pyc
