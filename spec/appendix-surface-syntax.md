@@ -1,3 +1,6 @@
+---
+description: "The single concrete TOML surface syntax for every strictspec authoring artifact: schema files, type-definition files, manifest scalar and vocabulary declarations, and migration files."
+---
 # Appendix: The Concrete TOML Surface Syntax (normative)
 
 > NORMATIVE STATUS: Part of the strictspec constitution (see `DESIGN.md`). This appendix pins the

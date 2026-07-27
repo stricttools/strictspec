@@ -1,3 +1,6 @@
+---
+description: "The strictspec constitution: the language-neutral definition of the schema language, constraint vocabulary, op set, error model, versioning and migration rules, and the normative appendices."
+---
 # spec/ — The strictspec Schema Language
 
 The constitution: the language-neutral definition of strictspec schemas, the constraint

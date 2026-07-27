@@ -1,3 +1,6 @@
+---
+description: "The normative catalogue of strictspec STRICTSPEC_* error codes with their pinned message templates, slot sets, and the closed area set that drives conformance and code generation."
+---
 # Appendix: Error-Code Catalogue and Message Templates (normative)
 
 > NORMATIVE STATUS: This appendix is part of the strictspec constitution (see `DESIGN.md`).

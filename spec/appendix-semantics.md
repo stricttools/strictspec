@@ -1,3 +1,6 @@
+---
+description: "Formal per-construct semantics of strictspec: the denotational frame, verdict algebra, and closed undecidability catalogue that every construct added to the language must extend."
+---
 # Appendix: Formal Semantics and the Undecidability Catalogue (normative)
 
 > NORMATIVE STATUS: Part of the strictspec constitution (see `DESIGN.md`). VERSIONED and WRITTEN

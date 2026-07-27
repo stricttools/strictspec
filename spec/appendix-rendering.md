@@ -1,3 +1,6 @@
+---
+description: "Normative strictspec value rendering: canonical float and string forms, the path grammar, and the pinned did-you-mean algorithm, asserted identically across every conformance target."
+---
 # Appendix: Value Rendering, Path Grammar, and Did-You-Mean (normative)
 
 > NORMATIVE STATUS: Part of the strictspec constitution (see `DESIGN.md`). CROSS-TARGET

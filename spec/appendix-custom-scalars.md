@@ -1,3 +1,6 @@
+---
+description: "Normative surface for registering custom scalars in strictspec: named refinements of built-in base lexeme classes with toolchain-checked constraints and rendering entries."
+---
 # Appendix: Custom Scalar Registration (normative)
 
 > NORMATIVE STATUS: Part of the strictspec constitution (see `DESIGN.md`). Custom scalar

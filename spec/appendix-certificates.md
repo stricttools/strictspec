@@ -1,3 +1,6 @@
+---
+description: "Normative output shapes for the strictspec diff certificate, adjudication file, and doc-diff, conformance-tested as toolchain golden output and forward-compatible with the future analyzer."
+---
 # Appendix: Diff Certificate, Adjudication File, and doc-diff Output (normative)
 
 > NORMATIVE STATUS: Part of the strictspec constitution (see `DESIGN.md`). VERSIONED: the shapes

@@ -1,3 +1,6 @@
+---
+description: "The shared emitter IR: the single intermediate representation strictspec generates every target's validator and renderer from, with its node set, generation scheme, and stability policy."
+---
 # Appendix: The Shared Emitter IR (normative)
 
 > NORMATIVE STATUS: Part of the strictspec constitution (see `DESIGN.md`). The IR is the
