@@ -2,5 +2,7 @@ github.com/BurntSushi/toml v1.6.0 h1:dRaEfpa2VI55EwlIW72hMRHdWouJeRF7TPYhI+AUQjk
 github.com/BurntSushi/toml v1.6.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
 github.com/smm-h/go-toml-edit v0.3.0 h1:XOt0AsBYafNc8PQpJ7jpfdUiUILFuYRr8Xv8ZPit5U8=
 github.com/smm-h/go-toml-edit v0.3.0/go.mod h1:ateUuu33c4CaaB3XUQgsyuPEsIkAWRV8nahfZqpNhm4=
+github.com/smm-h/strictcli/go v0.27.0 h1:6fqdrGmD0OBIiQ/KIPIaxGDcj/ucQiLVu3EqavTuyBk=
+github.com/smm-h/strictcli/go v0.27.0/go.mod h1:CFDJB7rDMon5TFSn5JqCy7I2PYv43j/KQDs1OlE2Ezg=
 github.com/toml-lang/toml-test/v2 v2.2.0 h1:q3ELZu7oPnpl9TClC6OOcAccXwj+jwAyFP8WvzBdK1M=
 github.com/toml-lang/toml-test/v2 v2.2.0/go.mod h1:TQdjhQItoZ0R+OODNiHUuxxxErtaE0Xsod2ENZbMvxI=

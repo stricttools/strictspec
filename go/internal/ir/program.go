@@ -94,6 +94,11 @@ type ExecOptions struct {
 	Format   doc.Format
 	Evidence map[string][]map[string]any
 
+	// StructuralOnly runs phase 1 (structural) only, skipping the phase-2
+	// constraint vocabulary. It backs `strictspec validate --structural-only`.
+	// The generated API and the conformance targets always run both phases.
+	StructuralOnly bool
+
 	// JSONL per-line anchor context.
 	JSONL     bool
 	Line      int
@@ -130,10 +135,13 @@ func Execute(p *Program, root doc.Node, opts ExecOptions) []diag.Diagnostic {
 	}
 	// Phase 1: structural, one-pass, pinned traversal order.
 	v.walk(rt, root, diag.NewPath())
-	// Phase 2: constraint vocabulary over records whose phase 1 passed.
-	for _, task := range v.phase2 {
-		if v.clean[task.rec] {
-			v.runConstraints(task)
+	// Phase 2: constraint vocabulary over records whose phase 1 passed (skipped
+	// under structural-only).
+	if !opts.StructuralOnly {
+		for _, task := range v.phase2 {
+			if v.clean[task.rec] {
+				v.runConstraints(task)
+			}
 		}
 	}
 	return v.diags.All()
