@@ -14,11 +14,27 @@ jobs:
       - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v7
       - run: uv python install 3.13
+      # The harness drives all four runtimes, so the conformance job needs the
+      # full toolchain matrix: uv (python), go (adapters + generated validators),
+      # and node (ts dist + adapter).
+      - uses: actions/setup-go@v6
+        with:
+          # rlsbl sync prefixes this with the sub-project path (conformance/); the
+          # go module is the sibling repo-root go/, so `../go/go.mod` resolves to
+          # <workspace>/go/go.mod after the prefix.
+          go-version-file: ../go/go.mod
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
       - name: Sync conformance project
         run: uv sync --locked
-      # All four targets are declared stubs (implemented=false), so every case
-      # reports UNIMPLEMENTED and the harness exits green as long as no fixture is
-      # malformed. When a target implementation lands, mismatches will fail here.
+      - name: Install ts runtime dependencies
+        run: npm ci
+        working-directory: ts
+      # All four targets are LIVE (interpreter, python, go, ts). The harness
+      # builds the Go adapters, the Python env, and the TS dist on the fly, then
+      # asserts byte-identical outcomes + parity across all four. A mismatch or a
+      # parity break fails here.
       - name: Run conformance harness
         run: uv run strictspec-conformance
       - name: Run harness tests
