@@ -18,17 +18,19 @@ the canonical-serialization appendix leg of `DESIGN.md`.
 
 ## Part A — Value rendering
 
-Two distinct tables. The DIAGNOSTIC table governs values embedded in message text (they may be
-truncated, always quoted for clarity). The WRITE-SIDE table governs values serialized back into
-a document (never truncated, byte-exact). Both are cross-target normative; renderers may not
-deviate.
+Two distinct tables. The DIAGNOSTIC table (A.1–A.5) governs values embedded in message text (they
+may be truncated, always quoted for clarity) and is CROSS-TARGET normative. The WRITE-SIDE table
+(A.6) governs values serialized back into a document (never truncated, byte-exact): its
+constructed-value rules are cross-target normative, while untouched-value lexeme retention is
+within-backend (backends emit different bytes for the same migrated document). Renderers may not
+deviate from either table.
 
 ### A.1 Diagnostic value rendering (read side, in messages)
 
 | Value kind | Rendered form | Notes |
 |---|---|---|
 | Integer | Decimal digits, optional leading `-`. No thousands separators, no `+`. | `1000`, `-42`. int64 domain. |
-| Float | The lexeme's canonical decimal or exponent form, ALWAYS carrying a `.` or an exponent marker. A float-classed value never renders as a bare integer. | `5.0`, `1.5`, `1e3` renders `1000.0`? See A.3 — the SOURCE lexeme class is preserved but the rendered text is canonicalized to a float-marked form; `5` in a float field renders `5.0`. |
+| Float | In a diagnostic message a float renders FROM ITS SOURCE LEXEME, UNCHANGED (exponent form is preserved: `1e3` renders `1e3`, `5.0` renders `5.0`). A CONSTRUCTED float that has no source lexeme renders per the canonical constructed-value rule (A.3), always carrying a `.` or an exponent marker — never a bare integer. | `1e3`→`1e3`; constructed `float64(5)`→`5.0`. |
 | number scalar | Rendered per its SOURCE lexeme class: an integer-classed source renders as an integer, a float-classed source renders float-marked. | The `number` scalar's whole point is lexeme-class fidelity. |
 | String | Double-quoted, with the escape set in A.2. Truncated per A.4. | `"hello"`, `"line\nbreak"`. |
 | Boolean | `true` / `false`, lowercase. | Never `1`/`0`. |
@@ -58,29 +60,32 @@ All other code points — including non-ASCII — are emitted verbatim as UTF-8.
 Unicode normalization (code-point identity, per `DESIGN.md` primitives appendix item 10). No
 `\uXXXX` escaping of printable non-ASCII.
 
-### A.3 Float rendering (canonical)
+### A.3 Float rendering (canonical) — constructed values only
 
-- A float-classed value renders with a decimal point OR an exponent, never as a bare integer.
+The canonical form below applies ONLY to a CONSTRUCTED or type-coerced float — a float value with
+NO source lexeme (produced by a generated constructor or a migration op). A float that HAS a
+source lexeme is never canonicalized: it renders from that lexeme unchanged in diagnostic messages
+(A.1) and serializes byte-identically on the write side (A.6, lexeme retention). This is the pin
+that resolves the former "does `1e3` render `1000.0`?" ambiguity: exponent-form lexemes are
+retained verbatim wherever a source lexeme exists; canonicalization touches only lexeme-less
+constructed values.
+
+- A constructed float renders with a decimal point OR an exponent, never as a bare integer:
   `float64(5)` renders `5.0`.
-- The canonical form is the shortest decimal string that round-trips to the same float64
-  (the standard shortest-round-trip algorithm), with these pins: a value with no fractional
-  part and no exponent gains a trailing `.0`; exponent form uses lowercase `e` with a sign on
-  the exponent (`1e3` -> `1000.0` in canonical decimal when it round-trips shortest as such;
-  values requiring exponent notation for shortness use `e`). The chosen shortest form is
-  identical across Go, Python, and TS by construction (all three implement shortest-round-trip
-  IEEE-754 formatting; the conformance suite asserts identity).
-- On the WRITE side, an untouched float serializes byte-identically to its retained source
-  lexeme (lexeme retention). Only CONSTRUCTED or type-coerced floats use the canonical form
-  above.
+- The canonical form is the SHORTEST decimal string that round-trips to the same float64 (the
+  standard shortest-round-trip algorithm): a value with no fractional part gains a trailing `.0`;
+  a value whose shortest round-trip requires exponent notation uses a lowercase `e` with a signed
+  exponent. The chosen shortest form is identical across Go, Python, and TS by construction (all
+  three implement shortest-round-trip IEEE-754 formatting; the conformance suite asserts identity).
 
 ### A.4 String truncation (diagnostic messages only)
 
 - Maximum rendered string length inside a message: 64 code points of CONTENT (measured after
   unescaping, i.e. source code points, not escape-expanded characters).
-- When a string exceeds 64 code points, render the first 64 code points, then the ellipsis
-  form ` … ` — a single U+2026 HORIZONTAL ELLIPSIS surrounded by single spaces is NOT used;
-  instead the pinned ellipsis is the three-character ASCII sequence `...` appended immediately
-  before the closing quote: `"<first 64 code points>..."`.
+- When a string exceeds 64 code points, render the first 64 code points followed by the pinned
+  ellipsis: the three-character ASCII sequence `...`, appended immediately before the closing
+  quote: `"<first 64 code points>..."`. (The ellipsis is exactly these three ASCII dots — never
+  the single U+2026 HORIZONTAL ELLIPSIS character.)
 - Truncation never splits an escape sequence: if the 64th code point would land inside a
   rendered escape, the whole escaped character is dropped and the ellipsis follows.
 - Write side is NEVER truncated.
@@ -97,6 +102,31 @@ Unicode normalization (code-point identity, per `DESIGN.md` primitives appendix 
   `{...}` for a record, `[...]` for an array.
 - Containers are rendered inline only when a template's slot is a container value; most
   diagnostics report scalar `{got}`/`{actual}` values.
+
+### A.6 Write-side value rendering (serialization, normative)
+
+The write-side table governs values serialized BACK into a document (never truncated,
+byte-exact). It is the canonical-serialization appendix leg of `DESIGN.md` and is cross-target
+normative WITHIN A BACKEND (Go, Python, and TS emit different bytes for the same migrated TOML;
+each backend is self-consistent).
+
+| Value kind | Write-side rendering | Notes |
+|---|---|---|
+| Any UNTOUCHED value | Byte-identical to its retained SOURCE LEXEME. | Lexeme retention: nothing re-renders what an op did not change. `1e3` stays `1e3`, `+00:00` stays `+00:00`, `007` stays `007` where the source allowed it. |
+| Constructed integer | Decimal digits, optional leading `-`, no `+`, no separators. | int64 domain. |
+| Constructed float | Canonical shortest-round-trip form (A.3), always float-marked. | `float64(5)` serializes `5.0`, never `5` — so a wrapped `5.0` writes `[5.0]`. |
+| Constructed number | Serialized per the SOURCE lexeme class it was constructed with (integer-class → integer lexeme; float-class → float-marked). | The `number` scalar preserves lexeme-class fidelity on write. |
+| Constructed string | Double-quoted with the A.2 escape set; never truncated. | Write side is never truncated (contrast A.4). |
+| Constructed boolean | `true` / `false`, lowercase. | |
+| Constructed null | `null` (JSON/JSONL only; TOML has no null). | |
+| Constructed date / time / datetime | RFC 3339 with the declared kind; offset forms keep the constructed offset. | Constructed datetimes are the only datetimes not covered by lexeme retention. |
+| Negative zero | Float `-0.0` retains its sign; integer `-0` serializes `0`. | Matches A.1's diagnostic pin. |
+
+- PRODUCER-CURRENT-ONLY: the write path hard-errors when asked to serialize a document at any
+  `format_version` other than the schema's current one (`STRICTSPEC_SERIALIZE_NONCURRENT`) — no
+  conforming producer creates staleness.
+- Key order follows document order; whitespace and comments on untouched regions are preserved
+  (within-backend round-trip fixpoint).
 
 ## Part B — Path grammar (EBNF, normative)
 

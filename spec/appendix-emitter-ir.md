@@ -58,7 +58,7 @@ code and no expressions (section 4).
 | type-dispatch | dispatch on a value's node kind / lexeme class to the declared scalar or container check |
 | union-dispatch | select a union arm (discriminated: by discriminator literal; node-kind: by node kind); non-matching arms are never entered |
 | scalar-check | validate a scalar's lexeme class, datetime kind, safe-integer bound, number representability, and any custom-scalar lexeme rule |
-| constraint-eval | evaluate one constraint-vocabulary form (intra- or cross-document) over the typed containing record and, for cross-document forms, resolver evidence |
+| constraint-eval | evaluate one constraint-vocabulary form (intra- or cross-document) over the typed containing record and, for cross-document forms, resolver evidence. The form is selected from the CLOSED vocabulary — including the gated forms conditional-required / forbidden-when / conditional-value (each over the closed six-kind condition set: present, absent, equals-literal, not-equals-literal, in-literal-set, not-in-literal-set), the set forms mutual-exclusion (field-level) and collections-disjoint (element-level), unique-by / pairwise-distinct / ranges-disjoint / ordered-pair, and the cross-document forms including count-limit / sum-limit — never an expression tree |
 | depth-guard | enforce the pinned maximum validation depth on recursive descent |
 | alias-resolution | canonicalize an alias spelling; detect both-present |
 | version-gate | run the `format_version` gate (documents) or `meta_version` gate (schemas) FIRST, before structural checks |
@@ -100,9 +100,12 @@ The IR's smallness is a design guarantee, not an accident. Excluded, by declarat
 
 - NO EXPRESSIONS. The IR has no arithmetic, no computed values, no general boolean expression
   language. Constraint forms are a CLOSED vocabulary of named nodes (`constraint-eval` selects
-  one), never an expression tree. This mirrors the migration engine's admission criterion (ops
-  never compute a value from a value) and the language's rejection of CEL-class open computation
-  (decision 23).
+  one), never an expression tree; a gate CONDITION is one of the closed six kinds (present /
+  absent / equals-literal / not-equals-literal / in-literal-set / not-in-literal-set) over
+  literals, never a computed predicate — which is exactly why numeric comparison predicates were
+  rejected (they would need an arithmetic/relational expression node). This mirrors the migration
+  engine's admission criterion (ops never compute a value from a value) and the language's
+  rejection of CEL-class open computation (decision 23).
 - NO CONSUMER HOOKS. There is no plugin node, no callback node, no registration surface in the
   IR. Consumer-native checks run DOWNSTREAM of validation in consumer code — they are never
   compiled into the IR and are outside the conformance guarantee by declaration.
@@ -122,6 +125,7 @@ to audit against hand-authored spec fixtures.
 - The templates the IR compiles into renderer tables: `appendix-error-codes.md`.
 - The rendering pin the generated renderers implement: `appendix-rendering.md`.
 - The constraint forms `constraint-eval` selects and their semantics: `appendix-semantics.md`.
+- The concrete surface authors write these forms in: `appendix-surface-syntax.md`.
 - Custom-scalar checks compiled into `scalar-check`: `appendix-custom-scalars.md`.
 - The fixture-authoring discipline that guards against common-mode IR bugs:
   `conformance/DESIGN.md`.

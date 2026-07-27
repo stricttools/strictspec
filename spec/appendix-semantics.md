@@ -226,6 +226,9 @@ in `appendix-error-codes.md`.
   Re-baking that REMOVES an arm SHRINKS the set and obligates a bump; adding an arm WIDENS. A
   baked set that differs from the source is STALE and a hard error in `gen` and `check`
   (`STRICTSPEC_ENUMSRC_STALE`) — the sanctioned data→schema dependency edge, gated in the open.
+  The arm SELECTOR is a restricted projection path (key steps + `[]` array-flatten only;
+  appendix-surface-syntax.md §7), and that grammar is the accept/reject boundary of
+  `STRICTSPEC_ENUMSRC_BAD_SELECTOR`.
 
 ### 3.22 Custom scalar registration
 - Informal: a named scalar refining a base lexeme class via an anchored RE2 lexeme rule, with
@@ -246,19 +249,28 @@ in `appendix-error-codes.md`.
 Each is a phase-2 predicate over the typed containing record; each INTERSECTS the accepted set
 with the trees it accepts. Decidable from document + schema alone.
 
+The three GATED forms (conditional-required, forbidden-when, conditional-value) share one CLOSED
+condition set of six kinds over a sibling gate field: `{present, absent, equals-literal,
+not-equals-literal, in-literal-set, not-in-literal-set}`. Value-testing kinds read the WRITTEN
+value only (no defaults — decision 30); the negative kinds give negative-polarity conditions
+directly (no complement enumeration). Numeric comparison predicates (`> k`, `>= k`, …) are NOT in
+the set (rejected — see `DESIGN.md` vocabulary rejection rationale).
+
 | Form | Informal statement | Accepted-set effect | Interaction |
 |---|---|---|---|
-| conditional-required | field required when a presence/value condition holds | excludes trees satisfying the condition but missing the field | condition tests presence/equality only |
+| conditional-required | field required when the gate condition holds | excludes trees satisfying the condition but missing the field | condition is one of the closed six kinds |
+| conditional-value (NEW) | target field, when present, must equal a LITERAL when the gate condition holds | excludes trees where the condition holds and the present target ≠ the literal | asserts VALUE (contrast conditional-required, which asserts PRESENCE); literal only; code `STRICTSPEC_INTRA_CONDITIONAL_VALUE` |
 | exactly-one-of | exactly one of a field set present | excludes trees with zero or ≥2 present | scopes at any nesting |
 | at-least-one-of | at least one of a field set present | excludes trees with none present | — |
 | co-presence (A iff B) | fields present together or absent together | excludes trees with exactly one present | — |
-| mutual exclusion | at most one of a field set present | excludes trees with ≥2 present | — |
-| forbidden-when | field forbidden when a condition holds | excludes trees satisfying the condition with the field present | mirrors conditional-required |
+| mutual exclusion | at most one of a field set present (FIELD-level) | excludes trees with ≥2 present | field-level; contrast collections-disjoint (element-level) |
+| collections-disjoint (NEW) | two declared sibling arrays share no element (ELEMENT-level) | excludes trees where an element appears in both arrays | normalization case-fold/trim (item 10); origin rlsbl include/exclude; code `STRICTSPEC_INTRA_COLLECTIONS_DISJOINT` |
+| forbidden-when | field forbidden when the gate condition holds | excludes trees satisfying the condition with the field present | mirrors conditional-required; closed six-kind condition set |
 | unique-by | a keyed value is unique across a collection; normalization case-fold/trim | excludes trees with a duplicate key | normalization is a CLOSED set: none/case-fold/trim (item 10) |
 | pairwise-distinct | all values in a set are distinct; same normalization set | excludes trees with any repeat | shares normalization set with unique-by |
-| ranges-disjoint | half-open ranges do not overlap | excludes trees whose ranges intersect | missing/invalid bound source is a hard error |
+| ranges-disjoint | each range is FIRST well-formed per ordered-pair (start < end), THEN half-open ranges do not overlap | excludes trees with an ill-formed range OR intersecting ranges | no in-bounds-against-sibling-length leg (that is consumer-native); a non-resolving start/length field source is a schema hard error |
 | ordered-pair | sibling a < sibling b | excludes trees where the order fails | comparison uses the scalars' natural order |
-| intra-document references | a reference resolves within the same document | excludes trees with a dangling in-document reference | distinct from cross-document references (3.25) |
+| intra-document references | a reference resolves within the same document | excludes trees with a dangling in-document reference | distinct from cross-document references (3.25); carries NO predicate on the resolved target (reference-target predicates are rejected — consumer-native) |
 
 ### 3.25 Cross-document constraint forms
 Evidence supplied by named resolvers (the closed IO vocabulary); executed by the constraint
@@ -271,8 +283,8 @@ the evidence (a fact recorded in the undecidability catalogue, section 4).
 | named-reference-must-resolve | a reference resolves in an evidence set | excludes trees whose reference is absent from the resolved set | resolver unavailable ⇒ hard error, never skip |
 | set-coverage | every element of an evidence set appears in a collection | excludes trees missing coverage of any evidence element | e.g. every commit covered by a changelog entry |
 | cross-collection-unique | a value is unique across a document family | excludes trees whose value collides in the family | evidence is the sibling collections |
-| count-limit (NEW) | a collection's element count across evidence ≤ a LITERAL bound | excludes trees exceeding the literal count | bound is LITERAL only — never computed (decision 23) |
-| sum-limit (NEW) | a summed field across evidence ≤ a LITERAL bound | excludes trees whose sum exceeds the literal | bound is LITERAL only; the sum is over resolved evidence |
+| count-limit (NEW) | a collection's element count across evidence ≤/≥ a LITERAL bound | excludes trees exceeding the literal count | bound is LITERAL only — never computed (decision 23); `documents-in` selection is manifest-root-anchored, lexicographic order |
+| sum-limit (NEW) | a summed field across evidence ≤/≥ a LITERAL bound | excludes trees whose sum exceeds the literal | bound is LITERAL only; a selected document lacking the summed field or with a non-numeric value is a HARD ERROR (`STRICTSPEC_CROSS_SUM_FIELD_MISSING`), never skip-or-zero; selection is manifest-root-anchored, lexicographic |
 
 ## 4. The CLOSED undecidability catalogue
 
@@ -310,4 +322,6 @@ appendix is normative now so the analyzer can be built against a spec that never
 - Value/path rendering of the values reasoned about here: `appendix-rendering.md`.
 - Evidence grades and the certificate the algebra maps onto: `appendix-certificates.md`.
 - Custom-scalar refinement semantics: `appendix-custom-scalars.md`.
+- The concrete surface that spells these constructs (fields, constraints, conditions, selectors):
+  `appendix-surface-syntax.md`.
 - The constitution: `DESIGN.md`.

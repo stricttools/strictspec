@@ -67,6 +67,8 @@ did-you-mean pin in that appendix.
 | `DEPTH` | Recursion-depth-exceeded |
 | `NUM` | `safe_integers` and `number`-scalar lexeme errors |
 | `MIGRATE` | Migration engine errors (the 13-op set) |
+| `SERIALIZE` | Write-path serialization refusals (producer-current-only invariant) |
+| `CHANNEL` | Live-channel version-negotiation refusals (boundary invariant, leg 3) |
 | `DIFF` | `diff` / certificate errors |
 | `DOCDIFF` | `doc-diff` errors |
 | `MANIFEST` | `strictspec.toml` / CLI errors |
@@ -134,7 +136,7 @@ Enum arms sourced from a named document (decision 32), with toolchain-enforced f
 | `STRICTSPEC_ENUMSRC_MISSING_SOURCE` | `Enum at {path} sources arms from {source}, which does not exist.` | path: path, source: string | Source document missing. |
 | `STRICTSPEC_ENUMSRC_STALE` | `Baked enum arms at {path} differ from source {source}; regenerate with `strictspec gen`. Baked: {baked}. Source: {actual}.` | path: path, source: string, baked: list\<string>, actual: list\<string> | Freshness hard error in `gen` and `check`. |
 | `STRICTSPEC_ENUMSRC_SOURCE_NOT_STRINGS` | `Enum source {source} at {path} yields a non-string arm; sourced enum arms must be strings.` | source: string, path: path | Sourced arms must be string-typed literals. |
-| `STRICTSPEC_ENUMSRC_BAD_SELECTOR` | `Enum-source selector {selector} at {path} does not resolve within {source}.` | selector: string, path: path, source: string | The arm-selection path is invalid. |
+| `STRICTSPEC_ENUMSRC_BAD_SELECTOR` | `Enum-source selector {selector} at {path} does not resolve within {source}.` | selector: string, path: path, source: string | The selector is outside the pinned selector grammar (appendix-surface-syntax.md §7 — key steps and `[]` array-flatten only) or does not resolve within the source. |
 
 ## 8. Version-gate errors (`STRICTSPEC_GATE_*`)
 
@@ -223,10 +225,12 @@ Phase-2 diagnostics, ordered after phase 1. Decidable from document + schema alo
 | Code | Template | Slots | Notes |
 |---|---|---|---|
 | `STRICTSPEC_INTRA_CONDITIONAL_REQUIRED` | `Field {key} at {path} is required when {condition}.` | key: string, path: path, condition: string | Presence- or value-triggered. |
+| `STRICTSPEC_INTRA_CONDITIONAL_VALUE` | `Field {key} at {path} must equal {expected} when {condition}; got {got}.` | key: string, path: path, expected: value, got: value, condition: string | Conditional literal value-equality (wavescript Pin; rlsbl preid/bump). |
 | `STRICTSPEC_INTRA_EXACTLY_ONE_OF` | `Exactly one of {fields} must be present at {path}; found {actual}.` | fields: list\<string>, path: path, actual: list\<string> | |
 | `STRICTSPEC_INTRA_AT_LEAST_ONE_OF` | `At least one of {fields} must be present at {path}; none were.` | fields: list\<string>, path: path | |
 | `STRICTSPEC_INTRA_CO_PRESENCE` | `Fields {fields} at {path} must be present together or absent together; found {actual}.` | fields: list\<string>, path: path, actual: list\<string> | A iff B. |
-| `STRICTSPEC_INTRA_MUTUAL_EXCLUSION` | `Fields {fields} at {path} are mutually exclusive; found {actual}.` | fields: list\<string>, path: path, actual: list\<string> | |
+| `STRICTSPEC_INTRA_MUTUAL_EXCLUSION` | `Fields {fields} at {path} are mutually exclusive; found {actual}.` | fields: list\<string>, path: path, actual: list\<string> | Field-level: at most one of a field set present. |
+| `STRICTSPEC_INTRA_COLLECTIONS_DISJOINT` | `Arrays {fields} at {path} must share no element; {value} appears in both (normalization: {normalization}).` | fields: list\<string>, path: path, value: value, normalization: string | Element-level set disjointness (rlsbl include/exclude); normalization `none`/`case-fold`/`trim`. |
 | `STRICTSPEC_INTRA_FORBIDDEN_WHEN` | `Field {key} at {path} is forbidden when {condition}.` | key: string, path: path, condition: string | |
 | `STRICTSPEC_INTRA_UNIQUE_BY` | `Duplicate value {value} for unique-by {field} at {path} (normalization: {normalization}).` | value: value, field: string, path: path, normalization: string | `{normalization}` is `none`, `case-fold`, or `trim`. |
 | `STRICTSPEC_INTRA_PAIRWISE_DISTINCT` | `Values at {path} must be pairwise distinct; {value} repeats (normalization: {normalization}).` | path: path, value: value, normalization: string | Same normalization set. |
@@ -246,6 +250,7 @@ guarantee as structural checks. Includes the two new aggregate forms.
 | `STRICTSPEC_CROSS_COLLECTION_UNIQUE` | `Value {value} at {path} also appears in {source}; it must be unique across the collection family.` | value: value, path: path, source: string | cross-collection-unique. |
 | `STRICTSPEC_CROSS_COUNT_LIMIT` | `Collection at {path} has {actual} elements across {source}; the limit is {limit}.` | path: path, actual: int, source: string, limit: int | count-limit; LITERAL bound only (decision 23). |
 | `STRICTSPEC_CROSS_SUM_LIMIT` | `Sum of {field} across {source} at {path} is {actual}; the limit is {limit}.` | field: string, source: string, path: path, actual: value, limit: value | sum-limit; LITERAL bound only. |
+| `STRICTSPEC_CROSS_SUM_FIELD_MISSING` | `sum-limit at {path} over {source} requires numeric field {field} on every selected document; document {actual} lacks it or has a non-numeric value.` | path: path, source: string, field: string, actual: string | Heterogeneous/missing sum field is a HARD ERROR, never skip-or-zero (aggregates gap note). |
 | `STRICTSPEC_CROSS_RESOLVER_UNAVAILABLE` | `Constraint at {path} requires evidence resolver {source}, which this environment cannot satisfy.` | path: path, source: string | Hard error at check-execution time — never a skip (decision 4/23). |
 
 ## 15. Union dispatch errors (`STRICTSPEC_UNION_*`)
@@ -292,6 +297,25 @@ compute a value from a value.
 | `STRICTSPEC_MIGRATE_REVALIDATION_FAILED` | `Migrated document at {path} does not validate at `format_version` {expected}; the migration is unsound.` | path: path, expected: version | Post-migration revalidation (all-or-nothing run aborts). |
 | `STRICTSPEC_MIGRATE_PREDICATE_UNSUPPORTED` | `Predicate at {path} tests more than equality and presence; migration predicates are restricted.` | path: path | Admission-criterion enforcement. |
 | `STRICTSPEC_MIGRATE_IRREVERSIBLE_DOWN` | `Op {op} at {path} is declared irreversible; a down-migration was requested.` | op: string, path: path | Reversibility taxonomy. |
+
+## 17a. Write-path serialization refusals (`STRICTSPEC_SERIALIZE_*`)
+
+The producer-current-only leg of the version-boundary invariant (decision 24; canonical
+serialization appendix). The write path refuses to serialize any non-current `format_version`.
+
+| Code | Template | Slots | Notes |
+|---|---|---|---|
+| `STRICTSPEC_SERIALIZE_NONCURRENT` | `Refusing to serialize document at {path}: its `format_version` is {got}, but schema {schema} serializes only the current {expected}. Migrate before writing.` | path: path, got: version, schema: identifier, expected: version | No conforming producer can create new staleness. |
+
+## 17b. Live-channel version-negotiation refusals (`STRICTSPEC_CHANNEL_*`)
+
+The live-channel leg of the version-boundary invariant (decision 24, leg 3): a channel agrees on
+one `format_version` or refuses to open; a receiver that cannot speak the negotiated version
+refuses with a structured "update the client" payload (browser runtimes never migrate).
+
+| Code | Template | Slots | Notes |
+|---|---|---|---|
+| `STRICTSPEC_CHANNEL_VERSION_REFUSED` | `Cannot open channel for schema {schema}: peer offers `format_version` {got}, this endpoint speaks only {expected}. Update the client to the paired strictspec release ({release}).` | schema: identifier, got: version, expected: version, release: string | Structured "update the client" payload; hard failure, no fallback. |
 
 ## 18. Diff / certificate errors (`STRICTSPEC_DIFF_*`)
 
@@ -351,4 +375,6 @@ schema.
   `appendix-semantics.md`.
 - Custom-scalar registration behind `STRICTSPEC_SCALAR_*`: `appendix-custom-scalars.md`.
 - How templates become per-target renderers: `appendix-emitter-ir.md`.
+- The concrete surface that produces these conditions (enum selector, migration ops, constraint
+  bodies): `appendix-surface-syntax.md`.
 - The constitution: `DESIGN.md`.

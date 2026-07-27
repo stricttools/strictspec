@@ -5,8 +5,9 @@ vocabulary, the error model, the read-side primitives appendix, the write-side
 canonical-serialization appendix, the generated API contract, the versioning and migration
 rules, the version-boundary invariant, the domain-check architecture, the accepted-set formal
 semantics, and the meta-schema. The detailed pinned tables live in dedicated appendix files
-alongside this document and are versioned with it: the error-code catalogue and message
-templates (appendix-error-codes.md); value rendering, path grammar, and did-you-mean
+alongside this document and are versioned with it: the concrete TOML surface syntax
+(appendix-surface-syntax.md); the error-code catalogue and message templates
+(appendix-error-codes.md); value rendering, path grammar, and did-you-mean
 (appendix-rendering.md); the diff certificate and doc-diff output shapes
 (appendix-certificates.md); the per-construct formal semantics and undecidability catalogue
 (appendix-semantics.md); custom scalar registration (appendix-custom-scalars.md); and the
@@ -206,7 +207,12 @@ paper-schema precondition — those donors left the corpus.
   — baked arms differing from the current source document. This is a sanctioned data→schema
   dependency edge, in the open and toolchain-gated. Removing an arm is a NARROWING edit (it
   shrinks the accepted-document set) and triggers the format_version bump rule (see
-  Versioning); the same-version flip-scan mechanically catches an un-bumped arm removal.
+  Versioning); the same-version flip-scan mechanically catches an un-bumped arm removal. The
+  arm-SELECTOR grammar is pinned (appendix-surface-syntax.md §7): a restricted projection path of
+  key steps and `[]` array-flatten steps (e.g. `sounds[].name`), with NO key wildcards, NO index
+  selection, and NO filtering; that grammar IS the accept/reject boundary of
+  `STRICTSPEC_ENUMSRC_BAD_SELECTOR`, and the selector must resolve to a flat sequence of
+  string-typed leaves.
 - Discriminated unions (literal-valued discriminator field) PLUS bounded NODE-KIND unions:
   undiscriminated unions allowed only when arms differ by node kind (scalar vs record vs
   array) — deterministic without a discriminator; covers predraw's fill-or-gradient.
@@ -269,14 +275,16 @@ Intra-document forms (decidable from document + schema alone):
 
 | Form | Example origin |
 |---|---|
-| conditional-required (presence- or value-triggered) | orxtra retry>0 => retry_resume |
+| conditional-required (presence- or value-triggered) | orxtra retry != 0 => retry_resume |
+| conditional-value (gate holds ⇒ target equals a literal) | wavescript Pin (unison == 1 when source ∈ {noise,pink,brown}); rlsbl preid=="stable" ⇒ bump=="prerelease" |
 | exactly-one-of / at-least-one-of | orxtra routing; predraw placeStep |
 | co-presence (A iff B) | orxtra provider iff model |
-| mutual exclusion | rlsbl include/exclude; pgdesign body XOR file |
+| mutual exclusion | pgdesign body XOR file (field-level: at most one of a field set present) |
+| collections-disjoint (two sibling arrays share no element; normalization case-fold/trim) | rlsbl include/exclude (element-level set disjointness) |
 | forbidden-when | tunebox drums forbid params |
 | unique-by (normalization: case-fold, trim) | a private project x-unique-field; tunebox track names |
 | pairwise-distinct (same normalization set) | a private project x-pairwise-distinct |
-| ranges-disjoint (half-open; missing/invalid bounds source = hard error) | a private project x-range-nonoverlap |
+| ranges-disjoint (half-open; each range well-formed per ordered-pair first) | a private project x-range-nonoverlap |
 | ordered-pair (a < b between siblings) | a private project x-less-than-sibling |
 | intra-document references | orxtra dependencies; incantino flow->screen |
 
@@ -296,7 +304,76 @@ count-limit and sum-limit (decision 23) are AGGREGATE forms with LITERAL bounds 
 expressions, no computed bounds; the bound is a literal written in the schema. count-limit
 compares the count of documents matching a declared selection against N; sum-limit compares the
 sum of a declared numeric field across the selection against N. Their formal semantics are
-pinned in appendix-semantics.md.
+pinned in appendix-semantics.md. Aggregate selection is resolved by the `documents-in(glob)`
+resolver; the glob is ANCHORED AT THE MANIFEST ROOT and resolved in LEXICOGRAPHIC order (a
+CWD-relative or document-relative anchor would make verdicts depend on invocation directory —
+banned by the no-silent-degradation rule). A sum-limit selection containing a document that
+lacks the summed field, or whose value is non-numeric, is a HARD ERROR
+(`STRICTSPEC_CROSS_SUM_FIELD_MISSING`), never a silent skip-or-zero — mirroring the
+ranges-disjoint missing-bound precedent.
+
+### Condition set (closed) for gated forms
+
+The three gated forms — `conditional-required`, `forbidden-when`, and `conditional-value` — share
+one CLOSED set of six condition kinds over a sibling gate field:
+
+`{ present, absent, equals-literal, not-equals-literal, in-literal-set, not-in-literal-set }`.
+
+`present`/`absent` test field presence; the other four test the WRITTEN value against literals
+(there is no effective/default value — decision 30 deleted defaults, so conditions read only what
+the author wrote). `not-equals-literal`/`not-in-literal-set` provide negative-polarity conditions
+DIRECTLY, so a schema never enumerates the complement of an enum to express an "unless" rule (a
+brittle pattern that silently breaks when the enum grows). NUMERIC COMPARISON predicates
+(`> k`, `>= k`, `< k`, `<= k`) are REJECTED (see the vocabulary rejection rationale below):
+they were single-consumer demand and are expressible via the literal predicates when the
+field's domain permits — e.g. `retry > 0` over a non-negative `retry` (`min = 0`) is exactly
+`retry not-equals-literal 0`. The vocabulary-table origin for value-triggered
+`conditional-required` is therefore stated as `orxtra retry != 0 => retry_resume` (with the note
+that it relies on `retry >= 0`), so the cited origin is honest.
+
+`conditional-value` (NEW): when the gate condition holds, a target field — when present — must
+EQUAL a declared literal (evidence: wavescript's `Pin`, e.g. `unison == 1` when
+`source ∈ {noise,pink,brown}`; rlsbl's `preid=="stable" ⇒ bump=="prerelease"`). It is decidable,
+portable, and analogous to conditional-required (which asserts presence, not value). Semantics in
+appendix-semantics.md; code `STRICTSPEC_INTRA_CONDITIONAL_VALUE`.
+
+`collections-disjoint` (NEW): two DECLARED sibling array fields in one record share no element
+(element-level set disjointness, with the `case-fold`/`trim` normalization options mirroring
+unique-by). This is distinct from `mutual exclusion`, which is FIELD-level ("at most one of a
+field set present"). Evidence: rlsbl's `include`/`exclude` rule (`set(include) ∩ set(exclude) =
+∅`). The former cross-field table MIS-CITED rlsbl include/exclude as the origin of `mutual
+exclusion`; that citation is corrected — `mutual exclusion`'s origin is now the field-level
+pgdesign body-XOR-file rule, and rlsbl include/exclude is the origin of `collections-disjoint`.
+Semantics in appendix-semantics.md; code `STRICTSPEC_INTRA_COLLECTIONS_DISJOINT`.
+
+`ranges-disjoint` (clarified): each declared range must FIRST be well-formed per ordered-pair
+(its start strictly less than its end, i.e. a positive half-open interval) — an ill-formed range
+is a violation before disjointness is even evaluated — and disjointness is then decided over the
+HALF-OPEN intervals `[start, start+length)`. The form does NOT include an in-bounds-against-a-
+sibling-array-length leg (a private project's `start+len <= len(palette)`): that leg is consumer-native
+(the vocabulary carries the portable disjointness/well-formedness, not a cross-collection length
+join). "Missing/invalid bounds source" remains a SCHEMA-authoring hard error (the start/length
+field names do not resolve on the element record).
+
+### Vocabulary rejection rationale (recorded, revisit on recurrence)
+
+The following shapes surfaced in the freeze drafts and are REJECTED (each single-consumer or
+expressible/consumer-native; recorded so a later recurrence is a vocabulary-evolution
+conversation, not an escape hatch):
+
+- NUMERIC COMPARISON condition predicates (`> k`, `>= k`, …) — single-consumer (orxtra's `> 0`),
+  expressible via the literal-value predicates over the field's known domain; the closed
+  condition set stays literal-equality/membership only.
+- `array-contains-literal` gate condition (rlsbl's Flutter gate: `"flutter" ∈ include ⇒
+  targets.flutter.mode required`) — 1 consumer; consumer-native.
+- REFERENCE-TARGET predicates ("resolve AND the resolved target satisfies P" — rlsbl-config F1
+  `wraps → sibling.artifact=="binary"`), CROSS-SCOPE EXISTENTIAL forbidden-when (rlsbl-config F2
+  launcher-under-`publish_mode==none`), and OPEN-NAMESPACE reference resolution (rlsbl-config F3
+  `depends_on` spanning in-document entries ∪ tool-runtime built-in checks) — revisit at the
+  rlsbl adoption wave.
+- ENUM-TYPED map keys / `key_type` (betterclaude tier→display) — 1 consumer; a `key_pattern`
+  regex expresses it today (and enum sourcing can bake the enum into the regex). Map keys remain
+  regex-constrained only.
 
 ## Domain checks — portable by construction
 
@@ -411,10 +488,14 @@ Rules:
   collision semantics normative (add onto existing, rename onto existing, unwrap of
   non-singleton: pinned, hard errors where ambiguous).
 - Reversibility taxonomy: each op declares `down` (total), `partial` (per-document; failure is
-  a canonical hard error — e.g. unwrap_singleton on a 2-element list), or `irreversible`.
-  The declared taxonomy is VERIFIED EMPIRICALLY by `strictspec diff` (corpus round-trip; see
-  below) — a mis-declared taxonomy is a hard error, not documentation. Static verification
-  arrives with the unbundled future analyzer (decision 25).
+  a canonical hard error — e.g. unwrap_singleton on a 2-element list), or `irreversible`. The
+  down migration is AUTHOR-SUPPLIED: the migration file carries explicit `[[down_ops]]` (the
+  inverse op sequence) alongside the declared taxonomy — the engine NEVER derives down ops from
+  the forward ops (the up and down directions are independently authored, per the surface in
+  appendix-surface-syntax.md §9). The declared taxonomy is VERIFIED EMPIRICALLY by `strictspec
+  diff` (down-taxonomy verification: the DECLARATION is checked against the corpus; a mis-declared
+  taxonomy is a hard error, not documentation). Static verification arrives with the unbundled
+  future analyzer (decision 25).
 - Flagship examples: claudestream budget = rename_field + wrap_in_array (down: partial);
   rlsbl dev_node chain = two rename_field migrations (down: total).
 
@@ -535,7 +616,8 @@ multi-target execution.
   appendix-error-codes.md, value rendering + path grammar + did-you-mean in appendix-rendering.md,
   the certificate + doc-diff shapes in appendix-certificates.md, the per-construct formal
   semantics and undecidability catalogue in appendix-semantics.md, custom scalar registration in
-  appendix-custom-scalars.md, and the shared emitter IR in appendix-emitter-ir.md) are VERSIONED.
+  appendix-custom-scalars.md, the concrete TOML surface syntax in appendix-surface-syntax.md, and
+  the shared emitter IR in appendix-emitter-ir.md) are VERSIONED.
   ANY change is a breaking-class, changelog-covered entry in the strictspec release that ships
   it and triggers full conformance-fixture regeneration. Appendix-driven behavior changes are
   always declared, never silent. The proof-object format and model-search order are NOT current
@@ -583,6 +665,10 @@ the interpreter and the interpreter is pinned as the fourth conformance target.
 
 Notation core adapted from incantino: header (name, meta_version, format_version,
 description) + per-field type/required/values/description (the donated notation's `default`
-is dropped — defaults are not in the language, decision 30).
+is dropped — defaults are not in the language, decision 30). The COMPLETE concrete TOML surface
+— the single pinned spelling of schema files, type-definition files, the manifest's custom-scalar
+and vocabulary-source declarations, and migration files — is normative in
+appendix-surface-syntax.md. The toolchain-shipped built-in meta-schema (the schema of schemas) is
+authored in exactly that surface and MUST equal it; there is no second spelling of any construct.
 </content>
 </invoke>
