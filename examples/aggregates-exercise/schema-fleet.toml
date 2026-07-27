@@ -1,44 +1,45 @@
 name = "fleet"
 meta_version = 1
 format_version = 1
-description = "A fleet manifest that budgets a sibling collection of service documents."
 document_syntax = "toml"
+role = "schema"
+root = "Fleet"
 targets = ["go", "python"]
+description = "A fleet manifest that budgets a sibling collection of service documents."
 
-[fields.name]
+[types.Fleet]
+type = "record"
+
+[types.Fleet.fields.name]
 type = "string"
 required = true
 non_empty = true
 
 # --- AGGREGATE cross-document constraints (decision 23; appendix-semantics 3.25) ---
 # LITERAL bounds ONLY — no expressions, no computed bounds. The selection is resolved by the
-# closed `documents-in(glob)` evidence resolver, relative to THIS document's directory. The
-# constraints range over the resolved service collection, not over this document's own fields.
+# closed `documents-in(glob)` evidence resolver; the glob is anchored at the MANIFEST ROOT and
+# resolved in lexicographic order (appendix-surface-syntax.md §5.1). The constraints range over
+# the resolved service collection, not over this document's own fields.
 
 # count-limit (max): at most 8 services in the fleet.
-[[constraints]]
+[[types.Fleet.constraints]]
 form = "count-limit"
+selection = "documents-in(services/*.toml)"
 compare = "<="
 limit = 8
-[constraints.selection]
-resolver = "documents-in"
-glob = "services/*.toml"
 
 # count-limit (min): at least 1 service — demonstrates the >= direction.
-[[constraints]]
+[[types.Fleet.constraints]]
 form = "count-limit"
+selection = "documents-in(services/*.toml)"
 compare = ">="
 limit = 1
-[constraints.selection]
-resolver = "documents-in"
-glob = "services/*.toml"
 
 # sum-limit (max): total per-replica memory reservation across the fleet <= 4096 MiB.
-[[constraints]]
+# A selected service lacking `memory_mb` (or non-numeric) is STRICTSPEC_CROSS_SUM_FIELD_MISSING.
+[[types.Fleet.constraints]]
 form = "sum-limit"
+selection = "documents-in(services/*.toml)"
+sum_field = "memory_mb"
 compare = "<="
 limit = 4096
-sum_field = "memory_mb"
-[constraints.selection]
-resolver = "documents-in"
-glob = "services/*.toml"

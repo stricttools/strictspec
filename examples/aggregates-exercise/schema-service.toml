@@ -1,28 +1,33 @@
 name = "service"
 meta_version = 1
 format_version = 1
-description = "One service in a fleet: image, memory reservation, replica count."
 document_syntax = "toml"
+role = "schema"
+root = "Service"
 targets = ["go", "python"]
+description = "One service in a fleet: image, memory reservation, replica count."
 
-[fields.name]
+[types.Service]
+type = "record"
+
+[types.Service.fields.name]
 type = "string"
 required = true
 non_empty = true
 
-[fields.image]
+[types.Service.fields.image]
 type = "string"
 required = true
 non_empty = true
 
-[fields.memory_mb]
+[types.Service.fields.memory_mb]
 type = "integer"
 required = true
 min = 64
 max = 8192
 description = "Per-replica memory reservation in MiB. Summed by the fleet budget."
 
-[fields.replicas]
+[types.Service.fields.replicas]
 type = "integer"
 required = true
 min = 1

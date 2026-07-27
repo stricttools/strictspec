@@ -1,22 +1,27 @@
 name = "drum-pattern"
 meta_version = 1
 format_version = 1
-description = "A step-sequencer pattern: each hit names a sound sourced from the sound registry."
 document_syntax = "json"
+role = "schema"
+root = "DrumPattern"
 targets = ["go", "python"]
+description = "A step-sequencer pattern: each hit names a sound sourced from the sound registry."
 
-[fields.bpm]
+[types.DrumPattern]
+type = "record"
+
+[types.DrumPattern.fields.bpm]
 type = "integer"
 required = true
 min = 20
 max = 300
 
-[fields.hits]
+[types.DrumPattern.fields.hits]
 type = "array"
 required = true
-[fields.hits.item]
+[types.DrumPattern.fields.hits.item]
 type = "record"
-[fields.hits.item.fields.step]
+[types.DrumPattern.fields.hits.item.fields.step]
 type = "integer"
 required = true
 min = 0
@@ -24,12 +29,13 @@ max = 15
 
 # --- Enum arms SOURCED from a document (decision 32; appendix-semantics 3.21) ---
 # The arms are BAKED into the generated code at `gen` time. `strictspec gen`/`check`
-# HARD-ERROR (STRICTSPEC_ENUMSRC_STALE) if `baked` differs from the live source.
-[fields.hits.item.fields.sound]
+# HARD-ERROR (STRICTSPEC_ENUMSRC_STALE) if `baked` differs from the live source. The selector is
+# a restricted projection path (key steps + `[]` array-flatten only; appendix-surface-syntax.md §7).
+[types.DrumPattern.fields.hits.item.fields.sound]
 type = "enum"
 required = true
 description = "Sourced from sounds.registry.json."
-[fields.hits.item.fields.sound.source]
+[types.DrumPattern.fields.hits.item.fields.sound.source]
 document = "sounds.registry.json"
 selector = "sounds[].name"
 # BAKED ARMS — the accepted set is exactly this list, a function of the schema TEXT, not of the

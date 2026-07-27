@@ -6,10 +6,11 @@
 name = "geometry-types-bad-constraint"
 meta_version = 1
 format_version = 1
+role = "type-definitions"
 description = "REJECTION FIXTURE: a type file must not carry constraints."
 
 [types.Span]
-kind = "record"
+type = "record"
 [types.Span.fields.lo]
 type = "number"
 required = true
@@ -21,5 +22,5 @@ required = true
 [[types.Span.constraints]]
 form = "ordered-pair"
 less = "lo"
-greater = "hi"
+than = "hi"
 # Expected: STRICTSPEC_IMPORT_CROSS_FILE_CONSTRAINT at file `geometry-types-bad-constraint.toml`

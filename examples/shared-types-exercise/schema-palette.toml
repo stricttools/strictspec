@@ -1,33 +1,38 @@
 name = "palette"
 meta_version = 1
 format_version = 1
-description = "A named palette: colour name -> swatch (RGB channels as positive ints)."
 document_syntax = "json"
+role = "schema"
+root = "Palette"
 targets = ["go", "python", "ts"]
 safe_integers = true
+description = "A named palette: colour name -> swatch (RGB channels as positive ints)."
 
 # Same type file, DIFFERENT subset of types. ColorName is shared with the canvas schema;
 # PositiveInt is shared too. This is the intended reuse: one type file, two importers.
 imports = [ { file = "types-geometry.toml", types = ["ColorName", "PositiveInt"] } ]
 
+[types.Palette]
+type = "record"
+
 # A typed map keyed by a regex over colour names, value is a swatch record.
-[fields.swatches]
+[types.Palette.fields.swatches]
 type = "map"
 required = true
 key_pattern = "^[a-z][a-z0-9-]{0,31}$"
 order = "incidental"
 description = "Colour-name -> swatch. Keys mirror the ColorName grammar."
-[fields.swatches.value]
+[types.Palette.fields.swatches.value]
 type = "record"
-[fields.swatches.value.fields.name]
+[types.Palette.fields.swatches.value.fields.name]
 type = "ColorName"
 required = true
-[fields.swatches.value.fields.r]
+[types.Palette.fields.swatches.value.fields.r]
 type = "PositiveInt"
 required = true
-[fields.swatches.value.fields.g]
+[types.Palette.fields.swatches.value.fields.g]
 type = "PositiveInt"
 required = true
-[fields.swatches.value.fields.b]
+[types.Palette.fields.swatches.value.fields.b]
 type = "PositiveInt"
 required = true

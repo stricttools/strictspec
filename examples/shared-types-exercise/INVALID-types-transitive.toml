@@ -6,13 +6,14 @@
 name = "geometry-types-transitive"
 meta_version = 1
 format_version = 1
+role = "type-definitions"
 description = "REJECTION FIXTURE: a type file must not import another file."
 
 # >>> The offending declaration. Type files are leaves in the import graph. <<<
 imports = [ { file = "types-geometry.toml", types = ["Point"] } ]
 
 [types.Segment]
-kind = "record"
+type = "record"
 [types.Segment.fields.a]
 type = "Point"   # would-be transitive use of an imported type
 required = true
