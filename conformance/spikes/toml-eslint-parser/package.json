@@ -1,0 +1,13 @@
+{
+  "name": "strictspec-spike-toml-eslint-parser",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Phase 0 spike: validate toml-eslint-parser against strictspec's lossless TOML write-side requirements (decision 5).",
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "toml-eslint-parser": "^1.0.3"
+  }
+}
