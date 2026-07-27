@@ -1,0 +1,18 @@
+format_version = 1
+schema_id = "AgentDefinition"
+old_format_version = 1
+new_format_version = 2
+
+[[adjudications]]
+claim_kind = "migrate-round-trip-completeness"
+scope = "the migration never errors on a corpus document valid at N"
+justification = "Greenfield deploy: no at-rest N documents exist; the rename+wrap migration cannot error on absent inputs."
+author = "release-eng"
+date = 2026-07-27
+
+[[adjudications]]
+claim_kind = "migrate-round-trip-soundness"
+scope = "every corpus document valid at N re-validates at N+1 after M"
+justification = "Greenfield deploy: soundness holds by construction of the rename+wrap; no N corpus to witness."
+author = "release-eng"
+date = 2026-07-27

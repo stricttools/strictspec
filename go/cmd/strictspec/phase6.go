@@ -193,18 +193,26 @@ func diffHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strictcl
 		ctx.Error(err.Error())
 		return strictcli.Exit(1)
 	}
+	var adj *diffeng.Adjudication
 	if adjPath != "" {
 		adjSrc, aerr := os.ReadFile(adjPath)
 		if aerr != nil {
 			ctx.Error(aerr.Error())
 			return strictcli.Exit(1)
 		}
-		if adiags := diffeng.ParseAdjudication(adjSrc, adjPath); len(adiags) > 0 {
+		a, adiags := diffeng.ParseAdjudication(adjSrc, adjPath)
+		if len(adiags) > 0 {
 			printDiags(ctx, adiags)
 			return strictcli.Exit(1)
 		}
+		adj = a
 		ctx.Info("adjudication acknowledged: " + adjPath)
 	}
+	// Deploy-gate cross-check (A.5 / Part B): claims corpus-supported WITHOUT
+	// genuine corpus support must be discharged by a matching adjudication entry,
+	// else STRICTSPEC_DIFF_ADJUDICATION_MISSING; a dangling entry is INVALID.
+	violations = append(violations, diffeng.Adjudicate(cert, adj)...)
+
 	out, _ := json.MarshalIndent(cert, "", "  ")
 	os.Stdout.Write(out)
 	os.Stdout.Write([]byte("\n"))

@@ -92,7 +92,11 @@ func sameVersionFlipScan(docs []corpusDoc, sharedFV int64, violations *[]diag.Di
 		Kind:      KindFlipScan,
 		Statement: "no corpus document valid under the old schema is rejected by the new schema at the same format_version",
 	}
+	witnesses := 0
 	for _, d := range docs {
+		if d.validOld {
+			witnesses++
+		}
 		if d.validOld && !d.validNew {
 			claim.Counterexamples = append(claim.Counterexamples, Counterexample{
 				DocumentPath: d.path,
@@ -108,6 +112,7 @@ func sameVersionFlipScan(docs []corpusDoc, sharedFV int64, violations *[]diag.Di
 			})
 		}
 	}
+	claim.Supported = witnesses > 0
 	claim.Grade = gradeFor(claim.Counterexamples)
 	return claim
 }
@@ -123,10 +128,12 @@ func completenessClaim(in Inputs, docs []corpusDoc, violations *[]diag.Diagnosti
 		claim.Grade = GradeCorpusSupported
 		return claim
 	}
+	witnesses := 0
 	for _, d := range docs {
 		if !d.validOld {
 			continue
 		}
+		witnesses++
 		_, mdiags := migrate.ApplyUp(in.Migration, d.format, d.bytes)
 		if len(mdiags) > 0 {
 			claim.Counterexamples = append(claim.Counterexamples, Counterexample{
@@ -136,6 +143,7 @@ func completenessClaim(in Inputs, docs []corpusDoc, violations *[]diag.Diagnosti
 			*violations = append(*violations, diffViolated(claim.Statement, d.path))
 		}
 	}
+	claim.Supported = witnesses > 0
 	claim.Grade = gradeFor(claim.Counterexamples)
 	return claim
 }
@@ -149,6 +157,7 @@ func soundnessClaim(in Inputs, docs []corpusDoc, violations *[]diag.Diagnostic) 
 		claim.Grade = GradeCorpusSupported
 		return claim
 	}
+	witnesses := 0
 	for _, d := range docs {
 		if !d.validOld {
 			continue
@@ -157,6 +166,7 @@ func soundnessClaim(in Inputs, docs []corpusDoc, violations *[]diag.Diagnostic) 
 		if len(mdiags) > 0 {
 			continue // completeness already flags this
 		}
+		witnesses++
 		vdiags := validateBytes(in.NewProg, d.format, out)
 		if len(vdiags) > 0 {
 			claim.Counterexamples = append(claim.Counterexamples, Counterexample{
@@ -166,6 +176,7 @@ func soundnessClaim(in Inputs, docs []corpusDoc, violations *[]diag.Diagnostic) 
 			*violations = append(*violations, diffViolated(claim.Statement, d.path))
 		}
 	}
+	claim.Supported = witnesses > 0
 	claim.Grade = gradeFor(claim.Counterexamples)
 	return claim
 }
@@ -203,6 +214,7 @@ func downTaxonomyClaim(in Inputs, docs []corpusDoc, violations *[]diag.Diagnosti
 			}
 		}
 	}
+	claim.Supported = (successes + failures) > 0
 	actual := actualTaxonomy(successes, failures, declared)
 	if taxonomyMisdeclared(declared, actual) {
 		src := ""

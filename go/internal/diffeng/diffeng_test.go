@@ -327,3 +327,84 @@ func hasCode(diags []diag.Diagnostic, code string) bool {
 	}
 	return false
 }
+
+// TestAdjudicationGate: a corpus of only v2-single documents (valid at N+1,
+// INVALID at N) leaves the completeness and soundness claims VACUOUSLY
+// corpus-supported (zero witnesses). The deploy gate requires each be discharged
+// by a matching adjudication entry: without one they are ADJUDICATION_MISSING;
+// with matching entries the gate is green; a dangling entry is INVALID.
+func TestAdjudicationGate(t *testing.T) {
+	files := writeCorpus(t, map[string]string{"b-v2-single.json": docV2Single})
+	cert, violations := Run(Inputs{
+		SchemaID: "AgentDefinition",
+		OldProg:  compile(t, budgetV1), NewProg: compile(t, budgetV2),
+		OldFV: 1, NewFV: 2,
+		Migration: budgetMigration(t),
+		Glob:      "*.json", Files: files, Release: "0.0.0-test",
+	})
+	if len(violations) > 0 {
+		t.Fatalf("unexpected engine violations: %v", violations)
+	}
+
+	// RED path: no adjudication -> both unsupported claims are MISSING.
+	missing := 0
+	for _, d := range Adjudicate(cert, nil) {
+		if d.Code == "STRICTSPEC_DIFF_ADJUDICATION_MISSING" {
+			missing++
+		}
+	}
+	if missing != 2 {
+		t.Fatalf("expected 2 ADJUDICATION_MISSING without adjudication, got %d", missing)
+	}
+
+	// GREEN path: adjudication discharging both unsupported claims -> empty gate.
+	adj := &Adjudication{
+		SchemaID: "AgentDefinition", OldFV: 1, NewFV: 2,
+		Entries: []AdjEntry{
+			{ClaimKind: KindRoundTripCompleteness,
+				Scope:         "the migration never errors on a corpus document valid at N",
+				Justification: "greenfield: no at-rest N documents", Author: "t", Date: "2026-07-27"},
+			{ClaimKind: KindRoundTripSoundness,
+				Scope:         "every corpus document valid at N re-validates at N+1 after M",
+				Justification: "greenfield: verified by construction", Author: "t", Date: "2026-07-27"},
+		},
+	}
+	if g := Adjudicate(cert, adj); len(g) != 0 {
+		t.Fatalf("expected green gate with full adjudication, got %v", g)
+	}
+
+	// Dangling entry (matches no unsupported claim) is INVALID.
+	stray := &Adjudication{SourcePath: "adj.toml",
+		Entries: []AdjEntry{{ClaimKind: KindDownTaxonomy, Scope: "does not match any claim"}}}
+	hasInvalid := false
+	for _, d := range Adjudicate(cert, stray) {
+		if d.Code == "STRICTSPEC_DIFF_ADJUDICATION_INVALID" {
+			hasInvalid = true
+		}
+	}
+	if !hasInvalid {
+		t.Fatalf("expected ADJUDICATION_INVALID for a dangling entry")
+	}
+}
+
+// TestAdjudicationFullySupportedNoGate: a corpus that genuinely supports every
+// claim needs no adjudication — the gate is empty even with no adjudication file.
+func TestAdjudicationFullySupportedNoGate(t *testing.T) {
+	files := writeCorpus(t, map[string]string{
+		"a-v1.json":        docV1,
+		"b-v2-single.json": docV2Single,
+	})
+	cert, violations := Run(Inputs{
+		SchemaID: "AgentDefinition",
+		OldProg:  compile(t, budgetV1), NewProg: compile(t, budgetV2),
+		OldFV: 1, NewFV: 2,
+		Migration: budgetMigration(t),
+		Glob:      "*.json", Files: files, Release: "0.0.0-test",
+	})
+	if len(violations) > 0 {
+		t.Fatalf("unexpected violations: %v", violations)
+	}
+	if g := Adjudicate(cert, nil); len(g) != 0 {
+		t.Fatalf("fully corpus-supported run must need no adjudication, got %v", g)
+	}
+}

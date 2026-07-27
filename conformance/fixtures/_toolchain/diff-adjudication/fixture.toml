@@ -1,0 +1,13 @@
+name = "diff-adjudication"
+kind = "diff"
+description = "No-corpus/unsupported claims (completeness+soundness over a corpus with no valid-at-N docs) discharged by a committed adjudication file; deploy gate green."
+old_schema = "old.toml"
+new_schema = "new.toml"
+migration = "budget.migration.toml"
+adjudication = "adjudication.toml"
+corpus = "*.json"
+corpus_subdir = "corpus"
+
+[expected]
+exit_code = 0
+stdout_contains = ["adjudication acknowledged", "down-taxonomy", "content_hash"]

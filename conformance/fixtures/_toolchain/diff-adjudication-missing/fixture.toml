@@ -1,0 +1,12 @@
+name = "diff-adjudication-missing"
+kind = "diff"
+description = "Unsupported claims (no valid-at-N corpus docs) with NO adjudication file block release with STRICTSPEC_DIFF_ADJUDICATION_MISSING."
+old_schema = "old.toml"
+new_schema = "new.toml"
+migration = "budget.migration.toml"
+corpus = "*.json"
+corpus_subdir = "corpus"
+
+[expected]
+exit_code = 1
+stderr_contains = ["STRICTSPEC_DIFF_ADJUDICATION_MISSING"]

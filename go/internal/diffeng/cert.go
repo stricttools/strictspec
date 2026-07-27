@@ -42,6 +42,14 @@ type Claim struct {
 	Grade           string           `json:"grade"`
 	Counterexamples []Counterexample `json:"counterexamples,omitempty"`
 	Statement       string           `json:"statement"`
+
+	// Supported records whether the DECLARED corpus actually exercised this claim
+	// (≥1 witnessing document). A claim graded corpus-supported with Supported ==
+	// false is VACUOUSLY supported — a no-corpus/unsupported situation the deploy
+	// gate (A.5) requires be discharged via an adjudication entry. Not serialized:
+	// the certificate shape (A.3) is pinned, so support is engine-internal gate
+	// state, not a certificate field.
+	Supported bool `json:"-"`
 }
 
 // Counterexample is a real corpus witness of a violation (A.4).

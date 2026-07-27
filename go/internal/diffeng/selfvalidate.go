@@ -80,32 +80,6 @@ func SelfValidate(cert *Certificate) error {
 	return nil
 }
 
-// ParseAdjudication reads and VALIDATES an adjudication file (a strictspec-schema'd
-// TOML document, appendix-certificates.md Part B) against its built-in schema. A
-// malformed file yields STRICTSPEC_DIFF_ADJUDICATION_INVALID.
-func ParseAdjudication(src []byte, path string) []diag.Diagnostic {
-	wd, werr := write.New(doc.FormatTOML, src)
-	if werr != nil {
-		return []diag.Diagnostic{adjInvalid(path, werr.Error())}
-	}
-	diags := ir.Execute(adjProgram(), wd.Root(), ir.ExecOptions{Format: doc.FormatTOML})
-	if len(diags) > 0 {
-		return []diag.Diagnostic{adjInvalid(path, renderAll(diags))}
-	}
-	return nil
-}
-
-func adjInvalid(path, detail string) diag.Diagnostic {
-	return diag.Diagnostic{
-		Code: "STRICTSPEC_DIFF_ADJUDICATION_INVALID",
-		Path: diag.NewPath(),
-		Slots: map[string]diag.Slot{
-			"source": diag.SlotString{S: path},
-			"detail": diag.SlotString{S: detail},
-		},
-	}
-}
-
 func renderAll(diags []diag.Diagnostic) string {
 	out := ""
 	for i, d := range diags {

@@ -1,0 +1,22 @@
+[migration]
+schema = "AgentDefinition"
+from_format_version = 1
+to_format_version = 2
+migration_set = "agent-budget"
+[[ops]]
+op = "rename_field"
+from = "$.budget.max_cost_usd"
+to = "$.budget.cost_thresholds"
+down = "total"
+[[ops]]
+op = "wrap_in_array"
+path = "$.budget.cost_thresholds"
+down = "partial"
+down_partial_reason = "unwrap_singleton is a hard error on a multi-element cost_thresholds."
+[[down_ops]]
+op = "unwrap_singleton"
+path = "$.budget.cost_thresholds"
+[[down_ops]]
+op = "rename_field"
+from = "$.budget.cost_thresholds"
+to = "$.budget.max_cost_usd"
