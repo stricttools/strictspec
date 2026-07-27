@@ -21,4 +21,4 @@ valid = false
 [[expected.diagnostics]]
 code = "STRICTSPEC_CROSS_SUM_LIMIT"
 path = "$"
-slots = { field = "memory_mb", source = '"documents-in(services/*.toml)"', actual = "6144", limit = "4096" }
+slots = { field = "memory_mb", source = "documents-in(services/*.toml)", actual = "6144", limit = "4096" }

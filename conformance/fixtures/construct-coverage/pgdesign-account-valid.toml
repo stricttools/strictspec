@@ -6,10 +6,10 @@ A pgdesign table document using the custom scalars identifier / pgtype / sql-exp
 in the pgdesign manifest). Well-formed identifier name, valid pgtype references, non-empty check
 expressions. Validates clean.
 
-NOTE: the companion account.invalid document is intentionally NOT converted -- one of its expected
-diagnostics renders the `pgtype` scalar's regex in a `pattern` (string) slot, and how a regex with
-backslashes renders in a message (A.2 backslash-escaping vs verbatim) is not pinned by
-appendix-rendering. Flagged in the harness report as an underspecified rendering case."""
+NOTE: the companion account.invalid document is now authored as pgdesign-account-invalid. Its
+`pgtype` regex renders in a `pattern` slot, which appendix-rendering.md A.7 now pins as a `value`
+slot (string-kinded): double-quoted with A.2 backslash-escaping. The former underspecified-rendering
+deferral is resolved."""
 schema = "_schemas/pgdesign-table.toml"
 input = "_inputs/pgdesign/account.valid.toml"
 

@@ -1,0 +1,44 @@
+name = "pgdesign-account-invalid"
+category = "construct-coverage"
+provenance = "derived-from(examples/pgdesign-scalars/account.invalid.toml, verified against spec)"
+description = """
+The companion to pgdesign-account-valid: a pgdesign table document that violates three custom-scalar
+rules plus a missing required field. Previously deferred because a regex `pattern` slot's rendering
+(A.2 backslash-escaping vs verbatim) was not pinned; now pinned by appendix-rendering.md A.7 — regex
+patterns are `value` slots (string-kinded) and render double-quoted with A.2 escaping. Every `string`
+slot (identifier/kind names) renders BARE (Model B). Diagnostics are in traversal order:
+
+1. `$.name` = "9lives": leading digit fails the `identifier` scalar lexeme rule -> SCALAR_LEXEME.
+2. `$` missing `comment`: pgdesign requires a table comment (schema-declaration order) -> TYPE_MISSING_REQUIRED.
+3. `$.columns["id"].type` = "bi gint": embedded space breaks the `pgtype` surface syntax -> SCALAR_LEXEME.
+   The pgtype regex renders quoted with A.2 escaping (each backslash doubled).
+4. `$.columns["note"].check` = "": empty violates the `sql-expression` length.min = 1 bound -> SCALAR_LENGTH.
+
+Slot rendering (Model B): `actual` and `pattern` are `value` slots (quoted); `name` is an
+`identifier` slot (bare); `key` is a `string` slot (bare); `actual`/`limit` in SCALAR_LENGTH are
+`int` slots (decimal)."""
+schema = "_schemas/pgdesign-table.toml"
+input = "_inputs/pgdesign/account.invalid.toml"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_SCALAR_LEXEME"
+path = "$.name"
+slots = { actual = '"9lives"', name = "identifier", pattern = '"^[A-Za-z_][A-Za-z0-9_]*$"' }
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_TYPE_MISSING_REQUIRED"
+path = "$"
+slots = { key = "comment" }
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_SCALAR_LEXEME"
+path = '$.columns["id"].type'
+slots = { actual = '"bi gint"', name = "pgtype", pattern = '"^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)?(\\([0-9]+(,[0-9]+)?\\))?(\\[\\])?$"' }
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_SCALAR_LENGTH"
+path = '$.columns["note"].check'
+slots = { name = "sql-expression", actual = "0", limit = "1" }

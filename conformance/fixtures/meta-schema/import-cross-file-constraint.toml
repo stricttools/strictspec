@@ -15,4 +15,4 @@ valid = false
 [[expected.diagnostics]]
 code = "STRICTSPEC_IMPORT_CROSS_FILE_CONSTRAINT"
 path = "$"
-slots = { file = '"geometry-types-bad-constraint.toml"' }
+slots = { file = "geometry-types-bad-constraint.toml" }

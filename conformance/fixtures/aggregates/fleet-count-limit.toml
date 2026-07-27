@@ -23,4 +23,4 @@ valid = false
 [[expected.diagnostics]]
 code = "STRICTSPEC_CROSS_COUNT_LIMIT"
 path = "$"
-slots = { actual = "9", source = '"documents-in(services/*.toml)"', limit = "8" }
+slots = { actual = "9", source = "documents-in(services/*.toml)", limit = "8" }

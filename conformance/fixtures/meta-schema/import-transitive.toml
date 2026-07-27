@@ -13,4 +13,4 @@ valid = false
 [[expected.diagnostics]]
 code = "STRICTSPEC_IMPORT_TRANSITIVE"
 path = "$"
-slots = { file = '"geometry-types-transitive.toml"' }
+slots = { file = "geometry-types-transitive.toml" }
