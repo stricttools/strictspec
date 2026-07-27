@@ -1,0 +1,5 @@
+format_version = 1
+name = "api"
+image = "registry.example/api:2.1.0"
+memory_mb = 512
+replicas = 2

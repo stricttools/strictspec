@@ -1,0 +1,5 @@
+format_version = 1
+name = "big-a"
+image = "registry.example/big-a:1.0.0"
+memory_mb = 2048
+replicas = 1

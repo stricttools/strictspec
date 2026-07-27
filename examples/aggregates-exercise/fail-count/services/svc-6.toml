@@ -1,0 +1,5 @@
+format_version = 1
+name = "svc-6"
+image = "registry.example/svc-6:1.0.0"
+memory_mb = 256
+replicas = 1

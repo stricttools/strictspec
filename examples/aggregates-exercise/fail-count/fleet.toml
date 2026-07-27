@@ -1,0 +1,4 @@
+format_version = 1
+name = "over-populated-tier"
+# count = 9 (> 8, VIOLATES count-limit <= 8); sum(memory_mb) = 9 * 256 = 2304 (<=4096, OK).
+# Only the count form is violated, isolating STRICTSPEC_CROSS_COUNT_LIMIT.

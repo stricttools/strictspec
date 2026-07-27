@@ -1,0 +1,5 @@
+format_version = 1
+name = "web"
+image = "registry.example/web:1.4.0"
+memory_mb = 512
+replicas = 3

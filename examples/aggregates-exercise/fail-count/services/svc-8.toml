@@ -1,0 +1,5 @@
+format_version = 1
+name = "svc-8"
+image = "registry.example/svc-8:1.0.0"
+memory_mb = 256
+replicas = 1

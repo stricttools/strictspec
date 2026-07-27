@@ -1,0 +1,5 @@
+format_version = 1
+name = "worker"
+image = "registry.example/worker:1.0.3"
+memory_mb = 1024
+replicas = 1
