@@ -265,18 +265,6 @@ jobs:
       env:
         RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # MANUAL EDIT (rlsbl gap: goreleaser-monorepo-tags). OSS goreleaser cannot
-      # parse the monorepo tag `go-strictspec@vX.Y.Z` as semver and has no
-      # `monorepo:` block (Pro-only). Strip the `go-strictspec@` prefix and hand
-      # goreleaser the bare `vX.Y.Z` via GORELEASER_CURRENT_TAG. rlsbl does not
-      # yet generate this step, so a re-run of `rlsbl monorepo sync`/`scaffold`
-      # will drop it -- re-apply it if the router is regenerated.
-    - name: Resolve goreleaser tag (strip monorepo prefix)
-      run: |
-        TAG="${RELEASE_TAG}"
-        echo "GORELEASER_CURRENT_TAG=${TAG##*@}" >> "$GITHUB_ENV"
-      env:
-        RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
     - uses: goreleaser/goreleaser-action@v7
       if: steps.check-go.outputs.skip != 'true'
       with:
@@ -301,6 +289,8 @@ jobs:
       with:
         node-version: 24
         registry-url: https://registry.npmjs.org
+    - name: Install dependencies (incl. devDependencies for prepack build)
+      run: npm ci
     - name: Install gitleaks
       run: |
         GITLEAKS_VERSION=8.24.3
