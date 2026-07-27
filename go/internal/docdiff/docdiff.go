@@ -15,6 +15,7 @@ import (
 	"github.com/smm-h/strictspec/go/internal/diag"
 	"github.com/smm-h/strictspec/go/internal/doc"
 	"github.com/smm-h/strictspec/go/internal/ir"
+	"github.com/smm-h/strictspec/go/internal/jsondoc"
 	"github.com/smm-h/strictspec/go/internal/render"
 	"github.com/smm-h/strictspec/go/internal/schema"
 )
@@ -40,6 +41,10 @@ type differ struct {
 	s      *schema.Schema
 	format doc.Format
 	out    []Delta
+	// line is the 1-based JSONL line the current documents came from (0 = not
+	// JSONL). When set, every delta's path carries the @Lline:byte suffix (C.2:
+	// JSONL deltas are line-scoped).
+	line int
 }
 
 // Diff compares two parsed documents of s and returns the structured delta.
@@ -53,6 +58,22 @@ func Diff(s *schema.Schema, format doc.Format, oldRoot, newRoot doc.Node) *Resul
 }
 
 func (d *differ) emit(delta Delta) { d.out = append(d.out, delta) }
+
+// render renders a delta path, appending the JSONL @Lline:byte suffix when the
+// differ is line-scoped. The byte offset is the addressed node's within-line
+// start offset (nodes are parsed per line, so spans are already line-relative).
+func (d *differ) render(p diag.Path, anchor doc.Node) string {
+	if d.line <= 0 {
+		return p.Render()
+	}
+	off := 0
+	if anchor != nil {
+		if sp := anchor.Span(); sp.Start.IsValid() {
+			off = sp.Start.ByteOffset
+		}
+	}
+	return p.WithAnchor(d.line, off).Render()
+}
 
 // walk recursively diffs old vs new at the given schema type and path.
 func (d *differ) walk(t *schema.Type, oldN, newN doc.Node, path diag.Path) {
@@ -84,7 +105,7 @@ func (d *differ) walkRecord(t *schema.Type, oldN, newN doc.Node, path diag.Path)
 		ov, _ := entryOf(oldN, k)
 		nv, present := entryOf(newN, k)
 		if !present {
-			d.emit(Delta{Op: "removed", Path: kp.Render(), OldValue: strp(d.renderNode(ov))})
+			d.emit(Delta{Op: "removed", Path: d.render(kp, ov), OldValue: strp(d.renderNode(ov))})
 			continue
 		}
 		// Record-scope unique-by (the pinned surface places `unique-by` on the record
@@ -104,7 +125,7 @@ func (d *differ) walkRecord(t *schema.Type, oldN, newN doc.Node, path diag.Path)
 		if _, ok := newSet[k]; ok {
 			kp := appendKey(path, k)
 			nv, _ := entryOf(newN, k)
-			d.emit(Delta{Op: "added", Path: kp.Render(), NewValue: strp(d.renderNode(nv))})
+			d.emit(Delta{Op: "added", Path: d.render(kp, nv), NewValue: strp(d.renderNode(nv))})
 		}
 	}
 }
@@ -127,9 +148,9 @@ func (d *differ) walkArray(t *schema.Type, oldN, newN doc.Node, path diag.Path) 
 		case i < len(oldItems) && i < len(newItems):
 			d.walk(itemT, oldItems[i], newItems[i], ip)
 		case i < len(oldItems):
-			d.emit(Delta{Op: "removed", Path: ip.Render(), OldValue: strp(d.renderNode(oldItems[i]))})
+			d.emit(Delta{Op: "removed", Path: d.render(ip, oldItems[i]), OldValue: strp(d.renderNode(oldItems[i]))})
 		default:
-			d.emit(Delta{Op: "added", Path: ip.Render(), NewValue: strp(d.renderNode(newItems[i]))})
+			d.emit(Delta{Op: "added", Path: d.render(ip, newItems[i]), NewValue: strp(d.renderNode(newItems[i]))})
 		}
 	}
 }
@@ -157,17 +178,17 @@ func (d *differ) walkArrayKeyed(at *schema.Type, oldN, newN doc.Node, path diag.
 		kv, ok := elemKey(it, key)
 		ip := appendIndex(path, ni)
 		if !ok {
-			d.emit(Delta{Op: "added", Path: ip.Render(), NewValue: strp(d.renderNode(it))})
+			d.emit(Delta{Op: "added", Path: d.render(ip, it), NewValue: strp(d.renderNode(it))})
 			continue
 		}
 		oi, existed := oldByKey[kv]
 		if !existed {
-			d.emit(Delta{Op: "added", Path: ip.Render(), NewValue: strp(d.renderNode(it))})
+			d.emit(Delta{Op: "added", Path: d.render(ip, it), NewValue: strp(d.renderNode(it))})
 			continue
 		}
 		if oi != ni {
 			oidx, nidx := oi, ni
-			d.emit(Delta{Op: "moved", Path: ip.Render(), OldIndex: &oidx, NewIndex: &nidx})
+			d.emit(Delta{Op: "moved", Path: d.render(ip, it), OldIndex: &oidx, NewIndex: &nidx})
 		}
 		// Diff element contents regardless of move.
 		d.walk(itemT, oldItems[oi], it, ip)
@@ -178,15 +199,17 @@ func (d *differ) walkArrayKeyed(at *schema.Type, oldN, newN doc.Node, path diag.
 			continue
 		}
 		if _, still := newByKey[kv]; !still {
-			d.emit(Delta{Op: "removed", Path: appendIndex(path, oi).Render(), OldValue: strp(d.renderNode(it))})
+			d.emit(Delta{Op: "removed", Path: d.render(appendIndex(path, oi), it), OldValue: strp(d.renderNode(it))})
 		}
 	}
 }
 
 func (d *differ) emitChanged(oldN, newN doc.Node, path diag.Path) {
+	// Anchor the delta at the NEW node's within-line offset (the new document is
+	// the reference for changed/added/moved deltas, per C.2).
 	d.emit(Delta{
 		Op:       "changed",
-		Path:     path.Render(),
+		Path:     d.render(path, newN),
 		OldValue: strp(d.renderNode(oldN)),
 		NewValue: strp(d.renderNode(newN)),
 	})
@@ -368,6 +391,58 @@ func Compute(prog *ir.Program, s *schema.Schema, format doc.Format,
 		}}
 	}
 	return Diff(s, format, oldRoot, newRoot), nil
+}
+
+// ComputeJSONL is the CLI-facing entry for JSONL doc-diff: it diffs two JSONL
+// streams PER LINE (each line is an independent JSON document; C.2: JSONL deltas
+// are line-scoped). Every line is validated against the schema (an invalid line
+// is STRICTSPEC_DOCDIFF_INVALID_OPERAND); corresponding lines are diffed and every
+// resulting delta carries the @Lline:byte suffix in its path. Lines present in
+// only one stream yield a whole-document added/removed delta on that line. The
+// format_version match is subsumed by validation (the version gate makes every
+// valid line carry the schema's format_version).
+func ComputeJSONL(prog *ir.Program, s *schema.Schema,
+	oldPath string, oldSrc []byte, newPath string, newSrc []byte) (*Result, []diag.Diagnostic) {
+
+	oldDocs, operr := jsondoc.ParseLines(oldSrc)
+	if operr != nil {
+		return nil, []diag.Diagnostic{invalidOperand(oldPath)}
+	}
+	newDocs, nperr := jsondoc.ParseLines(newSrc)
+	if nperr != nil {
+		return nil, []diag.Diagnostic{invalidOperand(newPath)}
+	}
+	for _, dd := range oldDocs {
+		if diags := ir.Execute(prog, dd.Root, ir.ExecOptions{Format: doc.FormatJSON}); len(diags) > 0 {
+			return nil, []diag.Diagnostic{invalidOperand(oldPath)}
+		}
+	}
+	for _, dd := range newDocs {
+		if diags := ir.Execute(prog, dd.Root, ir.ExecOptions{Format: doc.FormatJSON}); len(diags) > 0 {
+			return nil, []diag.Diagnostic{invalidOperand(newPath)}
+		}
+	}
+	res := &Result{SchemaID: s.Name, FormatVersion: s.FormatVersion}
+	rt, _ := s.LookupType(s.Root)
+	n := len(oldDocs)
+	if len(newDocs) > n {
+		n = len(newDocs)
+	}
+	for i := 0; i < n; i++ {
+		d := &differ{s: s, format: doc.FormatJSONL, line: i + 1}
+		switch {
+		case i < len(oldDocs) && i < len(newDocs):
+			d.walk(rt, oldDocs[i].Root, newDocs[i].Root, diag.NewPath())
+		case i < len(oldDocs):
+			d.emit(Delta{Op: "removed", Path: d.render(diag.NewPath(), oldDocs[i].Root),
+				OldValue: strp(d.renderNode(oldDocs[i].Root))})
+		default:
+			d.emit(Delta{Op: "added", Path: d.render(diag.NewPath(), newDocs[i].Root),
+				NewValue: strp(d.renderNode(newDocs[i].Root))})
+		}
+		res.Deltas = append(res.Deltas, d.out...)
+	}
+	return res, nil
 }
 
 func invalidOperand(path string) diag.Diagnostic {

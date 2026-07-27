@@ -1,0 +1,14 @@
+name = "LineRec"
+meta_version = 1
+format_version = 1
+document_syntax = "jsonl"
+role = "schema"
+root = "Root"
+[types.Root]
+type = "record"
+[types.Root.fields.id]
+type = "string"
+required = true
+[types.Root.fields.n]
+type = "integer"
+required = true

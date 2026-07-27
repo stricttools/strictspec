@@ -1,0 +1,10 @@
+name = "doc-diff-jsonl"
+kind = "doc-diff"
+description = "JSONL doc-diff is line-scoped: deltas on lines 2 and 3 carry the @Lline byte suffix in their paths (appendix-certificates C.2)."
+schema = "schema.toml"
+old_document = "a.jsonl"
+new_document = "b.jsonl"
+
+[expected]
+exit_code = 0
+stdout_contains = ["\"changed\"", "$.n@L2:", "$.id@L3:", "\"20\"", "cc"]

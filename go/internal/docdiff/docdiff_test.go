@@ -1,9 +1,11 @@
 package docdiff
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/smm-h/strictspec/go/internal/doc"
+	"github.com/smm-h/strictspec/go/internal/ir"
 	"github.com/smm-h/strictspec/go/internal/schema"
 	"github.com/smm-h/strictspec/go/internal/tomldoc"
 	"github.com/smm-h/strictspec/go/internal/write"
@@ -127,4 +129,76 @@ func deref(s *string) string {
 		return "<nil>"
 	}
 	return *s
+}
+
+func compileJSONLProg(t *testing.T, src string) *ir.Program {
+	t.Helper()
+	d, perr := tomldoc.Parse([]byte(src))
+	if perr != nil {
+		t.Fatalf("schema parse: %v", perr)
+	}
+	s, diags := schema.ReadSchema(d.Root, "")
+	if len(diags) > 0 {
+		t.Fatalf("schema authoring diags: %v", diags)
+	}
+	return ir.Compile(s, nil)
+}
+
+const jsonlSchema = `
+name = "LineRec"
+meta_version = 1
+format_version = 1
+document_syntax = "jsonl"
+role = "schema"
+root = "Root"
+[types.Root]
+type = "record"
+[types.Root.fields.id]
+type = "string"
+required = true
+[types.Root.fields.n]
+type = "integer"
+required = true
+`
+
+// TestComputeJSONLLineScoped: a JSONL doc-diff is line-scoped — each line is an
+// independent document, and every delta carries the @Lline:byte suffix. Two
+// three-line streams differing on lines 2 and 3 yield exactly two changed deltas,
+// anchored to lines 2 and 3 respectively.
+func TestComputeJSONLLineScoped(t *testing.T) {
+	prog := compileJSONLProg(t, jsonlSchema)
+	s := loadSchema(t, jsonlSchema)
+	old := []byte(`{"format_version": 1, "id": "a", "n": 1}` + "\n" +
+		`{"format_version": 1, "id": "b", "n": 2}` + "\n" +
+		`{"format_version": 1, "id": "c", "n": 3}` + "\n")
+	nw := []byte(`{"format_version": 1, "id": "a", "n": 1}` + "\n" +
+		`{"format_version": 1, "id": "b", "n": 20}` + "\n" +
+		`{"format_version": 1, "id": "cc", "n": 3}` + "\n")
+	res, diags := ComputeJSONL(prog, s, "a.jsonl", old, "b.jsonl", nw)
+	if len(diags) > 0 {
+		t.Fatalf("unexpected diags: %v", diags)
+	}
+	if len(res.Deltas) != 2 {
+		t.Fatalf("expected 2 line-scoped deltas, got %+v", res.Deltas)
+	}
+	d2, d3 := res.Deltas[0], res.Deltas[1]
+	if d2.Op != "changed" || !strings.HasPrefix(d2.Path, "$.n@L2:") {
+		t.Fatalf("line-2 delta wrong: %+v", d2)
+	}
+	if d3.Op != "changed" || !strings.HasPrefix(d3.Path, "$.id@L3:") {
+		t.Fatalf("line-3 delta wrong: %+v", d3)
+	}
+}
+
+// TestComputeJSONLInvalidOperand: a line that does not validate against the schema
+// makes the whole diff refuse with STRICTSPEC_DOCDIFF_INVALID_OPERAND.
+func TestComputeJSONLInvalidOperand(t *testing.T) {
+	prog := compileJSONLProg(t, jsonlSchema)
+	s := loadSchema(t, jsonlSchema)
+	old := []byte(`{"format_version": 1, "id": "a", "n": 1}` + "\n")
+	nw := []byte(`{"format_version": 1, "id": "a"}` + "\n") // missing required n
+	_, diags := ComputeJSONL(prog, s, "a.jsonl", old, "b.jsonl", nw)
+	if len(diags) != 1 || diags[0].Code != "STRICTSPEC_DOCDIFF_INVALID_OPERAND" {
+		t.Fatalf("expected INVALID_OPERAND, got %v", diags)
+	}
 }

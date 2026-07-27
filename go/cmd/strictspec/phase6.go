@@ -227,17 +227,36 @@ func docDiffHandler(ctx *strictcli.Context, kwargs map[string]interface{}) stric
 	if err != nil {
 		return strictcli.Exit(1)
 	}
-	oldRoot, oformat, oerr := parseDocFile(oldDoc)
-	if oerr != nil {
-		ctx.Error(oerr.Error())
-		return strictcli.Exit(1)
+
+	var res *docdiff.Result
+	var diags []diag.Diagnostic
+	if formatOf(oldDoc) == doc.FormatJSONL {
+		// JSONL doc-diff is line-scoped: diff every line and carry the @Lline
+		// suffix in each delta path (appendix-certificates C.2).
+		oldSrc, oerr := os.ReadFile(oldDoc)
+		if oerr != nil {
+			ctx.Error(oerr.Error())
+			return strictcli.Exit(1)
+		}
+		newSrc, nerr := os.ReadFile(newDoc)
+		if nerr != nil {
+			ctx.Error(nerr.Error())
+			return strictcli.Exit(1)
+		}
+		res, diags = docdiff.ComputeJSONL(prog, prog.Schema, oldDoc, oldSrc, newDoc, newSrc)
+	} else {
+		oldRoot, oformat, oerr := parseDocFile(oldDoc)
+		if oerr != nil {
+			ctx.Error(oerr.Error())
+			return strictcli.Exit(1)
+		}
+		newRoot, _, nerr := parseDocFile(newDoc)
+		if nerr != nil {
+			ctx.Error(nerr.Error())
+			return strictcli.Exit(1)
+		}
+		res, diags = docdiff.Compute(prog, prog.Schema, oformat, oldDoc, oldRoot, newDoc, newRoot)
 	}
-	newRoot, _, nerr := parseDocFile(newDoc)
-	if nerr != nil {
-		ctx.Error(nerr.Error())
-		return strictcli.Exit(1)
-	}
-	res, diags := docdiff.Compute(prog, prog.Schema, oformat, oldDoc, oldRoot, newDoc, newRoot)
 	if len(diags) > 0 {
 		printDiags(ctx, diags)
 		return strictcli.Exit(1)
