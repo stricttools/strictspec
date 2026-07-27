@@ -175,3 +175,62 @@ func TestOpSetValueWhere(t *testing.T) {
 		t.Fatalf("set_value_where out = %q", out)
 	}
 }
+
+// TestOpMoveFieldCollision: moving a field onto an existing destination key is a
+// hard collision (STRICTSPEC_MIGRATE_COLLISION), not a silent overwrite.
+func TestOpMoveFieldCollision(t *testing.T) {
+	_, _, diags := applyOne(t, doc.FormatJSON, `{"src": {"x": 1}, "dst": {"x": 9}}`,
+		Op{Kind: OpMoveField, From: "$.src.x", To: "$.dst.x"})
+	if len(diags) != 1 || diags[0].Code != "STRICTSPEC_MIGRATE_COLLISION" {
+		t.Fatalf("expected COLLISION, got %v", diags)
+	}
+}
+
+// TestOpDropCollectionApply: drop_collection removes an array-valued field
+// (the happy path — its type-mismatch refusal is covered separately).
+func TestOpDropCollectionApply(t *testing.T) {
+	out, _, diags := applyOne(t, doc.FormatJSON, `{"a": 1, "xs": [1, 2, 3]}`,
+		Op{Kind: OpDropCollection, Path: "$.xs"})
+	if len(diags) > 0 {
+		t.Fatalf("diags: %v", diags)
+	}
+	if out != `{"a": 1}` {
+		t.Fatalf("drop_collection out = %q", out)
+	}
+	// Dropping the first (non-last) array field consumes the trailing separator.
+	out2, _, diags2 := applyOne(t, doc.FormatJSON, `{"xs": [1, 2], "a": 1}`,
+		Op{Kind: OpDropCollection, Path: "$.xs"})
+	if len(diags2) > 0 {
+		t.Fatalf("diags: %v", diags2)
+	}
+	if out2 != `{"a": 1}` {
+		t.Fatalf("drop_collection(first) out = %q", out2)
+	}
+}
+
+// TestTOMLCommentPreservationWritePath: a value edit through the write path
+// (set_value) leaves every comment and whitespace byte untouched — only the
+// targeted value's bytes change. This locks the lexeme-retentive splice contract
+// against comment/whitespace-eating regressions.
+func TestTOMLCommentPreservationWritePath(t *testing.T) {
+	src := "# top-of-file comment\n" +
+		"format_version = 1\n" +
+		"\n" +
+		"# the budget section\n" +
+		"[budget]\n" +
+		"max = 5.0 # trailing inline comment\n"
+	out, _, diags := applyOne(t, doc.FormatTOML, src,
+		Op{Kind: OpSetValue, Path: "$.budget.max", Value: litNode(t, "9.0"), HasValue: true})
+	if len(diags) > 0 {
+		t.Fatalf("diags: %v", diags)
+	}
+	want := "# top-of-file comment\n" +
+		"format_version = 1\n" +
+		"\n" +
+		"# the budget section\n" +
+		"[budget]\n" +
+		"max = 9.0 # trailing inline comment\n"
+	if out != want {
+		t.Fatalf("comment/whitespace not preserved byte-identically:\n--- got ---\n%s\n--- want ---\n%s", out, want)
+	}
+}
