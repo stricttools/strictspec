@@ -14,6 +14,7 @@ import (
 	"github.com/smm-h/strictspec/go/internal/docdiff"
 	"github.com/smm-h/strictspec/go/internal/ir"
 	"github.com/smm-h/strictspec/go/internal/migrate"
+	"github.com/smm-h/strictspec/go/internal/render"
 	"github.com/smm-h/strictspec/go/internal/schema"
 	"github.com/smm-h/strictspec/go/internal/write"
 	"github.com/smm-h/strictspec/go/strictspec"
@@ -378,7 +379,7 @@ func parseDocFile(path string) (doc.Node, doc.Format, error) {
 }
 
 func renderDiag(d diag.Diagnostic) string {
-	return d.Code + " at " + d.Path.Render() + ": " + safeRender(d)
+	return d.Code + " at " + d.Path.Render() + ": " + render.Render(d)
 }
 
 // parseRoot parses source into a root node for the given format (JSONL parses

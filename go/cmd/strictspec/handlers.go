@@ -564,19 +564,11 @@ format_version = 1
 
 func printDiags(ctx *strictcli.Context, diags []diag.Diagnostic) {
 	for _, d := range diags {
-		ctx.Error(fmt.Sprintf("  %s at %s: %s", d.Code, d.Path.Render(), safeRender(d)))
+		// render.Render panics on programmer errors (unknown code/slot, missing
+		// required slot) by contract — a Diagnostic is slot-correct by
+		// construction, so a panic here is a bug to fix loudly, never masked.
+		ctx.Error(fmt.Sprintf("  %s at %s: %s", d.Code, d.Path.Render(), render.Render(d)))
 	}
-}
-
-// safeRender renders a diagnostic message, tolerating authoring diagnostics that
-// carry no catalogue template (e.g. reader-only slots) by falling back to code.
-func safeRender(d diag.Diagnostic) (msg string) {
-	defer func() {
-		if recover() != nil {
-			msg = d.Code
-		}
-	}()
-	return render.Render(d)
 }
 
 func printBlindSpots(ctx *strictcli.Context, schemaName string, s *schema.Schema) {
