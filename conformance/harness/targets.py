@@ -61,8 +61,11 @@ def _unimplemented_invoke(fixture: Fixture) -> Outcome:
 
 _GO_DIR = REPO_ROOT / "go"
 _ADAPTER_BIN = _GO_DIR / ".conformance-adapter"  # gitignored build artifact
+_GEN_ADAPTER_BIN = _GO_DIR / ".gen-adapter"  # gitignored build artifact
+_GEN_CACHE_DIR = _GO_DIR / ".gen-cache"  # gitignored per-schema generated+built cache
 _build_lock = threading.Lock()
 _built = False
+_gen_built = False
 
 
 def _ensure_adapter() -> Path:
@@ -79,6 +82,27 @@ def _ensure_adapter() -> Path:
             )
             _built = True
     return _ADAPTER_BIN
+
+
+def _ensure_gen_adapter() -> Path:
+    """Build the Go generated-code adapter once; return its path.
+
+    The gen-adapter generates a validator for a fixture's schema, compiles it
+    against the runtime, and runs it -- proving the emitter's output compiles
+    and validates. A build failure raises.
+    """
+    global _gen_built
+    with _build_lock:
+        if not _gen_built:
+            subprocess.run(
+                ["go", "build", "-o", str(_GEN_ADAPTER_BIN), "./cmd/gen-adapter"],
+                cwd=str(_GO_DIR),
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            _gen_built = True
+    return _GEN_ADAPTER_BIN
 
 
 def _interpreter_invoke(fixture: Fixture) -> Outcome:
@@ -102,6 +126,47 @@ def _interpreter_invoke(fixture: Fixture) -> Outcome:
     if proc.returncode != 0:
         raise RuntimeError(
             f"interpreter adapter failed (exit {proc.returncode}): {proc.stderr.strip()}"
+        )
+    resp = json.loads(proc.stdout)
+    diagnostics = tuple(
+        ObservedDiagnostic(code=d["code"], path=d["path"], message=d["message"])
+        for d in (resp.get("diagnostics") or [])
+    )
+    return Outcome(valid=bool(resp["valid"]), diagnostics=diagnostics)
+
+
+# --- The generated-Go target invocation contract ------------------------------
+#
+# The gen-adapter GENERATES a Go validator for each fixture's schema (cached per
+# schema under go/.gen-cache), COMPILES it against the runtime, and RUNS it on
+# the fixture input. Because the generated validator drives the SAME shared
+# emitter IR as the interpreter, its verdict+code+path+message are byte-identical
+# -- cross-target parity is structural, not coincidental.
+
+
+def _go_invoke(fixture: Fixture) -> Outcome:
+    """Generate, compile, and run the generated Go validator over one fixture."""
+    binary = _ensure_gen_adapter()
+    req: dict = {
+        "schema": str(fixture.schema_path),
+        "input_syntax": fixture.input_syntax,
+        "evidence": fixture.evidence,
+        "runtime_dir": str(_GO_DIR),
+        "cache_dir": str(_GEN_CACHE_DIR),
+    }
+    if fixture.input_path is not None:
+        req["input_path"] = str(fixture.input_path)
+    else:
+        req["input_inline"] = fixture.input_inline or ""
+    proc = subprocess.run(
+        [str(binary)],
+        input=json.dumps(req),
+        capture_output=True,
+        text=True,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(
+            f"gen adapter failed (exit {proc.returncode}): {proc.stderr.strip()}"
         )
     resp = json.loads(proc.stdout)
     diagnostics = tuple(
@@ -136,11 +201,12 @@ def _register(target: Target) -> None:
 
 
 # --- The four declared targets ------------------------------------------------
-# The reference interpreter (Phase 5.4) is LIVE. The generated python/go/ts
-# targets land in later phases; they remain declared stubs (implemented=false).
+# The reference interpreter (Phase 5.4) and the generated Go target (Phase 5.5)
+# are LIVE -- cross-target parity (interpreter vs go) is now active. The generated
+# python and ts targets land in later phases; they remain declared stubs.
 _register(Target(name="interpreter", implemented=True, invoke=_interpreter_invoke))
 _register(Target(name="python", implemented=False))
-_register(Target(name="go", implemented=False))
+_register(Target(name="go", implemented=True, invoke=_go_invoke))
 _register(Target(name="ts", implemented=False))
 
 
