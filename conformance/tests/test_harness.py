@@ -31,20 +31,23 @@ def test_real_fixture_tree_is_green():
     assert report.fixture_count > 0
 
 
-def test_all_targets_currently_unimplemented():
-    # With all four targets declared stubs, every case is UNIMPLEMENTED and none
-    # is PASS/MISMATCH/NOT_INVOCABLE.
+def test_interpreter_live_others_stub():
+    # The reference interpreter (Phase 5.4) is implemented: every fixture PASSes
+    # on it and none MISMATCHes / is NOT_INVOCABLE. The generated python/go/ts
+    # targets remain declared stubs, so each contributes UNIMPLEMENTED per fixture.
     report = run(FIXTURES_ROOT)
-    assert report.count(Status.PASS) == 0
+    assert report.count(Status.PASS) == report.fixture_count
     assert report.count(Status.MISMATCH) == 0
     assert report.count(Status.NOT_INVOCABLE) == 0
-    assert report.count(Status.UNIMPLEMENTED) == report.fixture_count * len(all_targets())
+    stub_count = len(all_targets()) - len(implemented_targets())
+    assert report.count(Status.UNIMPLEMENTED) == report.fixture_count * stub_count
 
 
-def test_four_targets_all_stubs():
+def test_four_targets_interpreter_implemented():
     names = [t.name for t in all_targets()]
     assert names == ["interpreter", "python", "go", "ts"]
-    assert implemented_targets() == []
+    impl = [t.name for t in implemented_targets()]
+    assert impl == ["interpreter"]
 
 
 # --- Template catalogue -------------------------------------------------------

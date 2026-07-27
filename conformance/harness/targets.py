@@ -16,9 +16,14 @@ real ``invoke``. Nothing else in the harness changes.
 
 from __future__ import annotations
 
+import json
+import subprocess
+import threading
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Callable
 
+from . import REPO_ROOT
 from .fixtures import Fixture
 
 
@@ -47,6 +52,65 @@ def _unimplemented_invoke(fixture: Fixture) -> Outcome:
     )
 
 
+# --- The reference interpreter (Go) invocation contract -----------------------
+#
+# The Go adapter binary (go/cmd/conformance-adapter) reads a JSON request on
+# stdin (schema path + input document + evidence) and writes the observed outcome
+# on stdout. We build it ONCE and invoke it per fixture (the strictcli conformance
+# pattern: compile the runtime once, feed many cases).
+
+_GO_DIR = REPO_ROOT / "go"
+_ADAPTER_BIN = _GO_DIR / ".conformance-adapter"  # gitignored build artifact
+_build_lock = threading.Lock()
+_built = False
+
+
+def _ensure_adapter() -> Path:
+    """Build the Go adapter binary once; return its path. A build failure raises."""
+    global _built
+    with _build_lock:
+        if not _built:
+            subprocess.run(
+                ["go", "build", "-o", str(_ADAPTER_BIN), "./cmd/conformance-adapter"],
+                cwd=str(_GO_DIR),
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            _built = True
+    return _ADAPTER_BIN
+
+
+def _interpreter_invoke(fixture: Fixture) -> Outcome:
+    """Run the reference interpreter over one fixture and return its outcome."""
+    binary = _ensure_adapter()
+    req: dict = {
+        "schema": str(fixture.schema_path),
+        "input_syntax": fixture.input_syntax,
+        "evidence": fixture.evidence,
+    }
+    if fixture.input_path is not None:
+        req["input_path"] = str(fixture.input_path)
+    else:
+        req["input_inline"] = fixture.input_inline or ""
+    proc = subprocess.run(
+        [str(binary)],
+        input=json.dumps(req),
+        capture_output=True,
+        text=True,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(
+            f"interpreter adapter failed (exit {proc.returncode}): {proc.stderr.strip()}"
+        )
+    resp = json.loads(proc.stdout)
+    diagnostics = tuple(
+        ObservedDiagnostic(code=d["code"], path=d["path"], message=d["message"])
+        for d in (resp.get("diagnostics") or [])
+    )
+    return Outcome(valid=bool(resp["valid"]), diagnostics=diagnostics)
+
+
 @dataclass(frozen=True)
 class Target:
     """A conformance target descriptor.
@@ -72,9 +136,9 @@ def _register(target: Target) -> None:
 
 
 # --- The four declared targets ------------------------------------------------
-# All implemented=false for now. Flip a flag and supply an `invoke` when the
-# corresponding implementation phase lands.
-_register(Target(name="interpreter", implemented=False))
+# The reference interpreter (Phase 5.4) is LIVE. The generated python/go/ts
+# targets land in later phases; they remain declared stubs (implemented=false).
+_register(Target(name="interpreter", implemented=True, invoke=_interpreter_invoke))
 _register(Target(name="python", implemented=False))
 _register(Target(name="go", implemented=False))
 _register(Target(name="ts", implemented=False))
