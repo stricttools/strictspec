@@ -1,28 +1,29 @@
 # strictspec schema — predraw Config (paper draft)
-# Notation legend: see scene.toml header.
+# Pinned surface (spec/appendix-surface-syntax.md).
 # Translated from predraw/predraw/schema/config.schema.json (JSON docs).
 # NOTE: predraw has no format_version today; value 1 is a net-new gate (gap-note.md #2).
 
-[schema]
 name = "PredrawConfig"
 meta_version = 1
 format_version = 1
 document_syntax = "json"
+role = "schema"
+root = "PredrawConfig"
 description = "Configuration file for predraw output settings."
 
-[root]
-kind = "record"
+[types.PredrawConfig]
+type = "record"
 
-[root.fields.outputs]
+[types.PredrawConfig.fields.outputs]
 type = "array"
 required = true
-min_items = 1
+min_len = 1
 description = "List of output render targets."
-[root.fields.outputs.items]
+[types.PredrawConfig.fields.outputs.item]
 type = "Output"
 
 [types.Output]
-kind = "record"
+type = "record"
 description = "A single output render target: format, path, and rendering options."
 [types.Output.fields.format]
 type = "enum"
