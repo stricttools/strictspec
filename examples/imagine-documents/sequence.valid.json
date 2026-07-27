@@ -1,0 +1,10 @@
+{
+  "format_version": 1,
+  "open": {
+    "kind": "agent-turn",
+    "ulid": "01J9Z0K3QF8XN2ABCDEFGHJKMN",
+    "opened_at": 1752868802000,
+    "event_cursor": 3,
+    "touched_files": ["scene--castle/world/tower.json"]
+  }
+}

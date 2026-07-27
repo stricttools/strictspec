@@ -1,0 +1,18 @@
+name = "imagine-bookmarks"
+meta_version = 1
+format_version = 1
+description = "bookmarks.json — per-node view bookmarks; module-typed opaque leaves (imagine §6.4, §6.5)."
+document_syntax = "json"
+targets = ["ts"]
+safe_integers = true
+
+# node (turn tag) -> opaque module-typed view. The engine stores/transports these opaque values
+# but never interprets them (§7 view is module-typed). Each leaf declares its stance (decision 29).
+[fields.bookmarks]
+type = "map"
+required = true
+key_pattern = "^turn/[0-9]{6,}$"
+order = "incidental"
+[fields.bookmarks.value]
+type = "opaque_json"
+consumer_check = "module.validateView"

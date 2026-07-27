@@ -1,0 +1,10 @@
+{
+  "format_version": 1,
+  "description": "A castle-building scene project.",
+  "engineVersion": 3,
+  "principals": {
+    "local": { "type": "human", "name": "Local User" },
+    "engine": { "type": "engine", "name": "imagine engine" },
+    "claude-code": { "type": "agent", "name": "Claude Code" }
+  }
+}

@@ -1,0 +1,4 @@
+{"format_version": 1, "id": "01J9Z0K3QF8XN2ABCDEFGHJKMN", "cursor": 1, "ts": 1752868800000, "user": "local", "document": "-", "type": "project.opened", "data": {}}
+{"format_version": 1, "id": "not-a-ulid", "cursor": 2, "ts": 1752868801000, "user": "local", "document": "scene--castle", "type": "select", "data": {}}
+{"format_version": 1, "id": "01J9Z0K5SH0ZQ4ABCDEFGHJKMN", "cursor": "3", "ts": 1752868802000, "user": "local", "document": "scene--castle", "type": "select", "data": {}}
+{"format_version": 1, "id": "01J9Z0K6TJ1AR5ABCDEFGHJKMN", "cursor": 4, "ts": 1752868803000, "user": "local", "document": "scene--castle", "type": "select"}

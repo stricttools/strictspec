@@ -1,0 +1,83 @@
+name = "imagine-inflight"
+meta_version = 1
+format_version = 1
+description = "inflight.json — the always-on in-flight op record, any actor (imagine §6.9)."
+document_syntax = "json"
+targets = ["ts"]
+safe_integers = true
+
+imports = [ { file = "types-imagine-common.toml", types = ["DocRef", "PrincipalId"] } ]
+
+# At most one op is in flight (one pen, §6.7). Written before the file write, cleared after the
+# commit; absent/null when nothing is in flight.
+[fields.op]
+type = "union"
+required = true
+nullable = true
+discriminator = "type"
+description = "The in-flight op, or null when idle."
+
+# file ops (path-scoped within one document, §6.3)
+[fields.op.arms."file.create".fields.type]
+type = "literal"
+value = "file.create"
+required = true
+[fields.op.arms."file.create".fields.actor]
+type = "PrincipalId"
+required = true
+[fields.op.arms."file.create".fields.document]
+type = "DocRef"
+required = true
+[fields.op.arms."file.create".fields.path]
+type = "string"
+required = true
+non_empty = true
+
+[fields.op.arms."file.update".fields.type]
+type = "literal"
+value = "file.update"
+required = true
+[fields.op.arms."file.update".fields.actor]
+type = "PrincipalId"
+required = true
+[fields.op.arms."file.update".fields.document]
+type = "DocRef"
+required = true
+[fields.op.arms."file.update".fields.path]
+type = "string"
+required = true
+non_empty = true
+
+[fields.op.arms."file.delete".fields.type]
+type = "literal"
+value = "file.delete"
+required = true
+[fields.op.arms."file.delete".fields.actor]
+type = "PrincipalId"
+required = true
+[fields.op.arms."file.delete".fields.document]
+type = "DocRef"
+required = true
+[fields.op.arms."file.delete".fields.path]
+type = "string"
+required = true
+non_empty = true
+
+[fields.op.arms."file.move".fields.type]
+type = "literal"
+value = "file.move"
+required = true
+[fields.op.arms."file.move".fields.actor]
+type = "PrincipalId"
+required = true
+[fields.op.arms."file.move".fields.document]
+type = "DocRef"
+required = true
+[fields.op.arms."file.move".fields.from]
+type = "string"
+required = true
+non_empty = true
+[fields.op.arms."file.move".fields.to]
+type = "string"
+required = true
+non_empty = true

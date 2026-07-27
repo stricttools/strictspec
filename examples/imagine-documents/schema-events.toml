@@ -1,0 +1,62 @@
+name = "imagine-events"
+meta_version = 1
+format_version = 1
+description = "events.jsonl — one event envelope per line; module-typed opaque payloads (imagine §8.1)."
+document_syntax = "jsonl"
+targets = ["ts"]
+safe_integers = true   # cursor and ts (epoch ms ~1.7e12) stay < 2^53
+
+imports = [ { file = "types-imagine-common.toml", types = ["Ulid", "DocRef", "PrincipalId"] } ]
+
+# Each JSONL line is one event; the root is this record and carries a per-line format_version.
+[fields.id]
+type = "Ulid"
+required = true
+
+[fields.cursor]
+type = "integer"
+required = true
+min = 0
+description = "Per-project monotonic cursor (§8.1)."
+
+[fields.ts]
+type = "integer"
+required = true
+min = 0
+description = "Epoch milliseconds."
+
+[fields.user]
+type = "PrincipalId"
+required = true
+description = "Emitting principal (one attribution vocabulary for commits and events)."
+
+[fields.document]
+type = "DocRef"
+required = true
+description = "Owning document dirname, or '-' for project-scoped events."
+
+[fields.type]
+type = "string"
+required = true
+non_empty = true
+description = "Event type. Core types (turn.handoff, travel, ...) and module types (select, draw.2d, ...) share this field; the engine does not discriminate module types — see gap note."
+
+# Module-typed payload — OPAQUE to the engine (§5 blackbox boundary). Validated on ingest by the
+# owning module (§8.1), never by strictspec. The consumer_check stance records the boundary; the
+# inventory prints it (decision 29).
+[fields.data]
+type = "opaque_json"
+required = true
+consumer_check = "module.validateEventData"
+
+[fields.context]
+type = "record"
+required = false
+[fields.context.fields.selection]
+type = "array"
+required = false
+item_type = "string"           # engine-level string ids (§8.1)
+[fields.context.fields.view]
+type = "opaque_json"           # module-typed, opaque
+required = false
+consumer_check = "module.validateView"
