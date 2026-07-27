@@ -149,6 +149,29 @@ Change detection rules:
 - JSONL: deltas are line-scoped. Each delta additionally carries the JSONL line suffix in its
   `path` (per the path grammar) so a delta names both its in-document location and its line.
 
+## Self-validation (dogfooding)
+
+The certificate shape IS a strictspec schema, and the engine self-validates every
+certificate it emits against a built-in copy of that schema. This is TOTAL: both the
+normal-mode and same-version-mode shapes self-validate. Two facts about the shape
+are pinned here so the self-check has no silent gaps.
+
+- 2026-07-27 — `old_format_version` is modeled PER MODE, not as a single-schema
+  union. A `node-kind-union` selects its arm by node CATEGORY (scalar / record /
+  array); an integer and the `"same-version"` string literal are the SAME category
+  (scalar), so no single union arm-selects between them. Self-validation therefore
+  uses TWO mode-specific built-in schemas — normal mode types `old_format_version`
+  as `integer`, same-version mode types it as the literal `"same-version"` — chosen
+  explicitly by the run's mode. This is explicit mode selection, not a runtime
+  fallback. (Both are dogfooded; neither mode is skipped.)
+- 2026-07-27 — the certificate is NOT a gated document: it carries
+  `certificate_format_version` (A.1), NOT a document `format_version`, so it does not
+  and must not satisfy the document version gate. For the self-check ONLY, the
+  built-in schema's `format_version` gate field is synthesized before validation; the
+  EMITTED certificate keeps the pinned shape (no `format_version` field). This one
+  synthetic gate field is irreducible (the certificate is deliberately un-gated) and
+  is documented here rather than left silent.
+
 ## Cross-references
 
 - The diagnostics embedded in counterexamples: `appendix-error-codes.md`.

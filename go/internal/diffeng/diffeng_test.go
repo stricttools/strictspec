@@ -408,3 +408,45 @@ func TestAdjudicationFullySupportedNoGate(t *testing.T) {
 		t.Fatalf("fully corpus-supported run must need no adjudication, got %v", g)
 	}
 }
+
+// TestSameVersionSelfValidates: a same-version certificate (old_format_version ==
+// the "same-version" marker) self-validates against the same-version built-in
+// schema — dogfooding is TOTAL, not partial (both modes self-validate; the
+// same-version shape is no longer silently skipped).
+func TestSameVersionSelfValidates(t *testing.T) {
+	old := `
+name = "S"
+meta_version = 1
+format_version = 1
+document_syntax = "json"
+role = "schema"
+root = "R"
+[types.R]
+type = "record"
+[types.R.fields.x]
+type = "integer"
+required = true
+`
+	files := writeCorpus(t, map[string]string{
+		"ok.json": `{"format_version": 1, "x": 3}`,
+	})
+	cert, violations := Run(Inputs{
+		SchemaID:    "S",
+		OldProg:     compile(t, old),
+		NewProg:     compile(t, old),
+		NewFV:       1,
+		Glob:        "*.json",
+		Files:       files,
+		Release:     "0.0.0-test",
+		SameVersion: true,
+	})
+	if len(violations) > 0 {
+		t.Fatalf("unexpected violations: %v", violations)
+	}
+	if cert.OldFormatVersion != SameVersionMarker {
+		t.Fatalf("expected same-version marker, got %v", cert.OldFormatVersion)
+	}
+	if err := SelfValidate(cert); err != nil {
+		t.Fatalf("same-version certificate must self-validate: %v", err)
+	}
+}

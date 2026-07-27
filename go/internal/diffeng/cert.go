@@ -84,10 +84,15 @@ const (
 
 // certSchemaTOML is the BUILT-IN strictspec schema for the diff certificate (the
 // shape IS a strictspec schema, authored in the pinned surface — dogfooding). The
-// engine self-validates every normal-mode certificate it emits against this
-// schema. old_format_version is modeled as an integer (the normal-mode shape;
-// same-version certificates carry the "same-version" marker and are a distinct
-// shape not self-validated here).
+// engine self-validates every NORMAL-mode certificate it emits against this
+// schema; SAME-VERSION certificates self-validate against certSchemaSameVersionTOML
+// (below), so BOTH modes are dogfooded (no silent partiality).
+//
+// old_format_version is modeled per mode, NOT as a single-schema union: a
+// node-kind-union selects arms by node CATEGORY (scalar/record/array), and both an
+// integer and the "same-version" string literal are the SAME category (scalar), so
+// no single union can distinguish them. The two mode-specific schemas are explicit
+// mode selection, not a fallback. See appendix-certificates.md "Self-validation".
 const certSchemaTOML = `
 name = "DiffCertificate"
 meta_version = 1
@@ -106,6 +111,104 @@ type = "string"
 required = true
 [types.Certificate.fields.old_format_version]
 type = "integer"
+required = true
+[types.Certificate.fields.new_format_version]
+type = "integer"
+required = true
+[types.Certificate.fields.migration_set_id]
+type = "string"
+required = false
+[types.Certificate.fields.corpus]
+type = "Corpus"
+required = true
+[types.Certificate.fields.claims]
+type = "array"
+required = true
+  [types.Certificate.fields.claims.item]
+  type = "Claim"
+[types.Certificate.fields.strictspec_release]
+type = "string"
+required = true
+
+[types.Corpus]
+type = "record"
+[types.Corpus.fields.declared_glob]
+type = "string"
+required = true
+[types.Corpus.fields.resolved_file_count]
+type = "integer"
+required = true
+[types.Corpus.fields.content_hash]
+type = "string"
+required = true
+
+[types.Claim]
+type = "record"
+[types.Claim.fields.kind]
+type = "enum"
+required = true
+values = ["flip-scan", "migrate-round-trip-soundness", "migrate-round-trip-completeness", "down-taxonomy"]
+[types.Claim.fields.grade]
+type = "enum"
+required = true
+values = ["violated", "corpus-supported", "proven"]
+[types.Claim.fields.statement]
+type = "string"
+required = true
+[types.Claim.fields.counterexamples]
+type = "array"
+required = false
+  [types.Claim.fields.counterexamples.item]
+  type = "Counterexample"
+
+[types.Counterexample]
+type = "record"
+[types.Counterexample.fields.document_path]
+type = "string"
+required = true
+[types.Counterexample.fields.diagnostics]
+type = "array"
+required = true
+  [types.Counterexample.fields.diagnostics.item]
+  type = "CertDiag"
+
+[types.CertDiag]
+type = "record"
+[types.CertDiag.fields.code]
+type = "string"
+required = true
+[types.CertDiag.fields.path]
+type = "string"
+required = true
+[types.CertDiag.fields.message]
+type = "string"
+required = true
+`
+
+// certSchemaSameVersionTOML is the SAME-VERSION built-in certificate schema. It is
+// identical to certSchemaTOML except old_format_version is the string LITERAL
+// "same-version" (decision 25: a same-version flip-scan carries the marker, and no
+// migration_set_id exists in that mode). Same-version certificates self-validate
+// against THIS schema, so the same-version shape is dogfooded too.
+const certSchemaSameVersionTOML = `
+name = "DiffCertificate"
+meta_version = 1
+format_version = 1
+document_syntax = "json"
+role = "schema"
+root = "Certificate"
+
+[types.Certificate]
+type = "record"
+[types.Certificate.fields.certificate_format_version]
+type = "integer"
+required = true
+[types.Certificate.fields.schema_id]
+type = "string"
+required = true
+[types.Certificate.fields.old_format_version]
+type = "literal"
+value = "same-version"
 required = true
 [types.Certificate.fields.new_format_version]
 type = "integer"
