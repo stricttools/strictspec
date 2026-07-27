@@ -1,0 +1,9 @@
+format_version = 1
+name = "9lives"
+
+[columns.id]
+type = "bi gint"
+
+[columns.note]
+type = "text"
+check = ""
