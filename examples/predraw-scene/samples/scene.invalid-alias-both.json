@@ -1,0 +1,7 @@
+{
+  "width": 100,
+  "height": 100,
+  "elements": [
+    { "type": "rect", "width": 10, "height": 10, "strokeWidth": 2, "stroke_width": 3 }
+  ]
+}

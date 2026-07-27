@@ -1,0 +1,577 @@
+# strictspec schema — predraw Scene (paper draft)
+#
+# DRAFT NOTATION LEGEND (surface syntax not pinned by spec/ — see gap-note.md #1):
+#   [schema] header; [root] root record; [types.<Name>] named types
+#   kind = record | discriminated-union | node-kind-union
+#   fields: type/required/regex/min/max/exclusive_min/exclusive_max/min_length/
+#           nullable/aliases/description
+#   type = "tuple" + elements = [ {type=...}, ... ]   (fixed arity; NOT array bounds)
+#   type = "map" + [.values]                          (typed map, open over keys)
+#   type = "<Named>"                                  (named-type ref; recursion OK)
+#   [[types.<N>.constraints]]                         (phase-2 forms)
+# Translated from predraw/predraw/schema/scene.schema.json (JSON docs).
+# NOTE: predraw has NO format_version today; the value 1 below is a NET-NEW gate
+# added by adoption (see gap-note.md #2).
+
+[schema]
+name = "PredrawScene"
+meta_version = 1
+format_version = 1
+document_syntax = "json"
+description = "A predraw scene file defining a vector graphic composition."
+
+[root]
+kind = "record"
+
+[root.fields.width]
+type = "number"
+required = true
+description = "Canvas width in pixels."
+[root.fields.height]
+type = "number"
+required = true
+description = "Canvas height in pixels."
+[root.fields.background]
+type = "string"
+required = false
+description = "Default background color (CSS color or $ref)."
+[root.fields.styles]
+type = "map"
+required = false
+description = "Named style tokens; referenced via $name in fill values."
+[root.fields.styles.values]
+type = "Style"
+[root.fields.imports]
+type = "map"
+required = false
+description = "Alias name -> relative file path for external component defs."
+[root.fields.imports.values]
+type = "string"
+[root.fields.defs]
+type = "map"
+required = false
+description = "Inline component definitions (packed). Recursive: values are Elements."
+[root.fields.defs.values]
+type = "Element"
+[root.fields.elements]
+type = "array"
+required = true
+description = "Ordered list of elements to render."
+[root.fields.elements.items]
+type = "Element"
+[root.fields.pipeline]
+type = "array"
+required = false
+description = "Post-processing steps applied after initial layout."
+[root.fields.pipeline.items]
+type = "PipelineStep"
+
+# --- leaf sub-types ---
+
+[types.Style]
+kind = "record"
+description = "A style token with light and dark color values."
+[types.Style.fields.light]
+type = "string"
+required = true
+[types.Style.fields.dark]
+type = "string"
+required = true
+
+[types.Transform]
+kind = "record"
+description = "2D transform. (Source `default` values dropped — decision 30; absence handled consumer-side.)"
+[types.Transform.fields.translate]
+type = "tuple"
+required = false
+elements = [ { type = "number" }, { type = "number" } ]
+description = "Translation as [x, y]."
+[types.Transform.fields.scale]
+type = "tuple"
+required = false
+elements = [ { type = "number" }, { type = "number" } ]
+description = "Scale as [sx, sy]."
+
+[types.Font]
+kind = "record"
+description = "Font specification for text elements."
+[types.Font.fields.family]
+type = "string"
+required = true
+[types.Font.fields.size]
+type = "number"
+required = true
+[types.Font.fields.weight]
+type = "integer"
+required = false
+min = 100
+max = 900
+description = "Font weight (100-900). Source default 400 dropped."
+
+[types.CharStyle]
+kind = "record"
+description = "Per-character styling override for text elements."
+[types.CharStyle.fields.chars]
+type = "string"
+required = true
+[types.CharStyle.fields.opacity]
+type = "number"
+required = false
+min = 0
+max = 1
+[types.CharStyle.fields.fill]
+type = "string"
+required = false
+
+[types.GradientStop]
+kind = "record"
+description = "A single stop in a gradient."
+[types.GradientStop.fields.offset]
+type = "number"
+required = true
+min = 0
+max = 1
+[types.GradientStop.fields.color]
+type = "string"
+required = true
+[types.GradientStop.fields.opacity]
+type = "number"
+required = false
+min = 0
+max = 1
+
+[types.Gradient]
+kind = "record"
+description = "A gradient fill/stroke definition."
+[types.Gradient.fields.type]
+type = "enum"
+required = true
+values = ["linear-gradient", "radial-gradient"]
+[types.Gradient.fields.stops]
+type = "array"
+required = true
+[types.Gradient.fields.stops.items]
+type = "GradientStop"
+[types.Gradient.fields.angle]
+type = "number"
+required = false
+[types.Gradient.fields.cx]
+type = "number"
+required = false
+[types.Gradient.fields.cy]
+type = "number"
+required = false
+[types.Gradient.fields.r]
+type = "number"
+required = false
+
+# THE node-kind union that motivates the construct (decision 15): a color STRING
+# (scalar arm) or a Gradient OBJECT (record arm) — distinct node kinds, no discriminator.
+[types.FillOrGradient]
+kind = "node-kind-union"
+arms = ["string", "Gradient"]
+description = "A color string or a gradient object."
+
+# --- element discriminated union (by `type`) ---
+
+[types.Element]
+kind = "discriminated-union"
+discriminator = "type"
+arms = ["backgroundElement", "rectElement", "pathElement", "textElement", "groupElement", "useElement"]
+description = "A drawable element; the `type` field selects the arm. NOTE: source useElement makes `type` OPTIONAL (inferred from `use`); this draft makes it REQUIRED (a narrowing) — see gap-note.md #4."
+
+[types.backgroundElement]
+kind = "record"
+description = "Fills the entire canvas with a color."
+[types.backgroundElement.fields.type]
+type = "literal"
+required = true
+value = "background"
+[types.backgroundElement.fields.id]
+type = "string"
+required = false
+[types.backgroundElement.fields.fill]
+type = "FillOrGradient"
+required = true
+[types.backgroundElement.fields.opacity]
+type = "number"
+required = false
+min = 0
+max = 1
+[types.backgroundElement.fields.transform]
+type = "Transform"
+required = false
+
+[types.rectElement]
+kind = "record"
+description = "A rectangle element."
+[types.rectElement.fields.type]
+type = "literal"
+required = true
+value = "rect"
+[types.rectElement.fields.id]
+type = "string"
+required = false
+[types.rectElement.fields.x]
+type = "number"
+required = false
+[types.rectElement.fields.y]
+type = "number"
+required = false
+[types.rectElement.fields.width]
+type = "number"
+required = false
+[types.rectElement.fields.height]
+type = "number"
+required = false
+[types.rectElement.fields.fill]
+type = "FillOrGradient"
+required = false
+[types.rectElement.fields.opacity]
+type = "number"
+required = false
+min = 0
+max = 1
+[types.rectElement.fields.stroke]
+type = "FillOrGradient"
+required = false
+[types.rectElement.fields.strokeWidth]
+type = "number"
+required = false
+aliases = ["stroke_width"]
+[types.rectElement.fields.strokeDasharray]
+type = "string"
+required = false
+aliases = ["stroke_dasharray"]
+[types.rectElement.fields.strokeLinecap]
+type = "enum"
+required = false
+values = ["butt", "round", "square"]
+aliases = ["stroke_linecap"]
+[types.rectElement.fields.strokeLinejoin]
+type = "enum"
+required = false
+values = ["miter", "round", "bevel"]
+aliases = ["stroke_linejoin"]
+[types.rectElement.fields.strokeOpacity]
+type = "number"
+required = false
+min = 0
+max = 1
+aliases = ["stroke_opacity"]
+[types.rectElement.fields.transform]
+type = "Transform"
+required = false
+
+[types.pathElement]
+kind = "record"
+description = "An SVG path element."
+[types.pathElement.fields.type]
+type = "literal"
+required = true
+value = "path"
+[types.pathElement.fields.id]
+type = "string"
+required = false
+[types.pathElement.fields.d]
+type = "string"
+required = true
+description = "SVG path data string."
+[types.pathElement.fields.fill]
+type = "FillOrGradient"
+required = false
+[types.pathElement.fields.opacity]
+type = "number"
+required = false
+min = 0
+max = 1
+[types.pathElement.fields.stroke]
+type = "FillOrGradient"
+required = false
+[types.pathElement.fields.strokeWidth]
+type = "number"
+required = false
+aliases = ["stroke_width"]
+[types.pathElement.fields.strokeDasharray]
+type = "string"
+required = false
+aliases = ["stroke_dasharray"]
+[types.pathElement.fields.strokeLinecap]
+type = "enum"
+required = false
+values = ["butt", "round", "square"]
+aliases = ["stroke_linecap"]
+[types.pathElement.fields.strokeLinejoin]
+type = "enum"
+required = false
+values = ["miter", "round", "bevel"]
+aliases = ["stroke_linejoin"]
+[types.pathElement.fields.strokeOpacity]
+type = "number"
+required = false
+min = 0
+max = 1
+aliases = ["stroke_opacity"]
+[types.pathElement.fields.transform]
+type = "Transform"
+required = false
+
+[types.textElement]
+kind = "record"
+description = "A text element with font and optional per-character styling."
+[types.textElement.fields.type]
+type = "literal"
+required = true
+value = "text"
+[types.textElement.fields.id]
+type = "string"
+required = false
+[types.textElement.fields.content]
+type = "string"
+required = true
+[types.textElement.fields.x]
+type = "number"
+required = false
+[types.textElement.fields.y]
+type = "number"
+required = false
+[types.textElement.fields.anchor]
+type = "enum"
+required = false
+values = ["start", "middle", "end"]
+[types.textElement.fields.fill]
+type = "FillOrGradient"
+required = false
+[types.textElement.fields.font]
+type = "Font"
+required = false
+[types.textElement.fields.letterSpacing]
+type = "number"
+required = false
+aliases = ["letter_spacing"]
+[types.textElement.fields.charStyles]
+type = "array"
+required = false
+aliases = ["char_styles"]
+[types.textElement.fields.charStyles.items]
+type = "CharStyle"
+[types.textElement.fields.opacity]
+type = "number"
+required = false
+min = 0
+max = 1
+[types.textElement.fields.stroke]
+type = "FillOrGradient"
+required = false
+[types.textElement.fields.strokeWidth]
+type = "number"
+required = false
+aliases = ["stroke_width"]
+[types.textElement.fields.strokeDasharray]
+type = "string"
+required = false
+aliases = ["stroke_dasharray"]
+[types.textElement.fields.strokeLinecap]
+type = "enum"
+required = false
+values = ["butt", "round", "square"]
+aliases = ["stroke_linecap"]
+[types.textElement.fields.strokeLinejoin]
+type = "enum"
+required = false
+values = ["miter", "round", "bevel"]
+aliases = ["stroke_linejoin"]
+[types.textElement.fields.strokeOpacity]
+type = "number"
+required = false
+min = 0
+max = 1
+aliases = ["stroke_opacity"]
+[types.textElement.fields.transform]
+type = "Transform"
+required = false
+
+[types.groupElement]
+kind = "record"
+description = "A group containing child elements. Recursive."
+[types.groupElement.fields.type]
+type = "literal"
+required = true
+value = "group"
+[types.groupElement.fields.id]
+type = "string"
+required = false
+# `elements` canonical; `children` is the co-valid alias (source: 'children is alias for elements').
+[types.groupElement.fields.elements]
+type = "array"
+required = false
+aliases = ["children"]
+[types.groupElement.fields.elements.items]
+type = "Element"
+[types.groupElement.fields.fill]
+type = "FillOrGradient"
+required = false
+[types.groupElement.fields.opacity]
+type = "number"
+required = false
+min = 0
+max = 1
+[types.groupElement.fields.stroke]
+type = "FillOrGradient"
+required = false
+[types.groupElement.fields.strokeWidth]
+type = "number"
+required = false
+aliases = ["stroke_width"]
+[types.groupElement.fields.strokeDasharray]
+type = "string"
+required = false
+aliases = ["stroke_dasharray"]
+[types.groupElement.fields.strokeLinecap]
+type = "enum"
+required = false
+values = ["butt", "round", "square"]
+aliases = ["stroke_linecap"]
+[types.groupElement.fields.strokeLinejoin]
+type = "enum"
+required = false
+values = ["miter", "round", "bevel"]
+aliases = ["stroke_linejoin"]
+[types.groupElement.fields.strokeOpacity]
+type = "number"
+required = false
+min = 0
+max = 1
+aliases = ["stroke_opacity"]
+[types.groupElement.fields.transform]
+type = "Transform"
+required = false
+
+[types.useElement]
+kind = "record"
+description = "Instantiates a component from defs or imports by name."
+[types.useElement.fields.type]
+type = "literal"
+required = true
+value = "use"
+description = "Source makes this OPTIONAL; draft requires it so the discriminated union is well-formed (gap-note.md #4)."
+[types.useElement.fields.id]
+type = "string"
+required = false
+[types.useElement.fields.use]
+type = "string"
+required = true
+description = "Name of the def/import to instantiate."
+[types.useElement.fields.fill]
+type = "FillOrGradient"
+required = false
+[types.useElement.fields.opacity]
+type = "number"
+required = false
+min = 0
+max = 1
+[types.useElement.fields.stroke]
+type = "FillOrGradient"
+required = false
+[types.useElement.fields.strokeWidth]
+type = "number"
+required = false
+aliases = ["stroke_width"]
+[types.useElement.fields.strokeDasharray]
+type = "string"
+required = false
+aliases = ["stroke_dasharray"]
+[types.useElement.fields.strokeLinecap]
+type = "enum"
+required = false
+values = ["butt", "round", "square"]
+aliases = ["stroke_linecap"]
+[types.useElement.fields.strokeLinejoin]
+type = "enum"
+required = false
+values = ["miter", "round", "bevel"]
+aliases = ["stroke_linejoin"]
+[types.useElement.fields.strokeOpacity]
+type = "number"
+required = false
+min = 0
+max = 1
+aliases = ["stroke_opacity"]
+[types.useElement.fields.transform]
+type = "Transform"
+required = false
+
+# --- pipeline discriminated union (by `action`) ---
+
+[types.PipelineStep]
+kind = "discriminated-union"
+discriminator = "action"
+arms = ["centerStep", "placeStep", "groupStep", "textToPathsStep"]
+
+[types.centerStep]
+kind = "record"
+[types.centerStep.fields.action]
+type = "literal"
+required = true
+value = "center"
+[types.centerStep.fields.target]
+type = "string"
+required = true
+[types.centerStep.fields.axis]
+type = "enum"
+required = false
+values = ["x", "y", "both"]
+
+[types.placeStep]
+kind = "record"
+description = "Places an element relative to another. anyOf(below/above/left/right) -> at-least-one-of."
+[types.placeStep.fields.action]
+type = "literal"
+required = true
+value = "place"
+[types.placeStep.fields.target]
+type = "string"
+required = true
+[types.placeStep.fields.below]
+type = "string"
+required = false
+[types.placeStep.fields.above]
+type = "string"
+required = false
+[types.placeStep.fields.left]
+type = "string"
+required = false
+[types.placeStep.fields.right]
+type = "string"
+required = false
+[types.placeStep.fields.gap]
+type = "number"
+required = false
+[[types.placeStep.constraints]]
+form = "at-least-one-of"
+fields = ["below", "above", "left", "right"]
+
+[types.groupStep]
+kind = "record"
+[types.groupStep.fields.action]
+type = "literal"
+required = true
+value = "group"
+[types.groupStep.fields.targets]
+type = "array"
+required = true
+[types.groupStep.fields.targets.items]
+type = "string"
+[types.groupStep.fields.id]
+type = "string"
+required = true
+
+[types.textToPathsStep]
+kind = "record"
+[types.textToPathsStep.fields.action]
+type = "literal"
+required = true
+value = "text-to-paths"
+[types.textToPathsStep.fields.target]
+type = "string"
+required = true

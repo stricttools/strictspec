@@ -1,0 +1,44 @@
+# strictspec schema — predraw Config (paper draft)
+# Notation legend: see scene.toml header.
+# Translated from predraw/predraw/schema/config.schema.json (JSON docs).
+# NOTE: predraw has no format_version today; value 1 is a net-new gate (gap-note.md #2).
+
+[schema]
+name = "PredrawConfig"
+meta_version = 1
+format_version = 1
+document_syntax = "json"
+description = "Configuration file for predraw output settings."
+
+[root]
+kind = "record"
+
+[root.fields.outputs]
+type = "array"
+required = true
+min_items = 1
+description = "List of output render targets."
+[root.fields.outputs.items]
+type = "Output"
+
+[types.Output]
+kind = "record"
+description = "A single output render target: format, path, and rendering options."
+[types.Output.fields.format]
+type = "enum"
+required = true
+values = ["svg", "png", "webp"]
+[types.Output.fields.path]
+type = "string"
+required = true
+description = "Output file path (relative to the project directory)."
+[types.Output.fields.mode]
+type = "enum"
+required = false
+values = ["light", "dark"]
+[types.Output.fields.quality]
+type = "integer"
+required = false
+min = 1
+max = 100
+description = "Compression quality (lossy formats like webp)."
