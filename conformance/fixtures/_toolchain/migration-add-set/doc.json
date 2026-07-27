@@ -1,0 +1,5 @@
+{
+  "format_version": 1,
+  "name": "old-name",
+  "budget": { "max_cost_usd": 5.0 }
+}

@@ -1,0 +1,11 @@
+name = "migration-add-set"
+kind = "migration"
+description = "add_field + set_value end-to-end; corpus-locks the §9 path/value op-key convention."
+schema = "schema.toml"
+migrations = "."
+to = 2
+inputs = ["doc.json"]
+
+[expected]
+exit_code = 0
+output_equals = { "doc.json" = "expected.json" }

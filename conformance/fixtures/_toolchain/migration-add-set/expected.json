@@ -1,0 +1,5 @@
+{
+  "format_version": 2,
+  "name": "reviewer",
+  "budget": { "max_cost_usd": 5.0, "currency": "USD" }
+}

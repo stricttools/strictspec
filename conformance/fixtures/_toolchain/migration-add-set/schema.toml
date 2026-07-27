@@ -1,0 +1,22 @@
+name = "AddSet"
+meta_version = 1
+format_version = 2
+document_syntax = "json"
+role = "schema"
+root = "Root"
+[types.Root]
+type = "record"
+[types.Root.fields.name]
+type = "string"
+required = true
+[types.Root.fields.budget]
+type = "Budget"
+required = true
+[types.Budget]
+type = "record"
+[types.Budget.fields.max_cost_usd]
+type = "float"
+required = true
+[types.Budget.fields.currency]
+type = "string"
+required = true

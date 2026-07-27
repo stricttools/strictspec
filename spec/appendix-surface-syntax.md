@@ -335,9 +335,11 @@ The `down` taxonomy (`total`/`partial`/`irreversible`) is DECLARED by the author
 AUTHORED explicitly; the engine never derives down ops. `strictspec diff`'s DOWN-TAXONOMY VERIFICATION
 checks the DECLARATION against the corpus (a mis-declared taxonomy is
 `STRICTSPEC_DIFF_TAXONOMY_MISDECLARED`). Op keys per op: `from`/`to` (rename/move), `path` (positional
-ops), `field`/`value` (add/set), `where = { field = …, predicate = …, value/values = … }` (the
-`set_value_where`/`remove_where` predicate, restricted to the §5.2 closed condition set — predicates
-test equality and presence only).
+ops), `path`/`value` (add/set — `add_field`/`set_value` address the target field via the SAME full
+read-side `path` grammar the positional ops use, and carry the injected literal in `value`),
+`where = { field = …, predicate = …, value/values = … }` plus a `field` sub-field target for
+`set_value_where` (the `set_value_where`/`remove_where` predicate is restricted to the §5.2 closed
+condition set — predicates test equality and presence only).
 
 ## 10. Path grammar reuse
 
@@ -357,6 +359,15 @@ The surface never re-defines paths.
 - **`kind` as a separate key, and `item_type`/`.items`/`.values`/`item` element spellings.** REJECTED
   in favour of the single `type` key and the uniform `.item`/`.value`/`.fields`/`.arms`/`.elements`
   subtable sites (criterion 5).
+
+## Soft-freeze amendment log
+
+- 2026-07-27 — §9: PINNED the `add_field`/`set_value` op-key convention to `path`/`value`. Earlier
+  prose read `field`/`value` for add/set, but the shipped engine (and the migrable donor it mirrors)
+  addresses the add/set target via the SAME full read-side `path` grammar as the positional ops —
+  `field` is the sub-field selector for `set_value_where` alone. This closes an unpinned-convention gap
+  between the appendix and the implementation; the corpus-locking fixture is the
+  `migration-add-set` toolchain fixture.
 
 ## Cross-references
 
