@@ -136,8 +136,8 @@ func TestCoercers(t *testing.T) {
 		t.Fatalf("ratio.Float() = %v,%v", f, ok)
 	}
 	lf, _ := v.Field("label")
-	if s, ok := lf.String(); !ok || s != "hi" {
-		t.Fatalf("label.String() = %q,%v", s, ok)
+	if s, ok := lf.AsString(); !ok || s != "hi" {
+		t.Fatalf("label.AsString() = %q,%v", s, ok)
 	}
 	ff, _ := v.Field("flag")
 	if b, ok := ff.Bool(); !ok || !b {

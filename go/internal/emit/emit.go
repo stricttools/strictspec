@@ -327,7 +327,7 @@ func (g *goEmitter) bindExpr(t *schema.Type, valueVar string) string {
 	case schema.KindRef:
 		switch t.Ref {
 		case "string":
-			return coerce1(valueVar, "String")
+			return coerce1(valueVar, "AsString")
 		case "integer":
 			return coerce1(valueVar, "Int")
 		case "float":
@@ -345,7 +345,7 @@ func (g *goEmitter) bindExpr(t *schema.Type, valueVar string) string {
 				}
 				return g.bindExpr(named, valueVar)
 			}
-			return coerce1(valueVar, "String") // custom scalar
+			return coerce1(valueVar, "AsString") // custom scalar
 		}
 	case schema.KindArray:
 		return fmt.Sprintf("bindSlice(%s, func(e strictspec.Value) %s { return %s })",
@@ -354,7 +354,7 @@ func (g *goEmitter) bindExpr(t *schema.Type, valueVar string) string {
 		if g.intEnum(t) {
 			return coerce1(valueVar, "Int")
 		}
-		return coerce1(valueVar, "String")
+		return coerce1(valueVar, "AsString")
 	case schema.KindLiteral:
 		return coerce1(valueVar, coercerOfKind(t.Literal.Kind))
 	case schema.KindNullable:
@@ -389,7 +389,7 @@ func coercerReturnType(method string) string {
 		return "float64"
 	case "Bool":
 		return "bool"
-	default: // String, Datetime
+	default: // AsString, Datetime
 		return "string"
 	}
 }
@@ -403,7 +403,7 @@ func coercerOfKind(k doc.Kind) string {
 	case doc.Bool:
 		return "Bool"
 	default:
-		return "String"
+		return "AsString"
 	}
 }
 

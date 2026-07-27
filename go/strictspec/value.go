@@ -169,8 +169,11 @@ func (v Value) Items() []Value {
 // coercer after phase-1 validation has established the kind, so ok is true in
 // generated code; the boolean lets standalone consumers guard).
 
-// String returns the decoded (code-point) value of a string scalar.
-func (v Value) String() (string, bool) {
+// AsString returns the decoded (code-point) value of a string scalar. (Named
+// AsString, not String, so it does not collide with the fmt.Stringer convention
+// — a two-return-value String() would make Value satisfy no interface yet shadow
+// the expected single-string Stringer signature, confusing fmt and readers.)
+func (v Value) AsString() (string, bool) {
 	if v.node == nil || v.node.Kind() != doc.String {
 		return "", false
 	}
