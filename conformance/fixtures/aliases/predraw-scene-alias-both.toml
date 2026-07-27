@@ -4,7 +4,9 @@ provenance = "derived-from(examples/predraw-scene/samples/scene.invalid-alias-bo
 description = """
 A rect element supplies BOTH the alias `stroke_width` and its canonical `strokeWidth`. Aliases are
 exempt from unknown-key errors, but supplying both spellings is STRICTSPEC_ALIAS_BOTH_PRESENT. The
-path carries the matched discriminated-union arm step `(rectElement)`."""
+path carries the matched discriminated-union arm step `(rect)` — the arm IDENTIFIER (the key under
+`[types.Element.arms.rect]`), per the path grammar (appendix-rendering.md Part B: the arm step is
+the schema-declared arm identifier, not the arm's referenced type name)."""
 schema = "_schemas/predraw-scene.toml"
 input = "_inputs/predraw/scene.invalid-alias-both.json"
 
@@ -13,5 +15,5 @@ valid = false
 
 [[expected.diagnostics]]
 code = "STRICTSPEC_ALIAS_BOTH_PRESENT"
-path = "$.elements[0](rectElement)"
+path = "$.elements[0](rect)"
 slots = { alias = "stroke_width", canonical = "strokeWidth" }

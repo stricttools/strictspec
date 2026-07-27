@@ -1,5 +1,6 @@
 # Adapted from orxtra/examples/simple_workflow.toml. Valid: each task has exactly one execution
 # mode (agent + task_prompt), depends_on references resolve, no cycle.
+format_version = 1
 [workflow]
 name = "feature-pipeline"
 description = "Implement a feature with tests and lint check."

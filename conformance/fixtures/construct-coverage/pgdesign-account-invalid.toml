@@ -36,7 +36,11 @@ slots = { key = "comment" }
 [[expected.diagnostics]]
 code = "STRICTSPEC_SCALAR_LEXEME"
 path = '$.columns["id"].type'
-slots = { actual = '"bi gint"', name = "pgtype", pattern = '"^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)?(\\([0-9]+(,[0-9]+)?\\))?(\\[\\])?$"' }
+# The pgtype lexeme_rule exceeds 64 code points, so the `pattern` value slot is
+# A.4-truncated (appendix-rendering.md A.4/A.7: pattern slots are `value`
+# (string-kinded) and truncate at 64 CONTENT code points, then A.2-escape, then
+# append `...` before the closing quote).
+slots = { actual = '"bi gint"', name = "pgtype", pattern = '"^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)?(\\([0-9]+(,[0-..."' }
 
 [[expected.diagnostics]]
 code = "STRICTSPEC_SCALAR_LENGTH"

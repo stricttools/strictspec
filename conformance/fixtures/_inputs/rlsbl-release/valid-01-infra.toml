@@ -6,6 +6,7 @@
 # the document as a whole; the meta-schema pins format_version = 1 and no v1
 # release file has ever needed a bump (see gap note on the absent field).
 
+format_version = 1
 # Version bump type: patch, minor, major, infra, or prerelease
 bump = "infra"
 # Short description of this release (required)

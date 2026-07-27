@@ -1,0 +1,24 @@
+name = "changelog-commit-mode-invalid"
+category = "versioning"
+provenance = "hand-authored (JSONL byte-offset anchor exercise)"
+description = """
+A two-line JSONL changelog stream (commit-coverage mode). Line 1 is a valid non-user-facing entry.
+Line 2 gates clean (format_version = 1) but its `commits[0]` is the integer 5 where a string is
+required, so structural validation emits STRICTSPEC_TYPE_NOT_STRING with a JSONL-anchored path.
+
+This closes the deferred JSONL byte-offset item: the diagnostic path carries the `@L<line>:<byte>`
+anchor with a REAL, hand-verified byte offset. Line 2 is
+`{"format_version":1,"commits":[5],"user_facing":false}`; the `5` sits at zero-based byte offset 31
+within the line (`{`=0, `"format_version"`=1..16, `:`=17, `1`=18, `,`=19, `"commits"`=20..28, `:`=29,
+`[`=30, `5`=31), so the anchor is `@L2:31`. Line numbers are one-based; byte offsets are zero-based
+within the line (appendix-rendering.md Part B). Per-line independence: line 1 is unaffected."""
+schema = "_schemas/rlsbl-changelog-commit-mode.toml"
+input = "_inputs/changelog/invalid-commit-mode.jsonl"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_TYPE_NOT_STRING"
+path = "$.commits[0]@L2:31"
+slots = { got = "integer" }

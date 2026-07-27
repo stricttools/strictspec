@@ -1,6 +1,7 @@
 # Invalid workflow. Phase-1 types are all correct so phase-2 constraints fire. Contains four
 # strictspec-catchable violations PLUS a dependency cycle that strictspec CANNOT catch (see gap
 # note finding 4 — the expected consumer-native tail).
+format_version = 1
 [workflow]
 name = "broken-pipeline"
 description = "Demonstrates the catchable and the uncatchable."

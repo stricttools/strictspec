@@ -12,7 +12,7 @@
         "source": "saw",
         "unison": 2,
         "filter_type": "svf_bp",
-        "cutoff": 1200,
+        "cutoff": 1200.0,
         "q": 3.0,
         "attack": 0.25,
         "decay": 0.3,
@@ -26,7 +26,7 @@
       "params": {
         "source": "saw",
         "filter_type": "ladder_lp",
-        "cutoff": 700,
+        "cutoff": 700.0,
         "resonance": 0.9,
         "filter_keytrack": 0.7,
         "attack": 0.004,

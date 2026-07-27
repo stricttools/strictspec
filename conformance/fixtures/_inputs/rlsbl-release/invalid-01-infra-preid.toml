@@ -12,6 +12,7 @@
 #    which the form treats as the two-present violation only if it read fields,
 #    not elements. This false-negative-on-elements is FINDING 1.)
 
+format_version = 1
 bump = "infra"
 description = "bad: infra release cannot be a pre-release, and pypi is double-listed"
 preid = "rc"

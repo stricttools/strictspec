@@ -3,13 +3,16 @@ category = "construct-coverage"
 provenance = "derived-from(examples/rlsbl-release-file/invalid-01-infra-preid.toml, re-verified against spec)"
 description = """
 An infra release that also sets `preid` -- forbidden-when fires:
-STRICTSPEC_INTRA_FORBIDDEN_WHEN. (The document also double-lists "pypi" in include and exclude,
-which the schema's field-level mutual-exclusion form cannot catch at the element level -- the
-draft's FINDING 1; not reported here by design.) Same format_version/gate caveat as rlsbl-release-
-valid.
+STRICTSPEC_INTRA_FORBIDDEN_WHEN. The document ALSO double-lists "pypi" in include and exclude; the
+schema now declares the Phase-3.3 `collections-disjoint` form (element-level set disjointness), so
+that overlap IS caught (STRICTSPEC_INTRA_COLLECTIONS_DISJOINT) -- superseding the draft's FINDING 1,
+which described the OLD field-level mutual-exclusion form that missed element overlaps. The two
+phase-2 diagnostics fire in constraint-declaration order: forbidden-when (#2) before
+collections-disjoint (#4).
 
-Path convention: the diagnostic attaches at the offending field `$.preid` and the message's `{path}`
-slot follows it (consistent with the wavescript forbidden-when fixtures)."""
+Path convention: the forbidden-when diagnostic attaches at the offending field `$.preid`;
+collections-disjoint attaches at the root record `$` (it ranges over the sibling include/exclude
+arrays)."""
 schema = "_schemas/rlsbl-release-file.toml"
 input = "_inputs/rlsbl-release/invalid-01-infra-preid.toml"
 
@@ -20,3 +23,8 @@ valid = false
 code = "STRICTSPEC_INTRA_FORBIDDEN_WHEN"
 path = "$.preid"
 slots = { key = "preid", condition = 'bump == "infra"' }
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_INTRA_COLLECTIONS_DISJOINT"
+path = "$"
+slots = { fields = '["include", "exclude"]', value = '"pypi"', normalization = "none" }
