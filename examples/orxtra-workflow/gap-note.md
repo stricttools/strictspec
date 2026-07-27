@@ -142,3 +142,21 @@ Only finding 2 is a genuine open spec decision; the rest are documentation or
 boundary-confirmations. No new construct is required for the workflow schema to fit — the
 recursive tree, execution-mode selection, conditional requirements, and reference resolution all
 express within the current vocabulary.
+
+## RESOLUTION (Phase 3.3)
+
+- **F1 (presence-implied-variant decomposition)** — BOUNDARY-CONFIRMED. Expressible today via
+  `co-presence` + `exactly-one-of`; documentation note, no construct.
+- **F2 (value-triggered predicate tension, `retry > 0`)** — ADOPTED (equality-only). The closed
+  condition set is literal-equality/membership only; NUMERIC COMPARISON predicates are REJECTED.
+  The `retry>0` origin is reworded to `retry != 0` (with a note it relies on `retry >= 0`), so the
+  cited origin is honest (`spec/DESIGN.md` — Condition set + vocabulary table). This draft uses
+  `retry not-equals-literal 0`.
+- **F3 (computed-name disjointness, variable collisions)** — BOUNDARY-CONFIRMED. Consumer-native
+  (values-from-values is banned).
+- **F4 (DAG cycle detection)** — BOUNDARY-CONFIRMED. The expected consumer-native tail; the
+  vocabulary correctly stops at references-resolve.
+- **F5 (validation-mode `headless`)** — BOUNDARY-CONFIRMED. A deployment fact, not a document
+  property; consumer-native.
+
+VERDICT: RESOLVED (Phase 3.3).

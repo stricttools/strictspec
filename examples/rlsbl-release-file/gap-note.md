@@ -87,11 +87,21 @@ Schema: `release-file.schema.toml`. Samples: `valid-01-infra.toml`,
 
 ## Verdict
 
-FINDINGS: 3
-- F1: no `collections-disjoint` intra-document form (element-level array
-  disjointness); spec DESIGN.md's cross-field table wrongly cites rlsbl
-  include/exclude as the origin of `mutual exclusion`.
-- F2: no conditional VALUE-EQUALITY form (preid=="stable" ⟹ bump=="prerelease");
-  `conditional-required` only asserts presence of the target field.
-- F3: no "array-contains-literal" condition predicate (the Flutter gate:
-  "flutter" ∈ include ⟹ targets.flutter.mode required).
+FINDINGS: 3 — RESOLVED (Phase 3.3).
+
+## RESOLUTION (Phase 3.3)
+
+- **F1 (collections-disjoint + mutual-exclusion mis-citation)** — ADOPTED. The
+  `collections-disjoint` intra-document form is added (two sibling arrays share no element,
+  element-level, with case-fold/trim normalization; code
+  `STRICTSPEC_INTRA_COLLECTIONS_DISJOINT`). The cross-field table's origin citation is CORRECTED:
+  rlsbl include/exclude is now the origin of `collections-disjoint`, and `mutual exclusion`'s
+  origin is the field-level pgdesign body-XOR-file rule (`spec/DESIGN.md` — Cross-field vocabulary;
+  `appendix-semantics.md` 3.24).
+- **F2 (conditional value-equality)** — ADOPTED. The `conditional-value` form is added
+  (`preid=="stable" ⇒ bump=="prerelease"`; code `STRICTSPEC_INTRA_CONDITIONAL_VALUE`).
+- **F3 (array-contains-literal gate — the Flutter gate)** — REJECTED (consumer-native). One
+  consumer; in the rejection list (`spec/DESIGN.md` — vocabulary rejection rationale). Revisit on
+  recurrence.
+
+VERDICT: RESOLVED (Phase 3.3).

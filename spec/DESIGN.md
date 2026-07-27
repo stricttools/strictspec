@@ -182,14 +182,25 @@ What every emitter emits, uniformly:
 
 ## Construct set
 
-Bounded to the analyzed corpus. SOFT-FREEZE REGIME (decision 3): until the first release the
-construct set is NOT frozen — implementation-driven amendments (semantics corrections,
-error-code catalogue growth) are normal and recorded, but no NEW construct enters without the
-examples/ gap-note process. The binding freeze IS the first release. The construct-freeze gate
-is all examples/ drafts (claudestream and a private project first; the construct-only exercises for
-shared types, enum baking, and aggregates; and the BetterClaude and imagine corpus-DRAFT
-sources) coming back clean plus resolved gap notes. This SUPERSEDES the former demobl/F/step
-paper-schema precondition — those donors left the corpus.
+STATUS — FROZEN under the SOFT-FREEZE regime (decision 3), as of Phase 3.3 (2026-07-27). The
+construct-freeze GATE is MET: all fifteen examples/ drafts came back clean (or with findings
+absorbed into spec/), and every gap note carries a resolved RESOLUTION (Phase 3.3) block. The
+freeze absorbed, over its two amendment rounds: the pinned concrete TOML surface syntax
+(appendix-surface-syntax.md); the aggregate forms count-limit/sum-limit; the intra-document forms
+conditional-value and collections-disjoint; the closed six-kind gated-form condition set; and the
+enum-source selector grammar, ranges-disjoint well-formedness, migration author-supplied down-ops,
+and aggregate-selection pins. Six candidate shapes were REJECTED with recorded rationale (numeric
+comparison predicates, array-contains-literal gates, reference-target predicates, cross-scope
+existential forbidden-when, open-namespace reference resolution, enum-typed map keys). Under the
+SOFT-freeze regime this frozen set still admits implementation-driven amendments (semantics
+corrections, error-code catalogue growth) before the first release — recorded per release — but NO
+new construct enters without the examples/ gap-note process. The BINDING freeze is the first
+release.
+
+Bounded to the analyzed corpus. The construct-freeze gate was all examples/ drafts (claudestream
+and a private project first; the construct-only exercises for shared types, enum baking, and aggregates;
+and the BetterClaude and imagine corpus-DRAFT sources) coming back clean plus resolved gap notes.
+This SUPERSEDES the former demobl/F/step paper-schema precondition — those donors left the corpus.
 
 - Closed records and typed maps (distinct constructs); regex on map keys.
 - Named types; recursive references; documents are trees; a pinned max validation depth with

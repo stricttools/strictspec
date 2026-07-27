@@ -94,9 +94,15 @@ baked: [...], actual: [...]}` — a HARD ERROR in BOTH `strictspec gen` and `str
 
 ## Verdict
 
-FINDINGS: 1
+FINDINGS: 1 — RESOLVED (Phase 3.3).
 
-1. The enum-source `selector` grammar is unpinned in the read material. Recommend pinning a
-   closed selector mini-grammar (minimally: `field`, `field[].field`, nesting) in a spec
-   appendix so `STRICTSPEC_ENUMSRC_BAD_SELECTOR`'s accept/reject boundary is normative. No new
-   construct; a completeness fix to the decision-32 surface.
+## RESOLUTION (Phase 3.3)
+
+- **F1 (enum-source selector grammar unpinned)** — ADOPTED. The selector grammar is pinned in
+  `spec/appendix-surface-syntax.md` §7: a restricted projection path of key steps and `[]`
+  array-flatten steps (e.g. `sounds[].name`), with NO key wildcards, NO index selection, and NO
+  filtering; it must resolve to a flat sequence of string leaves. That grammar IS the accept/reject
+  boundary of `STRICTSPEC_ENUMSRC_BAD_SELECTOR` (`appendix-error-codes.md` §7;
+  `appendix-semantics.md` 3.21). The draft's `sounds[].name` selector is within the pinned subset.
+
+VERDICT: RESOLVED (Phase 3.3).

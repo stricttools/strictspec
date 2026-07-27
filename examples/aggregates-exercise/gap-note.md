@@ -88,13 +88,18 @@ material does not fully pin. None blocks expression; all are worth a spec decisi
 
 ## Verdict
 
-FINDINGS: 3
+FINDINGS: 3 — RESOLVED (Phase 3.3).
 
-1. Pin the `documents-in` glob anchor as document-directory-relative (determinism).
-2. Pin runtime behavior of sum-limit over a heterogeneous/`sum_field`-missing selection as a
-   hard error (a `CROSS`-area code), not a silent skip-or-zero.
-3. Document the manifest-hosts-the-aggregate pattern as the canonical shape for collection
-   aggregates.
+## RESOLUTION (Phase 3.3)
 
-All three are surface-completeness clarifications to the existing decision-23 forms; none
-requires a new construct.
+- **F1 (`documents-in` glob anchor)** — ADOPTED, with a DIFFERENT anchor than this note guessed:
+  the glob is anchored at the MANIFEST ROOT (not document-directory-relative), resolved in
+  LEXICOGRAPHIC order (`spec/DESIGN.md` — Cross-document vocabulary; `appendix-semantics.md` 3.25;
+  `appendix-surface-syntax.md` §5.1). Manifest-root anchoring keeps a committed fleet portable and
+  invocation-independent. Deviation from the note's document-directory guess is deliberate.
+- **F2 (sum-limit over a heterogeneous / `sum_field`-missing selection)** — ADOPTED. Pinned as a
+  HARD ERROR, new code `STRICTSPEC_CROSS_SUM_FIELD_MISSING` — never skip-or-zero.
+- **F3 (manifest-hosts-the-aggregate canonical shape)** — ADOPTED (documented as the canonical
+  pattern in `appendix-semantics.md` 3.25 / `spec/DESIGN.md`).
+
+VERDICT: RESOLVED (Phase 3.3).

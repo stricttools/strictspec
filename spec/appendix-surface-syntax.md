@@ -203,7 +203,7 @@ inferred from shape (resolves the shared-types-exercise notation-ambiguity findi
 | `collections-disjoint` | `left`, `right`, `normalization` |
 | `unique-by` | `collection`, `field`, `normalization` |
 | `pairwise-distinct` | `collection`, `normalization` |
-| `ranges-disjoint` | `collection`, `start`, `length`, `bounds_from` |
+| `ranges-disjoint` | `collection`, `start`, `length` |
 | `ordered-pair` | `less`, `than` |
 | `intra-document-reference` | `reference`, `resolves_into`, `resolves_by` |
 

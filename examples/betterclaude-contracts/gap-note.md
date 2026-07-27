@@ -162,3 +162,18 @@ The shared-type-file mechanism (decision 21) came back CLEAN under the heaviest 
 corpus: multi-file imports, disjoint subsets, all three shareable kinds, and composition with
 every host construct. Only finding 1 suggests a possible small vocabulary enhancement
 (enum-typed map keys); it is a DRY improvement, not a blocker, and everything expresses today.
+
+## RESOLUTION (Phase 3.3)
+
+- **F1 (enum-typed map keys / `key_type`)** — REJECTED. Single consumer; the `key_pattern` regex
+  expresses it today (and enum sourcing can bake the enum into the key regex). Map keys remain
+  regex-constrained only (`spec/DESIGN.md` — vocabulary rejection rationale;
+  `appendix-surface-syntax.md` §11). Revisit on recurrence.
+- **F2 (SessionId reused as generic UUID)** — BOUNDARY-CONFIRMED. Modeling note, not a spec gap.
+- **F3 (session layouts as an enum on the PID-session doc)** — BOUNDARY-CONFIRMED. Correct
+  decomposition.
+- **F4 (opaque transcript payload `unchecked`)** — BOUNDARY-CONFIRMED. Both opaque stances legal
+  (decision 29); this draft deliberately exercises `unchecked`, imagine exercises `consumer_check`.
+
+VERDICT: RESOLVED (Phase 3.3). Draft normalized to the pinned surface (root-as-named-type,
+kind-typed named types, `role = "..."`, uniform `.item`/`.value` sites).

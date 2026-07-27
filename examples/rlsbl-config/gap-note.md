@@ -113,10 +113,19 @@ Schema: `config.schema.toml`. Samples: `valid-01.json` (rlsbl's own config),
 
 ## Verdict
 
-FINDINGS: 3
-- F1: `intra-document-references` cannot carry a predicate on the resolved target
-  (the `wraps`→binary join).
-- F2: no cross-scope existential `forbidden-when` (launcher under
-  publish_mode==none).
-- F3: `depends_on` resolves against an OPEN namespace (in-document entries ∪
-  tool-runtime built-in checks); no single form or resolver covers it.
+FINDINGS: 3 — RESOLVED (Phase 3.3).
+
+## RESOLUTION (Phase 3.3)
+
+All three are REJECTED (recorded in `spec/DESIGN.md` — vocabulary rejection rationale; revisit at
+the rlsbl adoption wave). They are consumer-native for now:
+
+- **F1 (reference-target predicate, `wraps`→binary join)** — REJECTED.
+  `intra-document-reference` carries no predicate on the resolved target; consumer-native.
+- **F2 (cross-scope existential forbidden-when, launcher under `publish_mode==none`)** — REJECTED.
+  No cross-scope existential form; consumer-native.
+- **F3 (open-namespace reference resolution, `depends_on`)** — REJECTED. The reference target set
+  spanning in-document entries ∪ tool-runtime built-in checks is not covered by a single form or
+  resolver; consumer-native (or a bespoke `rlsbl-registered-checks` resolver at adoption).
+
+VERDICT: RESOLVED (Phase 3.3).

@@ -108,8 +108,18 @@ records still differ, so imports only dedupe the leaves, not the split.)
 
 ## Verdict
 
-CLEAN. The mode split resolves cleanly to two consumer-selected schemas (explicit
-mode selection), and every field/constraint maps onto an existing construct. One
+CLEAN — RESOLVED (Phase 3.3). The mode split resolves cleanly to two consumer-selected schemas
+(explicit mode selection), and every field/constraint maps onto an existing construct. One
 ergonomics note logged (forbidden-field would give a better message than
 unknown-key for changeset-file `commits`), but it changes no verdict and needs no
 new expressive power — not counted as a finding.
+
+## RESOLUTION (Phase 3.3)
+
+- **Two-schema mode split** — BOUNDARY-CONFIRMED. Explicit mode selection (the mode is not in the
+  document); the correct modeling. Both schemas normalized to the pinned surface.
+- **Forbidden-field ergonomics note** — NOT ADOPTED. A present `commits` in changeset-file mode is
+  `STRICTSPEC_KEY_UNKNOWN` (verdict identical); no `forbidden-field` construct is added. Recorded,
+  not a finding.
+
+VERDICT: RESOLVED (Phase 3.3).

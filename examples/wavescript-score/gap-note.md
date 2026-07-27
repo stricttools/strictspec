@@ -193,15 +193,29 @@ two sibling scopes — not currently in the language).
 
 ## Verdict
 
-FINDINGS: 4
-- F1 (structural, central): the registry gates on EFFECTIVE (explicit-or-default)
-  values; strictspec deleted defaults and gates on WRITTEN values. Agreement on
-  the current corpus is coincidental, not carried by the vocabulary. Needs an
-  owner decision (narrow the format, or admit a gate-only literal fallback).
-- F2: `Pin` is a conditional literal constant with no vocabulary form; add a
-  `conditional-literal` intra-document form.
-- F3: no negative-polarity (`unless` / `not_in`) condition; add it to
-  conditional-required / forbidden-when to avoid brittle complement enumeration.
-- F4: the effective preset is a cross-record (and sometimes cross-document) merge
-  the intra-document forms cannot validate; consumer-native or a new two-scope
-  form.
+FINDINGS: 4 — RESOLVED (Phase 3.3).
+
+## RESOLUTION (Phase 3.3)
+
+- **F1 (effective-value gates vs deleted defaults)** — RESOLVED via ADOPTION-TIME FORMAT
+  NARROWING (decision 30 NOT reopened; no spec change). The registry gates on EFFECTIVE
+  (default-backed) values; strictspec gates on WRITTEN values only. At wavescript adoption its
+  format NARROWS: the gate-relevant optional keys become REQUIRED-EXPLICIT in a `format_version`
+  2→3 migration that uses the `merge_defaults` op to stamp the current effective (default) values
+  into existing documents. After the migration, every gate key is written, so effective == written
+  and strictspec's conditions carry the registry's semantics exactly. No gate-only default
+  fallback is admitted. (Recorded here per Phase 3.3 cluster 4; a one-line note is also in the
+  root roadmap's wavescript step.)
+- **F2 (Pin = conditional literal value)** — ADOPTED. The `conditional-value` form is added: a gate
+  condition ⇒ a target field equals a LITERAL (`spec/DESIGN.md` — Cross-field vocabulary;
+  `appendix-semantics.md` 3.24; code `STRICTSPEC_INTRA_CONDITIONAL_VALUE`). The draft's fictional
+  `conditional-literal` becomes the real `conditional-value` form in normalization.
+- **F3 (negative-polarity condition)** — ADOPTED. The closed gated-form condition set now includes
+  `not-equals-literal` and `not-in-literal-set`, so the brittle complement enumerations are
+  replaced by direct negative conditions (`spec/DESIGN.md` — Condition set; `appendix-semantics.md`
+  3.24). The draft's complement `in`-lists are rewritten to `not-in` where they express an
+  `unless`.
+- **F4 (effective preset is a cross-record/cross-document merge)** — REJECTED (consumer-native).
+  A two-scope merge check is not added; it stays consumer-native over the typed values (the tail).
+
+VERDICT: RESOLVED (Phase 3.3).

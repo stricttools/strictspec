@@ -129,7 +129,26 @@ check-declaration order (all attach at the root record):
 
 ## Verdict
 
-FINDINGS: 6 (1 notation-surface gap; 1 corrected premise about x-lock; 1 spec ambiguity to
-resolve — ranges-disjoint in-bounds; 1 prose-vs-enforced observation; 1 confirmed consumer-native
-tail; 1 wiring observation). None block the construct set — the three schemas translate
-completely. Findings 1 and 3 are spec-side items to resolve before the construct freeze.
+FINDINGS: 6 — RESOLVED (Phase 3.3).
+
+## RESOLUTION (Phase 3.3)
+
+- **F1 (surface syntax unpinned)** — ADOPTED. The concrete TOML surface is now pinned in
+  `spec/appendix-surface-syntax.md` (batch-3 kind-typed named types + root-as-named-type; the
+  single pinned spelling). This draft is normalized to it.
+- **F2 (x-lock is structural, not a keyword)** — BOUNDARY-CONFIRMED. Ordinary structural data
+  (a closed record + array); the only rule on it (`partA < partB`) is `ordered-pair`. No
+  vocabulary form.
+- **F3 (ranges-disjoint in-bounds ambiguity)** — ADOPTED/pinned. `ranges-disjoint` is pinned as:
+  each range FIRST well-formed per ordered-pair (start < end), THEN half-open disjointness. The
+  in-bounds-against-a-sibling-array-length leg (`start+len <= len(palette)`) is NOT part of the
+  form — it is consumer-native (`spec/DESIGN.md` ranges-disjoint clarification;
+  `appendix-semantics.md` 3.24). The draft's `bounds_from` operand is dropped in normalization.
+- **F4 (prose-vs-enforced widening)** — BOUNDARY-CONFIRMED. strictspec strengthens the schema
+  (unique-by on zOrder, ordered-pair on pairings); a narrowing vs the current generator, recorded.
+- **F5 (cross-record conditional blinkMode)** — REJECTED (consumer-native). Reference-target /
+  discriminator-of-referenced-record predicates are in the rejection list
+  (`spec/DESIGN.md` — vocabulary rejection rationale); the bespoke tail, as designed.
+- **F6 (character-preview wiring)** — BOUNDARY-CONFIRMED. Observation only.
+
+VERDICT: RESOLVED (Phase 3.3).

@@ -170,7 +170,11 @@ ADOPTION WAVE 1:
    gate discharges via the first real adjudication file; the budget-rename "flagship migration"
    is a conformance FIXTURE, not a live migration.
 4. wavescript — replaces its strictdecode/registry validation; its 158-pair golden
-   render-hash suite is the regression oracle; synthesis engine/specgen stay consumer-side.
+   render-hash suite is the regression oracle; synthesis engine/specgen stay consumer-side. Note
+   (decision 30, not reopened): the registry gates on EFFECTIVE (default-backed) values but
+   strictspec gates on WRITTEN values only, so at adoption wavescript's format NARROWS —
+   gate-relevant optional keys become required-explicit via a `format_version` 2→3 migration that
+   uses `merge_defaults` to stamp current effective values into existing scores.
 
 ADOPTION WAVE 2:
 
@@ -209,20 +213,21 @@ always-latest rule.
 
 ## Status
 
-Design phase. Next steps, in phase order:
+CONSTRUCT SET FROZEN (soft-freeze regime, decision 3) as of Phase 3.3 (2026-07-27): spec/ is
+redrafted in full (Phase 1), all fifteen examples/ drafts came back clean with their gap notes
+resolved (Phase 2), and Phase 3.3 absorbed every finding into spec/ — the concrete TOML surface
+syntax is pinned (appendix-surface-syntax.md), the vocabulary gained conditional-value +
+collections-disjoint + the closed condition set, and the aggregate/ranges/migration/enum-selector/
+rendering pins landed. NEXT: the scaffolding and build phases. The BINDING freeze remains the first
+release (no new construct enters without the examples/ gap-note process; implementation-driven
+amendments before the first release are still normal and recorded).
 
-1. Redraft spec/ in full (primitives appendix, canonical-serialization appendix, the
-   message-template appendix, generated API contract, union diagnostics, the closed op set —
-   including the pinned `merge_defaults` semantics — the domain-check architecture, the
-   version-boundary invariant, the accepted-set formal semantics with the undecidability catalog
-   and the per-construct semantics entries and the certificate format written now (the
-   proof-object format and model-search order deferred to the unbundled future analyzer,
-   decision 25), and the negotiation envelope are mandatory sections).
-2. Draft examples/ — claudestream and a private project first — and resolve the gap notes to reach
-   the construct-freeze gate (soft-freeze regime, decision 3).
+Remaining phases, in order:
+
+1. ~~Redraft spec/ in full.~~ DONE (Phase 1).
+2. ~~Draft examples/ and resolve the gap notes to reach the construct-freeze gate.~~ DONE
+   (Phase 2 + Phase 3.3; construct set frozen under the soft-freeze regime).
 3. Scaffold the monorepo (the Go-tag question is closed — see Pre-scaffolding verification).
 4. Build toward the acceptance test.
-5. A SINGLE release at the very end.
+5. A SINGLE release at the very end (this is the binding construct-set freeze).
 6. Then the adoption waves (wave 1, wave 2, late).
-
-The construct set freezes at the first release, not before.

@@ -106,4 +106,15 @@ subset and its exact coverage is a consumer decision.
 
 ## Verdict
 
-CLEAN
+CLEAN — RESOLVED (Phase 3.3).
+
+## RESOLUTION (Phase 3.3)
+
+- The custom-scalar registration surface (`[[scalars]]` with `name`/`base`/`lexeme_rule`/`length`/
+  `bindings`/`rendering`) is pinned in `spec/appendix-surface-syntax.md` §8; the three scalars,
+  their honesty spectrum, and their five `STRICTSPEC_SCALAR_*` codes all confirmed CLEAN. The
+  manifest and schema fragments are normalized to the pinned surface.
+- BOUNDARY-CONFIRMED: `pgtype` surface-regex partiality and `sql-expression` opacity are the
+  honest limit of regex refinement, ceded to consumer-native checks by declaration.
+
+VERDICT: RESOLVED (Phase 3.3).

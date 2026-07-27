@@ -150,3 +150,25 @@ FINDINGS: 5
 All five are scoping/boundary observations for a FUTURE adoption evaluation, not construct gaps.
 No new construct is required: JSONL per-line versioning, discriminated unions (incl. nullable),
 regex-keyed maps, and module-opaque leaves all express the imagine document family cleanly.
+
+## RESOLUTION (Phase 3.3)
+
+All five findings are BOUNDARY-CONFIRMED (scoping observations for a future adoption evaluation,
+not construct gaps):
+
+- **F1 (engineVersion/moduleVersion overlap format_version)** — BOUNDARY-CONFIRMED. Unify at
+  adoption; the duplication is a paper-drafting artifact.
+- **F2 (field-level immutability)** — BOUNDARY-CONFIRMED. An op-layer relation across two
+  documents, outside single-document validation.
+- **F3 (module-opaque payloads)** — BOUNDARY-CONFIRMED. The cartridge boundary; `opaque` +
+  `consumer_check` is the faithful modeling.
+- **F4 (closed error enum)** — BOUNDARY-CONFIRMED. Philosophies match; enums intersect only on
+  genuine document-validation errors.
+- **F5 (JSONL rotation/pruning)** — BOUNDARY-CONFIRMED. Filesystem lifecycle, not a schema
+  property.
+
+Datetime coverage note (Phase 3.3 cluster 5b): `Instant` (offset `datetime`) is exercised here and
+across the betterclaude contracts; the dedicated `examples/datetime-exercise/` additionally
+exercises `date`, `time`, and local `datetime`. Draft normalized to the pinned surface.
+
+VERDICT: RESOLVED (Phase 3.3).

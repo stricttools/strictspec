@@ -108,8 +108,21 @@ ergonomic cost.
 
 ## Verdict
 
-FINDINGS: 6 (1 shared notation-surface gap; 2 adoption preconditions that are deliberate
-exclusions working as designed — net-new gate, defaults removed; 1 acceptable narrowing for the
-non-uniform discriminator; 1 intended behavior change — alias both-present; 1 minor ergonomic
-observation). The scene schema — recursion, node-kind union, tuples, NUMBER, aliases — translates
-completely with no construct missing. Finding 1 is the only spec-side item (shared with siblings).
+FINDINGS: 6 — RESOLVED (Phase 3.3).
+
+## RESOLUTION (Phase 3.3)
+
+- **F1 (surface syntax unpinned)** — ADOPTED. Pinned in `spec/appendix-surface-syntax.md`. Draft
+  normalized.
+- **F2 (net-new format_version gate)** — BOUNDARY-CONFIRMED. Bootstrap contract (decision 13/34);
+  adoption precondition, not a gap.
+- **F3 (source `default` keys removed)** — BOUNDARY-CONFIRMED. Deliberate exclusion (decision 30);
+  defaults move to consumer rendering code.
+- **F4 (non-uniform discriminator, `useElement`)** — BOUNDARY-CONFIRMED. Acceptable narrowing
+  (`type` made required); discriminate-by-presence is NOT added (single field, single consumer).
+- **F5 (alias both-present hard error)** — BOUNDARY-CONFIRMED. Intended behavior change; the
+  ambiguity strictspec forbids.
+- **F6 (no record composition / mixins)** — BOUNDARY-CONFIRMED. Composition beyond named-type
+  import is deliberately excluded; ergonomic cost recorded.
+
+VERDICT: RESOLVED (Phase 3.3).
