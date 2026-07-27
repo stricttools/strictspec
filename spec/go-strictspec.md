@@ -1,8 +1,7 @@
 ---
 title: go/strictspec
-description: "Package strictspec is the PUBLIC Go runtime: the stable surface that generated strictspec validator code imports (go/DESIGN.md, "Runtime subpackage")."
+description: "Public Go runtime API for strictspec — the semver-bound surface generated validators import: the diagnostics model, lossless document loading for JSON, TOML, and JSONL, the version-pairing guard, and the tagged-value validation entry points with their coercers."
 generated: true
-seeded: true
 nav_group: "API Reference"
 nav_order: 1
 ---
