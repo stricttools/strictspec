@@ -1,0 +1,20 @@
+# META-SCHEMA REJECTION FIXTURE.
+# An opaque JSON leaf that declares `unchecked = true` but omits the mandatory
+# `unchecked_reason`. Validating this SCHEMA must hard-error:
+#   STRICTSPEC_SCHEMA_UNCHECKED_NO_REASON · path $.types.ToolSchema.fields.input_schema
+# (decision 29). The reason is mandatory so the blind spot is legible in review.
+
+[schema]
+name = "AgentDefinition"
+meta_version = 1
+format_version = 1
+document_syntax = "json"
+description = "Rejection fixture — unchecked without reason."
+
+[types.ToolSchema]
+kind = "record"
+[types.ToolSchema.fields.input_schema]
+type = "opaque"
+required = false
+unchecked = true
+# MISSING: unchecked_reason = "..."  — this is the meta-schema violation.

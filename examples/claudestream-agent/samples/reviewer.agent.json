@@ -1,0 +1,36 @@
+{
+  "format_version": 1,
+  "name": "reviewer",
+  "prompt_template": "You are a code reviewer for {repo}. Focus on {focus}.",
+  "version": "1.2.0",
+  "description": "Reviews diffs and flags regressions.",
+  "model": "opus",
+  "tools": [
+    {
+      "name": "grep",
+      "description": "Search the working tree.",
+      "input_schema": {
+        "type": "object",
+        "properties": { "pattern": { "type": "string" } },
+        "required": ["pattern"]
+      },
+      "server": "local"
+    }
+  ],
+  "sandbox": {
+    "tools": ["Read", "Bash"],
+    "write_paths": ["/project"]
+  },
+  "budget": {
+    "cost_thresholds": [1.0, 5.0, 10.0],
+    "turn_thresholds": [50],
+    "token_thresholds": []
+  },
+  "stream": {
+    "verbose": true,
+    "include_partial_messages": true,
+    "include_hook_events": false,
+    "replay_user_messages": false,
+    "exclude_dynamic_prompt_sections": false
+  }
+}

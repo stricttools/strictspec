@@ -1,0 +1,5 @@
+{
+  "name": "reviewer",
+  "prompt_template": "You are a reviewer.",
+  "version": "1.2.0"
+}
