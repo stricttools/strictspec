@@ -15,11 +15,13 @@ parser is built on the `toml-eslint-parser` library (AST ranges + text-splicing 
 proven by strictcli's TS implementation): lossless round-trips come from splicing edits back
 into the original text using the parser's node ranges. This REPLACES the former claim that a
 from-scratch lossless TOML parser was required because "no suitable lossless library exists" —
-that claim was falsified in-ecosystem. Decision adopted; spike validation in
-conformance/spikes/toml-eslint-parser/ (if that spike returns a limitation verdict, the
-fallback is the from-scratch parser). The parser is conformance-tested against the Go and
-Python substrates for verdict/code/path/message identity; round-trip fidelity remains
-within-backend, like every backend.
+that claim was falsified in-ecosystem. CONFIRMED by the validation spike in
+conformance/spikes/toml-eslint-parser/ (24 tests passing; VERDICT: CONFIRMS). One caveat the
+spike surfaced: `node.number` is normalized (underscores stripped), so range-based splicing is
+the only byte-lossless path — the write path must serialize from the source range, never from
+`.number`/`.value` (already how strictcli operates). The parser is conformance-tested against
+the Go and Python substrates for verdict/code/path/message identity; round-trip fidelity
+remains within-backend, like every backend.
 
 ## Entry points (per the Generated API Contract)
 
