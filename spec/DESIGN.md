@@ -465,6 +465,16 @@ Rules:
   unsupported = hard error using the three-message pattern with a STRUCTURED remediation
   payload: got format_version, expected format_version, schema id, migration-set id, and the
   exact `strictspec migrate` invocation. No inference, no ranges, no legacy modes.
+- GATE-TERMINAL (soft-freeze amendment, 2026-07-27): a gate failure TERMINATES that document's
+  validation — no structural (phase 1) or domain (phase 2) diagnostics are emitted for a document
+  whose gate did not pass. The gate runs first and, on failure, is the SOLE diagnostic for that
+  document (per JSONL line for streams). This pins the previously-implicit ordering (the generated
+  API contract says the gate "runs first, before structural validation"; this amendment states
+  that a failing gate also stops the pass). Rationale: a document at the wrong `format_version` may
+  have an entirely different shape; running structural checks against the current schema would emit
+  misleading cascade diagnostics. The remediation is to migrate, not to fix individual fields. The
+  document-root `format_version` key is itself EXEMPT from the unknown-key invariant (it is the
+  language-level gate field, never a schema-declared field unless the schema also models it).
 - NORMATIVE BUMP RULE (decision 13): any schema edit that SHRINKS the accepted-document set
   obligates a `format_version` bump — tightening a constraint, removing an enum arm (including
   a sourced-enum arm removed or gone stale), removing an alias, making an optional field
