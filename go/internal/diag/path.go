@@ -28,6 +28,12 @@ type Key struct{ Name string }
 // Index is a zero-based array element, rendered "[n]".
 type Index struct{ N int }
 
+// MapKey is a TYPED-MAP key, rendered ALWAYS in the bracketed, quoted map-key
+// form `["<escaped>"]` (appendix-rendering.md Part B: map-key steps quote the
+// key unconditionally, unlike record Key steps which switch to dotted form when
+// ident-shaped). Use MapKey for typed-map entries; use Key for record fields.
+type MapKey struct{ Name string }
+
 // Arm disambiguates which discriminated-union arm produced a nested diagnostic,
 // rendered "(name)". The arm name is always the schema-declared arm identifier.
 type Arm struct{ Name string }
@@ -40,10 +46,11 @@ type JSONLAnchor struct {
 	Offset int
 }
 
-func (Root) isStep()  {}
-func (Key) isStep()   {}
-func (Index) isStep() {}
-func (Arm) isStep()   {}
+func (Root) isStep()   {}
+func (Key) isStep()    {}
+func (Index) isStep()  {}
+func (MapKey) isStep() {}
+func (Arm) isStep()    {}
 
 // Render produces the path string per the Part B grammar.
 func (p Path) Render() string {
@@ -65,6 +72,10 @@ func (p Path) Render() string {
 			out = append(out, '[')
 			out = strconv.AppendInt(out, int64(st.N), 10)
 			out = append(out, ']')
+		case MapKey:
+			out = append(out, '[', '"')
+			out = append(out, EscapeString(st.Name)...)
+			out = append(out, '"', ']')
 		case Arm:
 			out = append(out, '(')
 			out = append(out, st.Name...)
