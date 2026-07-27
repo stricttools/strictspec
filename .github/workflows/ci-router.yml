@@ -111,10 +111,10 @@ jobs:
     - run: uv python install 3.13
     - name: Sync conformance project
       run: uv sync --locked
+      # All four targets are declared stubs (implemented=false), so every case
+      # reports UNIMPLEMENTED and the harness exits green as long as no fixture is
+      # malformed. When a target implementation lands, mismatches will fail here.
     - name: Run conformance harness
-        # All four targets are declared stubs (implemented=false), so every case
-        # reports UNIMPLEMENTED and the run exits green as long as no fixture is
-        # malformed. When a target implementation lands, mismatches will fail here.
       run: uv run strictspec-conformance
     - name: Run harness tests
       run: uv run pytest -q
