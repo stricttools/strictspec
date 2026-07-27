@@ -27,31 +27,31 @@ func TestRenderGolden(t *testing.T) {
 		want string
 	}{
 		{
-			name: "TYPE_NOT_INTEGER: string slot double-quoted",
+			name: "TYPE_NOT_INTEGER: string slot renders bare (prose, Model B)",
 			diag: diag.Diagnostic{
 				Code:  "STRICTSPEC_TYPE_NOT_INTEGER",
 				Path:  diag.NewPath(diag.Key{Name: "count"}),
 				Slots: slots("got", diag.SlotString{S: "float"}),
 			},
-			want: `Expected an integer at $.count, got "float".`,
+			want: `Expected an integer at $.count, got float.`,
 		},
 		{
-			name: "TYPE_MISMATCH: two string slots",
+			name: "TYPE_MISMATCH: two string slots render bare",
 			diag: diag.Diagnostic{
 				Code:  "STRICTSPEC_TYPE_MISMATCH",
 				Path:  diag.NewPath(diag.Key{Name: "canvas"}),
 				Slots: slots("expected", diag.SlotString{S: "record"}, "got", diag.SlotString{S: "array"}),
 			},
-			want: `Expected "record" at $.canvas, got "array".`,
+			want: `Expected record at $.canvas, got array.`,
 		},
 		{
-			name: "KEY_UNKNOWN: no suggestion (empty)",
+			name: "KEY_UNKNOWN: no suggestion (empty); key string slot bare",
 			diag: diag.Diagnostic{
 				Code:  "STRICTSPEC_KEY_UNKNOWN",
 				Path:  diag.NewPath(diag.Key{Name: "config"}),
 				Slots: slots("key", diag.SlotString{S: "colour"}),
 			},
-			want: `Unknown key "colour" at $.config.`,
+			want: `Unknown key colour at $.config.`,
 		},
 		{
 			name: "KEY_UNKNOWN: one suggestion",
@@ -63,7 +63,7 @@ func TestRenderGolden(t *testing.T) {
 					"suggestion", diag.SlotSuggestion{Unknown: "colr", Candidates: []string{"color", "width", "height"}},
 				),
 			},
-			want: `Unknown key "colr" at $.config. Did you mean color?`,
+			want: `Unknown key colr at $.config. Did you mean color?`,
 		},
 		{
 			name: "VALUE_NUM_TOO_SMALL: integer value slots",
@@ -84,13 +84,16 @@ func TestRenderGolden(t *testing.T) {
 			want: `String at $.bio has 200 code points; maximum is 64.`,
 		},
 		{
-			name: "VALUE_STRING_REGEX: value string quoted + regex pattern string quoted (A.7)",
+			name: "VALUE_STRING_REGEX: value string quoted + regex pattern is a value slot, quoted (A.7)",
 			diag: diag.Diagnostic{
 				Code: "STRICTSPEC_VALUE_STRING_REGEX",
 				Path: diag.NewPath(diag.Key{Name: "slug"}),
 				Slots: slots(
 					"actual", diag.SlotValue{V: diag.StringVal("Hello World")},
-					"pattern", diag.SlotString{S: `^[a-z-]+$`},
+					// pattern is re-typed string -> value (string-kinded) under Model B,
+					// so it still renders double-quoted per A.1 while ordinary string
+					// slots render bare.
+					"pattern", diag.SlotValue{V: diag.StringVal(`^[a-z-]+$`)},
 				),
 			},
 			want: `String "Hello World" at $.slug does not match the required pattern "^[a-z-]+$".`,
@@ -123,10 +126,10 @@ func TestRenderGolden(t *testing.T) {
 					"invocation", diag.SlotString{S: "strictspec migrate --schema canvas --to 3 doc.json"},
 				),
 			},
-			want: "Document `format_version` is 2, but schema canvas accepts exactly 3 (migration set canvas_v2_v3). Run: \"strictspec migrate --schema canvas --to 3 doc.json\"",
+			want: "Document `format_version` is 2, but schema canvas accepts exactly 3 (migration set canvas_v2_v3). Run: strictspec migrate --schema canvas --to 3 doc.json",
 		},
 		{
-			name: "INTRA_FORBIDDEN_WHEN: condition inserted verbatim (Part D), key quoted",
+			name: "INTRA_FORBIDDEN_WHEN: condition inserted verbatim (Part D), key string slot bare",
 			diag: diag.Diagnostic{
 				Code: "STRICTSPEC_INTRA_FORBIDDEN_WHEN",
 				Path: diag.NewPath(diag.Key{Name: "legacy"}),
@@ -135,7 +138,7 @@ func TestRenderGolden(t *testing.T) {
 					"condition", diag.SlotString{S: `mode == "strict"`},
 				),
 			},
-			want: `Field "legacy" at $.legacy is forbidden when mode == "strict".`,
+			want: `Field legacy at $.legacy is forbidden when mode == "strict".`,
 		},
 		{
 			name: "INTRA_EXACTLY_ONE_OF: two list slots",
@@ -181,7 +184,7 @@ func TestRenderGolden(t *testing.T) {
 					"detail", diag.SlotString{S: "unexpected end of input"},
 				),
 			},
-			want: `JSONL parse error on line 3 at $@L3:12: "unexpected end of input".`,
+			want: `JSONL parse error on line 3 at $@L3:12: unexpected end of input.`,
 		},
 		{
 			name: "MIGRATE_UNWRAP_NOT_SINGLETON: int slot",
@@ -217,7 +220,7 @@ func TestRenderGolden(t *testing.T) {
 			want: `Expected the literal 1 at $.version, got 2.`,
 		},
 		{
-			name: "INTRA_UNIQUE_BY: value + string field + string normalization",
+			name: "INTRA_UNIQUE_BY: value slot quoted; field + normalization string slots bare",
 			diag: diag.Diagnostic{
 				Code: "STRICTSPEC_INTRA_UNIQUE_BY",
 				Path: diag.NewPath(diag.Key{Name: "users"}),
@@ -227,7 +230,7 @@ func TestRenderGolden(t *testing.T) {
 					"normalization", diag.SlotString{S: "case-fold"},
 				),
 			},
-			want: `Duplicate value "alice" for unique-by "username" at $.users (normalization: "case-fold").`,
+			want: `Duplicate value "alice" for unique-by username at $.users (normalization: case-fold).`,
 		},
 	}
 

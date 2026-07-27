@@ -13,9 +13,11 @@ package diag
 //     carries the unknown token and candidate set (Part C did-you-mean).
 type Slot interface{ isSlot() }
 
-// SlotString fills a `string`-typed slot. Renders double-quoted with A.2
-// escaping and A.4 truncation. Regex-valued slots (`pattern`) are ordinary
-// string slots (A.7): no verbatim special case.
+// SlotString fills a `string`-typed slot. A `string` slot is a PROSE insertion
+// (appendix-error-codes.md §2, appendix-rendering.md A.7): rendered BARE, never
+// quoted or escaped — kind-names, field names, remediation commands, and the
+// pre-composed {condition} expression (Part D). Document-derived values,
+// INCLUDING regex `pattern` slots, use SlotValue and render quoted per A.1.
 type SlotString struct{ S string }
 
 // SlotInt fills an `int`-typed slot. Renders as decimal digits (A.1 integer).

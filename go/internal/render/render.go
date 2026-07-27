@@ -52,21 +52,6 @@ func Render(d diag.Diagnostic) string {
 				panic(fmt.Sprintf("render: code %s slot \"suggestion\" must be a SlotSuggestion, got %T", d.Code, slot))
 			}
 			return renderSuggestion(sug)
-		case "condition":
-			// {condition} is a pre-composed expression (Part D gated condition)
-			// or a claim (STRICTSPEC_DIFF_*). It is inserted VERBATIM, NOT
-			// double-quoted like an ordinary string slot: re-quoting would
-			// double-quote the inner string literals it already contains
-			// (appendix-rendering.md Part D).
-			slot, ok := d.Slots["condition"]
-			if !ok {
-				panic(fmt.Sprintf("render: code %s missing required slot %q", d.Code, "condition"))
-			}
-			s, ok := slot.(diag.SlotString)
-			if !ok {
-				panic(fmt.Sprintf("render: code %s slot \"condition\" must be a SlotString (verbatim), got %T", d.Code, slot))
-			}
-			return s.S
 		default:
 			slot, ok := d.Slots[name]
 			if !ok {
@@ -113,7 +98,13 @@ func validateSlots(d diag.Diagnostic, placeholders map[string]bool) {
 func renderSlot(code, name string, slot diag.Slot) string {
 	switch s := slot.(type) {
 	case diag.SlotString:
-		return renderQuotedString(s.S)
+		// A `string` slot is a PROSE insertion (appendix-error-codes.md §2,
+		// appendix-rendering.md A.7): rendered BARE, never quoted or escaped.
+		// This covers kind-names, field names, remediation commands, and the
+		// pre-composed {condition} expression (Part D), whose inner literals are
+		// already A.1-rendered and must not be re-quoted. Document-derived values
+		// (including regex patterns) are SlotValue, rendered quoted per A.1.
+		return s.S
 	case diag.SlotInt:
 		return strconv.FormatInt(s.N, 10)
 	case diag.SlotCode:

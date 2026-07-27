@@ -44,7 +44,7 @@ func TestHarnessParity(t *testing.T) {
 				Path:  diag.NewPath(diag.Key{Name: "count"}),
 				Slots: slots("got", diag.SlotString{S: "float"}),
 			},
-			harnessSlots: map[string]string{"path": "$.count", "got": `"float"`},
+			harnessSlots: map[string]string{"path": "$.count", "got": `float`},
 		},
 		{
 			diag: diag.Diagnostic{
@@ -55,7 +55,7 @@ func TestHarnessParity(t *testing.T) {
 					"suggestion", diag.SlotSuggestion{Unknown: "colr", Candidates: []string{"color", "width", "height"}},
 				),
 			},
-			harnessSlots: map[string]string{"path": "$.config", "key": `"colr"`, "suggestion": " Did you mean color?"},
+			harnessSlots: map[string]string{"path": "$.config", "key": `colr`, "suggestion": " Did you mean color?"},
 		},
 		{
 			diag: diag.Diagnostic{
@@ -63,7 +63,8 @@ func TestHarnessParity(t *testing.T) {
 				Path: diag.NewPath(diag.Key{Name: "slug"}),
 				Slots: slots(
 					"actual", diag.SlotValue{V: diag.StringVal("Hello World")},
-					"pattern", diag.SlotString{S: `^[a-z-]+$`},
+					// pattern re-typed string -> value (string-kinded) under Model B.
+					"pattern", diag.SlotValue{V: diag.StringVal(`^[a-z-]+$`)},
 				),
 			},
 			harnessSlots: map[string]string{"path": "$.slug", "actual": `"Hello World"`, "pattern": `"^[a-z-]+$"`},
@@ -101,7 +102,7 @@ func TestHarnessParity(t *testing.T) {
 			},
 			harnessSlots: map[string]string{
 				"got": "2", "schema": "canvas", "expected": "3", "migset": "canvas_v2_v3",
-				"invocation": `"strictspec migrate --schema canvas --to 3 doc.json"`,
+				"invocation": `strictspec migrate --schema canvas --to 3 doc.json`,
 			},
 		},
 		{
@@ -113,7 +114,7 @@ func TestHarnessParity(t *testing.T) {
 					"condition", diag.SlotString{S: `mode == "strict"`},
 				),
 			},
-			harnessSlots: map[string]string{"path": "$.legacy", "key": `"legacy"`, "condition": `mode == "strict"`},
+			harnessSlots: map[string]string{"path": "$.legacy", "key": `legacy`, "condition": `mode == "strict"`},
 		},
 		{
 			diag: diag.Diagnostic{
@@ -143,7 +144,7 @@ func TestHarnessParity(t *testing.T) {
 					"detail", diag.SlotString{S: "unexpected end of input"},
 				),
 			},
-			harnessSlots: map[string]string{"path": "$@L3:12", "line": "3", "detail": `"unexpected end of input"`},
+			harnessSlots: map[string]string{"path": "$@L3:12", "line": "3", "detail": `unexpected end of input`},
 		},
 		{
 			diag: diag.Diagnostic{

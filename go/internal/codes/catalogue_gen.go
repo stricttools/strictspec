@@ -786,7 +786,7 @@ var catalogue = map[string]Entry{
 			{Name: "actual", Type: SlotTypeValue},
 			{Name: "path", Type: SlotTypePath},
 			{Name: "name", Type: SlotTypeIdentifier},
-			{Name: "pattern", Type: SlotTypeString},
+			{Name: "pattern", Type: SlotTypeValue},
 		},
 	},
 	"STRICTSPEC_SCALAR_NO_BINDING": {
@@ -1164,7 +1164,7 @@ var catalogue = map[string]Entry{
 		Slots: []SlotSpec{
 			{Name: "key", Type: SlotTypeString},
 			{Name: "path", Type: SlotTypePath},
-			{Name: "pattern", Type: SlotTypeString},
+			{Name: "pattern", Type: SlotTypeValue},
 		},
 	},
 	"STRICTSPEC_VALUE_NUM_TOO_LARGE": {
@@ -1222,7 +1222,7 @@ var catalogue = map[string]Entry{
 		Slots: []SlotSpec{
 			{Name: "actual", Type: SlotTypeValue},
 			{Name: "path", Type: SlotTypePath},
-			{Name: "pattern", Type: SlotTypeString},
+			{Name: "pattern", Type: SlotTypeValue},
 		},
 	},
 	"STRICTSPEC_VALUE_STRING_TOO_LONG": {
