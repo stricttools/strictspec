@@ -1,0 +1,216 @@
+{
+  "_meta": {
+    "captured_by": "conformance/scripts/capture_legacy_verdicts.py",
+    "capture_command": "cd conformance && uv run python scripts/capture_legacy_verdicts.py --private-project-root <a private project>",
+    "sources": {
+      "pydantic": "a private project server/src/private-project/character_preview_generated.py (CharacterPreviewState.model_validate, as state.py::set_character_preview does)",
+      "ts": "a private project src/lib/character/character-preview.generated.ts (validateCharacterPreviewState, run under node --experimental-strip-types)"
+    },
+    "bootstrap_note": "format_version is stripped from every document before legacy validation: the legacy validators predate strictspec's format_version gate (decision 13).",
+    "raw_shape": "pydantic errors carry loc (list, ints are array indices) + type; ts errors are the validator's raw message strings. Path normalization and waiver adjudication happen in the test, not in this committed capture."
+  },
+  "verdicts": {
+    "mut-bad-axis-enum": {
+      "pydantic": {
+        "valid": false,
+        "errors": [
+          {
+            "loc": [
+              "oscillators",
+              "functions",
+              0,
+              "sine",
+              "axis"
+            ],
+            "type": "literal_error"
+          }
+        ]
+      },
+      "ts": {
+        "valid": false,
+        "errors": [
+          "oscillators.functions[0].axis: expected \"x\" or \"y\""
+        ]
+      }
+    },
+    "mut-duplicate-json-key": {
+      "pydantic": {
+        "valid": true,
+        "errors": []
+      },
+      "ts": {
+        "valid": true,
+        "errors": []
+      }
+    },
+    "mut-lexical-float-amplitude": {
+      "pydantic": {
+        "valid": true,
+        "errors": []
+      },
+      "ts": {
+        "valid": true,
+        "errors": []
+      }
+    },
+    "mut-lexical-float-seed": {
+      "pydantic": {
+        "valid": true,
+        "errors": []
+      },
+      "ts": {
+        "valid": true,
+        "errors": []
+      }
+    },
+    "mut-missing-randomizer": {
+      "pydantic": {
+        "valid": false,
+        "errors": [
+          {
+            "loc": [
+              "randomizer"
+            ],
+            "type": "missing"
+          }
+        ]
+      },
+      "ts": {
+        "valid": false,
+        "errors": [
+          "randomizer: expected an object"
+        ]
+      }
+    },
+    "mut-unknown-key-root": {
+      "pydantic": {
+        "valid": false,
+        "errors": [
+          {
+            "loc": [
+              "extra"
+            ],
+            "type": "extra_forbidden"
+          }
+        ]
+      },
+      "ts": {
+        "valid": false,
+        "errors": [
+          "characterPreview: unknown property \"extra\""
+        ]
+      }
+    },
+    "real-bad-version": {
+      "pydantic": {
+        "valid": false,
+        "errors": [
+          {
+            "loc": [
+              "version"
+            ],
+            "type": "string_pattern_mismatch"
+          }
+        ]
+      },
+      "ts": {
+        "valid": false,
+        "errors": [
+          "characterPreview.version: expected a semver string"
+        ]
+      }
+    },
+    "real-blink-onms-ge-period": {
+      "pydantic": {
+        "valid": false,
+        "errors": [
+          {
+            "loc": [
+              "oscillators",
+              "functions",
+              1,
+              "blink"
+            ],
+            "type": "value_error"
+          }
+        ]
+      },
+      "ts": {
+        "valid": false,
+        "errors": [
+          "oscillators.functions[1]: onMs (5000) must be < periodMs (3000)"
+        ]
+      }
+    },
+    "real-duplicate-function-id": {
+      "pydantic": {
+        "valid": false,
+        "errors": [
+          {
+            "loc": [
+              "oscillators"
+            ],
+            "type": "value_error"
+          }
+        ]
+      },
+      "ts": {
+        "valid": false,
+        "errors": [
+          "oscillators.functions[1]: duplicate id \"s1\" (also at index 0)"
+        ]
+      }
+    },
+    "real-valid": {
+      "pydantic": {
+        "valid": true,
+        "errors": []
+      },
+      "ts": {
+        "valid": true,
+        "errors": []
+      }
+    },
+    "sample-invalid-union-and-order": {
+      "pydantic": {
+        "valid": false,
+        "errors": [
+          {
+            "loc": [
+              "oscillators",
+              "functions",
+              0
+            ],
+            "type": "union_tag_invalid"
+          },
+          {
+            "loc": [
+              "oscillators",
+              "functions",
+              1,
+              "blink"
+            ],
+            "type": "value_error"
+          }
+        ]
+      },
+      "ts": {
+        "valid": false,
+        "errors": [
+          "oscillators.functions[0].type: expected \"sine\" or \"blink\"",
+          "oscillators.functions[1]: onMs (200) must be < periodMs (100)"
+        ]
+      }
+    },
+    "sample-valid": {
+      "pydantic": {
+        "valid": true,
+        "errors": []
+      },
+      "ts": {
+        "valid": true,
+        "errors": []
+      }
+    }
+  }
+}
