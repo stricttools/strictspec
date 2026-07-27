@@ -1,0 +1,3 @@
+{"format_version":1,"commits":["93a830665a263dc898bf26283035c0a92ccc419a"],"user_facing":true,"description":"**Removed hashes.json from scaffold metadata.** The file was vestigial (never read for any decision).","type":"breaking"}
+{"format_version":1,"commits":["18032a760c4e69f35cd7bd00491fa09b313109d1","bbdc8ec696c07ba2e40ee5e448fa01a34f067a8a"],"user_facing":false}
+{"format_version":1,"id":"18c49d1dd6d63a89b17d6a1f010c43c6a4489891ee8261b8","commits":["c1822bead4c4a4808920ecfb6b7e64216666519b"],"user_facing":true,"description":"**Fix.** `claim-name` now honors `--dry-run` and asks for confirmation before publishing; `--yes` skips the prompt.","type":"fix"}

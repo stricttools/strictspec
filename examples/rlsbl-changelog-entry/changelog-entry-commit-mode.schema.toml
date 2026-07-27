@@ -1,0 +1,91 @@
+# strictspec paper schema — rlsbl JSONL changelog entry, COMMIT coverage mode.
+# Source of truth: rlsbl/rlsbl/changelog/schema.py (ChangelogEntry,
+# validate_schema with coverage_unit="commit"). One document = one JSONL line.
+# Notation as established in ../rlsbl-release-file/release-file.schema.toml.
+#
+# MODE SPLIT (see gap-note.md): coverage_unit is a PROJECT-CONFIG value
+# (.rlsbl/config.json), NOT a field on the entry line. There is therefore no
+# in-document discriminator, so the two modes are TWO SEPARATE SCHEMAS selected
+# by the consumer from config — explicit mode selection, the strictspec-blessed
+# alternative to silent runtime degradation. This is the commit-mode schema;
+# the changeset-file-mode schema is its sibling.
+
+schema = "rlsbl-changelog-entry-commit"
+meta_version = 1
+format_version = 1
+description = "One JSONL changelog line in commit-coverage mode: commits required, id optional."
+syntax = "jsonl"
+targets = ["python"]
+
+[record.ROOT.format_version]
+type = "integer"
+required = true
+description = "Per-line format_version (JSONL per-line gate). Stamped by the bootstrap conversion script for pre-versioning entries — see gap note."
+
+[record.ROOT.commits]
+type = "array"
+item = "string"
+required = true
+min_len = 1
+description = "Commit hashes. REQUIRED and non-empty in commit mode (validate_schema: \"commits is empty\")."
+
+[record.ROOT.user_facing]
+type = "boolean"
+required = true
+description = "Whether this entry appears in the published changelog."
+
+[record.ROOT.description]
+type = "string"
+required = false
+non_empty = true
+description = "Markdown one-liner. REQUIRED WHEN user_facing == true (see constraint)."
+
+[record.ROOT.type]
+type = "enum"
+required = false
+values = ["feature", "fix", "breaking"]
+description = "Entry type. REQUIRED WHEN user_facing == true (see constraint)."
+
+[record.ROOT.release_type]
+type = "enum"
+required = false
+values = ["ota", "build"]
+description = "Flutter target release channel. Optional, unconstrained by user_facing."
+
+[record.ROOT.id]
+type = "string"
+required = false
+description = "Stable ULID-style identifier. OPTIONAL in commit mode (present on newer entries, absent on historical ones)."
+
+[record.ROOT.packages]
+type = "array"
+item = "string"
+required = false
+description = "Affected member packages in a releasable."
+
+# description required when user_facing == true
+[[constraint]]
+form = "conditional-required"
+scope = "$"
+field = "description"
+when = { field = "user_facing", equals = true }
+
+# type required when user_facing == true
+[[constraint]]
+form = "conditional-required"
+scope = "$"
+field = "type"
+when = { field = "user_facing", equals = true }
+
+# ---------------------------------------------------------------------------
+# Cross-document (stream-level) constraint: set-coverage.
+# Every commit in the unreleased range is covered by at least one entry.
+# Evidence via the commits-in-range resolver (the closed IO vocabulary).
+# This is a STREAM constraint over the whole JSONL file, not a per-line check.
+# ---------------------------------------------------------------------------
+[[constraint]]
+form = "set-coverage"
+scope = "stream"
+evidence = { resolver = "commits-in-range", args = ["<last_tag>", "HEAD"] }
+covered_by = "$.commits[*]"
+description = "Every commit in <last_tag>..HEAD appears in some entry's commits[]. Changelog-only commits are exempt (see gap note)."

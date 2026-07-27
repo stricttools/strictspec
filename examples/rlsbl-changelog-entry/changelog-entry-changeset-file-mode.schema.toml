@@ -1,0 +1,71 @@
+# strictspec paper schema — rlsbl JSONL changelog entry, CHANGESET-FILE mode.
+# Source of truth: rlsbl/rlsbl/changelog/schema.py, validate_schema with
+# coverage_unit="changeset-file". Sibling of the commit-mode schema; the
+# consumer selects which schema to validate against from .rlsbl/config.json's
+# coverage_unit (explicit mode selection — see gap-note.md).
+#
+# The ONLY structural differences from commit mode: commits is FORBIDDEN, id is
+# REQUIRED. Everything else (user_facing, description/type conditional-required,
+# release_type, packages, per-line format_version) is identical.
+
+schema = "rlsbl-changelog-entry-changeset-file"
+meta_version = 1
+format_version = 1
+description = "One JSONL changelog line in changeset-file mode: commits forbidden, id required."
+syntax = "jsonl"
+targets = ["python"]
+
+[record.ROOT.format_version]
+type = "integer"
+required = true
+description = "Per-line format_version (JSONL per-line gate)."
+
+# commits is FORBIDDEN in changeset-file mode. There is no positive construct
+# for \"this field must be absent, always\": a forbidden field is simply one the
+# closed record does NOT declare, so its presence is an unknown-key error.
+# (validate_schema: \"commits must be empty in changeset-file mode\".)
+# NOT declared here on purpose — see gap note on \"forbidden-always\" vs unknown-key.
+
+[record.ROOT.user_facing]
+type = "boolean"
+required = true
+
+[record.ROOT.description]
+type = "string"
+required = false
+non_empty = true
+description = "REQUIRED WHEN user_facing == true."
+
+[record.ROOT.type]
+type = "enum"
+required = false
+values = ["feature", "fix", "breaking"]
+description = "REQUIRED WHEN user_facing == true."
+
+[record.ROOT.release_type]
+type = "enum"
+required = false
+values = ["ota", "build"]
+
+[record.ROOT.id]
+type = "string"
+required = true
+non_empty = true
+description = "Stable identifier. REQUIRED in changeset-file mode (validate_schema: \"id is required in changeset-file mode\")."
+
+[record.ROOT.packages]
+type = "array"
+item = "string"
+required = false
+
+[[constraint]]
+form = "conditional-required"
+scope = "$"
+field = "description"
+when = { field = "user_facing", equals = true }
+
+[[constraint]]
+form = "conditional-required"
+scope = "$"
+field = "type"
+when = { field = "user_facing", equals = true }
