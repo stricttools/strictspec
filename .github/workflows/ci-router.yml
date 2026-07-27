@@ -16,6 +16,7 @@ jobs:
       strictspec: ${{ steps.changes.outputs.strictspec }}
       go-strictspec: ${{ steps.changes.outputs.go-strictspec }}
       ts-strictspec: ${{ steps.changes.outputs.ts-strictspec }}
+      conformance: ${{ steps.changes.outputs.conformance }}
     steps:
     - uses: actions/checkout@v6
     - uses: dorny/paths-filter@v4
@@ -27,6 +28,12 @@ jobs:
             - 'python/**'
           go-strictspec: 'go/**'
           ts-strictspec: 'ts/**'
+          conformance:
+            - 'conformance/**'
+            - 'python/**'
+            - 'go/**'
+            - 'ts/**'
+            - 'spec/**'
   strictspec-ci-test:
     runs-on: ubuntu-latest
     strategy:
@@ -95,3 +102,26 @@ jobs:
     needs:
     - detect
     if: needs.detect.outputs.ts-strictspec == 'true'
+  conformance-ci-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+    - uses: actions/checkout@v6
+    - uses: astral-sh/setup-uv@v7
+    - run: uv python install 3.13
+    - name: Sync conformance project
+      run: uv sync --locked
+    - name: Run conformance harness
+        # All four targets are declared stubs (implemented=false), so every case
+        # reports UNIMPLEMENTED and the run exits green as long as no fixture is
+        # malformed. When a target implementation lands, mismatches will fail here.
+      run: uv run strictspec-conformance
+    - name: Run harness tests
+      run: uv run pytest -q
+    defaults:
+      run:
+        working-directory: conformance
+    name: conformance-ci / test
+    needs:
+    - detect
+    if: needs.detect.outputs.conformance == 'true'
