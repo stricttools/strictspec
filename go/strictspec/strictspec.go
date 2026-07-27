@@ -13,13 +13,20 @@
 // values only).
 package strictspec
 
-import "fmt"
+import (
+	"fmt"
+
+	ssroot "github.com/smm-h/strictspec/go"
+)
 
 // Version is the strictspec release this runtime was built at. Generated code is
-// paired to it exactly (see RequireRuntimeVersion). Dev builds carry a dev
-// version string that pairs only with itself; released and dev artifacts never
-// cross-pair.
-const Version = "0.0.0"
+// paired to it exactly (see RequireRuntimeVersion). It is embedded from the
+// module-root VERSION file (via the strictspecroot package) — the same file
+// rlsbl's Go release target bumps during `rlsbl release run` — so the pairing
+// constant can never drift from the released version. Dev builds carry whatever
+// the working-tree VERSION file holds and pair only with matching artifacts;
+// released and dev artifacts never cross-pair.
+var Version = ssroot.Version
 
 // CheckRuntimeVersion reports whether generated code pinned to generatedBy is
 // paired with this runtime. Under the ecosystem's always-latest dependency rule

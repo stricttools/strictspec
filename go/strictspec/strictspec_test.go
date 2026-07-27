@@ -1,6 +1,10 @@
 package strictspec
 
-import "testing"
+import (
+	"os"
+	"strings"
+	"testing"
+)
 
 const miniSchema = `
 name = "point"
@@ -30,9 +34,20 @@ func compile(t *testing.T) *Program {
 	return p
 }
 
-func TestVersion(t *testing.T) {
-	if Version != "0.0.0" {
-		t.Fatalf("Version = %q, want %q", Version, "0.0.0")
+// TestVersionMatchesFile is the drift-impossibility gate: the runtime pairing
+// constant MUST equal the go/VERSION file that rlsbl's Go release target bumps
+// during `rlsbl release run`. Because Version is embedded from that file (see
+// go/version.go), the two can never diverge — this test would fail the instant a
+// hand-maintained constant fell out of sync with the released version, which is
+// exactly the false-pairing hazard it exists to prevent.
+func TestVersionMatchesFile(t *testing.T) {
+	b, err := os.ReadFile("../VERSION")
+	if err != nil {
+		t.Fatalf("reading go/VERSION: %v", err)
+	}
+	want := strings.TrimSpace(string(b))
+	if Version != want {
+		t.Fatalf("Version = %q, want %q (from go/VERSION); the pairing constant must be embedded from the VERSION file, never hand-maintained", Version, want)
 	}
 }
 
