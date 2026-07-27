@@ -45,3 +45,25 @@ on the GitHub Release as the single binary source the Python/npm launchers fetch
 ### Features
 
 - [go-strictspec] **Initial release: the strictspec Go toolchain and runtime.** A declarative schema toolchain -- a TOML meta-schema in, generated validators out -- with the eight-command CLI (`gen`, `check`, `validate`, `migrate`, `export`, `init`, `diff`, `doc-diff`), integer `format_version` gates, the closed-op migration engine, the cross-document constraint engine, and corpus-driven diff certificates. Go consumers `go install` the module directly.
+
+# ts-strictspec
+
+## 0.1.0
+
+Initial release of the strictspec TypeScript runtime and first-run CLI launcher.
+
+<details>
+<summary>Context</summary>
+
+Coordinated initial 0.1.0 release of all three strictspec runtimes (Go, Python,
+TypeScript). This is the binding construct-set freeze (root DESIGN.md, Status).
+The npm package ships the TS runtime plus a first-run bin launcher (no
+postinstall) that lazy-downloads the exact-version toolchain binary (SHA-256
+verified) on first invocation, so library-only installs perform zero network
+access (decision 31).
+
+</details>
+
+### Features
+
+- [ts-strictspec] **Initial release: the strictspec TypeScript runtime and CLI stub.** Lossless JSON, TOML (via toml-eslint-parser), and JSONL parsers producing tagged document-model values, the diagnostic model and cross-document constraint engine, and exact runtime/codegen version pairing. The `strictspec` bin is a first-run launcher that lazy-downloads the paired toolchain binary (SHA-256 verified); no postinstall, so library-only installs perform zero network access.
