@@ -3,33 +3,30 @@
 name = "imagine-common-types"
 meta_version = 1
 format_version = 1
+role = "type-definitions"
 description = "Shared grammars for the imagine document family: ULIDs, dirnames, principal ids, node refs."
 
-# Crockford base32 ULID (26 chars).
+# Crockford base32 ULID (26 chars). Scalar-refinement: a string site + regex.
 [types.Ulid]
-kind = "scalar"
-base = "string"
-pattern = "^[0-9A-HJKMNP-TV-Z]{26}$"
+type = "string"
+regex = "^[0-9A-HJKMNP-TV-Z]{26}$"
 description = "A ULID identifier."
 
 # Document dirname: <module>--<name>, each segment [a-z][a-z0-9]*(-[a-z0-9]+)*, or the project
 # sentinel '-' (§6.1; §8.1 project-scoped events use '-').
 [types.DocRef]
-kind = "scalar"
-base = "string"
-pattern = "^(-|[a-z][a-z0-9]*(-[a-z0-9]+)*--[a-z][a-z0-9]*(-[a-z0-9]+)*(/[^\\s]+)?)$"
+type = "string"
+regex = "^(-|[a-z][a-z0-9]*(-[a-z0-9]+)*--[a-z][a-z0-9]*(-[a-z0-9]+)*(/[^\\s]+)?)$"
 description = "A document dirname (module--name), optional /inner-path, or the '-' project sentinel."
 
 # Principal id: a slug (§2 registry; MVP: 'local', 'engine', slugified agent name).
 [types.PrincipalId]
-kind = "scalar"
-base = "string"
-pattern = "^[a-z0-9][a-z0-9-]*$"
+type = "string"
+regex = "^[a-z0-9][a-z0-9-]*$"
 description = "A principal id from the committed registry."
 
 # A world-tree node = a turn tag (§6.4). Bookmarks are keyed per node.
 [types.NodeRef]
-kind = "scalar"
-base = "string"
-pattern = "^turn/[0-9]{6,}$"
+type = "string"
+regex = "^turn/[0-9]{6,}$"
 description = "A turn-tag node reference."

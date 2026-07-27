@@ -1,91 +1,100 @@
 name = "imagine-sequence"
 meta_version = 1
 format_version = 1
-description = "sequence.json — the open-sequence journal; a per-kind discriminated union (imagine §6.9)."
 document_syntax = "json"
+role = "schema"
+root = "Sequence"
 targets = ["ts"]
 safe_integers = true
+description = "sequence.json — the open-sequence journal; a per-kind discriminated union (imagine §6.9)."
 
 imports = [ { file = "types-imagine-common.toml", types = ["Ulid", "DocRef", "NodeRef"] } ]
 
+[types.Sequence]
+type = "record"
+
 # The journal holds AT MOST one open sequence. When none is open the file is {format_version,
-# open: null} (JSON nullable is fine here — this schema is JSON, not TOML).
-[fields.open]
-type = "union"
+# open: null} (JSON nullable is fine here — this schema is JSON, not TOML). Nullable wraps the
+# discriminated union as its `inner` (appendix-surface-syntax.md §3.4).
+[types.Sequence.fields.open]
+type = "nullable"
 required = true
-nullable = true              # T | null (JSON only; appendix-semantics 3.7)
-discriminator = "kind"
 description = "The single open engine-driven multi-commit sequence, or null."
+[types.Sequence.fields.open.inner]
+type = "discriminated-union"
+discriminator = "kind"
 
 # --- arm: open agent turn (§6.9) ---
-[fields.open.arms.agent-turn.fields.kind]
+[types.Sequence.fields.open.inner.arms.agent-turn.fields.kind]
 type = "literal"
 value = "agent-turn"
 required = true
-[fields.open.arms.agent-turn.fields.ulid]
+[types.Sequence.fields.open.inner.arms.agent-turn.fields.ulid]
 type = "Ulid"
 required = true
-[fields.open.arms.agent-turn.fields.opened_at]
+[types.Sequence.fields.open.inner.arms.agent-turn.fields.opened_at]
 type = "integer"
 required = true
 min = 0
-[fields.open.arms.agent-turn.fields.event_cursor]
+[types.Sequence.fields.open.inner.arms.agent-turn.fields.event_cursor]
 type = "integer"
 required = true
 min = 0
-[fields.open.arms.agent-turn.fields.touched_files]
+[types.Sequence.fields.open.inner.arms.agent-turn.fields.touched_files]
 type = "array"
 required = true
-item_type = "string"
-[fields.open.arms.agent-turn.fields.abort_progress]
+[types.Sequence.fields.open.inner.arms.agent-turn.fields.touched_files.item]
+type = "string"
+[types.Sequence.fields.open.inner.arms.agent-turn.fields.abort_progress]
 type = "integer"
 required = false
 min = 0
 description = "Commits reverted so far during a mid-abort crash-resume; absent when not aborting."
 
 # --- arm: restore (§6.9) ---
-[fields.open.arms.restore.fields.kind]
+[types.Sequence.fields.open.inner.arms.restore.fields.kind]
 type = "literal"
 value = "restore"
 required = true
-[fields.open.arms.restore.fields.ulid]
+[types.Sequence.fields.open.inner.arms.restore.fields.ulid]
 type = "Ulid"
 required = true
-[fields.open.arms.restore.fields.document]
+[types.Sequence.fields.open.inner.arms.restore.fields.document]
 type = "DocRef"
 required = true
-[fields.open.arms.restore.fields.target_node]
+[types.Sequence.fields.open.inner.arms.restore.fields.target_node]
 type = "NodeRef"
 required = true
 
 # --- arm: reconciliation (§6.9, §6.10) ---
-[fields.open.arms.reconciliation.fields.kind]
+[types.Sequence.fields.open.inner.arms.reconciliation.fields.kind]
 type = "literal"
 value = "reconciliation"
 required = true
-[fields.open.arms.reconciliation.fields.ulid]
+[types.Sequence.fields.open.inner.arms.reconciliation.fields.ulid]
 type = "Ulid"
 required = true
-[fields.open.arms.reconciliation.fields.mode]
+[types.Sequence.fields.open.inner.arms.reconciliation.fields.mode]
 type = "enum"
 required = true
 values = ["adopt-all", "revert-all"]
 
 # --- arm: document.rename fan-out (§6.3, §6.9) ---
-[fields.open.arms.rename.fields.kind]
+[types.Sequence.fields.open.inner.arms.rename.fields.kind]
 type = "literal"
 value = "rename"
 required = true
-[fields.open.arms.rename.fields.ulid]
+[types.Sequence.fields.open.inner.arms.rename.fields.ulid]
 type = "Ulid"
 required = true
-[fields.open.arms.rename.fields.from]
+[types.Sequence.fields.open.inner.arms.rename.fields.from]
 type = "DocRef"
 required = true
-[fields.open.arms.rename.fields.to]
+[types.Sequence.fields.open.inner.arms.rename.fields.to]
 type = "DocRef"
 required = true
-[fields.open.arms.rename.fields.rewritten_paths]
+[types.Sequence.fields.open.inner.arms.rename.fields.rewritten_paths]
 type = "array"
 required = true
-item_type = "string"
+[types.Sequence.fields.open.inner.arms.rename.fields.rewritten_paths.item]
+type = "string"

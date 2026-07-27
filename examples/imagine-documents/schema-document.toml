@@ -1,17 +1,22 @@
 name = "imagine-document"
 meta_version = 1
 format_version = 1
-description = "document.json — the only engine-read file inside a document dir: description + module schema version (imagine §6.1)."
 document_syntax = "json"
+role = "schema"
+root = "Document"
 targets = ["ts"]
 safe_integers = true
+description = "document.json — the only engine-read file inside a document dir: description + module schema version (imagine §6.1)."
 
-[fields.description]
+[types.Document]
+type = "record"
+
+[types.Document.fields.description]
 type = "string"
 required = true
 description = "Document description (for agents; surfaced uniformly)."
 
-[fields.moduleVersion]
+[types.Document.fields.moduleVersion]
 type = "integer"
 required = true
 min = 0

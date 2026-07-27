@@ -1,37 +1,42 @@
 name = "imagine-project"
 meta_version = 1
 format_version = 1
-description = "project.json — project description, engine version, and the principal registry map (imagine §6.1, §2)."
 document_syntax = "json"
+role = "schema"
+root = "Project"
 targets = ["ts"]
 safe_integers = true
+description = "project.json — project description, engine version, and the principal registry map (imagine §6.1, §2)."
 
 imports = [ { file = "types-imagine-common.toml", types = ["PrincipalId"] } ]
 
-[fields.description]
+[types.Project]
+type = "record"
+
+[types.Project.fields.description]
 type = "string"
 required = true
 description = "Project description (surfaced to agents; updated via file.update with the '-' sentinel)."
 
-[fields.engineVersion]
+[types.Project.fields.engineVersion]
 type = "integer"
 required = true
 min = 0
 description = "Engine schema version. Immutable via ops (§6.1) — enforced by imagine's op layer, not by this schema. See gap note."
 
 # The principal registry: id -> { type, name } (§2).
-[fields.principals]
+[types.Project.fields.principals]
 type = "map"
 required = true
 key_pattern = "^[a-z0-9][a-z0-9-]*$"
 order = "incidental"
-[fields.principals.value]
+[types.Project.fields.principals.value]
 type = "record"
-[fields.principals.value.fields.type]
+[types.Project.fields.principals.value.fields.type]
 type = "enum"
 required = true
 values = ["human", "agent", "engine"]
-[fields.principals.value.fields.name]
+[types.Project.fields.principals.value.fields.name]
 type = "string"
 required = true
 non_empty = true
