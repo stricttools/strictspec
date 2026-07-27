@@ -1,0 +1,206 @@
+# strictspec schema — a private project CharacterPreviewState (paper draft)
+# THIS IS THE ACCEPTANCE-TEST SOURCE — it must come out complete.
+# Notation legend: see constraint-manifest.toml header. Additional forms here:
+#   kind = "discriminated-union", discriminator = "<field>", arms = [<record names>]
+#   type = "map", key_regex (optional), [.values] subtable for the value type
+#   type = "enum", values = [...]
+#   nullable = true              T | null (legal: document_syntax = json)
+# Translated from schemas/character-preview.schema.json (a private project, JSON docs).
+
+[schema]
+name = "CharacterPreviewState"
+meta_version = 1
+format_version = 1
+document_syntax = "json"
+description = "a private project character-preview document (v1). Project-scoped selection of part variants and palette alternatives, weighted-randomizer configuration, and procedural oscillator definitions/assignments."
+
+[root]
+kind = "record"
+
+[root.fields.version]
+type = "string"
+required = true
+regex = '^\d+\.\d+\.\d+$'
+description = "Document format version. v1 emits \"1.0.0\"."
+
+[root.fields.parts]
+type = "map"
+required = true
+description = "partKey -> PartSelection. Absent parts render as derived defaults."
+[root.fields.parts.values]
+type = "PartSelection"
+
+[root.fields.randomizer]
+type = "RandomizerConfig"
+required = true
+
+[root.fields.oscillators]
+type = "OscillatorConfig"
+required = true
+
+# --- named types ---
+
+[types.PartSelection]
+kind = "record"
+description = "Per-part selection: chosen variant, palette alternative, and randomizer lock."
+[types.PartSelection.fields.variantIndex]
+type = "integer"
+required = true
+nullable = true
+min = 0
+description = "Chosen variant index, or null when the part is hidden."
+[types.PartSelection.fields.paletteClassId]
+type = "string"
+required = true
+nullable = true
+description = "Palette-alternative class id, or null for the part's declared class."
+[types.PartSelection.fields.locked]
+type = "boolean"
+required = true
+description = "When true, the randomizer skips this part."
+
+[types.RandomizerConfig]
+kind = "record"
+description = "Weighted-randomizer config: seed, roll index, and per-part variant/palette weights."
+[types.RandomizerConfig.fields.seed]
+type = "integer"
+required = true
+min = 0
+max = 4294967295
+description = "Base seed for the deterministic roll stream."
+[types.RandomizerConfig.fields.rollIndex]
+type = "integer"
+required = true
+min = 0
+[types.RandomizerConfig.fields.variantWeights]
+type = "map"
+required = true
+description = "partKey -> (stringified variantIndex or \"none\") -> weight."
+[types.RandomizerConfig.fields.variantWeights.values]
+type = "map"
+[types.RandomizerConfig.fields.variantWeights.values.values]
+type = "number"
+min = 0
+[types.RandomizerConfig.fields.paletteWeights]
+type = "map"
+required = true
+description = "partKey -> classId -> weight."
+[types.RandomizerConfig.fields.paletteWeights.values]
+type = "map"
+[types.RandomizerConfig.fields.paletteWeights.values.values]
+type = "number"
+min = 0
+
+[types.OscillatorConfig]
+kind = "record"
+description = "Procedural oscillator definitions and their assignments."
+[types.OscillatorConfig.fields.functions]
+type = "array"
+required = true
+[types.OscillatorConfig.fields.functions.items]
+type = "OscFunction"
+[types.OscillatorConfig.fields.assignments]
+type = "array"
+required = true
+[types.OscillatorConfig.fields.assignments.items]
+type = "OscAssignment"
+
+# x-unique-field: "id" on functions  ->  unique-by
+[[types.OscillatorConfig.constraints]]
+form = "unique-by"
+collection = "functions"
+field = "id"
+normalization = "none"
+
+# oneOf[SineFunction, BlinkFunction] discriminated by the `type` literal.
+[types.OscFunction]
+kind = "discriminated-union"
+discriminator = "type"
+arms = ["SineFunction", "BlinkFunction"]
+description = "A procedural oscillator function; the type field selects the arm."
+
+[types.SineFunction]
+kind = "record"
+description = "A sine oscillator."
+[types.SineFunction.fields.id]
+type = "string"
+required = true
+min_length = 1
+[types.SineFunction.fields.name]
+type = "string"
+required = true
+[types.SineFunction.fields.type]
+type = "literal"
+required = true
+value = "sine"
+[types.SineFunction.fields.axis]
+type = "enum"
+required = true
+values = ["x", "y"]
+[types.SineFunction.fields.amplitudePx]
+type = "integer"
+required = true
+min = 1
+[types.SineFunction.fields.periodMs]
+type = "number"
+required = true
+exclusive_min = 0
+[types.SineFunction.fields.phaseMs]
+type = "number"
+required = true
+min = 0
+
+[types.BlinkFunction]
+kind = "record"
+description = "A blink oscillator: an on/off visibility cycle."
+[types.BlinkFunction.fields.id]
+type = "string"
+required = true
+min_length = 1
+[types.BlinkFunction.fields.name]
+type = "string"
+required = true
+[types.BlinkFunction.fields.type]
+type = "literal"
+required = true
+value = "blink"
+[types.BlinkFunction.fields.periodMs]
+type = "number"
+required = true
+exclusive_min = 0
+[types.BlinkFunction.fields.onMs]
+type = "number"
+required = true
+exclusive_min = 0
+[types.BlinkFunction.fields.phaseMs]
+type = "number"
+required = true
+min = 0
+
+# x-less-than-sibling: {less: onMs, than: periodMs}  ->  ordered-pair
+[[types.BlinkFunction.constraints]]
+form = "ordered-pair"
+less = "onMs"
+greater = "periodMs"
+
+[types.OscAssignment]
+kind = "record"
+description = "Binds an oscillator function to a part and optional layer."
+[types.OscAssignment.fields.functionId]
+type = "string"
+required = true
+min_length = 1
+[types.OscAssignment.fields.partKey]
+type = "string"
+required = true
+min_length = 1
+[types.OscAssignment.fields.layerId]
+type = "string"
+required = true
+nullable = true
+description = "Target layer id, or null for every layer of the part's resolved canvas."
+[types.OscAssignment.fields.blinkMode]
+type = "enum"
+required = false
+values = ["show-during-on", "hide-during-on"]
+description = "Required iff the referenced function is a blink; forbidden for sine. Cross-record (functionId -> function.type); consumer-native check — see gap-note.md."
