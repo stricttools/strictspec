@@ -1,0 +1,28 @@
+{
+  "format_version": 1,
+  "version": "1.0.0",
+  "parts": {
+    "hair": { "variantIndex": 3, "paletteClassId": "brown", "locked": false },
+    "hat": { "variantIndex": null, "paletteClassId": null, "locked": true }
+  },
+  "randomizer": {
+    "seed": 42,
+    "rollIndex": 0,
+    "variantWeights": {
+      "hair": { "0": 1.0, "1": 2.0, "none": 0.5 }
+    },
+    "paletteWeights": {
+      "hair": { "brown": 1.0, "black": 1.0 }
+    }
+  },
+  "oscillators": {
+    "functions": [
+      { "id": "bob", "name": "Head bob", "type": "sine", "axis": "y", "amplitudePx": 2, "periodMs": 800.0, "phaseMs": 0.0 },
+      { "id": "wink", "name": "Eye wink", "type": "blink", "periodMs": 1200.0, "onMs": 200.0, "phaseMs": 0.0 }
+    ],
+    "assignments": [
+      { "functionId": "bob", "partKey": "head", "layerId": null },
+      { "functionId": "wink", "partKey": "eyes", "layerId": "pupil", "blinkMode": "hide-during-on" }
+    ]
+  }
+}

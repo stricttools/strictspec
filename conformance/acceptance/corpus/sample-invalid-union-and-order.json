@@ -1,0 +1,20 @@
+{
+  "format_version": 1,
+  "version": "1.0.0",
+  "parts": {
+    "hair": { "variantIndex": 0, "paletteClassId": null, "locked": false }
+  },
+  "randomizer": {
+    "seed": 0,
+    "rollIndex": 0,
+    "variantWeights": {},
+    "paletteWeights": {}
+  },
+  "oscillators": {
+    "functions": [
+      { "id": "bob", "name": "Head bob", "type": "wobble", "axis": "y", "amplitudePx": 2, "periodMs": 800.0, "phaseMs": 0.0 },
+      { "id": "wink", "name": "Bad wink", "type": "blink", "periodMs": 100.0, "onMs": 200.0, "phaseMs": 0.0 }
+    ],
+    "assignments": []
+  }
+}

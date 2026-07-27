@@ -1,0 +1,49 @@
+{
+  "format_version": 1,
+  "version": "nope",
+  "parts": {
+    "p1": {
+      "variantIndex": 0,
+      "paletteClassId": null,
+      "locked": false
+    }
+  },
+  "randomizer": {
+    "seed": 7,
+    "rollIndex": 2,
+    "variantWeights": {
+      "p1": {
+        "0": 2.0
+      }
+    },
+    "paletteWeights": {}
+  },
+  "oscillators": {
+    "functions": [
+      {
+        "id": "s1",
+        "name": "breathe",
+        "type": "sine",
+        "axis": "y",
+        "amplitudePx": 1,
+        "periodMs": 2000.0,
+        "phaseMs": 0.0
+      },
+      {
+        "id": "b1",
+        "name": "blink",
+        "type": "blink",
+        "periodMs": 3000.0,
+        "onMs": 150.0,
+        "phaseMs": 0.0
+      }
+    ],
+    "assignments": [
+      {
+        "functionId": "s1",
+        "partKey": "p1",
+        "layerId": null
+      }
+    ]
+  }
+}

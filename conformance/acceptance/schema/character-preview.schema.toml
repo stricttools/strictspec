@@ -1,0 +1,223 @@
+# CONFORMANCE-OWNED COPY — acceptance-test source (its own module/dir per conformance/DESIGN.md).
+# Provenance: translated-from(examples/private-project/character-preview.toml), the hand-written strictspec
+# translation of a private project's schemas/character-preview.schema.json. This copy is byte-identical to the
+# examples/ source EXCEPT for the single schema-wide safe-integer declaration added below, which is
+# MANDATORY for TS emission (decision 14; gap-note.md: it becomes mandatory once a TS target is
+# declared, and the acceptance test declares one). The drift-guard test
+# (tests/test_acceptance.py::test_acceptance_schema_tracks_examples) reconstructs the examples/ source
+# from this file (drop this header through the sentinel, drop the added declaration line) and asserts
+# byte-equality, so this copy can never silently drift from the examples/ source.
+# --- end conformance provenance header ---
+# strictspec schema — a private project CharacterPreviewState (paper draft)
+# THIS IS THE ACCEPTANCE-TEST SOURCE — it must come out complete.
+# Pinned surface (spec/appendix-surface-syntax.md): discriminated-union arms are subtables
+# `[types.<U>.arms.<arm>]` (each a type-site referencing the arm record, keyed by the discriminator
+# literal); maps use `.value`; a nullable field is `type = "nullable"` + `.inner`.
+# Translated from schemas/character-preview.schema.json (a private project, JSON docs).
+
+name = "CharacterPreviewState"
+meta_version = 1
+format_version = 1
+safe_integers = true
+document_syntax = "json"
+role = "schema"
+root = "CharacterPreviewState"
+description = "a private project character-preview document (v1). Project-scoped selection of part variants and palette alternatives, weighted-randomizer configuration, and procedural oscillator definitions/assignments."
+
+[types.CharacterPreviewState]
+type = "record"
+
+[types.CharacterPreviewState.fields.version]
+type = "string"
+required = true
+regex = '^\d+\.\d+\.\d+$'
+description = "Document format version. v1 emits \"1.0.0\"."
+
+[types.CharacterPreviewState.fields.parts]
+type = "map"
+required = true
+description = "partKey -> PartSelection. Absent parts render as derived defaults."
+[types.CharacterPreviewState.fields.parts.value]
+type = "PartSelection"
+
+[types.CharacterPreviewState.fields.randomizer]
+type = "RandomizerConfig"
+required = true
+
+[types.CharacterPreviewState.fields.oscillators]
+type = "OscillatorConfig"
+required = true
+
+# --- named types ---
+
+[types.PartSelection]
+type = "record"
+description = "Per-part selection: chosen variant, palette alternative, and randomizer lock."
+[types.PartSelection.fields.variantIndex]
+type = "nullable"
+required = true
+description = "Chosen variant index, or null when the part is hidden."
+[types.PartSelection.fields.variantIndex.inner]
+type = "integer"
+min = 0
+[types.PartSelection.fields.paletteClassId]
+type = "nullable"
+required = true
+description = "Palette-alternative class id, or null for the part's declared class."
+[types.PartSelection.fields.paletteClassId.inner]
+type = "string"
+[types.PartSelection.fields.locked]
+type = "boolean"
+required = true
+description = "When true, the randomizer skips this part."
+
+[types.RandomizerConfig]
+type = "record"
+description = "Weighted-randomizer config: seed, roll index, and per-part variant/palette weights."
+[types.RandomizerConfig.fields.seed]
+type = "integer"
+required = true
+min = 0
+max = 4294967295
+description = "Base seed for the deterministic roll stream."
+[types.RandomizerConfig.fields.rollIndex]
+type = "integer"
+required = true
+min = 0
+[types.RandomizerConfig.fields.variantWeights]
+type = "map"
+required = true
+description = "partKey -> (stringified variantIndex or \"none\") -> weight."
+[types.RandomizerConfig.fields.variantWeights.value]
+type = "map"
+[types.RandomizerConfig.fields.variantWeights.value.value]
+type = "number"
+min = 0
+[types.RandomizerConfig.fields.paletteWeights]
+type = "map"
+required = true
+description = "partKey -> classId -> weight."
+[types.RandomizerConfig.fields.paletteWeights.value]
+type = "map"
+[types.RandomizerConfig.fields.paletteWeights.value.value]
+type = "number"
+min = 0
+
+[types.OscillatorConfig]
+type = "record"
+description = "Procedural oscillator definitions and their assignments."
+[types.OscillatorConfig.fields.functions]
+type = "array"
+required = true
+[types.OscillatorConfig.fields.functions.item]
+type = "OscFunction"
+[types.OscillatorConfig.fields.assignments]
+type = "array"
+required = true
+[types.OscillatorConfig.fields.assignments.item]
+type = "OscAssignment"
+
+# x-unique-field: "id" on functions  ->  unique-by
+[[types.OscillatorConfig.constraints]]
+form = "unique-by"
+collection = "functions"
+field = "id"
+normalization = "none"
+
+# oneOf[SineFunction, BlinkFunction] discriminated by the `type` literal. Arms are subtables
+# keyed by the discriminator value, each referencing the arm record type.
+[types.OscFunction]
+type = "discriminated-union"
+discriminator = "type"
+description = "A procedural oscillator function; the type field selects the arm."
+[types.OscFunction.arms.sine]
+type = "SineFunction"
+[types.OscFunction.arms.blink]
+type = "BlinkFunction"
+
+[types.SineFunction]
+type = "record"
+description = "A sine oscillator."
+[types.SineFunction.fields.id]
+type = "string"
+required = true
+min_length = 1
+[types.SineFunction.fields.name]
+type = "string"
+required = true
+[types.SineFunction.fields.type]
+type = "literal"
+required = true
+value = "sine"
+[types.SineFunction.fields.axis]
+type = "enum"
+required = true
+values = ["x", "y"]
+[types.SineFunction.fields.amplitudePx]
+type = "integer"
+required = true
+min = 1
+[types.SineFunction.fields.periodMs]
+type = "number"
+required = true
+exclusive_min = 0
+[types.SineFunction.fields.phaseMs]
+type = "number"
+required = true
+min = 0
+
+[types.BlinkFunction]
+type = "record"
+description = "A blink oscillator: an on/off visibility cycle."
+[types.BlinkFunction.fields.id]
+type = "string"
+required = true
+min_length = 1
+[types.BlinkFunction.fields.name]
+type = "string"
+required = true
+[types.BlinkFunction.fields.type]
+type = "literal"
+required = true
+value = "blink"
+[types.BlinkFunction.fields.periodMs]
+type = "number"
+required = true
+exclusive_min = 0
+[types.BlinkFunction.fields.onMs]
+type = "number"
+required = true
+exclusive_min = 0
+[types.BlinkFunction.fields.phaseMs]
+type = "number"
+required = true
+min = 0
+
+# x-less-than-sibling: {less: onMs, than: periodMs}  ->  ordered-pair
+[[types.BlinkFunction.constraints]]
+form = "ordered-pair"
+less = "onMs"
+than = "periodMs"
+
+[types.OscAssignment]
+type = "record"
+description = "Binds an oscillator function to a part and optional layer."
+[types.OscAssignment.fields.functionId]
+type = "string"
+required = true
+min_length = 1
+[types.OscAssignment.fields.partKey]
+type = "string"
+required = true
+min_length = 1
+[types.OscAssignment.fields.layerId]
+type = "nullable"
+required = true
+description = "Target layer id, or null for every layer of the part's resolved canvas."
+[types.OscAssignment.fields.layerId.inner]
+type = "string"
+[types.OscAssignment.fields.blinkMode]
+type = "enum"
+required = false
+values = ["show-during-on", "hide-during-on"]
+description = "Required iff the referenced function is a blink; forbidden for sine. Cross-record (functionId -> function.type); consumer-native check — see gap-note.md."

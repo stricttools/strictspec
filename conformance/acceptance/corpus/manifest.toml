@@ -1,0 +1,101 @@
+# Acceptance-test corpus — provenance for every character-preview document.
+#
+# The corpus (conformance/DESIGN.md, "The acceptance test") is: a private project's existing
+# character-preview test inputs + conformance fixtures derivable from the translated schema.
+# It is stored HERE (conformance-owned) so the acceptance test never reaches into the
+# a private project working tree at run time.
+#
+# BOOTSTRAP STAMP: a private project's real documents predate strictspec, so they carry no
+# `format_version`. Each imported real document is stamped `format_version = 1` on import —
+# the one-time pre-versioning conversion of decision 13 (stamp, never reshape). strictspec's
+# `format_version` gate is invisible to the legacy validators, which predate it; the capture
+# script strips `format_version` before feeding a document to a legacy validator.
+#
+# Fields per entry:
+#   source    — where the document (or its base) came from
+#   nature    — "valid" or "invalid" (the intended, spec-derived outcome under strictspec)
+#   stamped   — true when `format_version = 1` was added on import (real docs only)
+#   mutation  — the single change vs the base (mutated docs only)
+#   note      — what the document exercises
+
+[["real-valid"]]
+source = "a private project server/tests/test_character_preview.py::_doc() (the canonical valid document)"
+nature = "valid"
+stamped = true
+note = "The real a private project character-preview document. Clean under all validators."
+
+[["real-bad-version"]]
+source = "derived-from(real-valid) — mirrors test_character_preview.py::test_rejects_bad_version"
+nature = "invalid"
+stamped = true
+mutation = 'version = "nope" (fails the ^\\d+\\.\\d+\\.\\d+$ pattern)'
+note = "Structural regex rejection; agreed by all three validators."
+
+[["real-blink-onms-ge-period"]]
+source = "derived-from(real-valid) — mirrors test_character_preview.py::test_rejects_blink_on_not_less_than_period"
+nature = "invalid"
+stamped = true
+mutation = "oscillators.functions[1].onMs = 5000.0 (>= periodMs 3000.0)"
+note = "ordered-pair (onMs < periodMs) rejection; agreed by all three validators."
+
+[["real-duplicate-function-id"]]
+source = "derived-from(real-valid) — mirrors test_character_preview.py::test_rejects_duplicate_function_id"
+nature = "invalid"
+stamped = true
+mutation = 'oscillators.functions[1].id = "s1" (duplicates functions[0].id)'
+note = "unique-by (functions.id) rejection; agreed by all three validators."
+
+[["sample-valid"]]
+source = "copied-from(examples/private-project/samples/character-preview.valid.json)"
+nature = "valid"
+stamped = false
+note = "Conformance fixture derivable from the translated schema (already carries format_version). Clean."
+
+[["sample-invalid-union-and-order"]]
+source = "copied-from(examples/private-project/samples/character-preview.invalid-union-and-order.json)"
+nature = "invalid"
+stamped = false
+mutation = 'functions[0].type = "wobble" (unknown discriminator); functions[1] onMs 200.0 >= periodMs 100.0'
+note = "Phase-1 union-discriminator-unknown then phase-2 ordered-pair; the multi-error / path-subset case."
+
+[["mut-unknown-key-root"]]
+source = "derived-from(real-valid)"
+nature = "invalid"
+stamped = true
+mutation = 'added root key "extra" = 1'
+note = "Unknown-key rejection (always-error invariant); agreed by all three validators."
+
+[["mut-missing-randomizer"]]
+source = "derived-from(real-valid)"
+nature = "invalid"
+stamped = true
+mutation = "removed required field `randomizer`"
+note = "Missing-required rejection; agreed by all three validators."
+
+[["mut-bad-axis-enum"]]
+source = "derived-from(real-valid)"
+nature = "invalid"
+stamped = true
+mutation = 'oscillators.functions[0].axis = "z" (not in ["x", "y"])'
+note = "Enum rejection inside a matched union arm; agreed by all three validators."
+
+[["mut-lexical-float-seed"]]
+source = "derived-from(real-valid)"
+nature = "invalid"
+stamped = true
+mutation = "randomizer.seed = 7.0 (float lexeme in an integer field)"
+note = "LEXICAL-NUMBER WAIVER: strictspec rejects the float lexeme; legacy pydantic coerces and legacy TS parsed with JSON.parse — both accept."
+
+[["mut-lexical-float-amplitude"]]
+source = "derived-from(real-valid)"
+nature = "invalid"
+stamped = true
+mutation = "oscillators.functions[0].amplitudePx = 1.0 (float lexeme in an integer field, nested in a union arm)"
+note = "LEXICAL-NUMBER WAIVER at a nested scope; same class as mut-lexical-float-seed."
+
+[["mut-duplicate-json-key"]]
+source = "derived-from(real-valid) — raw text with a literal duplicate object key"
+nature = "invalid"
+stamped = true
+mutation = 'the "version" key appears twice at the document root'
+note = "DUPLICATE-KEY WAIVER: strictspec hard-errors on duplicate JSON keys; legacy validators parse with json.loads / JSON.parse which silently keep the last — both accept."
