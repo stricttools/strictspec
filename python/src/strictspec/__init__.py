@@ -14,7 +14,7 @@ error; raw untagged dicts are never a validation input (tagged values only).
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import IntEnum
 
 from . import _diag as _diag

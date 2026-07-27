@@ -9,7 +9,7 @@ freshness test regenerates and byte-compares (drift = failure).
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import IntEnum
 
 

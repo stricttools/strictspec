@@ -73,33 +73,45 @@ def _decode_escaped(s: str, multiline: bool) -> str:
             break
         e = s[i + 1]
         if e == '"':
-            out.append('"'); i += 2
+            out.append('"')
+            i += 2
         elif e == "\\":
-            out.append("\\"); i += 2
+            out.append("\\")
+            i += 2
         elif e == "/":
-            out.append("/"); i += 2
+            out.append("/")
+            i += 2
         elif e == "b":
-            out.append("\b"); i += 2
+            out.append("\b")
+            i += 2
         elif e == "f":
-            out.append("\f"); i += 2
+            out.append("\f")
+            i += 2
         elif e == "n":
-            out.append("\n"); i += 2
+            out.append("\n")
+            i += 2
         elif e == "r":
-            out.append("\r"); i += 2
+            out.append("\r")
+            i += 2
         elif e == "t":
-            out.append("\t"); i += 2
+            out.append("\t")
+            i += 2
         elif e == "u":
             r = _hex_n(s, i + 2, 4)
             if r is not None:
-                out.append(r); i += 6
+                out.append(r)
+                i += 6
             else:
-                out.append(c); i += 1
+                out.append(c)
+                i += 1
         elif e == "U":
             r = _hex_n(s, i + 2, 8)
             if r is not None:
-                out.append(r); i += 10
+                out.append(r)
+                i += 10
             else:
-                out.append(c); i += 1
+                out.append(c)
+                i += 1
         else:
             if multiline and e in ("\n", "\r", " ", "\t"):
                 # Line-ending backslash: trim following whitespace incl. newline.
@@ -108,7 +120,8 @@ def _decode_escaped(s: str, multiline: bool) -> str:
                     j += 1
                 i = j
             else:
-                out.append(c); i += 1
+                out.append(c)
+                i += 1
     return "".join(out)
 
 
