@@ -1,0 +1,27 @@
+# VALID. Translated from rlsbl .rlsbl/releases/v0.110.2.toml (an infra release).
+# Comment-carrying TOML; a read-then-write fixpoint must preserve these comments
+# and the triple-quoted `context` verbatim (within-backend byte fidelity, spec
+# DESIGN.md Write path). Note: this document carries no `format_version` field —
+# release files are TOML config, and the schema's format_version gate applies to
+# the document as a whole; the meta-schema pins format_version = 1 and no v1
+# release file has ever needed a bump (see gap note on the absent field).
+
+# Version bump type: patch, minor, major, infra, or prerelease
+bump = "infra"
+# Short description of this release (required)
+description = "CI-portable hermetic test sandbox; ships the full 0.110 cycle to registries"
+# Optional context explaining why these changes were made
+context = """
+v0.110.0/v0.110.1 were gate-blocked by red CI (the new sandbox needed runner \
+portability work: bwrap 0.11 source build + AppArmor sysctl, pinned Go with \
+GOTOOLCHAIN=local, pinned uv, git-filter-repo on the runner, fixture dependency \
++ PEP-517 build-backend cache warming, checkout credential persistence disabled); \
+this patch completes it -- the full suite now runs inside the read-only no-network \
+sandbox on CI, and the publish gate certifies it.
+"""
+# Pre-release identifier: alpha, beta, rc, or stable
+# preid = ""
+# Set to true to generate a blog post for this release
+# blog = false
+include = ["npm", "pypi"]
+exclude = []
