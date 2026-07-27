@@ -737,19 +737,21 @@ func lineStarts(src []byte) []int {
 }
 
 func parseDiag(pe *doc.ParseError) diag.Diagnostic {
+	// Only the JSONL parse template carries a {line} slot; the JSON and TOML
+	// templates do not, so binding `line` there makes render.Render panic on an
+	// unknown slot (render's slot-coverage invariant).
 	code := "STRICTSPEC_PARSE_JSON_SYNTAX"
+	slots := map[string]diag.Slot{"detail": diag.SlotString{S: pe.Message}}
 	switch pe.Format {
 	case doc.FormatTOML:
 		code = "STRICTSPEC_PARSE_TOML_SYNTAX"
 	case doc.FormatJSONL:
 		code = "STRICTSPEC_PARSE_JSONL_LINE_SYNTAX"
+		slots["line"] = diag.SlotInt{N: int64(pe.Position.Line)}
 	}
 	return diag.Diagnostic{
-		Code: code,
-		Path: diag.NewPath(),
-		Slots: map[string]diag.Slot{
-			"detail": diag.SlotString{S: pe.Message},
-			"line":   diag.SlotInt{N: int64(pe.Position.Line)},
-		},
+		Code:  code,
+		Path:  diag.NewPath(),
+		Slots: slots,
 	}
 }
