@@ -72,5 +72,50 @@ func newApp() *strictcli.App {
 		),
 	)
 
+	// --- Phase 6: migrate / diff / doc-diff ---------------------------------
+
+	app.Command("migrate", "Migrate document(s) up to the schema's current format_version",
+		migrateHandler,
+		strictcli.WithArgs(
+			strictcli.NewArg("schema", "Path to the target (current-version) schema file"),
+			strictcli.NewArg("documents", "One or more document files to migrate", strictcli.Variadic()),
+		),
+		strictcli.WithFlags(
+			strictcli.IntFlag("to", "Target format_version (must equal the schema's current format_version)"),
+			strictcli.StringFlag("migrations", "Directory of *.migration.toml files forming the chain",
+				strictcli.Default(".")),
+			strictcli.BoolFlag("dry-run", "Render the would-be output and diagnostics without writing",
+				strictcli.Default(false)),
+		),
+	)
+
+	app.Command("diff", "Compare a schema at two format_versions over a corpus; emit a certificate",
+		diffHandler,
+		strictcli.WithArgs(
+			strictcli.NewArg("old-schema", "Path to the schema at format_version N"),
+			strictcli.NewArg("new-schema", "Path to the schema at format_version N+1"),
+		),
+		strictcli.WithFlags(
+			strictcli.StringFlag("corpus", "REQUIRED corpus glob (anchored at --corpus-root, lexicographic)"),
+			strictcli.StringFlag("corpus-root", "Root the corpus glob is anchored at (default: cwd)",
+				strictcli.Default(".")),
+			strictcli.StringFlag("migration", "Path to the migration file between the two versions",
+				strictcli.Default("")),
+			strictcli.StringFlag("adjudication", "Path to a committed adjudication file to acknowledge",
+				strictcli.Default("")),
+			strictcli.BoolFlag("same-version", "Force same-version narrowing scan (no migration)",
+				strictcli.Default(false)),
+		),
+	)
+
+	app.Command("doc-diff", "Structural per-path delta of two documents of one schema",
+		docDiffHandler,
+		strictcli.WithArgs(
+			strictcli.NewArg("schema", "Path to the schema file"),
+			strictcli.NewArg("old-document", "Path to the OLD document"),
+			strictcli.NewArg("new-document", "Path to the NEW document"),
+		),
+	)
+
 	return app
 }

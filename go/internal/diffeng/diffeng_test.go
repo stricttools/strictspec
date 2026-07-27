@@ -142,9 +142,9 @@ to = "$.budget.max_cost_usd"
 }
 
 const (
-	docV1        = `{"format_version": 1, "name": "r", "prompt_template": "p", "version": "1.0.0", "budget": {"max_cost_usd": 5.0}}`
-	docV2Single  = `{"format_version": 2, "name": "r", "prompt_template": "p", "version": "1.0.0", "budget": {"cost_thresholds": [5.0]}}`
-	docV2Multi   = `{"format_version": 2, "name": "r", "prompt_template": "p", "version": "1.0.0", "budget": {"cost_thresholds": [1.0, 5.0, 10.0]}}`
+	docV1       = `{"format_version": 1, "name": "r", "prompt_template": "p", "version": "1.0.0", "budget": {"max_cost_usd": 5.0}}`
+	docV2Single = `{"format_version": 2, "name": "r", "prompt_template": "p", "version": "1.0.0", "budget": {"cost_thresholds": [5.0]}}`
+	docV2Multi  = `{"format_version": 2, "name": "r", "prompt_template": "p", "version": "1.0.0", "budget": {"cost_thresholds": [1.0, 5.0, 10.0]}}`
 )
 
 // TestBudgetGreenAndSelfValidate: the flagship migration over a corpus grades
@@ -152,7 +152,7 @@ const (
 // against the built-in certificate schema.
 func TestBudgetGreenAndSelfValidate(t *testing.T) {
 	files := writeCorpus(t, map[string]string{
-		"a-v1.json":       docV1,
+		"a-v1.json":        docV1,
 		"b-v2-single.json": docV2Single,
 		"c-v2-multi.json":  docV2Multi,
 	})
@@ -238,13 +238,13 @@ max = 10
 		"big.json": `{"format_version": 1, "x": 20}`,
 	})
 	cert, violations := Run(Inputs{
-		SchemaID: "S",
-		OldProg:  compile(t, old),
-		NewProg:  compile(t, newS),
-		NewFV:    1,
-		Glob:     "*.json",
-		Files:    files,
-		Release:  "0.0.0-test",
+		SchemaID:    "S",
+		OldProg:     compile(t, old),
+		NewProg:     compile(t, newS),
+		NewFV:       1,
+		Glob:        "*.json",
+		Files:       files,
+		Release:     "0.0.0-test",
 		SameVersion: true,
 	})
 	if !hasCode(violations, "STRICTSPEC_DIFF_NARROWING_UNBUMPED") {

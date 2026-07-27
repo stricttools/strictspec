@@ -14,6 +14,7 @@ import (
 	"github.com/smm-h/strictspec/go/internal/ir"
 	"github.com/smm-h/strictspec/go/internal/jsondoc"
 	"github.com/smm-h/strictspec/go/internal/manifest"
+	"github.com/smm-h/strictspec/go/internal/migrate"
 	"github.com/smm-h/strictspec/go/internal/render"
 	"github.com/smm-h/strictspec/go/internal/schema"
 	"github.com/smm-h/strictspec/go/internal/tomldoc"
@@ -238,10 +239,52 @@ func checkHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strictc
 			ctx.Info(fmt.Sprintf("%s -> %s: fresh", se.Path, tgt.Output))
 		}
 	}
+	// Migration files are documents of a toolchain-shipped schema; `check`
+	// validates their authoring (op vocabulary, required keys, restricted
+	// predicates) exactly as it validates schemas.
+	if checkMigrationFiles(ctx, dir) {
+		failed = true
+	}
 	if failed {
 		return strictcli.Exit(1)
 	}
 	return strictcli.Exit(0)
+}
+
+// checkMigrationFiles validates every *.migration.toml under dir and returns
+// whether any failed authoring validation.
+func checkMigrationFiles(ctx *strictcli.Context, dir string) bool {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return false
+	}
+	anyFailed := false
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".migration.toml") {
+			continue
+		}
+		path := filepath.Join(dir, e.Name())
+		src, rerr := os.ReadFile(path)
+		if rerr != nil {
+			ctx.Error(rerr.Error())
+			anyFailed = true
+			continue
+		}
+		_, mdiags, perr := migrate.ParseMigration(src, path)
+		if perr != nil {
+			ctx.Error(fmt.Sprintf("%s: unparseable: %v", e.Name(), perr))
+			anyFailed = true
+			continue
+		}
+		if len(mdiags) > 0 {
+			ctx.Error(fmt.Sprintf("%s: fails migration-file authoring validation:", e.Name()))
+			printDiags(ctx, mdiags)
+			anyFailed = true
+			continue
+		}
+		ctx.Info(fmt.Sprintf("%s: valid migration file", e.Name()))
+	}
+	return anyFailed
 }
 
 // --- init -------------------------------------------------------------------

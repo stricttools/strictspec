@@ -29,14 +29,14 @@ type Inputs struct {
 }
 
 type corpusDoc struct {
-	path      string
-	format    doc.Format
-	root      doc.Node
-	bytes     []byte
-	parseOK   bool
-	validOld  bool
-	validNew  bool
-	killNew   []diag.Diagnostic // killing diagnostics under the new schema
+	path     string
+	format   doc.Format
+	root     doc.Node
+	bytes    []byte
+	parseOK  bool
+	validOld bool
+	validNew bool
+	killNew  []diag.Diagnostic // killing diagnostics under the new schema
 }
 
 // Run executes the empirical diff and returns the certificate plus the

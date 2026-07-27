@@ -175,4 +175,3 @@ func TestOpSetValueWhere(t *testing.T) {
 		t.Fatalf("set_value_where out = %q", out)
 	}
 }
-

@@ -59,10 +59,10 @@ type DiagnosticJ struct {
 
 // Claim kinds (A.3) and grades (A.5).
 const (
-	KindFlipScan             = "flip-scan"
-	KindRoundTripSoundness   = "migrate-round-trip-soundness"
+	KindFlipScan              = "flip-scan"
+	KindRoundTripSoundness    = "migrate-round-trip-soundness"
 	KindRoundTripCompleteness = "migrate-round-trip-completeness"
-	KindDownTaxonomy         = "down-taxonomy"
+	KindDownTaxonomy          = "down-taxonomy"
 
 	GradeViolated        = "violated"
 	GradeCorpusSupported = "corpus-supported"
