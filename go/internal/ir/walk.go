@@ -1,4 +1,4 @@
-package interp
+package ir
 
 import (
 	"github.com/smm-h/strictspec/go/internal/diag"
@@ -6,23 +6,16 @@ import (
 	"github.com/smm-h/strictspec/go/internal/schema"
 )
 
-// maxValidationDepth is the pinned recursion-depth cap. Validation of a document
-// nested beyond it emits the canonical STRICTSPEC_DEPTH_EXCEEDED diagnostic
-// rather than recursing further (DESIGN.md — Construct set: a pinned max
-// validation depth with its own canonical diagnostic, fired before stack
-// exhaustion). Every nesting level costs multiple frames per target; 128 is far
-// below any runtime's stack limit yet far above realistic legitimate nesting.
-const maxValidationDepth = 128
-
-// walk validates node n against type t at path, returning whether n's SUBTREE was
-// clean (zero diagnostics) — the partial-subtree-binding signal that gates phase 2.
-func (v *validator) walk(t *schema.Type, n doc.Node, path diag.Path) bool {
+// walk realizes the depth-guard and type-dispatch nodes: it validates node n
+// against type t at path, returning whether n's SUBTREE was clean (zero
+// diagnostics) — the partial-subtree-binding signal that gates phase 2.
+func (v *exec) walk(t *schema.Type, n doc.Node, path diag.Path) bool {
 	v.depth++
 	defer func() { v.depth-- }()
 	before := v.diags.Len()
-	if v.depth > maxValidationDepth {
+	if v.depth > MaxValidationDepth {
 		v.emit("STRICTSPEC_DEPTH_EXCEEDED", path, n,
-			map[string]diag.Slot{"limit": diag.SlotInt{N: maxValidationDepth}})
+			map[string]diag.Slot{"limit": diag.SlotInt{N: MaxValidationDepth}})
 		return false
 	}
 	v.walkInner(t, n, path)
@@ -35,7 +28,7 @@ func (v *validator) walk(t *schema.Type, n doc.Node, path diag.Path) bool {
 	return clean
 }
 
-func (v *validator) walkInner(t *schema.Type, n doc.Node, path diag.Path) {
+func (v *exec) walkInner(t *schema.Type, n doc.Node, path diag.Path) {
 	switch t.Kind {
 	case schema.KindRef:
 		if named, ok := v.s.Types[t.Ref]; ok {
@@ -66,7 +59,7 @@ func (v *validator) walkInner(t *schema.Type, n doc.Node, path diag.Path) {
 	}
 }
 
-func (v *validator) walkRecord(t *schema.Type, n doc.Node, path diag.Path) {
+func (v *exec) walkRecord(t *schema.Type, n doc.Node, path diag.Path) {
 	if n == nil || n.Kind() != doc.Record {
 		v.emit("STRICTSPEC_TYPE_NOT_RECORD", path, n,
 			map[string]diag.Slot{"got": diag.SlotString{S: nodeKindName(kindOf(n))}})
@@ -142,7 +135,7 @@ func (v *validator) walkRecord(t *schema.Type, n doc.Node, path diag.Path) {
 	}
 }
 
-func (v *validator) walkMap(t *schema.Type, n doc.Node, path diag.Path) {
+func (v *exec) walkMap(t *schema.Type, n doc.Node, path diag.Path) {
 	if n == nil || n.Kind() != doc.Record {
 		v.emit("STRICTSPEC_TYPE_NOT_MAP", path, n,
 			map[string]diag.Slot{"got": diag.SlotString{S: nodeKindName(kindOf(n))}})
@@ -166,7 +159,7 @@ func (v *validator) walkMap(t *schema.Type, n doc.Node, path diag.Path) {
 	}
 }
 
-func (v *validator) walkArray(t *schema.Type, n doc.Node, path diag.Path) {
+func (v *exec) walkArray(t *schema.Type, n doc.Node, path diag.Path) {
 	if n == nil || n.Kind() != doc.Array {
 		v.emit("STRICTSPEC_TYPE_NOT_ARRAY", path, n,
 			map[string]diag.Slot{"got": diag.SlotString{S: nodeKindName(kindOf(n))}})
@@ -192,7 +185,7 @@ func (v *validator) walkArray(t *schema.Type, n doc.Node, path diag.Path) {
 	}
 }
 
-func (v *validator) walkTuple(t *schema.Type, n doc.Node, path diag.Path) {
+func (v *exec) walkTuple(t *schema.Type, n doc.Node, path diag.Path) {
 	if n == nil || n.Kind() != doc.Array {
 		v.emit("STRICTSPEC_TYPE_MISMATCH", path, n, map[string]diag.Slot{
 			"expected": diag.SlotString{S: "tuple"},
@@ -214,7 +207,7 @@ func (v *validator) walkTuple(t *schema.Type, n doc.Node, path diag.Path) {
 	}
 }
 
-func (v *validator) walkNullable(t *schema.Type, n doc.Node, path diag.Path) {
+func (v *exec) walkNullable(t *schema.Type, n doc.Node, path diag.Path) {
 	if n != nil && n.Kind() == doc.Null {
 		return // null short-circuits
 	}
@@ -223,7 +216,7 @@ func (v *validator) walkNullable(t *schema.Type, n doc.Node, path diag.Path) {
 	}
 }
 
-func (v *validator) walkDiscriminated(t *schema.Type, n doc.Node, path diag.Path) {
+func (v *exec) walkDiscriminated(t *schema.Type, n doc.Node, path diag.Path) {
 	if n == nil || n.Kind() != doc.Record {
 		v.emit("STRICTSPEC_TYPE_MISMATCH", path, n, map[string]diag.Slot{
 			"expected": diag.SlotString{S: "record"},
@@ -261,7 +254,7 @@ func (v *validator) walkDiscriminated(t *schema.Type, n doc.Node, path diag.Path
 	})
 }
 
-func (v *validator) walkNodeKind(t *schema.Type, n doc.Node, path diag.Path) {
+func (v *exec) walkNodeKind(t *schema.Type, n doc.Node, path diag.Path) {
 	cat := nodeCategory(kindOf(n))
 	var kinds []diag.Value
 	for _, arm := range t.Arms {
@@ -278,7 +271,7 @@ func (v *validator) walkNodeKind(t *schema.Type, n doc.Node, path diag.Path) {
 	})
 }
 
-func (v *validator) walkEnum(t *schema.Type, n doc.Node, path diag.Path) {
+func (v *exec) walkEnum(t *schema.Type, n doc.Node, path diag.Path) {
 	members := v.enumMembers(t)
 	var memberVals []diag.Value
 	for _, m := range members {
@@ -312,7 +305,7 @@ func (v *validator) walkEnum(t *schema.Type, n doc.Node, path diag.Path) {
 	v.emitEnumMiss(t, n, path, members, memberVals)
 }
 
-func (v *validator) emitEnumMiss(t *schema.Type, n doc.Node, path diag.Path, members []string, memberVals []diag.Value) {
+func (v *exec) emitEnumMiss(t *schema.Type, n doc.Node, path diag.Path, members []string, memberVals []diag.Value) {
 	got := ""
 	if n != nil && n.Kind() == doc.String {
 		got = v.decodeString(n)
@@ -324,7 +317,7 @@ func (v *validator) emitEnumMiss(t *schema.Type, n doc.Node, path diag.Path, mem
 	})
 }
 
-func (v *validator) walkLiteral(t *schema.Type, n doc.Node, path diag.Path) {
+func (v *exec) walkLiteral(t *schema.Type, n doc.Node, path diag.Path) {
 	if n != nil && v.sameScalar(t.Literal, n) {
 		return
 	}
@@ -344,7 +337,7 @@ func kindOf(n doc.Node) doc.Kind {
 }
 
 // armDiscriminator resolves an arm's discriminator literal value (as a string).
-func (v *validator) armDiscriminator(arm *schema.Arm, discField string) string {
+func (v *exec) armDiscriminator(arm *schema.Arm, discField string) string {
 	rec := v.resolveRecord(arm.Type)
 	if rec != nil {
 		for _, f := range rec.Fields {
@@ -357,7 +350,7 @@ func (v *validator) armDiscriminator(arm *schema.Arm, discField string) string {
 }
 
 // resolveRecord follows named references to a record type, if any.
-func (v *validator) resolveRecord(t *schema.Type) *schema.Type {
+func (v *exec) resolveRecord(t *schema.Type) *schema.Type {
 	seen := 0
 	for t != nil && t.Kind == schema.KindRef && seen < 32 {
 		named, ok := v.s.Types[t.Ref]
@@ -374,7 +367,7 @@ func (v *validator) resolveRecord(t *schema.Type) *schema.Type {
 }
 
 // armCategory returns the node-kind category (scalar/record/array) an arm accepts.
-func (v *validator) armCategory(t *schema.Type) string {
+func (v *exec) armCategory(t *schema.Type) string {
 	seen := 0
 	for t != nil && t.Kind == schema.KindRef {
 		if named, ok := v.s.Types[t.Ref]; ok && seen < 32 {
@@ -397,7 +390,7 @@ func (v *validator) armCategory(t *schema.Type) string {
 	}
 }
 
-func (v *validator) enumMembers(t *schema.Type) []string {
+func (v *exec) enumMembers(t *schema.Type) []string {
 	if t.Sourced {
 		return t.Baked
 	}
@@ -419,7 +412,7 @@ func allStringEnum(t *schema.Type) bool {
 
 // scalarKeyString returns a document scalar's comparable key (decoded string, or
 // integer/bool lexeme) for discriminator matching.
-func (v *validator) scalarKeyString(n doc.Node) string {
+func (v *exec) scalarKeyString(n doc.Node) string {
 	if n == nil {
 		return ""
 	}
@@ -441,7 +434,7 @@ func svalKeyString(sv schema.SVal) string {
 
 // sameScalar reports whether a document scalar node equals a schema literal by
 // class and value.
-func (v *validator) sameScalar(sv schema.SVal, n doc.Node) bool {
+func (v *exec) sameScalar(sv schema.SVal, n doc.Node) bool {
 	if n == nil {
 		return false
 	}

@@ -1,4 +1,4 @@
-package interp
+package ir
 
 import (
 	"strings"
@@ -11,7 +11,7 @@ import (
 // evalCondition evaluates a gate condition (closed six-kind set) against a record.
 // Value-testing predicates read only the WRITTEN value; an absent field makes
 // every value predicate FALSE (there is no default — decision 30).
-func (v *validator) evalCondition(rec doc.Node, c *schema.Condition) bool {
+func (v *exec) evalCondition(rec doc.Node, c *schema.Condition) bool {
 	if c == nil {
 		return false
 	}

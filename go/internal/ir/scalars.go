@@ -1,4 +1,4 @@
-package interp
+package ir
 
 import (
 	"regexp"
@@ -15,7 +15,7 @@ type compiledRegex = regexp.Regexp
 
 var regexCache = map[string]*regexp.Regexp{}
 
-func (v *validator) compile(pattern string) *compiledRegex {
+func (v *exec) compile(pattern string) *compiledRegex {
 	if re, ok := regexCache[pattern]; ok {
 		return re
 	}
@@ -28,7 +28,7 @@ func (v *validator) compile(pattern string) *compiledRegex {
 }
 
 // walkScalar validates a builtin or custom-scalar reference site.
-func (v *validator) walkScalar(t *schema.Type, n doc.Node, path diag.Path) {
+func (v *exec) walkScalar(t *schema.Type, n doc.Node, path diag.Path) {
 	switch t.Ref {
 	case "string":
 		v.validateString(t, n, path)
@@ -50,7 +50,7 @@ func (v *validator) walkScalar(t *schema.Type, n doc.Node, path diag.Path) {
 	}
 }
 
-func (v *validator) validateString(t *schema.Type, n doc.Node, path diag.Path) {
+func (v *exec) validateString(t *schema.Type, n doc.Node, path diag.Path) {
 	if n == nil || n.Kind() != doc.String {
 		v.emit("STRICTSPEC_TYPE_NOT_STRING", path, n,
 			map[string]diag.Slot{"got": diag.SlotString{S: nodeKindName(kindOf(n))}})
@@ -79,7 +79,7 @@ func (v *validator) validateString(t *schema.Type, n doc.Node, path diag.Path) {
 	}
 }
 
-func (v *validator) validateInteger(t *schema.Type, n doc.Node, path diag.Path) {
+func (v *exec) validateInteger(t *schema.Type, n doc.Node, path diag.Path) {
 	if n == nil || n.Kind() != doc.Integer {
 		got := nodeKindName(kindOf(n))
 		if n != nil && n.Kind() == doc.Float {
@@ -101,7 +101,7 @@ func (v *validator) validateInteger(t *schema.Type, n doc.Node, path diag.Path) 
 	v.checkNumericBounds(t, n, path, float64(iv))
 }
 
-func (v *validator) validateFloat(t *schema.Type, n doc.Node, path diag.Path) {
+func (v *exec) validateFloat(t *schema.Type, n doc.Node, path diag.Path) {
 	if n == nil || n.Kind() != doc.Float {
 		got := nodeKindName(kindOf(n))
 		if n != nil && n.Kind() == doc.Integer {
@@ -119,7 +119,7 @@ func (v *validator) validateFloat(t *schema.Type, n doc.Node, path diag.Path) {
 	v.checkNumericBounds(t, n, path, f)
 }
 
-func (v *validator) validateNumber(t *schema.Type, n doc.Node, path diag.Path) {
+func (v *exec) validateNumber(t *schema.Type, n doc.Node, path diag.Path) {
 	if n == nil || (n.Kind() != doc.Integer && n.Kind() != doc.Float) {
 		v.emit("STRICTSPEC_TYPE_MISMATCH", path, n, map[string]diag.Slot{
 			"expected": diag.SlotString{S: "number"},
@@ -143,14 +143,14 @@ func (v *validator) validateNumber(t *schema.Type, n doc.Node, path diag.Path) {
 	v.checkNumericBounds(t, n, path, f)
 }
 
-func (v *validator) validateBool(t *schema.Type, n doc.Node, path diag.Path) {
+func (v *exec) validateBool(t *schema.Type, n doc.Node, path diag.Path) {
 	if n == nil || n.Kind() != doc.Bool {
 		v.emit("STRICTSPEC_TYPE_NOT_BOOLEAN", path, n,
 			map[string]diag.Slot{"got": diag.SlotString{S: nodeKindName(kindOf(n))}})
 	}
 }
 
-func (v *validator) checkNumericBounds(t *schema.Type, n doc.Node, path diag.Path, val float64) {
+func (v *exec) checkNumericBounds(t *schema.Type, n doc.Node, path diag.Path, val float64) {
 	if t.Min != nil && val < svalNum(*t.Min) {
 		v.emit("STRICTSPEC_VALUE_NUM_TOO_SMALL", path, n, map[string]diag.Slot{
 			"actual": diag.SlotValue{V: v.valueOf(n)}, "limit": diag.SlotValue{V: svalToValue(*t.Min)},
@@ -173,7 +173,7 @@ func (v *validator) checkNumericBounds(t *schema.Type, n doc.Node, path diag.Pat
 	}
 }
 
-func (v *validator) validateCustomScalar(cs *schema.Scalar, n doc.Node, path diag.Path) {
+func (v *exec) validateCustomScalar(cs *schema.Scalar, n doc.Node, path diag.Path) {
 	// Base class: every corpus custom scalar refines `string`.
 	if cs.Base == "string" && (n == nil || n.Kind() != doc.String) {
 		v.emit("STRICTSPEC_SCALAR_BASE_MISMATCH", path, n, map[string]diag.Slot{
@@ -207,7 +207,7 @@ func (v *validator) validateCustomScalar(cs *schema.Scalar, n doc.Node, path dia
 	}
 }
 
-func (v *validator) emitScalarLength(cs *schema.Scalar, n doc.Node, path diag.Path, actual, limit int) {
+func (v *exec) emitScalarLength(cs *schema.Scalar, n doc.Node, path diag.Path, actual, limit int) {
 	v.emit("STRICTSPEC_SCALAR_LENGTH", path, n, map[string]diag.Slot{
 		"name":   diag.SlotIdentifier{Name: cs.Name},
 		"actual": diag.SlotInt{N: int64(actual)},
@@ -230,7 +230,7 @@ var (
 	reOffsetSufx = regexp.MustCompile(`(Z|[+-]\d{2}:\d{2})$`)
 )
 
-func (v *validator) validateDatetime(t *schema.Type, n doc.Node, path diag.Path) {
+func (v *exec) validateDatetime(t *schema.Type, n doc.Node, path diag.Path) {
 	// Determine the value's datetime form. JSON carries RFC 3339 strings; TOML
 	// natives carry their own kind.
 	var form string // "date" | "time" | "datetime-offset" | "datetime-local" | ""
@@ -305,7 +305,7 @@ func formGot(form string, n doc.Node) string {
 	return nodeKindName(kindOf(n))
 }
 
-func (v *validator) checkDatetimeRange(t *schema.Type, n doc.Node, path diag.Path) {
+func (v *exec) checkDatetimeRange(t *schema.Type, n doc.Node, path diag.Path) {
 	val := v.decodeString(n)
 	vi, ok := parseInstant(val)
 	if !ok {

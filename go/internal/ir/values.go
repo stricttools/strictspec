@@ -1,4 +1,4 @@
-package interp
+package ir
 
 import (
 	"math"
@@ -53,7 +53,7 @@ func nodeCategory(k doc.Kind) string {
 }
 
 // decodeString decodes a string scalar's retained lexeme per the document format.
-func (v *validator) decodeString(n doc.Node) string {
+func (v *exec) decodeString(n doc.Node) string {
 	if n == nil {
 		return ""
 	}
@@ -65,7 +65,7 @@ func (v *validator) decodeString(n doc.Node) string {
 
 // valueOf builds a diag.Value for a document node (a `value`-typed slot), per the
 // A.1 rendering table.
-func (v *validator) valueOf(n doc.Node) diag.Value {
+func (v *exec) valueOf(n doc.Node) diag.Value {
 	if n == nil {
 		return diag.NullVal{}
 	}

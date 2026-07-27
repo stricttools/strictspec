@@ -1,4 +1,4 @@
-package interp
+package ir
 
 import (
 	"strings"
@@ -10,7 +10,7 @@ import (
 
 // runConstraints evaluates a record's phase-2 constraint vocabulary in
 // declaration order, emitting diagnostics at the pinned paths.
-func (v *validator) runConstraints(task p2task) {
+func (v *exec) runConstraints(task p2task) {
 	rec, path := task.rec, task.path
 	for _, c := range task.typ.Constraints {
 		switch c.Form {
@@ -83,7 +83,7 @@ func (v *validator) runConstraints(task p2task) {
 	}
 }
 
-func (v *validator) collectionsDisjoint(rec doc.Node, path diag.Path, c *schema.Constraint) {
+func (v *exec) collectionsDisjoint(rec doc.Node, path diag.Path, c *schema.Constraint) {
 	left := v.stringElems(rec, c.Left)
 	right := v.stringElems(rec, c.Right)
 	seen := map[string]bool{}
@@ -103,7 +103,7 @@ func (v *validator) collectionsDisjoint(rec doc.Node, path diag.Path, c *schema.
 	}
 }
 
-func (v *validator) uniqueBy(rec doc.Node, path diag.Path, c *schema.Constraint) {
+func (v *exec) uniqueBy(rec doc.Node, path diag.Path, c *schema.Constraint) {
 	coll, ok := entryOf(rec, c.Collection)
 	if !ok || coll.Kind() != doc.Array {
 		return
@@ -128,7 +128,7 @@ func (v *validator) uniqueBy(rec doc.Node, path diag.Path, c *schema.Constraint)
 	}
 }
 
-func (v *validator) pairwiseDistinct(rec doc.Node, path diag.Path, c *schema.Constraint) {
+func (v *exec) pairwiseDistinct(rec doc.Node, path diag.Path, c *schema.Constraint) {
 	coll, ok := entryOf(rec, c.Collection)
 	if !ok || coll.Kind() != doc.Array {
 		return
@@ -151,7 +151,7 @@ func (v *validator) pairwiseDistinct(rec doc.Node, path diag.Path, c *schema.Con
 	}
 }
 
-func (v *validator) rangesDisjoint(rec doc.Node, path diag.Path, c *schema.Constraint) {
+func (v *exec) rangesDisjoint(rec doc.Node, path diag.Path, c *schema.Constraint) {
 	coll, ok := entryOf(rec, c.Collection)
 	if !ok || coll.Kind() != doc.Array {
 		return
@@ -183,7 +183,7 @@ func (v *validator) rangesDisjoint(rec doc.Node, path diag.Path, c *schema.Const
 	}
 }
 
-func (v *validator) orderedPair(rec doc.Node, path diag.Path, c *schema.Constraint) {
+func (v *exec) orderedPair(rec doc.Node, path diag.Path, c *schema.Constraint) {
 	ln, lok := numField(rec, c.Less)
 	tn, tok := numField(rec, c.Than)
 	if !lok || !tok {
@@ -199,7 +199,7 @@ func (v *validator) orderedPair(rec doc.Node, path diag.Path, c *schema.Constrai
 
 // intraReferences resolves references within the document against a root-level
 // collection (the pinned resolves_by shapes in the corpus).
-func (v *validator) intraReferences(rec doc.Node, path diag.Path, c *schema.Constraint) {
+func (v *exec) intraReferences(rec doc.Node, path diag.Path, c *schema.Constraint) {
 	keyset := v.rootKeyset(c.ResolvesInto)
 	if keyset == nil {
 		return
@@ -261,7 +261,7 @@ func (v *validator) intraReferences(rec doc.Node, path diag.Path, c *schema.Cons
 
 // rootKeyset builds the membership set of a root-level collection (map keys, or
 // array element names/values).
-func (v *validator) rootKeyset(name string) map[string]bool {
+func (v *exec) rootKeyset(name string) map[string]bool {
 	coll, ok := entryOf(v.root, name)
 	if !ok {
 		return nil
@@ -289,7 +289,7 @@ func (v *validator) rootKeyset(name string) map[string]bool {
 
 // --- cross-document aggregates ----------------------------------------------
 
-func (v *validator) countLimit(path diag.Path, c *schema.Constraint) {
+func (v *exec) countLimit(path diag.Path, c *schema.Constraint) {
 	docs, ok := v.evidence[c.Selection]
 	if !ok {
 		return // domain checks not requested for this resolver (structural-only)
@@ -306,7 +306,7 @@ func (v *validator) countLimit(path diag.Path, c *schema.Constraint) {
 	}
 }
 
-func (v *validator) sumLimit(path diag.Path, c *schema.Constraint) {
+func (v *exec) sumLimit(path diag.Path, c *schema.Constraint) {
 	docs, ok := v.evidence[c.Selection]
 	if !ok {
 		return
@@ -361,7 +361,7 @@ func strList(names []string) diag.SlotList {
 	return diag.SlotList{Elems: elems}
 }
 
-func (v *validator) stringElems(rec doc.Node, field string) []string {
+func (v *exec) stringElems(rec doc.Node, field string) []string {
 	n, ok := entryOf(rec, field)
 	if !ok || n.Kind() != doc.Array {
 		return nil
