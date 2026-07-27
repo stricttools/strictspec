@@ -7,7 +7,10 @@
     "go": {
       "type": "go",
       "local": false,
-      "artifact": "library"
+      "artifact": "library",
+      "install_paths": [
+        "./tools/gencodes"
+      ]
     }
   }
 }
