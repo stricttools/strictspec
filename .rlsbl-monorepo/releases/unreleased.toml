@@ -1,10 +1,21 @@
 [releasables.py-strictspec]
 # Version bump type: patch, minor, major, infra, or prerelease
-bump = ""
+# (ignored for this first, never-tagged release -- published as-is at 0.1.0)
+bump = "minor"
 # Short description of this release (required)
-description = ""
+description = "Initial release of the strictspec Python runtime and first-run CLI launcher."
 # Optional context explaining why these changes were made
-context = ""
+context = """
+Coordinated initial 0.1.0 release of all three strictspec runtimes (Go, Python,
+TypeScript). This is the binding construct-set freeze (root DESIGN.md, Status).
+The Go toolchain binary is the single source of truth, shipped as goreleaser
+archives + checksums.txt on the go-strictspec GitHub Release; the Python and npm
+packages carry in-package first-run CLI launchers that lazy-download the
+exact-version binary (SHA-256 verified) on first invocation, so library-only
+installs perform zero network access (decision 31). All three package versions
+move in lockstep so lazy download and the exact version-pairing rule (decision
+19) agree by construction.
+"""
 # Pre-release identifier: alpha, beta, rc, or stable
 # preid = ""
 include = ["pypi"]
@@ -12,11 +23,18 @@ exclude = []
 
 [releasables.go-strictspec]
 # Version bump type: patch, minor, major, infra, or prerelease
-bump = ""
+# (ignored for this first, never-tagged release -- published as-is at 0.1.0)
+bump = "minor"
 # Short description of this release (required)
-description = ""
+description = "Initial release of the strictspec Go toolchain, runtime, and CLI."
 # Optional context explaining why these changes were made
-context = ""
+context = """
+Coordinated initial 0.1.0 release of all three strictspec runtimes (Go, Python,
+TypeScript). This is the binding construct-set freeze (root DESIGN.md, Status).
+The Go module is the toolchain and the Go runtime in one: consumers `go install`
+it directly, and goreleaser publishes cross-compiled CLI archives + checksums.txt
+on the GitHub Release as the single binary source the Python/npm launchers fetch.
+"""
 # Pre-release identifier: alpha, beta, rc, or stable
 # preid = ""
 include = ["go"]
@@ -24,11 +42,19 @@ exclude = []
 
 [releasables.ts-strictspec]
 # Version bump type: patch, minor, major, infra, or prerelease
-bump = ""
+# (ignored for this first, never-tagged release -- published as-is at 0.1.0)
+bump = "minor"
 # Short description of this release (required)
-description = ""
+description = "Initial release of the strictspec TypeScript runtime and first-run CLI launcher."
 # Optional context explaining why these changes were made
-context = ""
+context = """
+Coordinated initial 0.1.0 release of all three strictspec runtimes (Go, Python,
+TypeScript). This is the binding construct-set freeze (root DESIGN.md, Status).
+The npm package ships the TS runtime plus a first-run bin launcher (no
+postinstall) that lazy-downloads the exact-version toolchain binary (SHA-256
+verified) on first invocation, so library-only installs perform zero network
+access (decision 31).
+"""
 # Pre-release identifier: alpha, beta, rc, or stable
 # preid = ""
 include = ["npm"]
