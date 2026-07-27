@@ -82,7 +82,13 @@ carries a `format_version`, is gated exactly like any document, and is migrated 
   classification per the primitives appendix; duplicate keys = hard error; int64 overflow,
   float64 overflow, and number-scalar unrepresentable lexemes = hard errors). Ordered semantic
   maps bind to `[]KV`. Datetime scalars per appendix item 11 (TOML natives bind directly; JSON
-  binds RFC 3339 strings; kind mismatches are canonical hard errors). Validating a TOML-syntax
+  binds RFC 3339 strings; kind mismatches are canonical hard errors). NOTE (2026-07-27): "bind
+  directly" does NOT mean a parsed `time.Time` — `date`/`time`/`datetime` fields bind the RETAINED
+  LEXEME as a Go `string` (the generated frozen-struct field type is `string`; see
+  `internal/emit` goType). Binding to `time.Time` would normalize on read (e.g. rewrite a `+00:00`
+  offset to `Z` and drop written precision), violating the lexeme-retention invariant (item 11:
+  lexemes are retained, no normalization on read; precision preserved as written). Validating a
+  TOML-syntax
   document against a schema in which a nullable union is reachable = hard error (also rejected
   at the meta-schema level where document syntax is known). JSONL: LF-only, streamed
   line-by-line so memory is bounded by the largest line, all-errors-in-one-pass per line with
