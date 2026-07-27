@@ -114,7 +114,10 @@ jobs:
       # and node (ts dist + adapter).
     - uses: actions/setup-go@v6
       with:
-        go-version-file: conformance/go/go.mod
+          # rlsbl sync prefixes this with the sub-project path (conformance/); the
+          # go module is the sibling repo-root go/, so `../go/go.mod` resolves to
+          # <workspace>/go/go.mod after the prefix.
+        go-version-file: conformance/../go/go.mod
     - uses: actions/setup-node@v6
       with:
         node-version: 22
