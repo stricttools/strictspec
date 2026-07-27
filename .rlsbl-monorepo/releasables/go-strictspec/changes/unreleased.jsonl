@@ -1,2 +1,3 @@
 {"id":"18c60210d53607884e49fd5bc13d4f10a6b3a82b70f20243","commits":["a9d37fa1c432be1818e075ddec8171f02e5bc733","c4b3ad0af97c2356f2ccc28cb604d00f110a3242"],"user_facing":false,"packages":["go-strictspec"]}
 {"id":"18c60280360c5b70086cbfc54c4848959e37141009aee777","commits":["545037bf30117a39adb7c3fef4a62090d91a36da"],"user_facing":false,"packages":["go-strictspec"]}
+{"id":"18c628e9e25500afd99aeb2af81340e4a074e5c25a704a34","commits":["e34e5cbe15a1a79ab3d7da8cfe7c9d6d6f318bae","6f489ad68d33488b8badbd44d0ae14a2710d2c1b","f90c0e2be52b66027b68e158eefb1320e2273165","5e13e35632c396e82824faa6d1eb5ec9af0a46be","7999fa67ed935cac84a7db33c7a4e5c3c6085dcb"],"user_facing":false,"packages":["go-strictspec"]}
