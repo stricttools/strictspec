@@ -144,3 +144,38 @@ func TestCoercers(t *testing.T) {
 		t.Fatalf("flag.Bool() = %v,%v", b, ok)
 	}
 }
+
+// TestValidateJSONParseErrorRenders is the regression for the parse-error render
+// panic: a malformed JSON document must surface STRICTSPEC_PARSE_JSON_SYNTAX with
+// a rendered message, never panic. The JSON parse template carries no {line}
+// slot, so binding a `line` slot in parseDiag (as the JSONL template needs) makes
+// render.Render panic on the unknown slot. This path was previously untested.
+func TestValidateJSONParseErrorRenders(t *testing.T) {
+	p := compile(t)
+	res := p.Validate([]byte(`{"format_version": 1, "x": }`), "json")
+	if res.Valid {
+		t.Fatal("malformed JSON must not validate")
+	}
+	if len(res.Diagnostics) != 1 || res.Diagnostics[0].Code != "STRICTSPEC_PARSE_JSON_SYNTAX" {
+		t.Fatalf("expected PARSE_JSON_SYNTAX, got %+v", res.Diagnostics)
+	}
+	if res.Diagnostics[0].Message == "" {
+		t.Fatalf("parse diagnostic message must render, got empty")
+	}
+}
+
+// TestValidateTOMLParseErrorRenders is the same regression for TOML: the TOML
+// parse template carries no {line} slot either.
+func TestValidateTOMLParseErrorRenders(t *testing.T) {
+	p := compile(t)
+	res := p.Validate([]byte("x = = 3\n"), "toml")
+	if res.Valid {
+		t.Fatal("malformed TOML must not validate")
+	}
+	if len(res.Diagnostics) != 1 || res.Diagnostics[0].Code != "STRICTSPEC_PARSE_TOML_SYNTAX" {
+		t.Fatalf("expected PARSE_TOML_SYNTAX, got %+v", res.Diagnostics)
+	}
+	if res.Diagnostics[0].Message == "" {
+		t.Fatalf("parse diagnostic message must render, got empty")
+	}
+}
