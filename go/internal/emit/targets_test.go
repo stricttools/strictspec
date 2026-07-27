@@ -8,7 +8,18 @@ import (
 	"strings"
 	"sync"
 	"testing"
+
+	strictspecroot "github.com/smm-h/strictspec/go"
 )
+
+// runtimeVersion is the strictspec release version embedded from go/VERSION
+// (== strictspecroot.Version). The exec-parity tests must generate code at THIS
+// version so the generated pairing guard matches the python/ts runtimes, which
+// read their own manifests (both kept in lockstep with go/VERSION by the
+// coordinated release). Hardcoding "0.0.0" here broke the moment the packages
+// were bumped off 0.0.0; the static hygiene/determinism tests below keep "0.0.0"
+// because they only assert on emitted text and never run the pairing guard.
+var runtimeVersion = strictspecroot.Version
 
 // The Python and TypeScript EMITTERS are gated the same way the Go emitter is:
 // generate the validator for representative schemas, EXECUTE the generated code
@@ -136,7 +147,7 @@ func TestPythonGoldenExecParity(t *testing.T) {
 		t.Run(c.schema+"/"+filepath.Base(c.input), func(t *testing.T) {
 			schemaPath := filepath.Join(fixturesRoot, "_schemas", c.schema)
 			inputPath := filepath.Join(fixturesRoot, "_inputs", c.input)
-			src := genPythonSource(t, schemaPath, "0.0.0")
+			src := genPythonSource(t, schemaPath, runtimeVersion)
 			got, stderr, err := runPython(t, pythonDir, src, inputPath, c.syntax)
 			if err != nil {
 				t.Fatalf("generated python failed to run: %v\n%s", err, stderr)
@@ -287,7 +298,7 @@ func TestTSGoldenExecParity(t *testing.T) {
 		t.Run(c.schema+"/"+filepath.Base(c.input), func(t *testing.T) {
 			schemaPath := filepath.Join(fixturesRoot, "_schemas", c.schema)
 			inputPath := filepath.Join(fixturesRoot, "_inputs", c.input)
-			src := genTSSource(t, schemaPath, "0.0.0")
+			src := genTSSource(t, schemaPath, runtimeVersion)
 			genDir := tsGenDir(t, tsDir)
 			got, stderr, err := compileAndRunTS(t, tsDir, genDir, src, inputPath, c.syntax)
 			if err != nil {

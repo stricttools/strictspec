@@ -21,6 +21,7 @@ import (
 	"os/exec"
 	"strings"
 
+	strictspecroot "github.com/smm-h/strictspec/go"
 	"github.com/smm-h/strictspec/go/internal/diag"
 	"github.com/smm-h/strictspec/go/internal/doc"
 	"github.com/smm-h/strictspec/go/internal/emit"
@@ -70,7 +71,11 @@ func main() {
 
 	version := req.Version
 	if version == "" {
-		version = "0.0.0"
+		// Default to THIS toolchain build's version so the generated code's
+		// pairing guard matches the runtime it compiles against (both embed
+		// go/VERSION). A hardcoded "0.0.0" here mismatched the moment the
+		// package was bumped off 0.0.0.
+		version = strictspecroot.Version
 	}
 	built, err := emit.Build(req.Schema, req.CacheDir, req.RuntimeDir, version)
 	if err != nil {

@@ -69,7 +69,7 @@ func TestGoldenCompileAndParity(t *testing.T) {
 			schemaPath := filepath.Join(fixturesRoot, "_schemas", c.schema)
 			inputPath := filepath.Join(fixturesRoot, "_inputs", c.input)
 
-			built, err := Build(schemaPath, cacheDir, runtimeDir, "0.0.0")
+			built, err := Build(schemaPath, cacheDir, runtimeDir, runtimeVersion)
 			if err != nil {
 				t.Fatalf("Build (generate+compile) failed: %v", err)
 			}
