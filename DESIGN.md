@@ -164,39 +164,44 @@ the freeze; not yet consumers). mage is independent — evaluate later.
 
 ADOPTION WAVE 1:
 
-1. a private project — deletes its 811-line dual-target generator
+1. DONE — a private project — deleted its 811-line dual-target generator
    (`scripts/generate-manifest-types.py`); the acceptance-test source.
-2. predraw — schema translation; aliases declared; `format_version` added net-new.
-3. claudestream — greenfield `.agent.json` schema + gate; ZERO at-rest corpus, so the deploy
-   gate discharges via the first real adjudication file; the budget-rename "flagship migration"
+2. DONE — predraw — schema translation; aliases declared; `format_version` added net-new.
+3. DONE — claudestream — greenfield `.agent.json` schema + gate; ZERO at-rest corpus, so the deploy
+   gate discharged via the FIRST REAL adjudication file; the budget-rename "flagship migration"
    is a conformance FIXTURE, not a live migration.
-4. wavescript — replaces its strictdecode/registry validation; its 158-pair golden
+4. BLOCKED — wavescript — replaces its strictdecode/registry validation; its 158-pair golden
    render-hash suite is the regression oracle; synthesis engine/specgen stay consumer-side. Note
    (decision 30, not reopened): the registry gates on EFFECTIVE (default-backed) values but
    strictspec gates on WRITTEN values only, so at adoption wavescript's format NARROWS —
    gate-relevant optional keys become required-explicit via a `format_version` 2→3 migration that
    uses `merge_defaults` to stamp current effective values into existing scores.
+   BLOCKED (2026-07-28) on three recorded design walls awaiting owner decisions: (a) the absence
+   of a map-iteration migration op (needed to migrate keyed score collections); (b) a
+   validation-seam refactor (where strictspec's verdict boundary sits relative to wavescript's
+   existing registry validation); (c) bank scope (how far the score-bank construct set extends).
 
 ADOPTION WAVE 2:
 
-5. rlsbl (low-risk surfaces first) — release-file + config validation + the certificate deploy
-   gate wired via rlsbl's external-checks mechanism.
-6. orxtra — ~1200–1600 lines of hand-rolled TOML loaders across 7+ packages collapse; the
+5. DONE — rlsbl (low-risk surfaces first) — release-file gate + config validation + the
+   certificate deploy gate wired via rlsbl's external-checks mechanism.
+6. DONE — orxtra — ~1200–1600 lines of hand-rolled TOML loaders across 7+ packages collapsed; the
    tagged-value entry point serves its compose flow.
-7. rlsbl changelog JSONL (the high-risk half) — fleet bootstrap is ~700 finalized chmod-444
-   JSONL files (~5000 lines) across ~30 repos, per-repo stamping scripts, rlsbl's OWN repo
-   LAST, and a red-green test in rlsbl proving stamped-file regeneration byte-identity +
-   `.validated` cache behavior BEFORE the fleet run.
-8. pgdesign — after custom scalar registration lands; registers identifier/pgtype/
-   sql-expression scalars; its `pkg/diagnostic` (severities/suppression) stays consumer-side,
-   fed by strictspec diagnostics.
+7. DONE — rlsbl changelog JSONL (the high-risk half) — the changelog engine gates on strictspec;
+   the fleet-wide per-line `format_version` backfill is COMPLETE (finalized chmod-444 JSONL files
+   across the fleet stamped, enforcement flipped on, rlsbl's OWN repo last), with the red-green
+   test proving stamped-file regeneration byte-identity + `.validated` cache behavior.
+8. DONE — pgdesign — gate-not-swap adoption (strictspec gates; pgdesign keeps its own model);
+   registered THREE custom scalars (identifier/pgtype/sql-expression); its `pkg/diagnostic`
+   (severities/suppression) stays consumer-side, fed by strictspec diagnostics.
 
 LATE:
 
-9. selfdoc directives — the DirectiveSpec catalog becomes a strictspec schema; the last
+9. DONE — selfdoc directives — the DirectiveSpec catalog became a strictspec schema; the last
    committed consumer, for blast-radius reasons.
-10. BetterClaude checkpoint — adopts generated validators when its schemas phase arrives.
-11. imagine / mage re-evaluation checkpoints.
+10. CHECKPOINT — BetterClaude — paper contracts standing; its monorepo adoption UNSTARTED
+    (adopts generated validators when its schemas phase arrives).
+11. CHECKPOINT — imagine (corpus-only standing) / mage (independent standing) re-evaluation.
 
 ## Defects found during sizing
 
@@ -214,6 +219,28 @@ always-latest rule.
 
 ## Status
 
+SHIPPED AND ADOPTED (2026-07-28). The toolchain is RELEASED at 0.1.0 across all four
+distribution channels: PyPI (Python), npm (TypeScript), Go module (Go), and GitHub Release
+assets. The binding construct-set freeze (decision 3) is now in force as of this first release.
+
+- Four-target conformance is GREEN: 42 fixtures, 168 checks pass (42 × 4 targets), cross-target
+  parity zero findings (verdict + code + path + message identical across Python, Go, TS, and the
+  reference target).
+- The acceptance test is GREEN with the 3-entry FROZEN waiver list (the three recorded,
+  intentionally-waived divergences; no additions permitted without reopening the freeze).
+- Adopted consumers (roadmap items closed): predraw; claudestream (deploy gate discharged via its
+  FIRST REAL adjudication file); a private project (dual-target generator DELETED); orxtra; rlsbl
+  (release-file gate + certificate deploy gate + changelog engine, with the fleet-wide per-line
+  `format_version` backfill COMPLETE); pgdesign (gate-not-swap + three custom scalars); and
+  selfdoc directives.
+- wavescript adoption is BLOCKED on three recorded design walls awaiting owner decisions:
+  map-iteration migration op absence, the validation-seam refactor, and bank scope (see roadmap
+  item 4).
+- Checkpoints recorded (not yet consumers): BetterClaude (paper contracts standing; its monorepo
+  adoption unstarted), imagine (corpus-only standing), mage (independent standing).
+
+Below is the pre-release freeze record, retained for provenance:
+
 CONSTRUCT SET FROZEN (soft-freeze regime, decision 3) as of Phase 3.3 (2026-07-27): spec/ is
 redrafted in full (Phase 1), all fifteen examples/ drafts came back clean with their gap notes
 resolved (Phase 2), and Phase 3.3 absorbed every finding into spec/ — the concrete TOML surface
@@ -223,12 +250,14 @@ rendering pins landed. NEXT: the scaffolding and build phases. The BINDING freez
 release (no new construct enters without the examples/ gap-note process; implementation-driven
 amendments before the first release are still normal and recorded).
 
-Remaining phases, in order:
+Phases, in order (all complete as of 2026-07-28):
 
 1. ~~Redraft spec/ in full.~~ DONE (Phase 1).
 2. ~~Draft examples/ and resolve the gap notes to reach the construct-freeze gate.~~ DONE
    (Phase 2 + Phase 3.3; construct set frozen under the soft-freeze regime).
-3. Scaffold the monorepo (the Go-tag question is closed — see Pre-scaffolding verification).
-4. Build toward the acceptance test.
-5. A SINGLE release at the very end (this is the binding construct-set freeze).
-6. Then the adoption waves (wave 1, wave 2, late).
+3. ~~Scaffold the monorepo (the Go-tag question is closed — see Pre-scaffolding verification).~~ DONE.
+4. ~~Build toward the acceptance test.~~ DONE (acceptance test green with the 3-entry frozen waiver list).
+5. ~~A SINGLE release at the very end (this is the binding construct-set freeze).~~ DONE (0.1.0 on
+   PyPI + npm + Go module + GitHub Release assets; the freeze is now binding).
+6. ~~Then the adoption waves (wave 1, wave 2, late).~~ DONE except wavescript (BLOCKED) and the
+   BetterClaude/imagine/mage checkpoints (recorded) — see the migration roadmap above.
