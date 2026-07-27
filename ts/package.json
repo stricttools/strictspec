@@ -1,0 +1,40 @@
+{
+	"name": "strictspec",
+	"version": "0.0.0",
+	"private": true,
+	"//publish": "TODO: flip `private` to false (or remove it) at the first real publish. Kept private for now so nothing can accidentally publish before the release. The npm name `strictspec` is owner-reserved (0.0.0 placeholder).",
+	"type": "module",
+	"description": "TypeScript runtime library and CLI stub for strictspec",
+	"engines": {
+		"node": ">=22"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/smm-h/strictspec.git",
+		"directory": "ts"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		}
+	},
+	"types": "./dist/index.d.ts",
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsc",
+		"test": "npm run build && tsc -p tsconfig.test.json && node --test \"dist-test/tests/**/*.test.js\"",
+		"lint": "biome check .",
+		"prepack": "npm run build"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.4",
+		"@types/node": "^22.20.1",
+		"typescript": "^7.0.2"
+	},
+	"keywords": [
+		"rlsbl"
+	]
+}

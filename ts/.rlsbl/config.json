@@ -1,0 +1,12 @@
+{
+  "targets": [
+    "npm"
+  ],
+  "publish_mode": "ci",
+  "pipelines": {
+    "npm": {
+      "type": "npm",
+      "local": false
+    }
+  }
+}
