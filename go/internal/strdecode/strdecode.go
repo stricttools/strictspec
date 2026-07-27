@@ -25,8 +25,9 @@ func JSON(lexeme string) string {
 }
 
 // TOML decodes a TOML string lexeme into its code-point value. It handles the
-// four TOML string forms: basic `"..."`, literal `'...'`, multiline basic
-// `"""..."""`, and multiline literal `'''...'''`.
+// four TOML string forms: basic (double-quoted), literal (single-quoted),
+// multiline basic (triple double-quoted), and multiline literal (triple
+// single-quoted).
 func TOML(lexeme string) string {
 	switch {
 	case strings.HasPrefix(lexeme, `"""`):
