@@ -1,0 +1,24 @@
+{
+  "format_version": 1,
+  "publish_mode": "ci",
+  "targets": ["npm", "pypi"],
+  "pipelines": {
+    "npm": {
+      "type": "npm",
+      "local": false,
+      "provenance": true,
+      "target": "npm"
+    },
+    "pypi": {
+      "type": "pypi",
+      "local": false,
+      "target": "pypi"
+    },
+    "docs-deploy": {
+      "type": "cloudflare-pages",
+      "local": true,
+      "target": null
+    }
+  },
+  "coverage_unit": "commit"
+}

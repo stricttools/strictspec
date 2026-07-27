@@ -1,0 +1,20 @@
+{
+  "format_version": 1,
+  "publish_mode": "ci",
+  "targets": ["pypi", "go"],
+  "pipelines": {
+    "pypi-launcher": {
+      "type": "pypi",
+      "local": false,
+      "target": "pypi",
+      "artifact": "launcher",
+      "wraps": "pypi",
+      "binary_source": "github-release"
+    },
+    "go": {
+      "type": "go",
+      "local": false,
+      "target": "go"
+    }
+  }
+}
