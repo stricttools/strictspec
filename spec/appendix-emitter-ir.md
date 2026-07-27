@@ -83,6 +83,15 @@ emission order; renderers may not reorder).
   renderer tables: for each `STRICTSPEC_*` code, a target-native function/table entry that takes
   the slot bindings and produces the pinned message text, using the target-native implementation
   of the rendering pin (`appendix-rendering.md`).
+- WHERE THE RENDERER TABLE LIVES (soft-freeze amendment, 2026-07-27): the per-target renderer
+  table is part of the TARGET'S RUNTIME, generated ONCE by the toolchain's OWN codegen from the
+  catalogue (`appendix-error-codes.md`) when the runtime is built — NOT emitted per consumer
+  `gen` run. A consumer's generated validator IMPORTS the renderer table from the runtime it is
+  paired to (version-pairing guard); it does not carry its own copy. "Compiled per-target" above
+  means "one renderer table per target language, built into that target's runtime," not "one
+  renderer table per generated artifact." This keeps every consumer of a given release byte-
+  identical in rendering (the renderer is shared, not re-derived) and is why the whole catalogue
+  can change in lockstep with a release without touching a single consumer's generated code.
 - The schema-shape IR is compiled per-target into the validator: record scopes, dispatches,
   scalar checks, constraint evals, and the gate, in the IR's fixed order.
 - NO hand-translated message strings exist ANYWHERE — not in the runtimes, not in generated
@@ -119,6 +128,15 @@ The IR's smallness is a design guarantee, not an accident. Excluded, by declarat
 The exclusions are what keep the four-target identity guarantee TRACTABLE: a closed, expression-
 free, hook-free, target-neutral node set is small enough to implement identically four times and
 to audit against hand-authored spec fixtures.
+
+## Soft-freeze amendment log
+
+- 2026-07-27 — §3: clarified WHERE the per-target renderer table lives. It is part of the
+  target's RUNTIME, generated once by the toolchain's own codegen from the catalogue when the
+  runtime is built, and IMPORTED by consumers' generated validators — never emitted per consumer
+  `gen` run. "Compiled per-target" means one renderer table per target language, not one per
+  generated artifact. No node-set or semantic change; a wording pin removing a per-consumer-gen
+  reading of the generation scheme.
 
 ## Cross-references
 
