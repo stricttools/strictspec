@@ -199,22 +199,7 @@ func (g *goEmitter) types() {
 // typeOrder returns every named type deterministically: the schema's declaration
 // order first, then any remaining (imported) types sorted alphabetically.
 func (g *goEmitter) typeOrder() []string {
-	seen := map[string]bool{}
-	order := make([]string, 0, len(g.s.Types))
-	for _, name := range g.s.TypeOrder {
-		if _, ok := g.s.Types[name]; ok && !seen[name] {
-			order = append(order, name)
-			seen[name] = true
-		}
-	}
-	var rest []string
-	for name := range g.s.Types {
-		if !seen[name] {
-			rest = append(rest, name)
-		}
-	}
-	sort.Strings(rest)
-	return append(order, rest...)
+	return namedTypeOrder(g.s)
 }
 
 func (g *goEmitter) recordType(name string, t *schema.Type) {
@@ -421,20 +406,11 @@ func goTypeOfKind(k doc.Kind) string {
 }
 
 func (g *goEmitter) intEnum(t *schema.Type) bool {
-	if t.Sourced {
-		return false
-	}
-	for _, ev := range t.EnumValues {
-		if ev.Kind != doc.Integer {
-			return false
-		}
-	}
-	return len(t.EnumValues) > 0
+	return isIntEnum(t)
 }
 
 func (g *goEmitter) isRecord(name string) bool {
-	t, ok := g.s.Types[name]
-	return ok && t != nil && t.Kind == schema.KindRecord
+	return isRecordType(g.s, name)
 }
 
 func (g *goEmitter) exportType(name string) string { return exportName(name) }
