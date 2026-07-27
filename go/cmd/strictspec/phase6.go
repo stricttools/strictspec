@@ -76,8 +76,17 @@ func migrateHandler(ctx *strictcli.Context, kwargs map[string]interface{}) stric
 		}
 		chain, ok := selectChain(migs, cur, to)
 		if !ok {
-			ctx.Error(fmt.Sprintf("%s: no migration chain from format_version %d to %d in %s",
-				docPath, cur, to, migDir))
+			// No registered migration set bridges the document's version to the
+			// target: the catalogued set-level code (migset named after the schema,
+			// matching the version-gate's STRICTSPEC_GATE_UNSUPPORTED convention).
+			ctx.Error(fmt.Sprintf("%s: %s", docPath, renderDiag(diag.Diagnostic{
+				Code: "STRICTSPEC_MIGRATE_UNKNOWN_SET",
+				Path: diag.NewPath(),
+				Slots: map[string]diag.Slot{
+					"migset": diag.SlotIdentifier{Name: prog.SchemaName()},
+					"schema": diag.SlotIdentifier{Name: prog.SchemaName()},
+				},
+			})))
 			return strictcli.Exit(1)
 		}
 		var res migrate.Result

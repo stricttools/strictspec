@@ -195,3 +195,30 @@ func TestDocDiffCLI(t *testing.T) {
 		t.Fatalf("doc-diff delta unexpected:\n%s", res.Stdout)
 	}
 }
+
+// TestMigrateNoChainUnknownSet: when no migration chain reaches the target
+// format_version from the document's version, the CLI emits the catalogued
+// STRICTSPEC_MIGRATE_UNKNOWN_SET (set-level code), not a plain ad-hoc string.
+func TestMigrateNoChainUnknownSet(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "schema.toml"), budgetV2Schema)
+	writeFile(t, filepath.Join(dir, "budget.migration.toml"), budgetMigrationFile)
+	docPath := filepath.Join(dir, "doc.json")
+	// A document at format_version 5: no migration in the dir bridges 5 -> 2.
+	writeFile(t, docPath, `{
+  "format_version": 5,
+  "name": "reviewer",
+  "prompt_template": "review",
+  "version": "1.0.0",
+  "budget": { "cost_thresholds": [5.0] }
+}`)
+
+	r := newApp().Test([]string{"migrate", filepath.Join(dir, "schema.toml"), docPath,
+		"--to", "2", "--migrations", dir})
+	if r.ExitCode == 0 {
+		t.Fatal("migrate must fail when no chain reaches the target version")
+	}
+	if !strings.Contains(r.Stderr, "STRICTSPEC_MIGRATE_UNKNOWN_SET") {
+		t.Fatalf("expected MIGRATE_UNKNOWN_SET, stderr: %s", r.Stderr)
+	}
+}
