@@ -1,0 +1,29 @@
+{
+  "items": [
+    {
+      "base_version": "0.1.0",
+      "bump": "minor",
+      "name": "py-strictspec",
+      "registry": "pypi",
+      "tag": "py-strictspec@v0.1.0",
+      "target_version": "0.1.0"
+    },
+    {
+      "base_version": "0.1.0",
+      "bump": "minor",
+      "name": "go-strictspec",
+      "registry": "go",
+      "tag": "go-strictspec@v0.1.0",
+      "target_version": "0.1.0"
+    },
+    {
+      "base_version": "0.1.0",
+      "bump": "minor",
+      "name": "ts-strictspec",
+      "registry": "npm",
+      "tag": "ts-strictspec@v0.1.0",
+      "target_version": "0.1.0"
+    }
+  ],
+  "section_type": "releasables"
+}
