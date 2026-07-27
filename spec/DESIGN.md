@@ -1,14 +1,20 @@
-# spec/ — The dclrbl Schema Language
+# spec/ — The strictspec Schema Language
 
-The constitution: the language-neutral definition of dclrbl schemas, the constraint vocabulary,
-the error model, the read-side primitives appendix, the write-side canonical-serialization
-appendix, the message-template appendix, the generated API contract, the versioning and
-migration rules, the version-boundary invariant, the domain-check architecture, the
-accepted-set formal semantics, and the meta-schema. Every backend and the internal interpreter
-implement this document; the conformance suite enforces it across all four targets: verdict,
-error-code, path, and message-text identity (ordered; messages render from the spec-pinned
-templates). This document, rendered by selfdoc, is also dclrbl's published language reference
-(decision 27) — the canonical, citable manual, versioned with the spec.
+The constitution: the language-neutral definition of strictspec schemas, the constraint
+vocabulary, the error model, the read-side primitives appendix, the write-side
+canonical-serialization appendix, the generated API contract, the versioning and migration
+rules, the version-boundary invariant, the domain-check architecture, the accepted-set formal
+semantics, and the meta-schema. The detailed pinned tables live in dedicated appendix files
+alongside this document and are versioned with it: the error-code catalogue and message
+templates (appendix-error-codes.md); value rendering, path grammar, and did-you-mean
+(appendix-rendering.md); the diff certificate and doc-diff output shapes
+(appendix-certificates.md); the per-construct formal semantics and undecidability catalogue
+(appendix-semantics.md); custom scalar registration (appendix-custom-scalars.md); and the
+shared emitter IR (appendix-emitter-ir.md). Every backend and the internal interpreter
+implement this document and its appendices; the conformance suite enforces it across all four
+targets: verdict, error-code, path, and message-text identity (ordered; messages render from
+the spec-pinned templates). This document, rendered by selfdoc, is also strictspec's published
+language reference (decision 27) — the canonical, citable manual, versioned with the spec.
 
 Schemas are authored in TOML (canonical, sole source syntax). JSON Schema is an export target
 for editor tooling, never a source.
@@ -48,13 +54,13 @@ lexeme retention and byte-stable writes. Consumers convert once, at migration ti
   preserved in every backend); booleans are not integers; non-finite numbers rejected.
 - Special leaf types: opaque JSON object (verbatim, never introspected) — every such leaf MUST
   declare either `consumer_check = "<name>"` (the named check is CONSUMER-NATIVE code over the
-  typed values — declared here so the blind spot is on record; dclrbl never executes it) or
+  typed values — declared here so the blind spot is on record; strictspec never executes it) or
   `unchecked = true` WITH a mandatory `unchecked_reason = "<why>"`; omission of the stance or
-  of the reason fails the meta-schema. Both stances are dclrbl-blind by written declaration: a
-  typo inside the blob is invisible to dclrbl — and `dclrbl check` prints the complete
-  inventory of unchecked subtrees (with reasons) AND consumer-check declarations, so every
-  blind spot is visible in review. Opaque domain string (validated by a named consumer check,
-  same declaration).
+  of the reason fails the meta-schema. Both stances are strictspec-blind by written
+  declaration: a typo inside the blob is invisible to strictspec — and `strictspec check`
+  prints the complete inventory of unchecked subtrees (with reasons) AND consumer-check
+  declarations, so every blind spot is visible in review. Opaque domain string (validated by a
+  named consumer check, same declaration).
 
 ## Primitives appendix (read side, normative)
 
@@ -80,21 +86,23 @@ identically across all four targets as part of full message-text identity (see E
    scalar: any lexeme whose exact value float64 cannot represent (an integer lexeme above
    exact-float64 range, or a decimal lexeme beyond float64 precision) = canonical hard error —
    the bound value never silently diverges from the lexeme. `-0`/`-0.0` pinned in the
-   rendering table.
-5. Canonical value rendering (cross-target normative): normative table for values inside
+   rendering table (appendix-rendering.md).
+5. Canonical value rendering (cross-target normative): the normative table for values inside
    diagnostic messages on every target — integers, floats, datetimes, strings
-   (quoting/escaping), booleans, null, negative zero, truncation. Messages never embed
-   platform-dependent content; positions are structured fields.
+   (quoting/escaping), booleans, null, negative zero, truncation — is pinned in
+   appendix-rendering.md. Messages never embed platform-dependent content; positions are
+   structured fields.
 6. Traversal order: document order for present keys, schema-declaration order for
    missing-required, index order for arrays. Phase-2 diagnostics follow phase 1, ordered by
    traversal order of containing records, then check-declaration order. Fixture-asserted order
    is emission order; renderers may not reorder.
-7. Did-you-mean (cross-target normative): pinned edit-distance metric, threshold, and
-   tie-break (alphabetical) over the known-key set. Every target implements it identically;
-   the `suggestion` field is conformance-asserted as part of message-text identity.
+7. Did-you-mean (cross-target normative): the pinned edit-distance metric, threshold, and
+   tie-break (alphabetical) over the known-key set are in appendix-rendering.md. Every target
+   implements it identically; the `suggestion` field is conformance-asserted as part of
+   message-text identity.
 8. Path rendering: the grammar for rendering a path (segment separators, index form,
-   key-quoting, index-then-key switching), pinned once. CROSS-TARGET normative: paths are part
-   of the conformance identity guarantee.
+   key-quoting, index-then-key switching) is pinned once in appendix-rendering.md. CROSS-TARGET
+   normative: paths are part of the conformance identity guarantee.
 9. Edge inputs: empty text, whitespace-only documents, empty TOML file, JSONL blank lines and
    final-line-without-LF — each has one pinned outcome.
 10. Unicode identity: NO implicit normalization anywhere. Map keys, duplicate detection, and
@@ -114,10 +122,10 @@ The write path is the same drift surface as the read path and gets the same trea
 
 - Values untouched by an operation serialize BYTE-IDENTICALLY to their source lexeme (the
   document model retains lexemes; nothing re-renders what it didn't change).
-- Constructed or type-coerced values render per a pinned table (a float value always renders
-  with a float lexeme — Go's `float64(5)` marshals as `5.0`, never `5`; constructed datetimes
-  render RFC 3339 with the declared kind; strings escape one way; key order = document order;
-  whitespace pinned).
+- Constructed or type-coerced values render per the pinned value-rendering table
+  (appendix-rendering.md): a float value always renders with a float lexeme — Go's
+  `float64(5)` marshals as `5.0`, never `5`; constructed datetimes render RFC 3339 with the
+  declared kind; strings escape one way; key order = document order; whitespace pinned.
 - PRODUCER-CURRENT-ONLY (the boundary invariant's first leg): the write path hard-errors when
   asked to serialize a document at any format_version other than the schema's current one. No
   conforming producer can create new staleness.
@@ -142,7 +150,7 @@ What every emitter emits, uniformly:
   throw/error on any diagnostic.
 - The version gate runs first, before structural validation; its diagnostics use the
   three-message pattern with the STRUCTURED remediation payload (got format_version, expected
-  format_version, schema id, migration-set id, exact `dclrbl migrate` invocation).
+  format_version, schema id, migration-set id, exact `strictspec migrate` invocation).
 - Typed values are immutable (frozen dataclasses / readonly TS types / Go values). Every
   record type gets generated `with_*` copy helpers (per-field copy-on-write; list edits
   produce new values) so mutate-then-revalidate stays typed end to end.
@@ -167,20 +175,38 @@ What every emitter emits, uniformly:
 - Generated-file hygiene: every file embeds the generator version, schema name +
   format_version, regeneration command, generated-by header, the MIT/unencumbered notice, and
   the target ecosystem's machine-readable generated-file and lint-suppression markers
-  (Go `// Code generated by dclrbl. DO NOT EDIT.`; Python `# ruff: noqa`; TS
+  (Go `// Code generated by strictspec. DO NOT EDIT.`; Python `# ruff: noqa`; TS
   `/* eslint-disable */`). Repo-level ignore files that some tools require (prettier) are
-  maintained by `dclrbl gen` for the manifest-declared generated paths.
+  maintained by `strictspec gen` for the manifest-declared generated paths.
 
 ## Construct set
 
-Bounded to the analyzed corpus. The corpus MUST include paper schemas for demobl, F, and step
-(examples/ drafts 11–13) before this set freezes — the sufficiency claim is verified, never
-assumed. Gap notes from those drafts feed back here as constructs or explicit exclusions.
+Bounded to the analyzed corpus. SOFT-FREEZE REGIME (decision 3): until the first release the
+construct set is NOT frozen — implementation-driven amendments (semantics corrections,
+error-code catalogue growth) are normal and recorded, but no NEW construct enters without the
+examples/ gap-note process. The binding freeze IS the first release. The construct-freeze gate
+is all examples/ drafts (claudestream and a private project first; the construct-only exercises for
+shared types, enum baking, and aggregates; and the BetterClaude and imagine corpus-DRAFT
+sources) coming back clean plus resolved gap notes. This SUPERSEDES the former demobl/F/step
+paper-schema precondition — those donors left the corpus.
 
 - Closed records and typed maps (distinct constructs); regex on map keys.
 - Named types; recursive references; documents are trees; a pinned max validation depth with
   its own canonical diagnostic (value chosen so the diagnostic fires before CPython stack
   exhaustion — multiple frames per nesting level under the default 1000-frame limit).
+- Shared type-definition files (decision 21): a schema may import named TYPES from dedicated
+  type-definition files — TYPES ONLY. No cross-file constraints, no transitive imports. A
+  type-definition file is itself a versioned document of the meta-schema (gated and migrated
+  exactly like a schema). Cross-file constraint references and transitive imports are
+  meta-schema rejections. This and enum sourcing (below) are the ONLY two sanctioned edges out
+  of an otherwise self-contained single schema file.
+- Enum arms sourced from a document (decision 32): a schema may declare an enum whose arms are
+  SOURCED FROM a named field of a named document. The toolchain BAKES the arms into the
+  generated code at `gen` time; `strictspec gen` and `strictspec check` HARD-ERROR on staleness
+  — baked arms differing from the current source document. This is a sanctioned data→schema
+  dependency edge, in the open and toolchain-gated. Removing an arm is a NARROWING edit (it
+  shrinks the accepted-document set) and triggers the format_version bump rule (see
+  Versioning); the same-version flip-scan mechanically catches an un-bumped arm removal.
 - Discriminated unions (literal-valued discriminator field) PLUS bounded NODE-KIND unions:
   undiscriminated unions allowed only when arms differ by node kind (scalar vs record vs
   array) — deterministic without a discriminator; covers predraw's fill-or-gradient.
@@ -193,7 +219,9 @@ assumed. Gap notes from those drafts feed back here as constructs or explicit ex
 - Scalars: string, integer, float, NUMBER (accepts both lexeme classes, binds float64,
   hard-errors on lexemes float64 cannot represent exactly, rendering preserves lexeme class),
   boolean, `date`, `time`, `datetime` (offset/local declared per field; appendix item 11);
-  enums and literal constants.
+  enums and literal constants. The datetime set (`date`/`time`/`datetime`) is COMPLETE for the
+  corpus — there is NO `duration` scalar (decision 35); future demand for one routes through
+  custom scalar registration, never a new built-in.
 - Safe integers: optional schema-wide `safe_integers = true` declaration; when set, every
   backend rejects |n| >= 2^53 (verdict identity preserved across backends). MANDATORY whenever
   the schema declares a TS target — a TS target without it is a hard error at generation time.
@@ -214,10 +242,12 @@ assumed. Gap notes from those drafts feed back here as constructs or explicit ex
 - Per-field descriptions (feed the exported metadata and scaffold comments).
 - Custom scalar registration: part of the language design (a named scalar with a toolchain-
   registered lexeme rule, binding, and rendering entry — pgdesign is the first consumer);
-  build-sequenced after the acceptance test, not a design exclusion.
+  build-sequenced after the acceptance test, not a design exclusion. The registration surface
+  (lexeme rule, binding, and rendering-entry format) is pinned in appendix-custom-scalars.md.
 
 NOT in the language: allOf, not, if/then/else, patternProperties, format keywords,
-uniqueItems, multipleOf; defaults; schema imports/composition; YAML. Exclusions are
+uniqueItems, multipleOf; defaults; schema composition BEYOND named-type imports from
+type-definition files (no cross-file constraints, no transitive imports); YAML. Exclusions are
 re-examined only through the examples/ gap-note process.
 
 ## Union diagnostics (normative)
@@ -232,8 +262,8 @@ TOML document is a canonical hard error, per the construct set).
 
 ## Cross-field and cross-document constraint vocabulary
 
-Attach at any nesting scope; implemented ONCE in the shared emitter IR; conformance-tested for
-verdict+code+path+message identity like every structural check.
+Attach at any nesting scope; implemented ONCE in the shared emitter IR (appendix-emitter-ir.md);
+conformance-tested for verdict+code+path+message identity like every structural check.
 
 Intra-document forms (decidable from document + schema alone):
 
@@ -259,11 +289,19 @@ conformance guarantee as everything above; they are NOT consumer code):
 | named-reference-must-resolve (across documents) | incantino flow -> screen files; orxtra cross-file deps |
 | set-coverage (every element of an evidence set appears in a collection) | rlsbl: every commit in range covered by a changelog entry |
 | cross-collection-unique | names unique across a document family |
+| count-limit (count of documents matching a declared selection ≤/≥ literal N) | aggregate over a selection; literal bounds only |
+| sum-limit (sum of a declared numeric field across a selection ≤/≥ literal N) | aggregate over a selection; literal bounds only |
+
+count-limit and sum-limit (decision 23) are AGGREGATE forms with LITERAL bounds ONLY — no
+expressions, no computed bounds; the bound is a literal written in the schema. count-limit
+compares the count of documents matching a declared selection against N; sum-limit compares the
+sum of a declared numeric field across the selection against N. Their formal semantics are
+pinned in appendix-semantics.md.
 
 ## Domain checks — portable by construction
 
 Domain checks are the validation that needs the outside world. The architecture has two
-dclrbl-owned layers — the former third layer, a portable decision language, was REMOVED
+strictspec-owned layers — the former third layer, a portable decision language, was REMOVED
 2026-07-12 (decision 23); the bespoke tail is consumer-native (below):
 
 1. EVIDENCE RESOLVERS — the only IO surface. A CLOSED, named vocabulary implemented by the
@@ -275,35 +313,36 @@ dclrbl-owned layers — the former third layer, a portable decision language, wa
    required resolver (git in a browser) hard-errors at check-execution time, naming the
    resolver. Extending the vocabulary is a versioned, changelog-covered language change.
 2. THE DECLARATIVE LAYER — the cross-document constraint vocabulary above. Most real domain
-   checks (references, coverage, uniqueness) are these forms and stop being "domain checks"
-   in any meaningful sense: implemented once in the shared IR, executed by the CONSTRAINT
-   ENGINE ported to all four targets — verdict-, code-, path-, and message-identical
-   everywhere.
+   checks (references, coverage, uniqueness, aggregate count/sum limits) are these forms and
+   stop being "domain checks" in any meaningful sense: implemented once in the shared emitter
+   IR (appendix-emitter-ir.md), executed by the CONSTRAINT ENGINE ported to all four targets —
+   verdict-, code-, path-, and message-identical everywhere.
 
 THE CONSUMER-NATIVE TAIL: genuinely bespoke checks are ordinary consumer code over the
 generated typed values — invoked by the consumer after validation, emitting diagnostics with
-consumer-prefixed codes via the runtime's constructor. They are outside dclrbl and outside the
-conformance guarantee, BY DECLARATION: dclrbl has no registration surface, no plugin API, no
-embedded expression language — consumer checks are not plugged in, they simply run downstream.
-Blobs owned by such a check are declared with the `consumer_check` stance on the opaque leaf,
-so the boundary is on record and inventoried by `dclrbl check`. Rationale: the constraint
-vocabulary covers the portable majority; a bespoke expression DSL hand-ported to four targets
-was a perpetual drift surface serving only the tail that is bespoke anyway. CEL-class open
-computation remains expressly rejected — there is nothing left to embed it in; a check shape
-that recurs across consumers is a vocabulary-evolution conversation, not an escape hatch.
+consumer-prefixed codes via the runtime's constructor. They are outside strictspec and outside
+the conformance guarantee, BY DECLARATION: strictspec has no registration surface, no plugin
+API, no embedded expression language — consumer checks are not plugged in, they simply run
+downstream. Blobs owned by such a check are declared with the `consumer_check` stance on the
+opaque leaf, so the boundary is on record and inventoried by `strictspec check`. Rationale: the
+constraint vocabulary covers the portable majority; a bespoke expression DSL hand-ported to
+four targets was a perpetual drift surface serving only the tail that is bespoke anyway.
+CEL-class open computation remains expressly rejected — there is nothing left to embed it in; a
+check shape that recurs across consumers is a vocabulary-evolution conversation, not an escape
+hatch.
 
 Execution model: phase 1 (structural) runs first and completely; phase 2 (domain — the
 constraint vocabulary over resolver evidence) runs only for records whose phase 1 passed;
 diagnostics append to the same ordered result. Honest carve-out: "all errors in one pass" is
 per-phase. Vocabulary forms receive the TYPED containing record (partial-subtree binding —
 which also serves downstream consumer-native checks). Every diagnostic is an error; warnings
-do not exist. `dclrbl validate` requires an explicit mode — `--structural-only` or
+do not exist. `strictspec validate` requires an explicit mode — `--structural-only` or
 `--with-domain-checks` — and the CLI hosts domain checks natively (the toolchain has the
 constraint engine and the resolvers); no default.
 
-What remains outside dclrbl: the consumer-native tail above, and bespoke analysis that is not
-document validation at all (pgdesign's normal-form analysis). Such code consumes
-dclrbl-validated typed values.
+What remains outside strictspec: the consumer-native tail above, and bespoke analysis that is
+not document validation at all (pgdesign's normal-form analysis). Such code consumes
+strictspec-validated typed values.
 
 ## Unknown-key policy
 
@@ -315,6 +354,13 @@ remain exempt from unknown-key errors. There is no warning severity anywhere in 
 the diagnostic model has no severity field, every diagnostic is an error, and no
 valid-with-warnings outcome exists — for structural validation or domain checks.
 
+The two sanctioned edges out of a single schema file — named-type imports from type-definition
+files (decision 21) and enum arms sourced from a document (decision 32) — are NOT unknown-key
+relaxations. Imported types are resolved names, and sourced enum arms are baked at `gen` time;
+unknown keys remain a hard error everywhere, including within imported types and against the
+sourced-enum source document. A schema remains otherwise self-contained; these are the only two
+cross-file/data dependency edges the language sanctions.
+
 ## Versioning, migrations, and the version-boundary invariant
 
 Field naming (three formerly-ambiguous uses of "version", now distinct tokens):
@@ -322,17 +368,25 @@ Field naming (three formerly-ambiguous uses of "version", now distinct tokens):
 - Documents carry integer `format_version` (fixed field name).
 - Schemas declare `format_version` — the value their documents must carry. Same token as the
   document field: the pairing is visible in the text.
-- Schemas carry `dclrbl_spec_version` — the schema-LANGUAGE version (schemas are documents of
-  the meta-schema, gated and migrated like any other document).
+- Schemas carry `meta_version` — the schema-LANGUAGE version (schemas are documents of the
+  meta-schema, gated and migrated like any other document).
 
 Rules:
 
 - The gate accepts exactly the schema's current `format_version`; absent/wrong-type/
   unsupported = hard error using the three-message pattern with a STRUCTURED remediation
   payload: got format_version, expected format_version, schema id, migration-set id, and the
-  exact `dclrbl migrate` invocation. No inference, no ranges, no legacy modes.
+  exact `strictspec migrate` invocation. No inference, no ranges, no legacy modes.
+- NORMATIVE BUMP RULE (decision 13): any schema edit that SHRINKS the accepted-document set
+  obligates a `format_version` bump — tightening a constraint, removing an enum arm (including
+  a sourced-enum arm removed or gone stale), removing an alias, making an optional field
+  required, narrowing a union, adding a required field, or any other edit that rejects a
+  document the previous schema accepted. Widening edits (accepting strictly more documents) do
+  NOT obligate a bump. Enum-sourcing interaction: removal of a sourced arm is a narrowing edit
+  and triggers the bump. `strictspec diff`'s SAME-VERSION FLIP-SCAN (below) mechanically
+  enforces this — an un-bumped narrowing is a hard error.
 - JSONL: per-line `format_version`; mixed-version streams well-defined (per-line gate).
-- Migration execution loci — exactly two, both tool-owned: (1) the CLI (`dclrbl migrate`,
+- Migration execution loci — exactly two, both tool-owned: (1) the CLI (`strictspec migrate`,
   including explicit in-memory migration of immutable archives — read old bytes, migrate in
   memory, hand back current-version values, never write; distinct from the banned silent
   auto-migrate-on-read); (2) TOOL-GENERATED BOUNDARY CHECKPOINTS (below). Receiver-side
@@ -358,7 +412,7 @@ Rules:
   non-singleton: pinned, hard errors where ambiguous).
 - Reversibility taxonomy: each op declares `down` (total), `partial` (per-document; failure is
   a canonical hard error — e.g. unwrap_singleton on a 2-element list), or `irreversible`.
-  The declared taxonomy is VERIFIED EMPIRICALLY by `dclrbl diff` (corpus round-trip; see
+  The declared taxonomy is VERIFIED EMPIRICALLY by `strictspec diff` (corpus round-trip; see
   below) — a mis-declared taxonomy is a hard error, not documentation. Static verification
   arrives with the unbundled future analyzer (decision 25).
 - Flagship examples: claudestream budget = rename_field + wrap_in_array (down: partial);
@@ -375,7 +429,7 @@ tool-generated migrate-to-current checkpoint. Three legs:
    WRITE-DOOR: every document entering the store is migrated-to-current and revalidated
    atomically at the write door, or rejected. Invariant: nothing stale exists at rest.
    Readers behind an ingesting store never meet an old document — their gate is a tautology.
-3. LIVE CHANNELS: a normative self-describing envelope (format_version + schema id + dclrbl
+3. LIVE CHANNELS: a normative self-describing envelope (format_version + schema id + strictspec
    release) and a version-negotiation handshake: producer and consumer agree on a single
    version before documents flow, or the channel refuses to open — explicit agreement, hard
    failure, no fallback. When negotiated versions differ from the producer's storage version,
@@ -390,34 +444,41 @@ which a reader meets a non-current document that did not already hard-error at a
 Consumers that declare no stores and no channels get no checkpoint code and pay nothing.
 Checkpoints are explicit, deterministic, single-target (current), and hard-failing — this is
 NOT auto-migrate-on-read, which remains banned. Fleet coordination: rlsbl's format_version
-deploy gate (fed by `dclrbl diff` certificates) refuses to roll out a producer emitting a
+deploy gate (fed by `strictspec diff` certificates) refuses to roll out a producer emitting a
 version its declared consumers cannot accept, and sequences at-rest migration jobs as ordered
 release steps.
 
 ## Accepted-set semantics, diff, and doc-diff
 
-FORMAL SEMANTICS APPENDIX (normative, versioned, WRITTEN NOW): every schema denotes a regular
-tree language plus a constraint envelope; every migration denotes a restricted tree transducer
-(restricted because ops never compute values from values — every value at N+1 is a verbatim
-carry-over, an injected literal, or absent). The three-valued verdict algebra
-(holds/violated/undecidable), the proof-object format, the CLOSED UNDECIDABILITY CATALOG (the
-enumerated fragments where a decision procedure may legitimately return unknown — every
-`undecidable` names its class; an open-ended "unknown" does not exist; adding a class is a
-breaking-class, changelog-covered appendix change), and the model-search order for witness
-synthesis are pinned here. Every construct added to the language MUST extend this appendix —
-a construct without semantics cannot ship. UNBUNDLING (2026-07-12, decision 25): nothing in
-the dclrbl toolchain implements these decision procedures; the analyzer that does (automaton
-inclusion, constraint solving, witness synthesis, proof objects re-verified by a small
-independent checker) is a SEPARATE FUTURE PROJECT. The appendices are written now so that
-(a) construct additions stay semantics-honest and (b) the analyzer can later be built against
-a spec that never drifted.
+FORMAL SEMANTICS APPENDIX (normative, versioned, WRITTEN NOW — appendix-semantics.md): every
+schema denotes a regular tree language plus a constraint envelope; every migration denotes a
+restricted tree transducer (restricted because ops never compute values from values — every
+value at N+1 is a verbatim carry-over, an injected literal, or absent). The three-valued
+verdict algebra (holds/violated/undecidable), the per-construct semantics entries (every
+construct in the language — including count-limit and sum-limit — has a semantics entry), and
+the CLOSED UNDECIDABILITY CATALOG (the enumerated fragments where a decision procedure may
+legitimately return unknown — every `undecidable` names its class; an open-ended "unknown" does
+not exist; adding a class is a breaking-class, changelog-covered appendix change) are pinned
+NOW in appendix-semantics.md. Every construct added to the language MUST extend that appendix —
+a construct without semantics cannot ship. DEFERRED (decision 25, amending the former
+written-now clause): the PROOF-OBJECT FORMAT and the MODEL-SEARCH ORDER for witness synthesis
+are NOT written now — they move to the future analyzer project. UNBUNDLING (2026-07-12,
+decision 25): nothing in the strictspec toolchain implements these decision procedures; the
+analyzer that does (automaton inclusion, constraint solving, witness synthesis, proof objects
+re-verified by a small independent checker) is a SEPARATE FUTURE PROJECT. The per-construct
+semantics and undecidability catalogue are written now so that (a) construct additions stay
+semantics-honest and (b) the analyzer can later be built against a spec that never drifted.
 
-`dclrbl diff` — THE EMPIRICAL ENGINE (what ships). Inputs: a schema at two format versions,
+`strictspec diff` — THE EMPIRICAL ENGINE (what ships). Inputs: a schema at two format versions,
 the migration M between them, and a REQUIRED `--corpus <glob>` of real documents. It runs:
 
 - FLIP-SCAN: every corpus document validated at N and at N+1; every flip is reported with the
   document and its killing diagnostics (code + path). A flipped document is a REAL WITNESS —
   no synthesis needed.
+- SAME-VERSION FLIP-SCAN (decision 25): the corpus replayed against the OLD and NEW schema at
+  the SAME (unchanged) format_version. Any document flipping valid->invalid is an UN-BUMPED
+  NARROWING — a HARD ERROR (pairs with the versioning bump rule). This catches a narrowing edit
+  that forgot to bump format_version, including a stale/removed sourced enum arm.
 - MIGRATE-ROUND-TRIP: soundness (M(d) revalidates at N+1 for every corpus d valid at N — a
   failure is a counterexample document) and completeness (M never errors on a valid-at-N
   corpus document). This enables red-green migration authoring against the corpus: write M,
@@ -426,24 +487,25 @@ the migration M between them, and a REQUIRED `--corpus <glob>` of real documents
   against the corpus (down applied where declared; partial failures must match the
   declaration); a mis-declared taxonomy is a hard error, not documentation.
 
-Output: a CERTIFICATE in a spec-pinned JSON format. Every claim carries an EVIDENCE GRADE:
-`violated` (a corpus document is the counterexample — a proof) or `corpus-supported` (no
-counterexample in the declared corpus — explicitly NOT a proof; the certificate records the
-corpus identity and size so the claim's weight is legible). The `proven` grade — a
-machine-checkable proof object re-verified by the independent checker — is RESERVED for the
-future analyzer, which emits the SAME certificate format; the gate consumes certificates
-without caring which engine produced them.
+Output: a CERTIFICATE in a spec-pinned JSON format (pinned in appendix-certificates.md). Every
+claim carries an EVIDENCE GRADE: `violated` (a corpus document is the counterexample — a proof)
+or `corpus-supported` (no counterexample in the declared corpus — explicitly NOT a proof; the
+certificate records the corpus identity and size so the claim's weight is legible). The
+`proven` grade — a machine-checkable proof object re-verified by the independent checker — is
+RESERVED for the future analyzer, which emits the SAME certificate format; the gate consumes
+certificates without caring which engine produced them.
 
 GATE INTEGRATION (normative): the certificate is the required input to rlsbl's format_version
 deploy gate. `violated` BLOCKS release. The green light is `corpus-supported` over the
 consumer's DECLARED AT-REST CORPUS (the documents the migration will actually meet). A
-consumer with no corpus discharges via a committed ADJUDICATION FILE — itself a dclrbl-schema'd
-TOML document naming each unsupported claim and attaching a signed manual justification.
-There is no bypass.
+consumer with no corpus discharges via a committed ADJUDICATION FILE — itself a
+strictspec-schema'd TOML document naming each unsupported claim and attaching a signed manual
+justification. There is no bypass.
 
-`dclrbl doc-diff` (inputs: one schema + two documents of it): a structured per-path semantic
-delta — added/removed/changed with typed values, array element moves keyed by declared
-unique-by. Pinned output shape. For agents reviewing spec changes as structure, not text.
+`strictspec doc-diff` (inputs: one schema + two documents of it): a structured per-path
+semantic delta — added/removed/changed with typed values, array element moves keyed by declared
+unique-by. Pinned output shape (in appendix-certificates.md). For agents reviewing spec changes
+as structure, not text.
 
 Both commands are toolchain-only analyses; conformance is golden-output determinism, not
 multi-target execution.
@@ -453,26 +515,32 @@ multi-target execution.
 - Diagnostic: stable code, path, message, expected/got, optional suggestion, optional source
   position (raw-text inputs have positions; tagged-value inputs do not). NO severity field —
   every diagnostic is an error.
-- Codes are prefixed strings; `DCLRBL_*` reserved. STABILITY POLICY: codes are permanent —
+- Codes are prefixed strings; `STRICTSPEC_*` reserved. STABILITY POLICY: codes are permanent —
   never renamed, never reused. Message text is SPEC-PINNED (below) and changes only as a
   versioned appendix change; consumers may assert codes AND rely on message identity across
-  targets.
-- MESSAGE TEMPLATES (normative appendix): every `DCLRBL_*` code has a spec-pinned template —
-  fixed prose plus typed slots (path, expected, got, suggestion), slot values rendered per the
-  canonical value-rendering table (appendix item 5) and suggestions computed per the pinned
-  did-you-mean algorithm (item 7). Generators emit each runtime's renderer FROM the templates;
-  nothing is hand-translated per target. Consumer-prefixed codes (from consumer-native checks)
-  have consumer-owned templates, outside this appendix and outside the conformance surface.
+  targets. The complete code catalogue lives in appendix-error-codes.md.
+- MESSAGE TEMPLATES (normative, appendix-error-codes.md): every `STRICTSPEC_*` code has a
+  spec-pinned template — fixed prose plus typed slots (path, expected, got, suggestion), slot
+  values rendered per the canonical value-rendering table (appendix-rendering.md) and
+  suggestions computed per the pinned did-you-mean algorithm (appendix-rendering.md). Generators
+  emit each runtime's renderer FROM the templates via the shared emitter IR
+  (appendix-emitter-ir.md); nothing is hand-translated per target. Consumer-prefixed codes (from
+  consumer-native checks) have consumer-owned templates, outside these appendices and outside
+  the conformance surface.
 - CONFORMANCE GUARANTEE: ordered verdict + code + path + message-text identity across all four
   targets — the suite asserts exactly what consumers may rely on, and agents (the primary
   consumers) read messages, so messages are guaranteed.
 - APPENDIX STABILITY POLICY: the appendices (path grammar, traversal order, datetime lexeme
-  rules, edge-input outcomes, canonical serialization, message templates, value rendering,
-  did-you-mean, formal semantics, undecidability catalog, model-search order)
-  are VERSIONED. ANY change is a breaking-class, changelog-covered entry in the dclrbl release
-  that ships it and triggers full conformance-fixture regeneration. Appendix-driven behavior
-  changes are always declared, never silent.
-- Paths: index-then-key switching, rendered per appendix item 8.
+  rules, edge-input outcomes, canonical serialization, message templates + code catalogue in
+  appendix-error-codes.md, value rendering + path grammar + did-you-mean in appendix-rendering.md,
+  the certificate + doc-diff shapes in appendix-certificates.md, the per-construct formal
+  semantics and undecidability catalogue in appendix-semantics.md, custom scalar registration in
+  appendix-custom-scalars.md, and the shared emitter IR in appendix-emitter-ir.md) are VERSIONED.
+  ANY change is a breaking-class, changelog-covered entry in the strictspec release that ships
+  it and triggers full conformance-fixture regeneration. Appendix-driven behavior changes are
+  always declared, never silent. The proof-object format and model-search order are NOT current
+  appendices — they are deferred to the future analyzer (decision 25).
+- Paths: index-then-key switching, rendered per appendix-rendering.md.
 - All-errors-in-one-pass (per phase); no fail-first mode.
 - Renderers: terminal (emission order) and JSON.
 
@@ -481,20 +549,20 @@ multi-target execution.
 - JSON Schema export with a NORMATIVE LOSSINESS TABLE: every construct maps to its exported
   form; dropped semantics are named (alias both-present rule, all cross-field and
   cross-document forms, consumer-check declarations, per-line versioning). The export may use
-  keywords excluded from dclrbl's own language. Editors are advisory; dclrbl is the
+  keywords excluded from strictspec's own language. Editors are advisory; strictspec is the
   enforcement.
 - STRUCTURED SCHEMA METADATA export (JSON): the complete schema — constructs, constraints,
   descriptions, versions, migration history, unchecked inventory — as data. selfdoc owns
-  rendering docs pages from this metadata; dclrbl generates no docs pages. One docs system —
-  which also renders THIS constitution as dclrbl's published language reference (decision 27):
-  the canonical, citable manual, versioned with the spec.
+  rendering docs pages from this metadata; strictspec generates no docs pages. One docs system —
+  which also renders THIS constitution (and its appendices) as strictspec's published language
+  reference (decision 27): the canonical, citable manual, versioned with the spec.
 
 ## Meta-schema, self-hosting, and bootstrap
 
-The language is defined as a dclrbl schema, versioned and migrated by its own machinery: each
-schema-language version bump ships declarative META-MIGRATIONS INSIDE the toolchain, and
-`dclrbl migrate` upgrades consumer schema files exactly like any other document — schema files
-are documents of the meta-schema. Meta-schema rules: `default` is not a construct — its
+The language is defined as a strictspec schema, versioned and migrated by its own machinery:
+each schema-language version bump ships declarative META-MIGRATIONS INSIDE the toolchain, and
+`strictspec migrate` upgrades consumer schema files exactly like any other document — schema
+files are documents of the meta-schema. Meta-schema rules: `default` is not a construct — its
 presence fails the meta-schema with a dedicated diagnostic (decision 30); alias may
 not target a discriminator; tuple/length-bounds exclusive; every regex must compile under RE2;
 every opaque JSON object leaf declares `consumer_check` or `unchecked = true` with a mandatory
@@ -502,8 +570,10 @@ every opaque JSON object leaf declares `consumer_check` or `unchecked = true` wi
 TS target without it is a hard error at generation time; a reachable nullable union is
 rejected when the target document syntax is known to be TOML; datetime range constraints must
 compare same-kind scalars; cross-document constraint forms must reference only declared
-resolvers.
-The consumer manifest (dclrbl.toml) is a document of a toolchain-shipped built-in schema —
+resolvers; named-type imports resolve only to type-definition files (types only — no cross-file
+constraints, no transitive imports); a sourced enum's baked arms must be fresh against their
+source document (staleness is a `gen`/`check` hard error).
+The consumer manifest (strictspec.toml) is a document of a toolchain-shipped built-in schema —
 same gating, same migrations, meta-fixtures in conformance; it additionally declares stores
 and channels for boundary-checkpoint generation.
 
@@ -511,6 +581,8 @@ Bootstrap order (entered by hand exactly once): document model -> hand-written m
 check -> interpreter (full language) -> generator -> thereafter the meta-schema is validated by
 the interpreter and the interpreter is pinned as the fourth conformance target.
 
-Notation core adapted from incantino: header (name, dclrbl_spec_version, format_version,
+Notation core adapted from incantino: header (name, meta_version, format_version,
 description) + per-field type/required/values/description (the donated notation's `default`
 is dropped — defaults are not in the language, decision 30).
+</content>
+</invoke>
