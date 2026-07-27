@@ -1,49 +1,56 @@
 name = "claude-models"
 meta_version = 1
 format_version = 1
-description = "model families, name grammar, 1M-suffix, display abbreviations (BetterClaude §3 models contract)."
 document_syntax = "json"
+role = "schema"
+root = "Models"
 targets = ["python", "go", "ts"]
 safe_integers = true   # context_window counts; TS target present
+description = "model families, name grammar, 1M-suffix, display abbreviations (BetterClaude §3 models contract)."
 
 imports = [ { file = "types-claude-common.toml", types = ["ModelName"] } ]
 
-[fields.families]
+[types.Models]
+type = "record"
+
+[types.Models.fields.families]
 type = "array"
 required = true
-min_items = 1
-[fields.families.item]
+min_len = 1
+[types.Models.fields.families.item]
 type = "record"
-[fields.families.item.fields.name]
+[types.Models.fields.families.item.fields.name]
 type = "string"
 required = true
 non_empty = true
 description = "Family name, e.g. opus, sonnet, haiku."
-[fields.families.item.fields.models]
+[types.Models.fields.families.item.fields.models]
 type = "array"
 required = true
-min_items = 1
-[fields.families.item.fields.models.item]
+min_len = 1
+[types.Models.fields.families.item.fields.models.item]
 type = "record"
-[fields.families.item.fields.models.item.fields.name]
+[types.Models.fields.families.item.fields.models.item.fields.name]
 type = "ModelName"
 required = true
 description = "The 1M-context suffix, if any, is part of the ModelName grammar."
-[fields.families.item.fields.models.item.fields.display_abbreviation]
+[types.Models.fields.families.item.fields.models.item.fields.display_abbreviation]
 type = "string"
 required = true
 non_empty = true
 max_length = 12
-[fields.families.item.fields.models.item.fields.context_window]
+[types.Models.fields.families.item.fields.models.item.fields.context_window]
 type = "integer"
 required = true
 min = 1
-[fields.families.item.fields.models.item.fields.supports_1m]
+[types.Models.fields.families.item.fields.models.item.fields.supports_1m]
 type = "boolean"
 required = true
 
-# family names must be pairwise distinct
-[[constraints]]
-form = "pairwise-distinct"
-field = "families[].name"
+# family names must be distinct across families (unique-by over the families collection, keyed
+# by `name`; semantically "no two families share a name").
+[[types.Models.constraints]]
+form = "unique-by"
+collection = "families"
+field = "name"
 normalization = "none"

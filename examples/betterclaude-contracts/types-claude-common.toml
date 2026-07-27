@@ -1,49 +1,46 @@
 # PRIMARY SHARED TYPE-DEFINITION FILE for the BetterClaude contract set (decision 21).
 # Types only. Imported by all five contract schemas — the reuse this draft stress-tests.
+# `role = "type-definitions"` is the declared discriminator (appendix-surface-syntax.md §4).
 name = "claude-common-types"
 meta_version = 1
 format_version = 1
+role = "type-definitions"
 description = "Shared Claude vocabulary: tiers, model names, session ids, instants, profile names, project-path codec."
 
 # Subscription tier. Reused by auth (tier + tier->display), profiles, usage.
 [types.Tier]
-kind = "enum"
+type = "enum"
 values = ["free", "pro", "max_5x", "max_20x", "team", "enterprise"]
 description = "A Claude subscription tier."
 
 # Model name grammar (family-generation, optional date stamp, optional 1M-context suffix).
-# Reused by models, usage, profiles, transcript.
+# Reused by models, usage, profiles, transcript. Scalar-refinement type: a string site + regex.
 [types.ModelName]
-kind = "scalar"
-base = "string"
-pattern = "^claude-[a-z]+(-[0-9]+)+(-[0-9]{8})?(\\[1m\\])?$"
+type = "string"
+regex = "^claude-[a-z]+(-[0-9]+)+(-[0-9]{8})?(\\[1m\\])?$"
 description = "e.g. claude-opus-4-20250514, claude-sonnet-4-5-20250929, claude-sonnet-4-5[1m]."
 
 # Session UUID. Reused by usage, transcript.
 [types.SessionId]
-kind = "scalar"
-base = "string"
-pattern = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+type = "string"
+regex = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 description = "A lowercase RFC 4122 UUID session id."
 
 # An offset instant (scalar-refinement fixing the datetime KIND). Reused by auth, usage, transcript.
 [types.Instant]
-kind = "scalar"
-base = "datetime"
+type = "datetime"
 datetime_kind = "offset"
 description = "An RFC 3339 offset datetime; the offset lexeme is retained (not rewritten to Z)."
 
 # Profile name slug. Reused by profiles, auth.
 [types.ProfileName]
-kind = "scalar"
-base = "string"
-pattern = "^[a-z0-9][a-z0-9_-]*$"
+type = "string"
+regex = "^[a-z0-9][a-z0-9_-]*$"
 description = "A claudewheel profile name."
 
 # Claude's on-disk project-dir codec: absolute path with '/' -> '-' (leading '-').
 # Reused by transcript (cwd encoding) and the session-file locator.
 [types.ProjectPathCodec]
-kind = "scalar"
-base = "string"
-pattern = "^-[A-Za-z0-9._-]+$"
+type = "string"
+regex = "^-[A-Za-z0-9._-]+$"
 description = "An encoded project path, e.g. /home/m/Projects -> -home-m-Projects."

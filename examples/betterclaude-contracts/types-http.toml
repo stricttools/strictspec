@@ -3,19 +3,19 @@
 name = "http-types"
 meta_version = 1
 format_version = 1
+role = "type-definitions"
 description = "HTTP-shaped shared types: HTTPS URLs and an OAuth client record."
 
-# HTTPS URL surface refinement. Reused by auth (endpoints).
+# HTTPS URL surface refinement. Reused by auth (endpoints). Scalar-refinement: a string site + regex.
 [types.HttpsUrl]
-kind = "scalar"
-base = "string"
-pattern = "^https://[^\\s]+$"
+type = "string"
+regex = "^https://[^\\s]+$"
 description = "An https:// URL by surface syntax (existence/reachability is a domain fact, not a regex)."
 
 # An OAuth client record. Named RECORD type; its `headers` field is an inline typed map — a
 # named type may embed a map even though a bare map is not itself a shared named type.
 [types.OAuthClient]
-kind = "record"
+type = "record"
 description = "OAuth client id + endpoints + default headers."
 [types.OAuthClient.fields.client_id]
 type = "string"

@@ -1,49 +1,56 @@
 name = "claude-profiles"
 meta_version = 1
 format_version = 1
-description = "profiles registry: config-dir precedence, the profile map, and the active profile (BetterClaude §3 profiles contract)."
 document_syntax = "json"
+role = "schema"
+root = "Profiles"
 targets = ["python", "go"]
+description = "profiles registry: config-dir precedence, the profile map, and the active profile (BetterClaude §3 profiles contract)."
 
 imports = [ { file = "types-claude-common.toml", types = ["ProfileName", "ModelName", "Tier"] } ]
 
+[types.Profiles]
+type = "record"
+
 # Ordered config-dir precedence (e.g. CLAUDEWHEEL_CONFIG_DIR -> ~/.claudewheel; §17).
-[fields.config_dir_precedence]
+[types.Profiles.fields.config_dir_precedence]
 type = "array"
 required = true
-min_items = 1
-item_type = "string"
+min_len = 1
 description = "Order is semantic: earlier entries win. The array binds order-preserving."
+[types.Profiles.fields.config_dir_precedence.item]
+type = "string"
 
-[fields.active]
+[types.Profiles.fields.active]
 type = "ProfileName"
 required = true
 description = "Must name a key in `profiles` (see reference constraint)."
 
 # The claudewheel profile registry: name -> profile record.
-[fields.profiles]
+[types.Profiles.fields.profiles]
 type = "map"
 required = true
 key_pattern = "^[a-z0-9][a-z0-9_-]*$"
 order = "incidental"
-[fields.profiles.value]
+[types.Profiles.fields.profiles.value]
 type = "record"
-[fields.profiles.value.fields.name]
+[types.Profiles.fields.profiles.value.fields.name]
 type = "ProfileName"
 required = true
-[fields.profiles.value.fields.path]
+[types.Profiles.fields.profiles.value.fields.path]
 type = "string"
 required = true
 non_empty = true
-[fields.profiles.value.fields.model]
+[types.Profiles.fields.profiles.value.fields.model]
 type = "ModelName"
 required = false
-[fields.profiles.value.fields.tier]
+[types.Profiles.fields.profiles.value.fields.tier]
 type = "Tier"
 required = false
 
-# The active profile must resolve to a declared profile key (intra-document reference).
-[[constraints]]
+# The active profile must resolve to a declared profile key (intra-document reference into a map).
+[[types.Profiles.constraints]]
 form = "intra-document-references"
-field = "active"
-target = "profiles.<key>"
+reference = "active"
+resolves_into = "profiles"
+resolves_by = "map-key"

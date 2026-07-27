@@ -1,75 +1,80 @@
 name = "claude-usage"
 meta_version = 1
 format_version = 1
-description = "statusline stdin JSON + usage-API windows (BetterClaude §3 usage contract)."
 document_syntax = "json"
+role = "schema"
+root = "Usage"
 targets = ["python", "go", "ts"]
 safe_integers = true   # token counts; TS target present, so this is mandatory
+description = "statusline stdin JSON + usage-API windows (BetterClaude §3 usage contract)."
 
 imports = [ { file = "types-claude-common.toml", types = ["SessionId", "ModelName", "Tier", "Instant"] } ]
 
+[types.Usage]
+type = "record"
+
 # --- statusline stdin JSON (what Claude passes to the statusline program) ---
-[fields.session_id]
+[types.Usage.fields.session_id]
 type = "SessionId"
 required = true
 
-[fields.model]
+[types.Usage.fields.model]
 type = "record"
 required = true
-[fields.model.fields.id]
+[types.Usage.fields.model.fields.id]
 type = "ModelName"
 required = true
-[fields.model.fields.display_name]
+[types.Usage.fields.model.fields.display_name]
 type = "string"
 required = true
 non_empty = true
 
-[fields.workspace]
+[types.Usage.fields.workspace]
 type = "record"
 required = true
-[fields.workspace.fields.current_dir]
+[types.Usage.fields.workspace.fields.current_dir]
 type = "string"
 required = true
 non_empty = true
-[fields.workspace.fields.project_dir]
+[types.Usage.fields.workspace.fields.project_dir]
 type = "string"
 required = true
 non_empty = true
 
-[fields.tier]
+[types.Usage.fields.tier]
 type = "Tier"
 required = false
 
-[fields.cost]
+[types.Usage.fields.cost]
 type = "record"
 required = false
-[fields.cost.fields.total_cost_usd]
+[types.Usage.fields.cost.fields.total_cost_usd]
 type = "number"                # NUMBER scalar: accepts int or float lexeme, binds float64
 required = true
 min = 0
 
 # --- usage-API windows ---
-[fields.windows]
+[types.Usage.fields.windows]
 type = "array"
 required = false
-[fields.windows.item]
+[types.Usage.fields.windows.item]
 type = "record"
-[fields.windows.item.fields.start]
+[types.Usage.fields.windows.item.fields.start]
 type = "Instant"
 required = true
-[fields.windows.item.fields.end]
+[types.Usage.fields.windows.item.fields.end]
 type = "Instant"
 required = true
-[fields.windows.item.fields.input_tokens]
+[types.Usage.fields.windows.item.fields.input_tokens]
 type = "integer"
 required = true
 min = 0
-[fields.windows.item.fields.output_tokens]
+[types.Usage.fields.windows.item.fields.output_tokens]
 type = "integer"
 required = true
 min = 0
 # each window's start must precede its end (ordered-pair; same-kind offset instants)
-[[fields.windows.item.constraints]]
+[[types.Usage.fields.windows.item.constraints]]
 form = "ordered-pair"
 less = "start"
-greater = "end"
+than = "end"

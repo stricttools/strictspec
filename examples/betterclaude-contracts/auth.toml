@@ -1,9 +1,11 @@
 name = "claude-auth"
 meta_version = 1
 format_version = 1
-description = "credentials-file shape: OAuth client, tokens, tier, and the tier->display table (BetterClaude DESIGN.md §3 auth contract)."
 document_syntax = "json"
+role = "schema"
+root = "Credentials"
 targets = ["python", "go"]
+description = "credentials-file shape: OAuth client, tokens, tier, and the tier->display table (BetterClaude DESIGN.md §3 auth contract)."
 
 # Imports from TWO type files — the multi-file import case.
 imports = [
@@ -11,48 +13,53 @@ imports = [
   { file = "types-claude-common.toml", types = ["Tier", "Instant"] },
 ]
 
-[fields.oauth]
+[types.Credentials]
+type = "record"
+
+[types.Credentials.fields.oauth]
 type = "OAuthClient"
 required = true
 description = "Imported record: client id + endpoints + headers."
 
-[fields.tokens]
+[types.Credentials.fields.tokens]
 type = "record"
 required = true
-[fields.tokens.fields.access_token]
+[types.Credentials.fields.tokens.fields.access_token]
 type = "string"
 required = true
 non_empty = true
-[fields.tokens.fields.refresh_token]
+[types.Credentials.fields.tokens.fields.refresh_token]
 type = "string"
 required = false
 non_empty = true
-[fields.tokens.fields.expires_at]
+[types.Credentials.fields.tokens.fields.expires_at]
 type = "Instant"
 required = true
-[fields.tokens.fields.scopes]
+[types.Credentials.fields.tokens.fields.scopes]
 type = "array"
 required = true
-item_type = "string"
+[types.Credentials.fields.tokens.fields.scopes.item]
+type = "string"
 
-[fields.tier]
+[types.Credentials.fields.tier]
 type = "Tier"
 required = true
 
 # tier -> display table (authored fresh into the auth schema; §3 / decision 17). A typed map
-# keyed by tier NAME (see gap note: keys are regex-constrained, not enum-constrained).
-[fields.tier_display]
+# keyed by tier NAME (see gap note: keys are regex-constrained, not enum-constrained — key_type
+# rejected, cluster 2d).
+[types.Credentials.fields.tier_display]
 type = "map"
 required = true
 key_pattern = "^(free|pro|max_5x|max_20x|team|enterprise)$"
 order = "incidental"
-[fields.tier_display.value]
+[types.Credentials.fields.tier_display.value]
 type = "record"
-[fields.tier_display.value.fields.display_name]
+[types.Credentials.fields.tier_display.value.fields.display_name]
 type = "string"
 required = true
 non_empty = true
-[fields.tier_display.value.fields.abbreviation]
+[types.Credentials.fields.tier_display.value.fields.abbreviation]
 type = "string"
 required = true
 non_empty = true

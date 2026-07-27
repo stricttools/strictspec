@@ -1,96 +1,100 @@
 name = "claude-transcript"
 meta_version = 1
 format_version = 1
-description = "transcript JSONL line: discriminated by `type`; project-path codec; opaque message payloads (BetterClaude §3 transcript contract)."
 document_syntax = "jsonl"
+role = "schema"
+root = "TranscriptLine"
 targets = ["python", "go", "ts"]
 safe_integers = true
+description = "transcript JSONL line: discriminated by `type`; project-path codec; opaque message payloads (BetterClaude §3 transcript contract)."
 
 imports = [ { file = "types-claude-common.toml", types = ["SessionId", "Instant", "ProjectPathCodec"] } ]
 
 # Each JSONL line is one transcript record, discriminated on `type`. Per-line format_version.
-[root]
-type = "union"
+[types.TranscriptLine]
+type = "discriminated-union"
 discriminator = "type"
 
 # --- user turn ---
-[root.arms.user.fields.type]
+[types.TranscriptLine.arms.user.fields.type]
 type = "literal"
 value = "user"
 required = true
-[root.arms.user.fields.uuid]
+[types.TranscriptLine.arms.user.fields.uuid]
 type = "SessionId"           # a UUID; SessionId's grammar is the generic uuid refinement (see gap note)
 required = true
-[root.arms.user.fields.parentUuid]
+[types.TranscriptLine.arms.user.fields.parentUuid]
+type = "nullable"           # first line has null parent (JSONL: nullable is available)
+required = true
+[types.TranscriptLine.arms.user.fields.parentUuid.inner]
+type = "SessionId"
+[types.TranscriptLine.arms.user.fields.sessionId]
 type = "SessionId"
 required = true
-nullable = true             # first line has null parent (JSONL: nullable is available)
-[root.arms.user.fields.sessionId]
-type = "SessionId"
-required = true
-[root.arms.user.fields.timestamp]
+[types.TranscriptLine.arms.user.fields.timestamp]
 type = "Instant"
 required = true
-[root.arms.user.fields.cwd]
+[types.TranscriptLine.arms.user.fields.cwd]
 type = "ProjectPathCodec"
 required = true
-[root.arms.user.fields.message]
-type = "opaque_json"        # Anthropic message shape — opaque to the transcript contract
+[types.TranscriptLine.arms.user.fields.message]
+type = "opaque"             # Anthropic message shape — opaque to the transcript contract
 required = true
 unchecked = true
 unchecked_reason = "Anthropic message content shape is owned by the API, not this contract; validated downstream by claudetranscript."
 
 # --- assistant turn ---
-[root.arms.assistant.fields.type]
+[types.TranscriptLine.arms.assistant.fields.type]
 type = "literal"
 value = "assistant"
 required = true
-[root.arms.assistant.fields.uuid]
+[types.TranscriptLine.arms.assistant.fields.uuid]
 type = "SessionId"
 required = true
-[root.arms.assistant.fields.parentUuid]
+[types.TranscriptLine.arms.assistant.fields.parentUuid]
+type = "nullable"
+required = true
+[types.TranscriptLine.arms.assistant.fields.parentUuid.inner]
+type = "SessionId"
+[types.TranscriptLine.arms.assistant.fields.sessionId]
 type = "SessionId"
 required = true
-nullable = true
-[root.arms.assistant.fields.sessionId]
-type = "SessionId"
-required = true
-[root.arms.assistant.fields.timestamp]
+[types.TranscriptLine.arms.assistant.fields.timestamp]
 type = "Instant"
 required = true
-[root.arms.assistant.fields.cwd]
+[types.TranscriptLine.arms.assistant.fields.cwd]
 type = "ProjectPathCodec"
 required = true
-[root.arms.assistant.fields.message]
-type = "opaque_json"
+[types.TranscriptLine.arms.assistant.fields.message]
+type = "opaque"
 required = true
 unchecked = true
 unchecked_reason = "Anthropic message content shape (blocks, usage) is owned by the API; validated downstream by claudetranscript."
 
 # --- system line ---
-[root.arms.system.fields.type]
+[types.TranscriptLine.arms.system.fields.type]
 type = "literal"
 value = "system"
 required = true
-[root.arms.system.fields.uuid]
+[types.TranscriptLine.arms.system.fields.uuid]
 type = "SessionId"
 required = true
-[root.arms.system.fields.timestamp]
+[types.TranscriptLine.arms.system.fields.timestamp]
 type = "Instant"
 required = true
-[root.arms.system.fields.content]
+[types.TranscriptLine.arms.system.fields.content]
 type = "string"
 required = true
 
 # --- summary line ---
-[root.arms.summary.fields.type]
+[types.TranscriptLine.arms.summary.fields.type]
 type = "literal"
 value = "summary"
 required = true
-[root.arms.summary.fields.summary]
+[types.TranscriptLine.arms.summary.fields.summary]
 type = "string"
 required = true
 non_empty = true
-[root.arms.summary.fields.leafUuid]
+[types.TranscriptLine.arms.summary.fields.leafUuid]
 type = "SessionId"
 required = true

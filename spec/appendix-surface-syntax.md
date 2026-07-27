@@ -205,7 +205,7 @@ inferred from shape (resolves the shared-types-exercise notation-ambiguity findi
 | `pairwise-distinct` | `collection`, `normalization` |
 | `ranges-disjoint` | `collection`, `start`, `length` |
 | `ordered-pair` | `less`, `than` |
-| `intra-document-reference` | `reference`, `resolves_into`, `resolves_by` |
+| `intra-document-references` | `reference`, `resolves_into`, `resolves_by` |
 
 Cross-document forms (each carries a resolver-backed `selection`/`source`):
 
