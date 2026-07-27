@@ -1,0 +1,83 @@
+{
+  "generated_at": "2026-07-27T18:56:08Z",
+  "package_count": 4,
+  "packages": {
+    "strictspec": {
+      "path": "python",
+      "targets": [
+        "pypi"
+      ],
+      "version": "0.1.0",
+      "description": null,
+      "deps": [],
+      "rdeps": [],
+      "library": false,
+      "dev_only": false,
+      "releasable_flag": true,
+      "test_only": false
+    },
+    "go-strictspec": {
+      "path": "go",
+      "targets": [
+        "go"
+      ],
+      "version": "0.1.0",
+      "description": null,
+      "deps": [],
+      "rdeps": [],
+      "library": false,
+      "dev_only": false,
+      "releasable_flag": true,
+      "test_only": false
+    },
+    "ts-strictspec": {
+      "path": "ts",
+      "targets": [
+        "npm"
+      ],
+      "version": "0.1.0",
+      "description": null,
+      "deps": [],
+      "rdeps": [],
+      "library": false,
+      "dev_only": false,
+      "releasable_flag": true,
+      "test_only": false
+    },
+    "conformance": {
+      "path": "conformance",
+      "targets": [
+        "plain"
+      ],
+      "version": "0.0.0",
+      "description": null,
+      "deps": [],
+      "rdeps": [],
+      "library": false,
+      "dev_only": true,
+      "releasable_flag": false,
+      "test_only": false
+    }
+  },
+  "graph": {
+    "leaf_nodes": [
+      "conformance",
+      "go-strictspec",
+      "strictspec",
+      "ts-strictspec"
+    ],
+    "root_nodes": [
+      "conformance",
+      "go-strictspec",
+      "strictspec",
+      "ts-strictspec"
+    ],
+    "max_depth": 0,
+    "topological_order": [
+      "conformance",
+      "go-strictspec",
+      "strictspec",
+      "ts-strictspec"
+    ]
+  }
+}
