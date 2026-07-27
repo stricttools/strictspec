@@ -31,34 +31,33 @@ def test_real_fixture_tree_is_green():
     assert report.fixture_count > 0
 
 
-def test_interpreter_and_go_live_others_stub():
-    # The reference interpreter (Phase 5.4) and the generated Go target
-    # (Phase 5.5) are implemented: every fixture PASSes on BOTH and none
-    # MISMATCHes / is NOT_INVOCABLE. The generated python/ts targets remain
-    # declared stubs, so each contributes UNIMPLEMENTED per fixture.
+def test_all_four_targets_live():
+    # All four targets (interpreter, python, go, ts) are implemented: every
+    # fixture PASSes on ALL of them and none MISMATCHes / is NOT_INVOCABLE /
+    # UNIMPLEMENTED. There are no declared stubs left.
     report = run(FIXTURES_ROOT)
     impl_count = len(implemented_targets())
+    assert impl_count == len(all_targets())
     assert report.count(Status.PASS) == report.fixture_count * impl_count
     assert report.count(Status.MISMATCH) == 0
     assert report.count(Status.NOT_INVOCABLE) == 0
-    stub_count = len(all_targets()) - impl_count
-    assert report.count(Status.UNIMPLEMENTED) == report.fixture_count * stub_count
+    assert report.count(Status.UNIMPLEMENTED) == 0
 
 
 def test_parity_active_and_clean():
-    # With >= 2 implemented targets the parity checker runs; interpreter vs go
-    # must be byte-identical (verdict + code + path + message), so there are ZERO
-    # parity findings.
+    # With four implemented targets the parity checker runs; interpreter, python,
+    # go, and ts must be byte-identical (verdict + code + path + message), so
+    # there are ZERO parity findings.
     report = run(FIXTURES_ROOT)
     assert report.parity.active
     assert report.parity.ok, [f.detail for f in report.parity.findings]
 
 
-def test_four_targets_interpreter_and_go_implemented():
+def test_four_targets_all_implemented():
     names = [t.name for t in all_targets()]
     assert names == ["interpreter", "python", "go", "ts"]
     impl = [t.name for t in implemented_targets()]
-    assert impl == ["interpreter", "go"]
+    assert impl == ["interpreter", "python", "go", "ts"]
 
 
 # --- Template catalogue -------------------------------------------------------
