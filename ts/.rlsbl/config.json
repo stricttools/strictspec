@@ -6,7 +6,9 @@
   "pipelines": {
     "npm": {
       "type": "npm",
-      "local": false
+      "target": "npm",
+      "local": false,
+      "provenance": true
     }
   }
 }

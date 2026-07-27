@@ -6,6 +6,7 @@
   "pipelines": {
     "pypi": {
       "type": "pypi",
+      "target": "pypi",
       "local": false
     }
   }

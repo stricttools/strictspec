@@ -1,0 +1,63 @@
+# goreleaser config for the strictspec CLI (the Go toolchain binary).
+#
+# This ships the `strictspec` command as per-OS/arch archives plus a
+# checksums.txt on the go-strictspec GitHub Release. Those archives are the
+# SINGLE binary source of truth: the PyPI and npm packages carry first-run
+# launcher shims that download the exact-version archive from this Release and
+# SHA-256-verify it against checksums.txt (root DESIGN.md decision 31).
+#
+# Asset naming is goreleaser's DEFAULT (`<ProjectName>_<Version>_<Os>_<Arch>`)
+# with `project_name: strictspec`, so assets are e.g.
+# `strictspec_0.1.0_linux_amd64.tar.gz`. The launcher shims reconstruct exactly
+# these names -- a custom name_template would silently break them, so it is
+# deliberately left default.
+#
+# MONOREPO TAG HANDLING: this is an rlsbl monorepo releasable. Release tags are
+# `go-strictspec@vX.Y.Z`, which is NOT bare semver. OSS goreleaser has no
+# `monorepo:` block (that is a goreleaser-Pro feature), so the version is
+# supplied to goreleaser via the `GORELEASER_CURRENT_TAG` env var, which the
+# publish workflow sets to the prefix-stripped `vX.Y.Z` before invoking
+# goreleaser. See the release-step notes: this is the first goreleaser-shipping
+# monorepo releasable in the ecosystem -- verify the goreleaser job resolves
+# version 0.1.0 (not a "failed to parse tag as semver" error) on the first
+# release.
+version: 2
+
+project_name: strictspec
+
+builds:
+  - main: ./cmd/strictspec
+    binary: strictspec
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      # The version is embedded from the VERSION file via go:embed
+      # (version.go / strictspec.Version), not injected here, so no -X.
+      - -s -w
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+checksum:
+  name_template: checksums.txt
+
+# rlsbl creates the GitHub Release (with notes) in its release flow; the
+# release:published event then triggers this goreleaser run. `append` uploads
+# the binary archives onto that existing Release instead of failing because it
+# already exists.
+release:
+  mode: append
+
+changelog:
+  disable: true
