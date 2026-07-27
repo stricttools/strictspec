@@ -1,0 +1,38 @@
+name = "drum-pattern"
+meta_version = 1
+format_version = 1
+description = "A step-sequencer pattern: each hit names a sound sourced from the sound registry."
+document_syntax = "json"
+targets = ["go", "python"]
+
+[fields.bpm]
+type = "integer"
+required = true
+min = 20
+max = 300
+
+[fields.hits]
+type = "array"
+required = true
+[fields.hits.item]
+type = "record"
+[fields.hits.item.fields.step]
+type = "integer"
+required = true
+min = 0
+max = 15
+
+# --- Enum arms SOURCED from a document (decision 32; appendix-semantics 3.21) ---
+# The arms are BAKED into the generated code at `gen` time. `strictspec gen`/`check`
+# HARD-ERROR (STRICTSPEC_ENUMSRC_STALE) if `baked` differs from the live source.
+[fields.hits.item.fields.sound]
+type = "enum"
+required = true
+description = "Sourced from sounds.registry.json."
+[fields.hits.item.fields.sound.source]
+document = "sounds.registry.json"
+selector = "sounds[].name"
+# BAKED ARMS — the accepted set is exactly this list, a function of the schema TEXT, not of the
+# live source (validation never reads the source; appendix-semantics 3.21). Kept fresh by the
+# toolchain: these must equal `sounds[].name` in the source at every `gen`/`check`.
+baked = ["kick", "snare", "hat", "clap", "tom"]

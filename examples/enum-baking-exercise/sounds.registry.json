@@ -1,0 +1,10 @@
+{
+  "format_version": 1,
+  "sounds": [
+    { "name": "kick",  "hz": 60 },
+    { "name": "snare", "hz": 200 },
+    { "name": "hat",   "hz": 8000 },
+    { "name": "clap",  "hz": 1500 },
+    { "name": "tom",   "hz": 120 }
+  ]
+}
