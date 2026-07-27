@@ -42,10 +42,28 @@ did-you-mean pin in that appendix.
      language constructs or newly surfaced hard-error conditions and are additive only.
 - Slot notation in templates: `{name}` interpolates a value of the declared slot type,
   rendered per `appendix-rendering.md`. Braces are literal delimiters; a template never
-  contains an unlisted slot. Slot types: `path` (rendered per the path grammar), `string`,
-  `int`, `code` (a bare `STRICTSPEC_*` string), `list<T>` (rendered as the pinned truncated
-  inline form), `value` (a rendered document value), `identifier`, `version` (an integer
-  `format_version` or `meta_version`).
+  contains an unlisted slot. Slot types:
+  - `string` — a PROSE insertion, rendered BARE (never quoted, never escaped): kind-names,
+    field names, resolver identities, remediation commands, and other tool-composed text that
+    reads as part of the sentence (e.g. `Expected record ... got array.`,
+    `Run: strictspec migrate ...`). A `string` slot never carries a raw document-derived value;
+    such values use the `value` type below.
+  - `value` — a rendered DOCUMENT value, rendered per the A.1 diagnostic table (strings
+    double-quoted, A.2-escaped, and A.4-truncated; floats from their source lexeme; etc.).
+    Document-derived text — including a regex PATTERN carried in a diagnostic — is a `value`
+    slot, so it renders double-quoted with A.2 escaping (see `appendix-rendering.md` A.7).
+  - `path` — rendered per the Part B path grammar.
+  - `int` — decimal digits (A.1 integer).
+  - `code` — a bare `STRICTSPEC_*` string.
+  - `identifier` — a schema-declared name, rendered bare.
+  - `version` — an integer `format_version` or `meta_version`, rendered as decimal digits.
+  - `list<T>` — the pinned truncated inline form (A.5).
+- SLOT-RENDERING AMENDMENT (soft-freeze, 2026-07-27): `string` slots are PROSE and render BARE;
+  document-derived values (including regex patterns) use the `value` type and render per A.1.
+  The three regex-pattern slots (`STRICTSPEC_VALUE_STRING_REGEX`, `STRICTSPEC_VALUE_MAP_KEY_REGEX`,
+  `STRICTSPEC_SCALAR_LEXEME`) are RE-TYPED from `string` to `value` (string-kinded) so they keep
+  rendering double-quoted with A.2 escaping — preserving amendment A.7's intent without a
+  string-slot special case. See `appendix-rendering.md` A.7 and Part D.
 
 ## 3. Closed area set
 
@@ -213,8 +231,8 @@ Every value constraint in the construct set.
 | `STRICTSPEC_VALUE_STRING_TOO_SHORT` | `String at {path} has {actual} code points; minimum is {limit}.` | actual: int, path: path, limit: int | Code points, never bytes. |
 | `STRICTSPEC_VALUE_STRING_TOO_LONG` | `String at {path} has {actual} code points; maximum is {limit}.` | actual: int, path: path, limit: int | Code points. |
 | `STRICTSPEC_VALUE_STRING_EMPTY` | `String at {path} is empty; a non-empty value is required.` | path: path | Non-empty constraint. |
-| `STRICTSPEC_VALUE_STRING_REGEX` | `String {actual} at {path} does not match the required pattern {pattern}.` | actual: value, path: path, pattern: string | Value regex. |
-| `STRICTSPEC_VALUE_MAP_KEY_REGEX` | `Map key {key} at {path} does not match the required key pattern {pattern}.` | key: string, path: path, pattern: string | Regex on map keys. |
+| `STRICTSPEC_VALUE_STRING_REGEX` | `String {actual} at {path} does not match the required pattern {pattern}.` | actual: value, path: path, pattern: value | Value regex. `{pattern}` is a `value` slot (string-kinded): double-quoted, A.2-escaped (A.7). |
+| `STRICTSPEC_VALUE_MAP_KEY_REGEX` | `Map key {key} at {path} does not match the required key pattern {pattern}.` | key: string, path: path, pattern: value | Regex on map keys. `{pattern}` is a `value` slot (A.7). |
 | `STRICTSPEC_VALUE_ARRAY_TOO_SHORT` | `Array at {path} has {actual} elements; minimum is {limit}.` | actual: int, path: path, limit: int | Array-length bound. |
 | `STRICTSPEC_VALUE_ARRAY_TOO_LONG` | `Array at {path} has {actual} elements; maximum is {limit}.` | actual: int, path: path, limit: int | Array-length bound. |
 
@@ -363,7 +381,7 @@ schema.
 
 | Code | Template | Slots | Notes |
 |---|---|---|---|
-| `STRICTSPEC_SCALAR_LEXEME` | `Value {actual} at {path} does not match the {name} scalar's lexeme rule {pattern}.` | actual: value, path: path, name: identifier, pattern: string | Anchored-regex refinement failure. |
+| `STRICTSPEC_SCALAR_LEXEME` | `Value {actual} at {path} does not match the {name} scalar's lexeme rule {pattern}.` | actual: value, path: path, name: identifier, pattern: value | Anchored-regex refinement failure. `{pattern}` is a `value` slot (string-kinded): double-quoted, A.2-escaped (A.7). |
 | `STRICTSPEC_SCALAR_BASE_MISMATCH` | `Value at {path} is not a {expected} lexeme, which the {name} scalar refines.` | path: path, expected: string, name: identifier | Base lexeme class disagreement. |
 | `STRICTSPEC_SCALAR_UNKNOWN` | `Field {path} uses custom scalar {name}, which is not registered in the manifest.` | path: path, name: identifier | Unregistered scalar reference. |
 | `STRICTSPEC_SCALAR_NO_BINDING` | `Custom scalar {name} declares no binding for target {got}; every declared target requires a binding.` | name: identifier, got: string | Per-target binding obligation. |

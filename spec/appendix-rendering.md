@@ -128,14 +128,24 @@ each backend is self-consistent).
 - Key order follows document order; whitespace and comments on untouched regions are preserved
   (within-backend round-trip fixpoint).
 
-### A.7 Regex-valued string slots (normative)
+### A.7 Regex patterns render as value slots (normative)
 
-A slot whose value is a regular expression — `{pattern}` in `STRICTSPEC_VALUE_STRING_REGEX`,
-`STRICTSPEC_VALUE_MAP_KEY_REGEX`, and `STRICTSPEC_SCALAR_LEXEME` — is a STRING slot and renders
-EXACTLY like any other string slot: double-quoted, with the A.2 escape set applied UNIFORMLY, and
-truncated per A.4. There is NO verbatim special case: a regex is never emitted bare, and its
+Slot rendering follows the SEMANTIC distinction pinned in `appendix-error-codes.md` §2: a `string`
+slot is PROSE and renders BARE (no quotes, no escaping) — tool-composed sentence fragments such as
+kind-names, field names, resolver identities, and remediation commands (`Expected record at $.x,
+got array.`; `Run: strictspec migrate --schema s --to 3 doc.json`). A `value` slot is a
+document-derived value and renders per the A.1 diagnostic table (strings double-quoted, A.2-escaped,
+A.4-truncated).
+
+A regular expression carried in a diagnostic is document-derived text that must be delimited to be
+legible, so the three regex-pattern slots — `{pattern}` in `STRICTSPEC_VALUE_STRING_REGEX`,
+`STRICTSPEC_VALUE_MAP_KEY_REGEX`, and `STRICTSPEC_SCALAR_LEXEME` — are typed `value` (string-kinded),
+NOT `string`. They therefore render double-quoted, with the A.2 escape set applied UNIFORMLY, and
+truncated per A.4. There is NO verbatim special case and NO bare-regex case: a regex's
 metacharacters (`\`, `"`, control chars) are not exempt from A.2 escaping. Example: the pattern
-`^\d+$` renders `"^\\d+$"`; the pattern containing a literal quote `a"b` renders `"a\"b"`.
+`^\d+$` renders `"^\\d+$"`; the pattern containing a literal quote `a"b` renders `"a\"b"`. Typing
+these three slots `value` (rather than carving a string-slot exception) is what keeps regex patterns
+quoted while every ordinary `string` slot renders bare.
 
 ## Part B — Path grammar (EBNF, normative)
 
@@ -250,6 +260,15 @@ not-in-literal-set), each over a named field and literal operands. Its rendered 
 - Examples: `status == "active"`; `tier in ["gold", "silver"]`; `count != 0`; `flag present`;
   `x in [1]`.
 
+The composed condition text fills the `{condition}` slot VERBATIM: a `{condition}` slot is a
+pre-composed expression, inserted as-is. Like an ordinary `string` slot it is neither re-quoted nor
+re-escaped as a whole — but unlike a plain prose slot, its INNER literal operands are already
+rendered per Part A (A.1) when the expression is composed, so a string operand appears double-quoted
+WITHIN the expression (e.g. `status == "active"`). Re-quoting or re-escaping the whole condition
+would corrupt those already-rendered inner literals. The same verbatim-insertion rule applies to the
+`{condition}` slot of the `STRICTSPEC_DIFF_*` claim diagnostics (`STRICTSPEC_DIFF_VIOLATED`,
+`STRICTSPEC_DIFF_ADJUDICATION_MISSING`), whose `{condition}` is a claim expression, not a value.
+
 ## Soft-freeze amendment log
 
 Per the soft-freeze regime (see the META NOTE above), pre-release refinements are recorded here.
@@ -262,6 +281,14 @@ Per the soft-freeze regime (see the META NOTE above), pre-release refinements ar
   Promotes an established conformance-harness convention into the appendix.
 - 2026-07-27 — Added Part D: the gated-constraint `{condition}` rendering scheme. Promotes an
   established conformance-harness convention into the appendix.
+- 2026-07-27 — Semantic slot rendering: `string` slots are PROSE and render BARE (kind-names,
+  field names, remediation commands); document-derived values use the `value` type and render per
+  A.1. Rewrote A.7 accordingly and RE-TYPED the three regex-pattern slots
+  (`STRICTSPEC_VALUE_STRING_REGEX`, `STRICTSPEC_VALUE_MAP_KEY_REGEX`, `STRICTSPEC_SCALAR_LEXEME`)
+  from `string` to `value` (string-kinded), so they keep rendering double-quoted with A.2 escaping —
+  preserving the prior A.7 amendment's intent without a string-slot special case. Adjusted the
+  Part D `{condition}` note: ordinary `string` slots are no longer double-quoted, so the contrast
+  is now about the condition's already-rendered inner literals, not whole-slot quoting.
 
 ## Cross-references
 
