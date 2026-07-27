@@ -1,0 +1,259 @@
+{
+  "commands": {
+    "check": {
+      "flags": [
+        {
+          "default": "strictspec.toml",
+          "help": "Path to the strictspec.toml manifest",
+          "name": "manifest",
+          "type": "str"
+        }
+      ],
+      "help": "Check schema authoring validity and generated-code freshness",
+      "name": "check"
+    },
+    "diff": {
+      "args": [
+        {
+          "help": "Path to the schema at format_version N",
+          "name": "old-schema"
+        },
+        {
+          "help": "Path to the schema at format_version N+1",
+          "name": "new-schema"
+        }
+      ],
+      "flags": [
+        {
+          "help": "REQUIRED corpus glob (anchored at --corpus-root, lexicographic)",
+          "name": "corpus",
+          "type": "str"
+        },
+        {
+          "default": ".",
+          "help": "Root the corpus glob is anchored at (default: cwd)",
+          "name": "corpus-root",
+          "type": "str"
+        },
+        {
+          "default": "",
+          "help": "Path to the migration file between the two versions",
+          "name": "migration",
+          "type": "str"
+        },
+        {
+          "default": "",
+          "help": "Path to a committed adjudication file to acknowledge",
+          "name": "adjudication",
+          "type": "str"
+        },
+        {
+          "default": false,
+          "help": "Force same-version narrowing scan (no migration)",
+          "name": "same-version",
+          "negatable": true,
+          "type": "bool"
+        }
+      ],
+      "help": "Compare a schema at two format_versions over a corpus; emit a certificate",
+      "name": "diff"
+    },
+    "doc-diff": {
+      "args": [
+        {
+          "help": "Path to the schema file",
+          "name": "schema"
+        },
+        {
+          "help": "Path to the OLD document",
+          "name": "old-document"
+        },
+        {
+          "help": "Path to the NEW document",
+          "name": "new-document"
+        }
+      ],
+      "help": "Structural per-path delta of two documents of one schema",
+      "name": "doc-diff"
+    },
+    "export": {
+      "args": [
+        {
+          "help": "Path to the schema file",
+          "name": "schema"
+        }
+      ],
+      "flags": [
+        {
+          "default": "",
+          "help": "Output path (default: stdout)",
+          "name": "output",
+          "type": "str"
+        }
+      ],
+      "help": "Export a schema to JSON Schema (advisory; lossy per the constitution)",
+      "name": "export"
+    },
+    "gen": {
+      "flags": [
+        {
+          "default": "strictspec.toml",
+          "help": "Path to the strictspec.toml manifest",
+          "name": "manifest",
+          "type": "str"
+        }
+      ],
+      "help": "Generate validator code from the manifest (strictspec.toml)",
+      "name": "gen"
+    },
+    "init": {
+      "flags": [
+        {
+          "default": "strictspec.toml",
+          "help": "Path to the strictspec.toml manifest to create",
+          "name": "manifest",
+          "type": "str"
+        }
+      ],
+      "help": "Scaffold a minimal strictspec.toml manifest and .gitattributes",
+      "name": "init"
+    },
+    "migrate": {
+      "args": [
+        {
+          "help": "Path to the target (current-version) schema file",
+          "name": "schema"
+        },
+        {
+          "help": "One or more document files to migrate",
+          "name": "documents",
+          "variadic": true
+        }
+      ],
+      "flags": [
+        {
+          "help": "Target format_version (must equal the schema's current format_version)",
+          "name": "to",
+          "type": "int"
+        },
+        {
+          "default": ".",
+          "help": "Directory of *.migration.toml files forming the chain",
+          "name": "migrations",
+          "type": "str"
+        },
+        {
+          "default": false,
+          "help": "Render the would-be output and diagnostics without writing",
+          "name": "dry-run",
+          "negatable": true,
+          "type": "bool"
+        }
+      ],
+      "help": "Migrate document(s) up to the schema's current format_version",
+      "name": "migrate"
+    },
+    "validate": {
+      "args": [
+        {
+          "help": "Path to the schema file",
+          "name": "schema"
+        },
+        {
+          "help": "One or more document files to validate",
+          "name": "documents",
+          "variadic": true
+        }
+      ],
+      "constraints": [
+        {
+          "flags": [
+            "structural-only",
+            "with-domain-checks"
+          ],
+          "type": "mutex"
+        }
+      ],
+      "flags": [
+        {
+          "default": [],
+          "help": "Glob hosting an in-process documents-in(...) evidence collection (repeatable)",
+          "name": "collection",
+          "repeatable": true,
+          "type": "str"
+        },
+        {
+          "default": ".",
+          "help": "Root the --collection globs are anchored at (default: cwd)",
+          "name": "collection-root",
+          "type": "str"
+        },
+        {
+          "help": "Run phase-1 structural checks only",
+          "name": "structural-only",
+          "negatable": true,
+          "type": "bool"
+        },
+        {
+          "help": "Also run the phase-2 constraint vocabulary",
+          "name": "with-domain-checks",
+          "negatable": true,
+          "type": "bool"
+        }
+      ],
+      "help": "Validate document(s) against a schema and render diagnostics",
+      "name": "validate"
+    }
+  },
+  "defaults": {
+    "app": {
+      "commands": {},
+      "config": false,
+      "deprecated": {},
+      "env_prefix": null,
+      "global_flags": [],
+      "groups": {},
+      "tag_contracts": {}
+    },
+    "arg": {
+      "choices": null,
+      "default": null,
+      "required": true,
+      "type": "str",
+      "variadic": false
+    },
+    "command": {
+      "args": [],
+      "constraints": [],
+      "flags": [],
+      "hidden": false,
+      "interactive": false,
+      "passthrough": false,
+      "tags": []
+    },
+    "flag": {
+      "choices": null,
+      "default": null,
+      "env": null,
+      "env_separator": null,
+      "hidden": false,
+      "negatable": null,
+      "repeatable": false,
+      "short": null,
+      "unique": false
+    },
+    "group": {
+      "commands": {},
+      "deprecated": {},
+      "groups": {},
+      "hidden": false,
+      "tags": []
+    },
+    "schema_version": 1
+  },
+  "help": "strictspec: strict, byte-identical schema validation and code generation",
+  "name": "strictspec",
+  "project_id": "github.com/smm-h/strictspec/go",
+  "schema_version": 1,
+  "version": "0.1.0"
+}
