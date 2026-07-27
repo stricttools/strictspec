@@ -168,9 +168,16 @@ What every emitter emits, uniformly:
   produce new values) so mutate-then-revalidate stays typed end to end.
 - Bindings: semantic-order maps -> `[]KV` (Go) / `Map` (TS) / dict-preserving wrapper (Python,
   insertion-ordered); tuples -> fixed-size forms; `number` -> float64/`number`/`float`;
-  datetimes -> the backend's pinned datetime binding (Go time.Time with kind guard, Python
-  datetime/date/time, TS a tagged runtime type — never the platform Date for local kinds).
-  Freezing is shallow-plus-generated-immutability (stated honestly).
+  datetimes -> the backend's pinned datetime binding (Go the RETAINED LEXEME as a `string`, kind
+  guard retained; Python datetime/date/time; TS a tagged runtime type — never the platform Date
+  for local kinds). DATETIME-BINDING AMENDMENT (soft-freeze, 2026-07-27): the Go binding is the
+  retained lexeme string, NOT a parsed `time.Time`. Parsing to `time.Time` would normalize on read
+  (rewrite a `+00:00` offset to `Z`, drop written sub-second precision), violating the
+  lexeme-retention invariant (appendix item 11: lexemes retained, no normalization on read). The
+  KIND GUARD (date / time / datetime discrimination, offset-vs-local) is retained in full; only the
+  carrier changed from `time.Time` to `string`. This matches go/DESIGN.md's already-amended note and
+  the implementation (`internal/emit` goType emits `string` for datetime-kinded fields). Freezing is
+  shallow-plus-generated-immutability (stated honestly).
 - Partial-subtree binding: a record binds to its typed form when ITS phase 1 passed, even if a
   sibling failed — required by phase-2 domain checks.
 - Cross-document constraint forms execute via the runtime's ported CONSTRAINT ENGINE (see
