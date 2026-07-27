@@ -1,15 +1,25 @@
 # ts/ — TypeScript Runtime Library and npm Releasable
 
-Published to npm as `dclrbl` (unscoped; verified available). NOT the toolchain: TS consumers
-run the Go binary at build time via the `dclrbl-bin` npm wrapper — one universal package with
-a postinstall download of the exact-version binary from the GitHub Release (the ecosystem's
-established wrapper mechanics, decision 31 in the root charter).
+Published to npm as `strictspec` (unscoped; owner-reserved). NOT the toolchain. There is NO
+separate binary package: the former `-bin` wrapper is eliminated (decision 31). The npm
+`strictspec` package carries a stub `bin` that lazy-downloads the exact-version Go binary from
+the GitHub Release — with SHA-256 checksum verification — into a platform cache on FIRST RUN,
+NEVER at postinstall. So a library-only install (importing the runtime without ever invoking
+the CLI) performs zero network access. The download shim is built on rlsbl's first-party
+"launcher" artifact mechanism (checksum-verifying templates; an npm first-run launcher variant
+is added to rlsbl in a later phase).
 
 FULL FORMAT PARITY: this runtime ships lossless, lexeme-retaining parsers for JSON, TOML, and
 JSONL — the four-target conformance identity holds for every format, not just JSON. The TOML
-parser is written for this runtime (no suitable lossless library exists) and is
-conformance-tested against the Go and Python substrates for verdict/code/path/message
-identity; round-trip fidelity remains within-backend, like every backend.
+parser is built on the `toml-eslint-parser` library (AST ranges + text-splicing technique, as
+proven by strictcli's TS implementation): lossless round-trips come from splicing edits back
+into the original text using the parser's node ranges. This REPLACES the former claim that a
+from-scratch lossless TOML parser was required because "no suitable lossless library exists" —
+that claim was falsified in-ecosystem. Decision adopted; spike validation in
+conformance/spikes/toml-eslint-parser/ (if that spike returns a limitation verdict, the
+fallback is the from-scratch parser). The parser is conformance-tested against the Go and
+Python substrates for verdict/code/path/message identity; round-trip fidelity remains
+within-backend, like every backend.
 
 ## Entry points (per the Generated API Contract)
 
@@ -35,16 +45,17 @@ first, with the structured remediation payload.
 There is no TS-target auto-application of the 2^53 safe-integer constraint. Instead, a schema
 must explicitly declare `safe_integers = true` (schema-wide); when declared, the constraint
 applies in ALL backends, preserving verdict identity. Declaring a TS target for a schema that
-lacks the declaration is a hard error at `dclrbl gen` time, telling the author to add it. So a
-schema with a TS target always carries the declaration, and TS never meets an unrepresentable
-integer: integer and number fields bind plain `number`, no BigInt anywhere. The number scalar
-additionally hard-errors on any lexeme float64 cannot represent exactly — in every backend, so
-verdict identity is untouched. Verdict identity comes from explicit schema declarations and
-canonical rules — never from auto-application.
+lacks the declaration is a hard error at `strictspec gen` time, telling the author to add it.
+So a schema with a TS target always carries the declaration, and TS never meets an
+unrepresentable integer: integer and number fields bind plain `number`, no BigInt anywhere. The
+number scalar additionally hard-errors on any lexeme float64 cannot represent exactly — in
+every backend, so verdict identity is untouched. Verdict identity comes from explicit schema
+declarations and canonical rules — never from auto-application.
 
 ## Contents
 
-- Lossless JSON, TOML, and JSONL parsers producing tagged, lexeme-retaining values.
+- Lossless JSON, TOML (via `toml-eslint-parser`), and JSONL parsers producing tagged,
+  lexeme-retaining values.
 - Tagged value constructors' support types; semantic-order maps bind to `Map` (JS objects
   reorder integer-like keys — plain objects are unusable for ordered maps). Datetime scalars
   per appendix item 11 bind a tagged runtime datetime type with kind guards — never the
@@ -71,9 +82,9 @@ Per the version-boundary invariant (spec/): browser runtimes NEVER migrate. A br
 either receives current-version bytes (the egress side migrated before sending, under the
 negotiation envelope) or refuses cleanly with the structured "update the client" diagnostic
 when it cannot speak the negotiated version. There is no migration engine in this runtime, no
-`dclrbl-bin` in the browser, and no receiver-side upgrade path — by design, not by omission.
-Node-side consumers that declare stores/channels in the manifest get generated checkpoint
-wrappers that delegate to `dclrbl-bin`.
+downloaded binary in the browser, and no receiver-side upgrade path — by design, not by
+omission. Node-side consumers that declare stores/channels in the manifest get generated
+checkpoint wrappers that delegate to the packaged CLI.
 
 ## Notes
 
@@ -84,6 +95,6 @@ wrappers that delegate to `dclrbl-bin`.
 - Version pairing: exact match per release; dev builds pair only with themselves; the pairing
   hard error is the intended surfacing of skew under always-latest dependencies.
 - Generated files land chmod 444 in consumer repos, carry `/* eslint-disable */` plus the
-  generated-by header, and are formatted by the generator's own canonical emitter; `dclrbl
+  generated-by header, and are formatted by the generator's own canonical emitter; `strictspec
   gen` maintains prettier-ignore entries for the generated paths — consumers never
   hand-silence linters.

@@ -1,9 +1,14 @@
 # python/ — Python Runtime Library and PyPI Releasable
 
 NOT the toolchain (that's Go). Runtime support for generated Python code, published to PyPI as
-`dclrbl`. The Go binary reaches Python-only consumers via the `dclrbl-bin` wrapper package —
-one `py3-none-any` wheel that lazy-downloads the exact-version binary from the GitHub Release
-on first run (the ecosystem's established wrapper mechanics, decision 31 in the root charter).
+`strictspec`. There is NO separate binary package: the former `-bin` wrapper is eliminated
+(decision 31). The PyPI `strictspec` wheel (stays `py3-none-any`) exposes a `strictspec`
+console script that lazy-downloads the exact-version Go binary from the GitHub Release — with
+SHA-256 checksum verification — into a platform cache on FIRST CLI INVOCATION. Library-only
+installs (importing the runtime without ever invoking the CLI) do zero network access. The
+download shim is built on rlsbl's first-party "launcher" artifact mechanism (checksum-verifying
+templates). Runtime package version = strictspec release version, so the lazy download and the
+exact version-pairing rule agree by construction.
 
 ## Generated-code style
 
@@ -62,13 +67,13 @@ first, with the structured remediation payload.
   run by the consumer after validation. A resolver this environment cannot satisfy is a hard
   error naming the resolver.
 - Boundary-checkpoint support: generated ingest write-doors and egress wrappers invoke the
-  migration engine via `dclrbl-bin` (the engine itself never lives in this runtime); the
+  migration engine via the packaged CLI (the engine itself never lives in this runtime); the
   wrappers are generated only for manifest-declared stores/channels.
 
 ## Invariants
 
 - No toolchain logic: no schema parsing, no generation, no migration engine (checkpoints
-  delegate to `dclrbl-bin`).
+  delegate to the packaged CLI).
 - No lenient modes; loading and validation inseparable; discovery collects per-file errors and
   fails loudly. No warnings anywhere.
 - Version pairing with generated code: exact match per release; dev builds pair only with
