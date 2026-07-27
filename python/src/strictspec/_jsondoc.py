@@ -15,13 +15,17 @@ hard error on duplicate object keys.
 
 from __future__ import annotations
 
+import sys
 from typing import Callable
 
 from . import _doc as doc
 from ._doc import Kind, ParseError, Position, Span
 
 # maxDepth bounds nesting to keep parsing safe on adversarial input. This is a
-# stack-safety guard, NOT a document-size limit.
+# stack-safety guard, NOT a document-size limit. It mirrors the Go backend's
+# explicit cap; on CPython the interpreter's own recursion limit is reached
+# first for pathological input and is surfaced as the SAME clean ParseError
+# (see _guard_recursion) rather than crashing the interpreter.
 MAX_DEPTH = 10000
 
 _HEXDIGITS = "0123456789ABCDEF"
@@ -416,8 +420,23 @@ def parse(src: bytes) -> doc.Document:
     lexical or structural error.
     """
     p = _Parser(bytes(src), line=1, col=1, base_offset=0, fmt=doc.FORMAT_JSON)
-    root = p.parse_document()
+    root = _guard_recursion(p, p.parse_document)
     return doc.new_document(doc.FORMAT_JSON, root, src)
+
+
+def _guard_recursion(p: "_Parser", fn):
+    """Run a recursive-descent parse, converting a CPython RecursionError on
+    pathological nesting into the same clean ParseError the explicit MAX_DEPTH
+    guard would raise.
+    """
+    old = sys.getrecursionlimit()
+    sys.setrecursionlimit(max(old, 4000))
+    try:
+        return fn()
+    except RecursionError:
+        raise p.err_at(p.pos(), "maximum nesting depth exceeded") from None
+    finally:
+        sys.setrecursionlimit(old)
 
 
 def parse_lines(src: bytes) -> list[doc.Document]:
@@ -454,7 +473,7 @@ def parse_stream_bytes(src: bytes, emit: Callable[[doc.Document], None]) -> None
 
         _frame_line(line, line_no, line_start)
         p = _Parser(line, line=line_no, col=1, base_offset=line_start, fmt=doc.FORMAT_JSONL)
-        root = p.parse_document()
+        root = _guard_recursion(p, p.parse_document)
         emit(doc.new_document(doc.FORMAT_JSONL, root, line))
 
 
@@ -477,7 +496,7 @@ def parse_stream(reader, emit: Callable[[doc.Document], None]) -> None:
             line = chunk
         _frame_line(line, line_no, line_start)
         p = _Parser(line, line=line_no, col=1, base_offset=line_start, fmt=doc.FORMAT_JSONL)
-        root = p.parse_document()
+        root = _guard_recursion(p, p.parse_document)
         emit(doc.new_document(doc.FORMAT_JSONL, root, line))
 
 
