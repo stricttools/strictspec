@@ -1,0 +1,43 @@
+# strictspec schema — datetime coverage exercise (Phase 3.3, cluster 5b).
+# Closes the datetime-scalar coverage gap batch 2 flagged (rlsbl release-file carries no
+# date/time/datetime field). Exercises all three datetime scalar KINDS — `date`, `time`,
+# `datetime` (offset) and `datetime` (local) — plus a same-kind datetime range. Authored in the
+# pinned surface (appendix-surface-syntax.md): bare header, root-as-named-type via `root`,
+# `role`, uniform `[types.<Name>.fields.*]` sites.
+
+name = "event-log-entry"
+meta_version = 1
+format_version = 1
+document_syntax = "json"
+role = "schema"
+root = "EventLogEntry"
+targets = ["go", "python", "ts"]
+safe_integers = true
+description = "A single event-log entry exercising every datetime scalar kind. JSON carries RFC 3339 strings; lexemes are retained (a +00:00 offset is never rewritten to Z)."
+
+[types.EventLogEntry]
+type = "record"
+
+[types.EventLogEntry.fields.day]
+type = "date"
+required = true
+description = "RFC 3339 full-date, e.g. 2026-07-27 (scalar kind `date`)."
+
+[types.EventLogEntry.fields.wall_clock]
+type = "time"
+required = true
+description = "RFC 3339 partial-time, e.g. 13:37:00 (scalar kind `time`)."
+
+[types.EventLogEntry.fields.recorded_at]
+type = "datetime"
+datetime_kind = "offset"
+required = true
+min = "2026-01-01T00:00:00+00:00"
+max = "2027-01-01T00:00:00+00:00"
+description = "An OFFSET datetime within a same-kind [min, max] range; comparisons use the instant. A local-datetime lexeme here is STRICTSPEC_TYPE_DATETIME_KIND."
+
+[types.EventLogEntry.fields.scheduled_local]
+type = "datetime"
+datetime_kind = "local"
+required = false
+description = "An optional LOCAL datetime (no offset); comparisons would use the naive value. Absent binds ABSENT (no default)."
