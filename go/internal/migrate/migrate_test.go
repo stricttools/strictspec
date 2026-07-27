@@ -6,7 +6,84 @@ import (
 	"testing"
 
 	"github.com/smm-h/strictspec/go/internal/doc"
+	"github.com/smm-h/strictspec/go/internal/ir"
+	"github.com/smm-h/strictspec/go/internal/schema"
+	"github.com/smm-h/strictspec/go/internal/tomldoc"
 )
+
+func compileProg(t *testing.T, src string) *ir.Program {
+	t.Helper()
+	d, perr := tomldoc.Parse([]byte(src))
+	if perr != nil {
+		t.Fatalf("schema parse: %v", perr)
+	}
+	s, diags := schema.ReadSchema(d.Root, "")
+	if len(diags) > 0 {
+		t.Fatalf("schema authoring diags: %v", diags)
+	}
+	return ir.Compile(s, nil)
+}
+
+// TestMigrateRevalidationFailure: a migration whose OUTPUT is well-formed but
+// invalid under the target schema is a hard error — MigrateDocument returns
+// STRICTSPEC_MIGRATE_REVALIDATION_FAILED FIRST, followed by the underlying
+// validation diagnostics (they are carried, not swallowed).
+func TestMigrateRevalidationFailure(t *testing.T) {
+	const schemaV2 = `
+name = "S"
+meta_version = 1
+format_version = 2
+document_syntax = "json"
+role = "schema"
+root = "R"
+[types.R]
+type = "record"
+[types.R.fields.a]
+type = "string"
+required = true
+`
+	prog := compileProg(t, schemaV2)
+	// v1 doc; migration 1->2 sets $.a to an INTEGER — well-formed JSON, but the
+	// target schema requires a string, so revalidation must fail.
+	in := []byte(`{"format_version": 1, "a": "hello"}`)
+	m := &Migration{
+		Schema: "S", From: 1, To: 2, Set: "bad",
+		Ops: []Op{{Kind: OpSetValue, Path: "$.a", Value: litNodeM(t, "5"), HasValue: true, Down: DownTotal}},
+	}
+	res := MigrateDocument([]*Migration{m}, prog, doc.FormatJSON, in)
+	if len(res.Diags) < 2 {
+		t.Fatalf("expected REVALIDATION_FAILED + underlying diagnostics, got %v", res.Diags)
+	}
+	if res.Diags[0].Code != "STRICTSPEC_MIGRATE_REVALIDATION_FAILED" {
+		t.Fatalf("first diagnostic must be REVALIDATION_FAILED, got %v", res.Diags)
+	}
+	// The underlying validation diagnostic (a type violation on $.a) must be carried.
+	carried := false
+	for _, d := range res.Diags[1:] {
+		if d.Path.Render() == "$.a" {
+			carried = true
+		}
+	}
+	if !carried {
+		t.Fatalf("underlying validation diagnostics not carried: %v", res.Diags)
+	}
+}
+
+// litNodeM builds a TOML-parsed literal value node (as a migration file supplies).
+func litNodeM(t *testing.T, tomlLit string) doc.Node {
+	t.Helper()
+	d, perr := tomldoc.Parse([]byte("v = " + tomlLit + "\n"))
+	if perr != nil {
+		t.Fatalf("lit parse %q: %v", tomlLit, perr)
+	}
+	for _, e := range d.Root.Entries() {
+		if e.Key == "v" {
+			return e.Value
+		}
+	}
+	t.Fatalf("lit not found")
+	return nil
+}
 
 const examplesRel = "../../../examples/migrations"
 
