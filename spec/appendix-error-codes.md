@@ -273,7 +273,10 @@ is no separate union code for that case.
 |---|---|---|---|
 | `STRICTSPEC_ALIAS_BOTH_PRESENT` | `Both {alias} and canonical {canonical} are present at {path}; provide exactly one.` | alias: identifier, canonical: identifier, path: path | Aliases are exempt from unknown-key errors but both-present is an error. |
 | `STRICTSPEC_DEPTH_EXCEEDED` | `Document nesting at {path} exceeds the maximum validation depth of {limit}.` | path: path, limit: int | Fires before CPython stack exhaustion; canonical diagnostic. |
-| `STRICTSPEC_NUM_SAFE_INTEGER` | `Integer {actual} at {path} exceeds the safe-integer range (|n| >= 2^53) required by `safe_integers`.` | actual: value, path: path | Schema-wide when declared; identical verdict across backends. |
+<!-- The two pipes in `\|n\|` are ESCAPED so this row is valid markdown (a literal `|`
+     inside a table cell must be `\|`). The rendered template text is `(|n| >= 2^53)`
+     unchanged. Do not "un-escape" them. (soft-freeze formatting amendment 2026-07-27) -->
+| `STRICTSPEC_NUM_SAFE_INTEGER` | `Integer {actual} at {path} exceeds the safe-integer range (\|n\| >= 2^53) required by `safe_integers`.` | actual: value, path: path | Schema-wide when declared; identical verdict across backends. |
 | `STRICTSPEC_NUM_UNREPRESENTABLE` | `Lexeme {actual} at {path} cannot be represented exactly as float64; the `number` scalar refuses silent precision loss.` | actual: value, path: path | number-scalar unrepresentable lexeme. |
 | `STRICTSPEC_NUM_INT_OVERFLOW` | `Integer lexeme {actual} at {path} overflows int64.` | actual: value, path: path | Integer lexeme beyond int64. |
 | `STRICTSPEC_NUM_FLOAT_OVERFLOW` | `Float lexeme {actual} at {path} is beyond float64 range.` | actual: value, path: path | Float lexeme beyond float64. |

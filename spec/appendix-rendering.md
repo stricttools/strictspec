@@ -128,6 +128,15 @@ each backend is self-consistent).
 - Key order follows document order; whitespace and comments on untouched regions are preserved
   (within-backend round-trip fixpoint).
 
+### A.7 Regex-valued string slots (normative)
+
+A slot whose value is a regular expression — `{pattern}` in `STRICTSPEC_VALUE_STRING_REGEX`,
+`STRICTSPEC_VALUE_MAP_KEY_REGEX`, and `STRICTSPEC_SCALAR_LEXEME` — is a STRING slot and renders
+EXACTLY like any other string slot: double-quoted, with the A.2 escape set applied UNIFORMLY, and
+truncated per A.4. There is NO verbatim special case: a regex is never emitted bare, and its
+metacharacters (`\`, `"`, control chars) are not exempt from A.2 escaping. Example: the pattern
+`^\d+$` renders `"^\\d+$"`; the pattern containing a literal quote `a"b` renders `"a\"b"`.
+
 ## Part B — Path grammar (EBNF, normative)
 
 Diagnostic paths are part of the conformance identity guarantee. A path names the location of a
@@ -181,6 +190,14 @@ Rules and clarifications:
   within the line. Example: `$.budget@L42:17`. A whole-line diagnostic (e.g. a parse failure)
   renders `$@L42:0`.
 - Separators: `.` before ident key steps; no separator before `[`, `(`, or `@`.
+- `{path}` SLOT AUTO-INJECTION (template contract, normative): the `{path}` slot in every
+  catalogue template is bound AUTOMATICALLY from the diagnostic's own path — the location the
+  diagnostic is attached to — and rendered per this grammar. Emitters and generated renderers
+  NEVER bind `{path}` manually; it is supplied by the diagnostic infrastructure from the current
+  traversal path (the path-push / path-pop discipline of `appendix-emitter-ir.md`). A template
+  that references `{path}` therefore needs no hand-supplied slot value; the catalogue rows whose
+  Slots column omits `path` while the template references it (e.g. `STRICTSPEC_PARSE_JSON_SYNTAX`)
+  rely on exactly this auto-injection.
 
 ## Part C — Did-you-mean (normative, pinned)
 
@@ -207,6 +224,44 @@ Application:
 - With one qualifying candidate, the rendered clause is ` Did you mean {name}?`. With two or
   three, ` Did you mean {n1}, {n2}, or {n3}?` (Oxford comma; two candidates: ` Did you mean {n1}
   or {n2}?`). Candidate names render per A.1 as strings if not ident-shaped, bare otherwise.
+
+## Part D — Gated-constraint condition rendering (normative)
+
+Three diagnostics interpolate a `{condition}` slot describing the gate that triggered a gated
+constraint: `STRICTSPEC_INTRA_CONDITIONAL_REQUIRED`, `STRICTSPEC_INTRA_CONDITIONAL_VALUE`, and
+`STRICTSPEC_INTRA_FORBIDDEN_WHEN`. The condition is one of the CLOSED six-kind gate-condition set
+(`appendix-emitter-ir.md` §4 — present, absent, equals-literal, not-equals-literal, in-literal-set,
+not-in-literal-set), each over a named field and literal operands. Its rendered form is pinned:
+
+| Condition kind | Rendered form |
+|---|---|
+| present | `{field} present` |
+| absent | `{field} absent` |
+| equals-literal | `{field} == {literal}` |
+| not-equals-literal | `{field} != {literal}` |
+| in-literal-set | `{field} in [{l1}, {l2}, ...]` |
+| not-in-literal-set | `{field} not in [{l1}, {l2}, ...]` |
+
+- `{field}` is the schema-declared field name, rendered BARE (it is always identifier-shaped).
+- Each literal renders per Part A (A.1): string literals are double-quoted with A.2 escaping,
+  integers decimal, booleans lowercase `true`/`false`, and so on.
+- The literal set is rendered IN FULL — comma+space separated inside `[...]`. It is a finite
+  schema-declared set, NOT a runtime container, so the A.5 three-element truncation does NOT apply.
+- Examples: `status == "active"`; `tier in ["gold", "silver"]`; `count != 0`; `flag present`;
+  `x in [1]`.
+
+## Soft-freeze amendment log
+
+Per the soft-freeze regime (see the META NOTE above), pre-release refinements are recorded here.
+
+- 2026-07-27 — Added A.7: regex-valued string slots render identically to any other string slot
+  (double-quoted, A.2 escaping applied uniformly, A.4 truncation); no verbatim special case.
+  Resolves a deferred conformance-fixture question about regex slot rendering.
+- 2026-07-27 — Pinned the `{path}` slot auto-injection contract in Part B: `{path}` is bound from
+  the diagnostic's own path by the diagnostic infrastructure; emitters never bind it manually.
+  Promotes an established conformance-harness convention into the appendix.
+- 2026-07-27 — Added Part D: the gated-constraint `{condition}` rendering scheme. Promotes an
+  established conformance-harness convention into the appendix.
 
 ## Cross-references
 
