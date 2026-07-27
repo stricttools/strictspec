@@ -11,8 +11,18 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Release tag to publish (e.g. pkga@v1.2.3). Overrides the 
+        description: Release tag to publish (e.g. pkga@v1.2.3). Overrides the
           ref for retry dispatch.
+        required: false
+        type: string
+      # MANUAL EDIT (rlsbl gap: publish-router-project-dispatch). Lets a fixed
+      # publish router on a non-tag ref (e.g. a dev branch) publish one specific
+      # project: the gate resolver and each job `if` fall back to this input
+      # when the ref/tag is not a release tag. rlsbl does not yet generate it --
+      # re-apply if the router is regenerated.
+      project:
+        description: Project to publish when dispatching from a non-tag ref
+          (e.g. ts-strictspec). Ignored when the ref/tag input is a release tag.
         required: false
         type: string
 concurrency:
@@ -32,6 +42,9 @@ jobs:
       GATE_MARKER_ATTEMPTS: '5'
       GATE_MARKER_RETRY_SECONDS: '5'
       TAG_INPUT: ${{ inputs.tag }}
+      # MANUAL EDIT (rlsbl gap: publish-router-project-dispatch): re-apply if the
+      # router is regenerated. Feeds the non-tag-ref project fallback below.
+      PROJECT_INPUT: ${{ inputs.project }}
     steps:
     - name: Resolve releasing project's CI checks from the tag ref
       run: |
@@ -60,9 +73,30 @@ jobs:
             regex='^(conformance\-ci) / '
             ;;
           *)
-            echo "::error::Publish gate: ref '$tag_ref' matches no project tag prefix (known prefixes: py-strictspec@v, go-strictspec@v, ts-strictspec@v, conformance@v)."
-            echo "To retry a release publish, dispatch this workflow at the tag ref: gh workflow run publish.yml --ref <tag>"
-            exit 1
+            # MANUAL EDIT (rlsbl gap: publish-router-project-dispatch). When the
+            # ref is not a release tag (dev-branch dispatch), select the project
+            # from the `project` workflow_dispatch input. re-apply if the router
+            # is regenerated.
+            case "${PROJECT_INPUT:-}" in
+              py-strictspec)
+                regex='^(strictspec\-ci) / '
+                ;;
+              go-strictspec)
+                regex='^(go\-strictspec\-ci) / '
+                ;;
+              ts-strictspec)
+                regex='^(ts\-strictspec\-ci) / '
+                ;;
+              conformance)
+                regex='^(conformance\-ci) / '
+                ;;
+              *)
+                echo "::error::Publish gate: ref '$tag_ref' matches no project tag prefix and no 'project' input was given (known projects: py-strictspec, go-strictspec, ts-strictspec, conformance)."
+                echo "To retry a release publish, dispatch this workflow at the tag ref: gh workflow run publish.yml --ref <tag>"
+                echo "To publish from a non-tag ref, pass the project input: gh workflow run publish.yml --ref <branch> -f project=<name>"
+                exit 1
+                ;;
+            esac
             ;;
         esac
         echo "CI_CHECK_REGEX=$regex" >> "$GITHUB_ENV"
@@ -228,7 +262,8 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    if: startsWith(inputs.tag || github.ref_name, 'py-strictspec@v')
+    if: startsWith(inputs.tag || github.ref_name, 'py-strictspec@v') || inputs.project
+      == 'py-strictspec'
     defaults:
       run:
         working-directory: python
@@ -265,16 +300,36 @@ jobs:
       env:
         RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # MANUAL EDIT (rlsbl gap: goreleaser-monorepo-tags). OSS goreleaser cannot
+      # parse the monorepo tag `go-strictspec@vX.Y.Z` as semver and has no
+      # `monorepo:` block (Pro-only). Strip the `go-strictspec@` prefix and hand
+      # goreleaser the bare `vX.Y.Z` via GORELEASER_CURRENT_TAG. rlsbl does not
+      # yet generate this step, so a re-run of `rlsbl monorepo sync`/`scaffold`
+      # will drop it -- re-apply it if the router is regenerated.
+    - name: Resolve goreleaser tag (strip monorepo prefix)
+      run: |
+        TAG="${RELEASE_TAG}"
+        echo "GORELEASER_CURRENT_TAG=${TAG##*@}" >> "$GITHUB_ENV"
+      env:
+        RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+    # MANUAL EDIT (rlsbl gap: goreleaser-monorepo-tags). `--skip=validate` is
+    # required so goreleaser does not reject the synthetic bare `vX.Y.Z`
+    # GORELEASER_CURRENT_TAG -- no git tag by that bare name exists (the real
+    # tag is the prefixed `go-strictspec@vX.Y.Z`), so the default tag-name
+    # validation would fail with "git tag vX.Y.Z was not made against commit".
+    # rlsbl does not yet generate this arg -- re-apply if the router is
+    # regenerated.
     - uses: goreleaser/goreleaser-action@v7
       if: steps.check-go.outputs.skip != 'true'
       with:
         version: ~> v2
-        args: release --clean
+        args: release --clean --skip=validate
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     permissions:
       contents: write
-    if: startsWith(inputs.tag || github.ref_name, 'go-strictspec@v')
+    if: startsWith(inputs.tag || github.ref_name, 'go-strictspec@v') || inputs.project
+      == 'go-strictspec'
     defaults:
       run:
         working-directory: go
@@ -325,7 +380,8 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    if: startsWith(inputs.tag || github.ref_name, 'ts-strictspec@v')
+    if: startsWith(inputs.tag || github.ref_name, 'ts-strictspec@v') || inputs.project
+      == 'ts-strictspec'
     defaults:
       run:
         working-directory: ts

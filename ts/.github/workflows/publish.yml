@@ -177,6 +177,11 @@ jobs:
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
+      # npm publish runs prepack -> npm run build -> tsc, which needs
+      # devDependencies (@types/node, typescript). Install them first, else
+      # tsc fails with TS2688 (cannot find type definition file for 'node').
+      - name: Install dependencies (incl. devDependencies for prepack build)
+        run: npm ci
       - name: Install gitleaks
         run: |
           GITLEAKS_VERSION=8.24.3
