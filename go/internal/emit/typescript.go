@@ -155,7 +155,20 @@ func (g *tsEmitter) recordType(name string, t *schema.Type) {
 	fmt.Fprintf(w, "// %s is the readonly typed binding of the %q record.\n", iface, name)
 	fmt.Fprintf(w, "export interface %s {\n", iface)
 	for _, f := range t.Fields {
-		fmt.Fprintf(w, "\treadonly %s: %s;\n", g.tsKey(f.Name), g.tsType(f.Type))
+		// Optional (required=false) fields bind to an ABSENT property when the
+		// document omits them (the binder sets out[key] only when present), so the
+		// interface marks them optional. Under exactOptionalPropertyTypes (the
+		// strict tsconfig) `key?: T` means "may be absent, else exactly T" — which
+		// is precisely what the binder produces (never present-as-undefined), so
+		// `?` is correct and `| undefined` would be wrong. This is TS's uniform
+		// convention for every optional field (scalar and record alike): unlike
+		// Python/Go there is no zero-value written for absent scalars, so all
+		// optional fields need the marker, not just record refs.
+		opt := ""
+		if !f.Required {
+			opt = "?"
+		}
+		fmt.Fprintf(w, "\treadonly %s%s: %s;\n", g.tsKey(f.Name), opt, g.tsType(f.Type))
 	}
 	fmt.Fprintf(w, "}\n\n")
 

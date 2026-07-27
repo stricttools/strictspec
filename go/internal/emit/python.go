@@ -150,7 +150,10 @@ func (g *pyEmitter) types() {
 func (g *pyEmitter) recordType(name string, t *schema.Type) {
 	w := &g.b
 	cls := exportName(name)
-	fmt.Fprintf(w, "@dataclass(frozen=True)\n")
+	// kw_only so an optional field's `= None` default never constrains
+	// required-field ordering (a required field may follow an optional one). The
+	// binder and with_* both construct by keyword, so this is transparent.
+	fmt.Fprintf(w, "@dataclass(frozen=True, kw_only=True)\n")
 	fmt.Fprintf(w, "class %s:\n", cls)
 	fmt.Fprintf(w, "    \"\"\"Frozen typed binding of the %q record. Immutable; use with_* for\n", name)
 	fmt.Fprintf(w, "    copy-on-write.\n")
@@ -159,7 +162,13 @@ func (g *pyEmitter) recordType(name string, t *schema.Type) {
 		fmt.Fprintf(w, "    pass\n\n")
 	}
 	for _, f := range t.Fields {
-		fmt.Fprintf(w, "    %s: %s\n", identSafe(f.Name), g.pyType(f.Type))
+		if g.isOptionalRecord(f) {
+			// Absent binds None (pyZero), so the type admits None and the field
+			// carries a None default for ergonomic hand-construction.
+			fmt.Fprintf(w, "    %s: %s = None\n", identSafe(f.Name), g.pyFieldType(f))
+		} else {
+			fmt.Fprintf(w, "    %s: %s\n", identSafe(f.Name), g.pyFieldType(f))
+		}
 	}
 	if len(t.Fields) > 0 {
 		fmt.Fprintf(w, "\n")
@@ -167,7 +176,7 @@ func (g *pyEmitter) recordType(name string, t *schema.Type) {
 	// with_* helpers (per-field copy-on-write).
 	for _, f := range t.Fields {
 		fn := identSafe(f.Name)
-		fmt.Fprintf(w, "    def with_%s(self, v: %s) -> %s:\n", fn, g.pyType(f.Type), cls)
+		fmt.Fprintf(w, "    def with_%s(self, v: %s) -> %s:\n", fn, g.pyFieldType(f), cls)
 		fmt.Fprintf(w, "        return replace(self, %s=v)\n\n", fn)
 	}
 	fmt.Fprintf(w, "\n")
@@ -235,6 +244,48 @@ func (g *pyEmitter) pyType(t *schema.Type) string {
 	default:
 		// record (inline), map, tuple, union, opaque.
 		return "Value"
+	}
+}
+
+// pyFieldType is the annotation for a record field SITE: pyType(f.Type), widened
+// to `| None` when the field is an optional record ref. That is the sole site
+// where the absent-zero (pyZero) is None while pyType is not already nullable —
+// so the bare annotation over-promises presence. Optional SCALAR fields keep the
+// zero-value convention (absent binds "", 0, False, ...), matching Go's zeroed
+// struct field, and are NOT widened. KindNullable sites are already `| None`.
+func (g *pyEmitter) pyFieldType(f *schema.Field) string {
+	ft := g.pyType(f.Type)
+	if g.isOptionalRecord(f) {
+		ft += " | None"
+	}
+	return ft
+}
+
+// isOptionalRecord reports whether f is a required=false field whose type binds
+// None when absent because it resolves to a named record (directly or through a
+// type-alias chain). This is exactly the over-promise the pointer-typed Go
+// emitter avoids by making every record ref a pointer.
+func (g *pyEmitter) isOptionalRecord(f *schema.Field) bool {
+	return !f.Required && g.bindsNilRecord(f.Type)
+}
+
+// bindsNilRecord reports whether pyType(t) is a bare record class (so pyZero(t)
+// is None). Mirrors pyType's record-detection, following ref-alias chains.
+func (g *pyEmitter) bindsNilRecord(t *schema.Type) bool {
+	if t == nil || t.Kind != schema.KindRef {
+		return false
+	}
+	switch t.Ref {
+	case "string", "integer", "float", "number", "boolean", "date", "time", "datetime":
+		return false
+	default:
+		if named, ok := g.s.Types[t.Ref]; ok {
+			if named.Kind == schema.KindRecord {
+				return true
+			}
+			return g.bindsNilRecord(named)
+		}
+		return false
 	}
 }
 
