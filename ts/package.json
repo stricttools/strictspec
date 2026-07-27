@@ -1,8 +1,6 @@
 {
 	"name": "strictspec",
 	"version": "0.1.0",
-	"private": true,
-	"//publish": "TODO: flip `private` to false (or remove it) at the first real publish. Kept private for now so nothing can accidentally publish before the release. The npm name `strictspec` is owner-reserved (0.0.0 placeholder).",
 	"license": "MIT",
 	"type": "module",
 	"description": "TypeScript runtime library and CLI stub for strictspec",
