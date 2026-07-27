@@ -1,0 +1,36 @@
+# SECOND SHARED TYPE-DEFINITION FILE. Demonstrates a schema importing from TWO type files
+# (auth imports both this and claude-common-types). Types only.
+name = "http-types"
+meta_version = 1
+format_version = 1
+description = "HTTP-shaped shared types: HTTPS URLs and an OAuth client record."
+
+# HTTPS URL surface refinement. Reused by auth (endpoints).
+[types.HttpsUrl]
+kind = "scalar"
+base = "string"
+pattern = "^https://[^\\s]+$"
+description = "An https:// URL by surface syntax (existence/reachability is a domain fact, not a regex)."
+
+# An OAuth client record. Named RECORD type; its `headers` field is an inline typed map — a
+# named type may embed a map even though a bare map is not itself a shared named type.
+[types.OAuthClient]
+kind = "record"
+description = "OAuth client id + endpoints + default headers."
+[types.OAuthClient.fields.client_id]
+type = "string"
+required = true
+non_empty = true
+[types.OAuthClient.fields.authorize_url]
+type = "HttpsUrl"
+required = true
+[types.OAuthClient.fields.token_url]
+type = "HttpsUrl"
+required = true
+[types.OAuthClient.fields.headers]
+type = "map"
+required = false
+key_pattern = "^[A-Za-z0-9-]+$"
+order = "incidental"
+[types.OAuthClient.fields.headers.value]
+type = "string"

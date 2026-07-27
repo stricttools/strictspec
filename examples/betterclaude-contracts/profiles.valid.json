@@ -1,0 +1,9 @@
+{
+  "format_version": 1,
+  "config_dir_precedence": ["CLAUDEWHEEL_CONFIG_DIR", "~/.claudewheel"],
+  "active": "work",
+  "profiles": {
+    "work": { "name": "work", "path": "~/.claudewheel/profiles/work", "model": "claude-opus-4-20250514", "tier": "max_20x" },
+    "personal": { "name": "personal", "path": "~/.claudewheel/profiles/personal" }
+  }
+}

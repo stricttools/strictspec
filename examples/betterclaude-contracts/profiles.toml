@@ -1,0 +1,49 @@
+name = "claude-profiles"
+meta_version = 1
+format_version = 1
+description = "profiles registry: config-dir precedence, the profile map, and the active profile (BetterClaude §3 profiles contract)."
+document_syntax = "json"
+targets = ["python", "go"]
+
+imports = [ { file = "types-claude-common.toml", types = ["ProfileName", "ModelName", "Tier"] } ]
+
+# Ordered config-dir precedence (e.g. CLAUDEWHEEL_CONFIG_DIR -> ~/.claudewheel; §17).
+[fields.config_dir_precedence]
+type = "array"
+required = true
+min_items = 1
+item_type = "string"
+description = "Order is semantic: earlier entries win. The array binds order-preserving."
+
+[fields.active]
+type = "ProfileName"
+required = true
+description = "Must name a key in `profiles` (see reference constraint)."
+
+# The claudewheel profile registry: name -> profile record.
+[fields.profiles]
+type = "map"
+required = true
+key_pattern = "^[a-z0-9][a-z0-9_-]*$"
+order = "incidental"
+[fields.profiles.value]
+type = "record"
+[fields.profiles.value.fields.name]
+type = "ProfileName"
+required = true
+[fields.profiles.value.fields.path]
+type = "string"
+required = true
+non_empty = true
+[fields.profiles.value.fields.model]
+type = "ModelName"
+required = false
+[fields.profiles.value.fields.tier]
+type = "Tier"
+required = false
+
+# The active profile must resolve to a declared profile key (intra-document reference).
+[[constraints]]
+form = "intra-document-references"
+field = "active"
+target = "profiles.<key>"

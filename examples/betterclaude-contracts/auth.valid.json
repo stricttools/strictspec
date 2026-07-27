@@ -1,0 +1,21 @@
+{
+  "format_version": 1,
+  "oauth": {
+    "client_id": "9d1c...client",
+    "authorize_url": "https://claude.ai/oauth/authorize",
+    "token_url": "https://console.anthropic.com/v1/oauth/token",
+    "headers": { "User-Agent": "claudewheel/1.0" }
+  },
+  "tokens": {
+    "access_token": "sk-ant-oat01-abc",
+    "refresh_token": "sk-ant-ort01-def",
+    "expires_at": "2026-08-01T12:00:00+00:00",
+    "scopes": ["user:inference", "user:profile"]
+  },
+  "tier": "max_20x",
+  "tier_display": {
+    "free": { "display_name": "Free", "abbreviation": "F" },
+    "pro": { "display_name": "Pro", "abbreviation": "Pro" },
+    "max_20x": { "display_name": "Max 20x", "abbreviation": "M20" }
+  }
+}

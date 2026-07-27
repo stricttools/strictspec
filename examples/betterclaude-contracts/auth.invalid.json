@@ -1,0 +1,17 @@
+{
+  "format_version": 1,
+  "oauth": {
+    "client_id": "9d1c...client",
+    "authorize_url": "http://claude.ai/oauth/authorize",
+    "token_url": "https://console.anthropic.com/v1/oauth/token"
+  },
+  "tokens": {
+    "access_token": "sk-ant-oat01-abc",
+    "expires_at": "2026-08-01T12:00:00",
+    "scopes": []
+  },
+  "tier": "max_50x",
+  "tier_display": {
+    "free": { "display_name": "Free", "abbreviation": "FREE!" }
+  }
+}

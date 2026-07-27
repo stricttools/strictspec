@@ -1,0 +1,32 @@
+name = "claude-pid-session"
+meta_version = 1
+format_version = 1
+description = "PID session file: maps a running process to a session, project, and on-disk layout (BetterClaude §3 transcript contract, PID session files)."
+document_syntax = "json"
+targets = ["python", "go"]
+safe_integers = true
+
+imports = [ { file = "types-claude-common.toml", types = ["SessionId", "Instant", "ProjectPathCodec"] } ]
+
+[fields.pid]
+type = "integer"
+required = true
+min = 1
+
+[fields.session_id]
+type = "SessionId"
+required = true
+
+[fields.project]
+type = "ProjectPathCodec"
+required = true
+
+# The three session LAYOUTS (§3): code / desktop / cowork — where transcripts live on disk.
+[fields.layout]
+type = "enum"
+required = true
+values = ["code", "desktop", "cowork"]
+
+[fields.started_at]
+type = "Instant"
+required = true

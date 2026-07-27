@@ -1,0 +1,96 @@
+name = "claude-transcript"
+meta_version = 1
+format_version = 1
+description = "transcript JSONL line: discriminated by `type`; project-path codec; opaque message payloads (BetterClaude §3 transcript contract)."
+document_syntax = "jsonl"
+targets = ["python", "go", "ts"]
+safe_integers = true
+
+imports = [ { file = "types-claude-common.toml", types = ["SessionId", "Instant", "ProjectPathCodec"] } ]
+
+# Each JSONL line is one transcript record, discriminated on `type`. Per-line format_version.
+[root]
+type = "union"
+discriminator = "type"
+
+# --- user turn ---
+[root.arms.user.fields.type]
+type = "literal"
+value = "user"
+required = true
+[root.arms.user.fields.uuid]
+type = "SessionId"           # a UUID; SessionId's grammar is the generic uuid refinement (see gap note)
+required = true
+[root.arms.user.fields.parentUuid]
+type = "SessionId"
+required = true
+nullable = true             # first line has null parent (JSONL: nullable is available)
+[root.arms.user.fields.sessionId]
+type = "SessionId"
+required = true
+[root.arms.user.fields.timestamp]
+type = "Instant"
+required = true
+[root.arms.user.fields.cwd]
+type = "ProjectPathCodec"
+required = true
+[root.arms.user.fields.message]
+type = "opaque_json"        # Anthropic message shape — opaque to the transcript contract
+required = true
+unchecked = true
+unchecked_reason = "Anthropic message content shape is owned by the API, not this contract; validated downstream by claudetranscript."
+
+# --- assistant turn ---
+[root.arms.assistant.fields.type]
+type = "literal"
+value = "assistant"
+required = true
+[root.arms.assistant.fields.uuid]
+type = "SessionId"
+required = true
+[root.arms.assistant.fields.parentUuid]
+type = "SessionId"
+required = true
+nullable = true
+[root.arms.assistant.fields.sessionId]
+type = "SessionId"
+required = true
+[root.arms.assistant.fields.timestamp]
+type = "Instant"
+required = true
+[root.arms.assistant.fields.cwd]
+type = "ProjectPathCodec"
+required = true
+[root.arms.assistant.fields.message]
+type = "opaque_json"
+required = true
+unchecked = true
+unchecked_reason = "Anthropic message content shape (blocks, usage) is owned by the API; validated downstream by claudetranscript."
+
+# --- system line ---
+[root.arms.system.fields.type]
+type = "literal"
+value = "system"
+required = true
+[root.arms.system.fields.uuid]
+type = "SessionId"
+required = true
+[root.arms.system.fields.timestamp]
+type = "Instant"
+required = true
+[root.arms.system.fields.content]
+type = "string"
+required = true
+
+# --- summary line ---
+[root.arms.summary.fields.type]
+type = "literal"
+value = "summary"
+required = true
+[root.arms.summary.fields.summary]
+type = "string"
+required = true
+non_empty = true
+[root.arms.summary.fields.leafUuid]
+type = "SessionId"
+required = true

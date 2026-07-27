@@ -1,0 +1,18 @@
+{
+  "format_version": 1,
+  "families": [
+    {
+      "name": "opus",
+      "models": [
+        { "name": "claude-opus-4-20250514", "display_abbreviation": "Opus 4", "context_window": 200000, "supports_1m": false }
+      ]
+    },
+    {
+      "name": "sonnet",
+      "models": [
+        { "name": "claude-sonnet-4-5-20250929", "display_abbreviation": "Sonnet 4.5", "context_window": 200000, "supports_1m": true },
+        { "name": "claude-sonnet-4-5-20250929[1m]", "display_abbreviation": "Sonnet 1M", "context_window": 1000000, "supports_1m": true }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+name = "claude-usage"
+meta_version = 1
+format_version = 1
+description = "statusline stdin JSON + usage-API windows (BetterClaude §3 usage contract)."
+document_syntax = "json"
+targets = ["python", "go", "ts"]
+safe_integers = true   # token counts; TS target present, so this is mandatory
+
+imports = [ { file = "types-claude-common.toml", types = ["SessionId", "ModelName", "Tier", "Instant"] } ]
+
+# --- statusline stdin JSON (what Claude passes to the statusline program) ---
+[fields.session_id]
+type = "SessionId"
+required = true
+
+[fields.model]
+type = "record"
+required = true
+[fields.model.fields.id]
+type = "ModelName"
+required = true
+[fields.model.fields.display_name]
+type = "string"
+required = true
+non_empty = true
+
+[fields.workspace]
+type = "record"
+required = true
+[fields.workspace.fields.current_dir]
+type = "string"
+required = true
+non_empty = true
+[fields.workspace.fields.project_dir]
+type = "string"
+required = true
+non_empty = true
+
+[fields.tier]
+type = "Tier"
+required = false
+
+[fields.cost]
+type = "record"
+required = false
+[fields.cost.fields.total_cost_usd]
+type = "number"                # NUMBER scalar: accepts int or float lexeme, binds float64
+required = true
+min = 0
+
+# --- usage-API windows ---
+[fields.windows]
+type = "array"
+required = false
+[fields.windows.item]
+type = "record"
+[fields.windows.item.fields.start]
+type = "Instant"
+required = true
+[fields.windows.item.fields.end]
+type = "Instant"
+required = true
+[fields.windows.item.fields.input_tokens]
+type = "integer"
+required = true
+min = 0
+[fields.windows.item.fields.output_tokens]
+type = "integer"
+required = true
+min = 0
+# each window's start must precede its end (ordered-pair; same-kind offset instants)
+[[fields.windows.item.constraints]]
+form = "ordered-pair"
+less = "start"
+greater = "end"
