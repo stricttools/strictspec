@@ -1,0 +1,40 @@
+# strictspec migration — claudestream budget (FLAGSHIP shape-op example)
+#
+# This is a conformance FIXTURE, not a live migration. The field change
+# (max_cost_usd -> cost_thresholds) happened in claudestream code long ago and
+# NO at-rest documents exist (see ../claudestream-agent gap-note #3). It exists to
+# exercise: rename_field + wrap_in_array, and a PARTIAL down-migration whose
+# per-document failure is the pinned unwrap-of-a-multi-element-list hard error.
+#
+# DRAFT MIGRATION NOTATION (surface not pinned by spec/):
+#   [migration] header: schema / from_format_version / to_format_version / migration_set / description
+#   [[ops]] one per op from the CLOSED 13-op set; each declares `down`:
+#           "total" | "partial" | "irreversible" (reversibility taxonomy, decision 9)
+#   ops may move/rename/reshape/delete/inject-literals — NEVER compute a value from a value.
+
+[migration]
+schema = "AgentDefinition"
+from_format_version = 1
+to_format_version = 2
+migration_set = "agent-budget"
+description = "Budget max_cost_usd (float scalar) -> cost_thresholds ([float]). rename_field + wrap_in_array; down declared PARTIAL."
+
+# 1) rename the scalar field. Fully reversible.
+[[ops]]
+op = "rename_field"
+from = "$.budget.max_cost_usd"
+to = "$.budget.cost_thresholds"
+down = "total"
+
+# 2) wrap the (now-renamed) scalar into a single-element array.
+#    Write side: wrap_in_array of the float 5.0 writes [5.0] (float renders float-marked,
+#    never a bare 5 — canonical serialization appendix). Migration output revalidates at v2.
+[[ops]]
+op = "wrap_in_array"
+path = "$.budget.cost_thresholds"
+down = "partial"
+down_partial_reason = "The down op is unwrap_singleton; it is a canonical hard error (STRICTSPEC_MIGRATE_UNWRAP_NOT_SINGLETON) on any v2 document whose cost_thresholds has more than one element — a per-document failure, hence PARTIAL, not total."
+
+# Declared inverse (down) op sequence, for reference / taxonomy verification:
+#   unwrap_singleton $.budget.cost_thresholds   (partial: fails on >1 element)
+#   rename_field     $.budget.cost_thresholds -> $.budget.max_cost_usd   (total)

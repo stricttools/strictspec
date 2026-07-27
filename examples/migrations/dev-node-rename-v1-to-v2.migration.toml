@@ -1,0 +1,19 @@
+# strictspec migration — rlsbl dev_node naming history, step 1 of 2 (PURE-RENAME chain)
+#
+# Models rlsbl's real workspace flag rename history: internal -> changelog_exempt -> dev_node.
+# Two rename_field migrations, each down: TOTAL (rename is fully reversible; no value is
+# computed, reshaped, or dropped). This file is step 1 (internal -> changelog_exempt).
+# Notation legend: see budget-v1-to-v2.migration.toml header.
+
+[migration]
+schema = "WorkspaceProject"
+from_format_version = 1
+to_format_version = 2
+migration_set = "dev-node-naming"
+description = "rlsbl workspace flag rename: internal -> changelog_exempt. Pure rename, fully reversible."
+
+[[ops]]
+op = "rename_field"
+from = "$.internal"
+to = "$.changelog_exempt"
+down = "total"

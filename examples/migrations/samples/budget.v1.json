@@ -1,0 +1,7 @@
+{
+  "format_version": 1,
+  "name": "reviewer",
+  "prompt_template": "review",
+  "version": "1.0.0",
+  "budget": { "max_cost_usd": 5.0 }
+}

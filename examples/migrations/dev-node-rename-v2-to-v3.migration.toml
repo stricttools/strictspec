@@ -1,0 +1,17 @@
+# strictspec migration — rlsbl dev_node naming history, step 2 of 2 (PURE-RENAME chain)
+#
+# Step 2: changelog_exempt -> dev_node. Pure rename, down: TOTAL.
+# Notation legend: see budget-v1-to-v2.migration.toml header.
+
+[migration]
+schema = "WorkspaceProject"
+from_format_version = 2
+to_format_version = 3
+migration_set = "dev-node-naming"
+description = "rlsbl workspace flag rename: changelog_exempt -> dev_node. Pure rename, fully reversible."
+
+[[ops]]
+op = "rename_field"
+from = "$.changelog_exempt"
+to = "$.dev_node"
+down = "total"
