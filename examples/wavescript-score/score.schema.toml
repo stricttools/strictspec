@@ -1,0 +1,356 @@
+# strictspec paper schema — wavescript JSON score, format_version 2.
+# Source of truth: wavescript/internal/score/score.go (format_version gate at
+# ~line 999), internal/registry/registry.go (Spec/Cond/Pin, ValidateValue,
+# ValidateEffective), internal/registry/scorefields.go and topo_subtractive.go
+# (the per-topology parameter registry). Notation as established in
+# ../rlsbl-release-file/release-file.schema.toml.
+#
+# This is the strongest conditional-required stress test in the corpus: a
+# parameter's APPLICABILITY (required / optional / forbidden) and even its VALUE
+# depend on the EFFECTIVE (explicit-or-default) value of a sibling gate key.
+# The schema below models the score root skeleton, the embedded_bank typed map,
+# the topology discriminated union, and ONE topology (subtractive) in enough
+# depth to exercise every conditional shape. The other ~19 topologies follow the
+# identical pattern (a closed params record + a set of gate constraints). See
+# gap-note.md for what the vocabulary carries and where it falls short.
+
+schema = "wavescript-score"
+meta_version = 1
+format_version = 2
+description = "A wavescript JSON score: global fields, tracks, and an embedded bank of topology-tagged synthesis presets whose parameter applicability is gate-conditional."
+syntax = "json"
+targets = ["go"]
+
+# ---------------------------------------------------------------------------
+# Score root
+# ---------------------------------------------------------------------------
+
+[record.ROOT.format_version]
+type = "literal"
+value = 2
+required = true
+description = "The v2 marker. The schema's integer format_version gate (=2) runs first; a missing/wrong value is STRICTSPEC_GATE_ABSENT/UNSUPPORTED (maps exactly to score.go's fast-fail). This is the one already-versioned format in the fleet."
+
+[record.ROOT.title]
+type = "string"
+required = true
+non_empty = true
+
+[record.ROOT.sample_rate]
+type = "integer"
+required = true
+values = [44100, 48000]
+description = "IntEnum: exactly one of {44100, 48000} (registry ScoreSpec sample_rate). Modeled as an integer enum."
+
+[record.ROOT.tempo]
+type = "number"
+required = false
+description = "Global tempo (qpm). Optional here; the real format also accepts a tempo map object (not modeled — a node-kind union of number-or-object)."
+
+[record.ROOT.seed]
+type = "integer"
+required = true
+min = 0
+max = 4294967295
+description = "uint32 PRNG seed, [0, 2^32-1]. Inclusive integer range."
+
+[record.ROOT.master_gain]
+type = "float"
+required = true
+exclusive_min = 0.0
+max = 1.0
+description = "Master gain, (0, 1]. Exclusive lower bound (registry MinExclusive) + inclusive upper."
+
+[record.ROOT.bank]
+type = "string"
+required = false
+description = "Named external bank reference (resolved by the consumer against the bank store). Mutually exclusive in practice with embedded_bank usage but both may appear."
+
+[record.ROOT.tracks]
+type = "array"
+item = "Track"
+required = true
+min_len = 1
+
+[record.ROOT.embedded_bank]
+type = "map"
+required = false
+key_pattern = "^[A-Za-z_][A-Za-z0-9_-]*$"
+value = "Preset"
+description = "Inline preset definitions keyed by preset name. Each value is a topology-tagged Preset (discriminated union)."
+
+# ---------------------------------------------------------------------------
+# Track (minimal; the pattern string is an opaque domain string)
+# ---------------------------------------------------------------------------
+
+[record.Track.name]
+type = "string"
+required = true
+non_empty = true
+
+[record.Track.instrument]
+type = "string"
+required = true
+description = "Preset name referenced from embedded_bank or the external bank. See constraint track-instrument-resolves (partial — cross-store)."
+
+[record.Track.gain]
+type = "float"
+required = false
+min = 0.0
+max = 1.0
+
+[record.Track.pan]
+type = "float"
+required = false
+min = -1.0
+max = 1.0
+
+[record.Track.pattern]
+type = "string"
+opaque = true
+consumer_check = "pattern-grammar"
+required = false
+description = "Pattern DSL (e.g. \"a3:1/8 c4 e4\"). A named consumer-native check parses it; strictspec is blind to its interior by declaration (inventoried by `strictspec check`)."
+
+[record.Track.repeat]
+type = "integer"
+required = false
+min = 1
+
+# ---------------------------------------------------------------------------
+# Preset — discriminated union on `topology`
+# ---------------------------------------------------------------------------
+
+[record.Preset]
+union = "discriminated"
+discriminator = "topology"
+description = "Arms keyed by topology name. Only `subtractive` is modeled in full; the rest follow the same shape."
+arms = { subtractive = "SubtractivePreset" }
+
+[record.SubtractivePreset.topology]
+type = "literal"
+value = "subtractive"
+required = true
+
+[record.SubtractivePreset.params]
+type = "SubtractiveParams"
+required = true
+
+# ---------------------------------------------------------------------------
+# SubtractiveParams — a closed record. A key NOT declared here is an unknown-key
+# error, which reproduces the registry's per-topology whitelist (a param invalid
+# for the topology). Representative subset of topo_subtractive.go covering every
+# conditional shape; ~25 further keys elided (same patterns).
+# ---------------------------------------------------------------------------
+
+[record.SubtractiveParams.source]
+type = "enum"
+required = true
+values = ["sine", "saw", "square", "triangle", "noise", "pink", "brown"]
+description = "Oscillator waveform. Unconditionally Required — a gate for many keys and, being required, always explicit (effective == explicit)."
+
+[record.SubtractiveParams.harm2_level]
+type = "float"
+required = false
+min = 0.0
+max = 1.0
+description = "onlyWhen source==sine. Modeled as forbidden-when source in the COMPLEMENT set — see gap note FINDING 3 (no negative-polarity `unless`)."
+
+[record.SubtractiveParams.pulse_width]
+type = "float"
+required = false
+min = 0.05
+max = 0.95
+description = "onlyWhen source==square."
+
+[record.SubtractiveParams.sub_level]
+type = "float"
+required = false
+min = 0.0
+max = 1.0
+description = "forbiddenWhen source in {noise,pink,brown}. Positive-polarity forbidden-when — clean."
+
+[record.SubtractiveParams.unison]
+type = "integer"
+required = false
+min = 1
+max = 7
+description = "Detuned unison voices. PINNED to 1 when source in {noise,pink,brown} (registry Pin). Conditional-literal — INEXPRESSIBLE, see gap note FINDING 2."
+
+[record.SubtractiveParams.filter_type]
+type = "enum"
+required = true
+values = ["lowpass", "highpass", "bandpass", "svf_lp", "svf_hp", "svf_bp", "svf_notch", "ladder_lp", "none"]
+description = "Per-voice filter. Unconditionally Required (a gate; always explicit)."
+
+[record.SubtractiveParams.cutoff]
+type = "float"
+required = false
+min = 20.0
+max = 20000.0
+description = "requiredUnless filter_type==none (and forbidden when none). Two rules: forbidden-when filter_type==none (clean) + required-when filter_type in COMPLEMENT (FINDING 3)."
+
+[record.SubtractiveParams.q]
+type = "float"
+required = false
+min = 0.1
+max = 10.0
+description = "forbiddenWhen filter_type in {none, ladder_lp}. Clean positive-polarity forbidden-when."
+
+[record.SubtractiveParams.resonance]
+type = "float"
+required = false
+min = 0.0
+max = 1.0
+description = "onlyWhen filter_type==ladder_lp."
+
+[record.SubtractiveParams.filter_keytrack]
+type = "float"
+required = false
+min = 0.0
+max = 1.0
+description = "forbiddenWhen filter_type==none."
+
+[record.SubtractiveParams.attack]
+type = "float"
+required = true
+min = 0.0
+max = 10.0
+description = "ADSR attack. Unconditionally Required."
+
+[record.SubtractiveParams.decay]
+type = "float"
+required = true
+min = 0.0
+max = 10.0
+
+[record.SubtractiveParams.sustain]
+type = "float"
+required = true
+min = 0.0
+max = 1.0
+
+[record.SubtractiveParams.release]
+type = "float"
+required = true
+min = 0.0
+max = 10.0
+
+[record.SubtractiveParams.lfo_rate]
+type = "float"
+required = false
+min = 0.02
+max = 20.0
+description = "LFO #1 rate. forbiddenWhen lfo_sync in SyncNoteValues. THE crux: the gate `lfo_sync` is OPTIONAL WITH A DEFAULT (\"\"), so the registry reads its EFFECTIVE (explicit-or-default) value. strictspec has no defaults — see gap note FINDING 1."
+
+[record.SubtractiveParams.lfo_sync]
+type = "enum"
+required = false
+values = ["", "1/1", "1/2", "1/4", "1/8", "1/16", "1/32", "1/2.", "1/4.", "1/8.", "1/16.", "1/2t", "1/4t", "1/8t", "1/16t"]
+description = "LFO tempo sync note value. Default-of-record is \"\" (free-running). In strictspec absence != \"\": an absent lfo_sync binds ABSENT, not \"\" — the divergence that makes FINDING 1 concrete."
+
+[record.SubtractiveParams.fixed_pitch]
+type = "string"
+opaque = true
+consumer_check = "pitch-grammar"
+required = false
+description = "A note string in the pitch grammar (registry Type Note). Opaque domain string validated by a consumer-native check — the pitch grammar is not an RE2 lexeme."
+
+[record.SubtractiveParams.velocity_curve]
+type = "enum"
+required = false
+values = ["linear", "exponential", "soft"]
+
+# ---------------------------------------------------------------------------
+# Gate constraints on the subtractive arm's params.
+# Scoped with an arm step: $.embedded_bank[*](subtractive).params
+# ---------------------------------------------------------------------------
+
+# CLEAN — positive-polarity forbidden-when on a required gate:
+[[constraint]]
+form = "forbidden-when"
+scope = "$.embedded_bank[*](subtractive).params"
+field = "sub_level"
+when = { field = "source", in = ["noise", "pink", "brown"] }
+
+[[constraint]]
+form = "forbidden-when"
+scope = "$.embedded_bank[*](subtractive).params"
+field = "q"
+when = { field = "filter_type", in = ["none", "ladder_lp"] }
+
+[[constraint]]
+form = "forbidden-when"
+scope = "$.embedded_bank[*](subtractive).params"
+field = "filter_keytrack"
+when = { field = "filter_type", in = ["none"] }
+
+# forbidden-when filter_type==none — half of cutoff's requiredUnless (clean half):
+[[constraint]]
+form = "forbidden-when"
+scope = "$.embedded_bank[*](subtractive).params"
+field = "cutoff"
+when = { field = "filter_type", in = ["none"] }
+
+# AWKWARD — onlyWhen via complement enumeration (FINDING 3). harm2_level is
+# forbidden UNLESS source==sine; expressed as forbidden-when source in the
+# enumerated complement. Brittle: adding a `source` arm requires editing this.
+[[constraint]]
+form = "forbidden-when"
+scope = "$.embedded_bank[*](subtractive).params"
+field = "harm2_level"
+when = { field = "source", in = ["saw", "square", "triangle", "noise", "pink", "brown"] }
+
+[[constraint]]
+form = "forbidden-when"
+scope = "$.embedded_bank[*](subtractive).params"
+field = "pulse_width"
+when = { field = "source", in = ["sine", "saw", "triangle", "noise", "pink", "brown"] }
+
+[[constraint]]
+form = "forbidden-when"
+scope = "$.embedded_bank[*](subtractive).params"
+field = "resonance"
+when = { field = "filter_type", in = ["lowpass", "highpass", "bandpass", "svf_lp", "svf_hp", "svf_bp", "svf_notch", "none"] }
+
+# required-when half of cutoff's requiredUnless — required when filter_type is
+# any NON-none value (complement enumeration again, FINDING 3):
+[[constraint]]
+form = "conditional-required"
+scope = "$.embedded_bank[*](subtractive).params"
+field = "cutoff"
+when = { field = "filter_type", in = ["lowpass", "highpass", "bandpass", "svf_lp", "svf_hp", "svf_bp", "svf_notch", "ladder_lp"] }
+
+# INEXPRESSIBLE — lfo_rate forbidden when lfo_sync ∈ SyncNoteValues. Written as a
+# forbidden-when on lfo_sync's VALUE. This is faithful ONLY because absence of
+# lfo_sync happens to fall in the allowed branch (default "" ∉ SyncNoteValues).
+# If lfo_sync's default were a matching value, this constraint would be WRONG —
+# FINDING 1. Kept here to show it "works" by coincidence of the data.
+[[constraint]]
+form = "forbidden-when"
+scope = "$.embedded_bank[*](subtractive).params"
+field = "lfo_rate"
+when = { field = "lfo_sync", in = ["1/1", "1/2", "1/4", "1/8", "1/16", "1/32", "1/2.", "1/4.", "1/8.", "1/16.", "1/2t", "1/4t", "1/8t", "1/16t"] }
+
+# INEXPRESSIBLE — Pin: unison must equal 1 when source ∈ {noise,pink,brown}.
+# No vocabulary form asserts a conditional VALUE equality. `pin_value`/`equals`
+# below are fictional keys, flagged. FINDING 2.
+[[constraint]]
+form = "conditional-literal"
+scope = "$.embedded_bank[*](subtractive).params"
+field = "unison"
+equals_literal = 1
+when = { field = "source", in = ["noise", "pink", "brown"] }
+description = "FICTIONAL FORM — no `conditional-literal` exists in the vocabulary. See gap note FINDING 2."
+
+# ---------------------------------------------------------------------------
+# Cross-store reference (partial): a track's instrument must resolve to an
+# embedded_bank preset OR an external bank preset. The external half is NOT in
+# this document — see gap note.
+# ---------------------------------------------------------------------------
+[[constraint]]
+form = "intra-document-references"
+scope = "$.tracks[*].instrument"
+resolves_into = "$.embedded_bank"
+resolves_by = "map-key"
+description = "Resolves against embedded_bank. When `bank` names an external store, resolution also succeeds there (out of document) — partial, see gap note."

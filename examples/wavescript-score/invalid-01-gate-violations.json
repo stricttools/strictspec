@@ -1,0 +1,38 @@
+{
+  "format_version": 2,
+  "title": "gate-violations",
+  "sample_rate": 44100,
+  "seed": 1,
+  "master_gain": 0.5,
+  "embedded_bank": {
+    "bad_filter": {
+      "topology": "subtractive",
+      "params": {
+        "source": "saw",
+        "filter_type": "none",
+        "q": 2.0,
+        "harm2_level": 0.5,
+        "attack": 0.01,
+        "decay": 0.1,
+        "sustain": 0.5,
+        "release": 0.2
+      }
+    },
+    "noise_unison": {
+      "topology": "subtractive",
+      "params": {
+        "source": "noise",
+        "unison": 4,
+        "filter_type": "lowpass",
+        "attack": 0.01,
+        "decay": 0.1,
+        "sustain": 0.5,
+        "release": 0.2
+      }
+    }
+  },
+  "tracks": [
+    {"name": "t1", "instrument": "bad_filter"},
+    {"name": "t2", "instrument": "noise_unison"}
+  ]
+}
