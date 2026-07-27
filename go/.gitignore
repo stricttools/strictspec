@@ -1,5 +1,5 @@
 *.test
-strictspec
+/strictspec-bin
 dist/
 
 node_modules/
