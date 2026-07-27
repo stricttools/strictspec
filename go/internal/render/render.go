@@ -128,6 +128,11 @@ func renderSlot(code, name string, slot diag.Slot) string {
 
 // --- Value rendering (appendix-rendering.md Part A) --------------------------
 
+// Value renders a document value per the A.1 diagnostic table. It is the public
+// entry the diff/doc-diff toolchain uses to render certificate and delta values
+// (appendix-certificates.md: "Values render per appendix-rendering.md Part A").
+func Value(v diag.Value) string { return renderValue(v) }
+
 // renderValue renders a document value per A.1 (top-level container depth = 1).
 func renderValue(v diag.Value) string {
 	return renderValueAtDepth(v, 1)
