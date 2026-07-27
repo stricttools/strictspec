@@ -53,7 +53,7 @@ description = "Changelog coverage mode. Selects which changelog-entry schema the
 # TargetRef — a node-kind union: a bare string, or a {name,path} record
 # ---------------------------------------------------------------------------
 
-[record.ROOT.targets.item]
+[record.TargetRef]
 union = "node-kind"
 description = "String form (target name) OR record form."
 arms = { string = "string", record = "TargetObject" }
