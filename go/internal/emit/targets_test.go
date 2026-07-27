@@ -414,6 +414,54 @@ func TestGeneratedDeterminism(t *testing.T) {
 	}
 }
 
+// snippetAround returns up to a few lines of s starting at the first line that
+// contains marker, for readable failure messages.
+func snippetAround(s, marker string) string {
+	lines := strings.Split(s, "\n")
+	for i, ln := range lines {
+		if strings.Contains(ln, marker) {
+			hi := i + 10
+			if hi > len(lines) {
+				hi = len(lines)
+			}
+			return strings.Join(lines[i:hi], "\n")
+		}
+	}
+	return "(marker " + marker + " not found)"
+}
+
+// TestOptionalRecordFieldTypeText pins the typed-binding fix for optional
+// (required=false) record-typed fields. shared-canvas's Canvas.origin is a
+// `required = false` field of the imported record type Point: when the field is
+// absent the binder yields None (Python) / an absent property (TS), so the
+// emitted TYPE must admit absence. Go already emits a pointer (*Point, nil when
+// absent, since record refs are always pointers); this guards the Python and TS
+// emitters against the same over-promise. Required scalar fields keep the
+// zero-value convention (Go parity) and must NOT be widened.
+func TestOptionalRecordFieldTypeText(t *testing.T) {
+	_, fixturesRoot := dirs(t)
+	schemaPath := filepath.Join(fixturesRoot, "_schemas", "shared-canvas.toml")
+
+	py := genPythonSource(t, schemaPath, "0.0.0")
+	if !strings.Contains(py, "origin: Point | None = None") {
+		t.Errorf("python: optional record field must be nullable with a None default (`origin: Point | None = None`):\n%s", snippetAround(py, "class Canvas"))
+	}
+	if !strings.Contains(py, "@dataclass(frozen=True, kw_only=True)") {
+		t.Errorf("python: records must be keyword-only so an optional field's None default never breaks required-field ordering")
+	}
+	if strings.Contains(py, "background: str | None") {
+		t.Errorf("python: required scalar field must not be widened to | None (zero-value convention, Go parity)")
+	}
+
+	ts := genTSSource(t, schemaPath, "0.0.0")
+	if !strings.Contains(ts, "readonly origin?: Point;") {
+		t.Errorf("ts: optional record field must be an optional property (`readonly origin?: Point;`):\n%s", snippetAround(ts, "interface Canvas"))
+	}
+	if !strings.Contains(ts, "readonly background: string;") {
+		t.Errorf("ts: required field must stay a non-optional property (`readonly background: string;`):\n%s", snippetAround(ts, "interface Canvas"))
+	}
+}
+
 func errWith(msg, out string, err error) error {
 	return &execError{msg: msg, out: out, err: err}
 }
