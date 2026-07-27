@@ -213,7 +213,9 @@ class _Converter:
 
     def _convert_value(self, item) -> doc.Node:
         if isinstance(item, Array):
-            children = [self._convert_value(g.value) for g in item._value]
+            children = [
+                self._convert_value(g.value) for g in item._value if g.value is not None
+            ]
             return doc.new_array(children, _cover(children))
         if isinstance(item, InlineTable):
             return self._convert_inline_table(item)
