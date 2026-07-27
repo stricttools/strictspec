@@ -22,6 +22,7 @@ target/
 .conformance-adapter
 .gen-adapter
 .gen-cache/
+.strictspec-cli
 /strictspec
 /gen-adapter
 /conformance-adapter

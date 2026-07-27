@@ -1,0 +1,12 @@
+name = "diff-taxonomy-misdeclared"
+kind = "diff"
+description = "Declaring wrap_in_array's down TOTAL is a hard error when a multi-element v2 corpus doc makes down fail."
+old_schema = "old.toml"
+new_schema = "new.toml"
+migration = "bad.migration.toml"
+corpus = "*.json"
+corpus_subdir = "corpus"
+
+[expected]
+exit_code = 1
+stderr_contains = ["STRICTSPEC_DIFF_TAXONOMY_MISDECLARED"]

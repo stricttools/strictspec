@@ -1,0 +1,11 @@
+name = "Doc"
+meta_version = 1
+format_version = 1
+document_syntax = "json"
+role = "schema"
+root = "Root"
+[types.Root]
+type = "record"
+[types.Root.fields.x]
+type = "number"
+required = true

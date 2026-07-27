@@ -1,0 +1,10 @@
+name = "doc-diff-lexeme-class"
+kind = "doc-diff"
+description = "1 (integer) vs 1.0 (float) at the same path is a `changed` delta (lexeme-class-aware)."
+schema = "schema.toml"
+old_document = "a.json"
+new_document = "b.json"
+
+[expected]
+exit_code = 0
+stdout_contains = ["\"changed\"", "$.x", "\"1\"", "\"1.0\""]

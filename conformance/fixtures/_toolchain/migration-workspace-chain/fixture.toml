@@ -1,0 +1,11 @@
+name = "migration-workspace-chain"
+kind = "migration"
+description = "Two-step pure-rename chain internal -> changelog_exempt -> dev_node; byte-exact."
+schema = "schema.toml"
+migrations = "."
+to = 3
+inputs = ["doc.json"]
+
+[expected]
+exit_code = 0
+output_equals = { "doc.json" = "expected.json" }

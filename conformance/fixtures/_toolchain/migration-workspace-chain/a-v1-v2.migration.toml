@@ -1,0 +1,15 @@
+[migration]
+schema = "WorkspaceProject"
+from_format_version = 1
+to_format_version = 2
+migration_set = "dev-node-naming"
+description = "internal -> changelog_exempt."
+[[ops]]
+op = "rename_field"
+from = "$.internal"
+to = "$.changelog_exempt"
+down = "total"
+[[down_ops]]
+op = "rename_field"
+from = "$.changelog_exempt"
+to = "$.internal"

@@ -1,0 +1,10 @@
+[migration]
+schema = "AgentDefinition"
+from_format_version = 1
+to_format_version = 2
+migration_set = "agent-budget"
+description = "Intentionally broken: removes a field that is absent."
+[[ops]]
+op = "remove_field"
+path = "$.budget.does_not_exist"
+down = "irreversible"

@@ -1,0 +1,11 @@
+name = "migration-budget"
+kind = "migration"
+description = "Flagship budget rename_field + wrap_in_array; byte-exact write side (5.0 -> [5.0])."
+schema = "schema.toml"
+migrations = "."
+to = 2
+inputs = ["doc.json"]
+
+[expected]
+exit_code = 0
+output_equals = { "doc.json" = "expected.json" }

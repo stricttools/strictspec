@@ -1,0 +1,27 @@
+name = "AgentDefinition"
+meta_version = 1
+format_version = 2
+document_syntax = "json"
+role = "schema"
+root = "Root"
+[types.Root]
+type = "record"
+[types.Root.fields.name]
+type = "string"
+required = true
+[types.Root.fields.prompt_template]
+type = "string"
+required = true
+[types.Root.fields.version]
+type = "string"
+required = true
+[types.Root.fields.budget]
+type = "Budget"
+required = true
+[types.Budget]
+type = "record"
+[types.Budget.fields.cost_thresholds]
+type = "array"
+required = true
+  [types.Budget.fields.cost_thresholds.item]
+  type = "float"

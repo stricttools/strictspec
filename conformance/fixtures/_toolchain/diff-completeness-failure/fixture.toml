@@ -1,0 +1,13 @@
+name = "diff-completeness-failure"
+kind = "diff"
+description = "A migration op that errors on a valid-at-N corpus doc is a completeness violation with a real corpus counterexample."
+old_schema = "old.toml"
+new_schema = "new.toml"
+migration = "bad.migration.toml"
+corpus = "*.json"
+corpus_subdir = "corpus"
+
+[expected]
+exit_code = 1
+stderr_contains = ["STRICTSPEC_DIFF_VIOLATED"]
+stdout_contains = ["migrate-round-trip-completeness", "violated"]

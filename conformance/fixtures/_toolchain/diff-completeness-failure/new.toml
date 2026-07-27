@@ -1,0 +1,11 @@
+name = "S"
+meta_version = 1
+format_version = 2
+document_syntax = "json"
+role = "schema"
+root = "R"
+[types.R]
+type = "record"
+[types.R.fields.x]
+type = "integer"
+required = true

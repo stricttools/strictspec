@@ -1,0 +1,15 @@
+[migration]
+schema = "WorkspaceProject"
+from_format_version = 2
+to_format_version = 3
+migration_set = "dev-node-naming"
+description = "changelog_exempt -> dev_node."
+[[ops]]
+op = "rename_field"
+from = "$.changelog_exempt"
+to = "$.dev_node"
+down = "total"
+[[down_ops]]
+op = "rename_field"
+from = "$.dev_node"
+to = "$.changelog_exempt"

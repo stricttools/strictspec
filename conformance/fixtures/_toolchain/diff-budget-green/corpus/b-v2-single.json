@@ -1,0 +1,7 @@
+{
+  "format_version": 2,
+  "name": "reviewer",
+  "prompt_template": "review",
+  "version": "1.0.0",
+  "budget": { "cost_thresholds": [5.0] }
+}

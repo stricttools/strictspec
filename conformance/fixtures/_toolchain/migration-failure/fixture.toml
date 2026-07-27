@@ -1,0 +1,11 @@
+name = "migration-failure"
+kind = "migration"
+description = "A migration op targeting an absent field is STRICTSPEC_MIGRATE_TARGET_MISSING; no file is written."
+schema = "schema.toml"
+migrations = "."
+to = 2
+inputs = ["doc.json"]
+
+[expected]
+exit_code = 1
+stderr_contains = ["STRICTSPEC_MIGRATE_TARGET_MISSING"]

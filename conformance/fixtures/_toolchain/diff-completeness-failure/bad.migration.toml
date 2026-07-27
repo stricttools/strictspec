@@ -1,0 +1,13 @@
+[migration]
+schema = "S"
+from_format_version = 1
+to_format_version = 2
+migration_set = "bad-unwrap"
+description = "Intentionally broken: unwrap a scalar."
+[[ops]]
+op = "unwrap_singleton"
+path = "$.x"
+down = "total"
+[[down_ops]]
+op = "wrap_in_array"
+path = "$.x"

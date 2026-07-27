@@ -1,0 +1,13 @@
+name = "diff-same-version-narrowing"
+kind = "diff"
+description = "Two schemas at the same format_version where new narrows (max=10): a valid->invalid flip is an un-bumped narrowing."
+old_schema = "old.toml"
+new_schema = "new.toml"
+corpus = "*.json"
+corpus_subdir = "corpus"
+same_version = true
+
+[expected]
+exit_code = 1
+stderr_contains = ["STRICTSPEC_DIFF_NARROWING_UNBUMPED"]
+stdout_contains = ["same-version", "flip-scan", "violated"]

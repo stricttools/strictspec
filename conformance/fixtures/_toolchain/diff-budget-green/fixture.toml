@@ -1,0 +1,12 @@
+name = "diff-budget-green"
+kind = "diff"
+description = "Budget N->N+1 over a corpus: every claim corpus-supported; certificate emitted; exit 0."
+old_schema = "old.toml"
+new_schema = "new.toml"
+migration = "budget.migration.toml"
+corpus = "*.json"
+corpus_subdir = "corpus"
+
+[expected]
+exit_code = 0
+stdout_contains = ["corpus-supported", "content_hash", "migrate-round-trip-soundness", "down-taxonomy"]
