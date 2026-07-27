@@ -1,0 +1,6 @@
+{
+  "targets": [
+    "plain"
+  ],
+  "publish_mode": "ci"
+}
