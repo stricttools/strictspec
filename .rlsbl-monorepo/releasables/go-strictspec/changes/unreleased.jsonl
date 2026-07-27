@@ -11,3 +11,4 @@
 {"id":"18c62d227d354d272b44add6666c4e848dec682f509ba8d0","commits":["fdbb2410489166f7e560d52baab0b65faae5e47c"],"user_facing":false,"packages":["go-strictspec"]}
 {"id":"18c62d22870c00de766541ad38bf4de78508b93c9ebc73be","commits":["d8e3e5657c496cf4a957610fde74f0869b91e9c7"],"user_facing":false,"packages":["go-strictspec"]}
 {"id":"18c62d2291a7d564d7d99f48222b4345a10a352d2b331c01","commits":["9f871e0f652bc65b03a64aef3821d244925884cb"],"user_facing":false,"packages":["go-strictspec"]}
+{"id":"18c62d229ca0abf33ab6b268ff7148299676662b3cfc0b56","commits":["8ea62401d2ce7b73c2c86c75a3860d9ceb57f32b"],"user_facing":false,"packages":["go-strictspec"]}
