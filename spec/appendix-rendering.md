@@ -1,0 +1,187 @@
+# Appendix: Value Rendering, Path Grammar, and Did-You-Mean (normative)
+
+> NORMATIVE STATUS: Part of the strictspec constitution (see `DESIGN.md`). CROSS-TARGET
+> normative — every rule here is asserted identically across all four conformance targets as
+> part of full VERDICT + CODE + PATH + MESSAGE-TEXT identity. VERSIONED: any change is a
+> breaking-class, changelog-covered release event triggering full conformance-fixture
+> regeneration.
+>
+> META NOTE: Under the soft-freeze regime, pre-release refinements to these rules (truncation
+> length, escape forms, edge outcomes) are expected and recorded per-release. The binding
+> freeze is the first release.
+
+This appendix pins two things that must be byte-identical everywhere: how a value is rendered
+inside a diagnostic message (read side) AND how a constructed value is serialized (write side),
+plus the path grammar and the did-you-mean algorithm. The message templates in
+`appendix-error-codes.md` interpolate slots per this appendix; the write-side table implements
+the canonical-serialization appendix leg of `DESIGN.md`.
+
+## Part A — Value rendering
+
+Two distinct tables. The DIAGNOSTIC table governs values embedded in message text (they may be
+truncated, always quoted for clarity). The WRITE-SIDE table governs values serialized back into
+a document (never truncated, byte-exact). Both are cross-target normative; renderers may not
+deviate.
+
+### A.1 Diagnostic value rendering (read side, in messages)
+
+| Value kind | Rendered form | Notes |
+|---|---|---|
+| Integer | Decimal digits, optional leading `-`. No thousands separators, no `+`. | `1000`, `-42`. int64 domain. |
+| Float | The lexeme's canonical decimal or exponent form, ALWAYS carrying a `.` or an exponent marker. A float-classed value never renders as a bare integer. | `5.0`, `1.5`, `1e3` renders `1000.0`? See A.3 — the SOURCE lexeme class is preserved but the rendered text is canonicalized to a float-marked form; `5` in a float field renders `5.0`. |
+| number scalar | Rendered per its SOURCE lexeme class: an integer-classed source renders as an integer, a float-classed source renders float-marked. | The `number` scalar's whole point is lexeme-class fidelity. |
+| String | Double-quoted, with the escape set in A.2. Truncated per A.4. | `"hello"`, `"line\nbreak"`. |
+| Boolean | `true` / `false`, lowercase. | Never `1`/`0`. |
+| Null | `null`, lowercase. | The JSON/JSONL null value. |
+| Negative zero | Integer `-0` renders `0` (int64 has no negative zero). Float `-0.0` renders `-0.0`, preserving the sign. | Pinned edge case; the sign is significant for floats and is retained. |
+| Date | RFC 3339 full-date, e.g. `2026-07-27`. | Scalar kind `date`. |
+| Time | RFC 3339 partial-time, e.g. `13:37:00` (or with fractional seconds as written). | Scalar kind `time`. |
+| Datetime (offset) | RFC 3339 date-time with the source offset preserved verbatim (`+00:00` is NOT rewritten to `Z`). | Lexeme retention rule. |
+| Datetime (local) | RFC 3339 local date-time, no offset. | Local kind. |
+| Array (in message) | Truncated inline form per A.5. | e.g. `[1, 2, 3, ...]`. |
+| Record (in message) | Truncated inline form per A.5. | e.g. `{a: 1, b: 2, ...}`. |
+
+### A.2 String escaping (both sides)
+
+Within double quotes, exactly these escapes are produced, and nothing else:
+
+| Character | Escape |
+|---|---|
+| `"` (U+0022) | `\"` |
+| `\` (U+005C) | `\\` |
+| newline (U+000A) | `\n` |
+| carriage return (U+000D) | `\r` |
+| tab (U+0009) | `\t` |
+| other control chars U+0000–U+001F | `\u00XX` (lowercase hex, four digits) |
+
+All other code points — including non-ASCII — are emitted verbatim as UTF-8. No implicit
+Unicode normalization (code-point identity, per `DESIGN.md` primitives appendix item 10). No
+`\uXXXX` escaping of printable non-ASCII.
+
+### A.3 Float rendering (canonical)
+
+- A float-classed value renders with a decimal point OR an exponent, never as a bare integer.
+  `float64(5)` renders `5.0`.
+- The canonical form is the shortest decimal string that round-trips to the same float64
+  (the standard shortest-round-trip algorithm), with these pins: a value with no fractional
+  part and no exponent gains a trailing `.0`; exponent form uses lowercase `e` with a sign on
+  the exponent (`1e3` -> `1000.0` in canonical decimal when it round-trips shortest as such;
+  values requiring exponent notation for shortness use `e`). The chosen shortest form is
+  identical across Go, Python, and TS by construction (all three implement shortest-round-trip
+  IEEE-754 formatting; the conformance suite asserts identity).
+- On the WRITE side, an untouched float serializes byte-identically to its retained source
+  lexeme (lexeme retention). Only CONSTRUCTED or type-coerced floats use the canonical form
+  above.
+
+### A.4 String truncation (diagnostic messages only)
+
+- Maximum rendered string length inside a message: 64 code points of CONTENT (measured after
+  unescaping, i.e. source code points, not escape-expanded characters).
+- When a string exceeds 64 code points, render the first 64 code points, then the ellipsis
+  form ` … ` — a single U+2026 HORIZONTAL ELLIPSIS surrounded by single spaces is NOT used;
+  instead the pinned ellipsis is the three-character ASCII sequence `...` appended immediately
+  before the closing quote: `"<first 64 code points>..."`.
+- Truncation never splits an escape sequence: if the 64th code point would land inside a
+  rendered escape, the whole escaped character is dropped and the ellipsis follows.
+- Write side is NEVER truncated.
+
+### A.5 Container inline rendering (diagnostic messages only)
+
+- Arrays render `[e1, e2, e3, ...]` where each element renders per A.1 (recursively,
+  truncated). At most 3 elements are shown; if the array has more, `, ...` follows the third.
+  An empty array renders `[]`.
+- Records render `{k1: v1, k2: v2, k3: v3, ...}` in document order, keys unquoted when they are
+  identifier-shaped (`[A-Za-z_][A-Za-z0-9_-]*`), otherwise quoted per A.2. At most 3 pairs are
+  shown; `, ...` follows the third when more exist. An empty record renders `{}`.
+- Nesting is rendered to at most 2 levels deep; deeper values render as their kind sentinel:
+  `{...}` for a record, `[...]` for an array.
+- Containers are rendered inline only when a template's slot is a container value; most
+  diagnostics report scalar `{got}`/`{actual}` values.
+
+## Part B — Path grammar (EBNF, normative)
+
+Diagnostic paths are part of the conformance identity guarantee. A path names the location of a
+value within a document (and, for JSONL, within a stream). Rendered per this grammar on every
+target.
+
+```ebnf
+path            = root , { step } , [ jsonl-suffix ] ;
+root            = "$" ;                          (* the document root *)
+step            = key-step | index-step | map-key-step | arm-step ;
+
+key-step        = "." , key-name ;               (* record field *)
+key-name        = ident | quoted-key ;
+ident           = ( letter | "_" ) , { letter | digit | "_" | "-" } ;
+
+index-step      = "[" , index , "]" ;            (* array element *)
+index           = digit , { digit } ;            (* zero-based *)
+
+map-key-step    = "[" , quoted-key , "]" ;       (* typed-map key *)
+quoted-key      = '"' , { key-char | escape } , '"' ;
+key-char        = ? any code point except '"' , '\' , or a control char ? ;
+escape          = "\\" , ( '"' | "\\" | "n" | "r" | "t" | "u" , 4 * hexdigit ) ;
+
+arm-step        = "(" , arm-name , ")" ;         (* union-arm disambiguation *)
+arm-name        = ident ;
+
+jsonl-suffix    = "@" , "L" , line , ":" , byte-offset ;
+line            = digit , { digit } ;            (* one-based line number *)
+byte-offset     = digit , { digit } ;            (* zero-based byte offset within the line *)
+
+letter          = "A"…"Z" | "a"…"z" ;
+digit           = "0"…"9" ;
+hexdigit        = digit | "a"…"f" ;
+```
+
+Rules and clarifications:
+
+- ROOT is always `$`. A diagnostic at the document root renders path `$`.
+- KEY STEPS use dotted notation when the key is `ident`-shaped. A record key that is NOT
+  ident-shaped (contains special characters, spaces, leading digit) is rendered as a MAP-KEY
+  STEP with quoting: `$.config["weird key"]`. This is the "index-then-key switching" rule —
+  the renderer switches from `.key` to `["key"]` exactly when the key is not ident-shaped.
+- INDEX STEPS are zero-based and always bracketed: `$.items[0]`.
+- MAP-KEY STEPS quote the key per A.2 escaping and bracket it: `$.headers["Content-Type"]`.
+  Map keys are compared and rendered by code points (no normalization).
+- ARM STEPS disambiguate which union arm produced a nested diagnostic:
+  `$.shape(gradient).stops[0]`. The arm name is the schema-declared arm identifier. Arm steps
+  appear only when a matched discriminated-union arm's body produced the diagnostic.
+- JSONL SUFFIX addresses a value within a stream: `@L<line>:<byteoffset>`, appended after the
+  in-document path. Line numbers are ONE-based (human-facing); byte offsets are ZERO-based
+  within the line. Example: `$.budget@L42:17`. A whole-line diagnostic (e.g. a parse failure)
+  renders `$@L42:0`.
+- Separators: `.` before ident key steps; no separator before `[`, `(`, or `@`.
+
+## Part C — Did-you-mean (normative, pinned)
+
+Five decided parameters, normative — every target implements them identically and the
+`suggestion` slot is conformance-asserted as part of message-text identity:
+
+1. METRIC: Levenshtein edit distance (insertions, deletions, substitutions each cost 1;
+   no transposition).
+2. CASE SENSITIVITY: case-SENSITIVE. `Foo` and `foo` are at distance 1, not 0.
+3. THRESHOLD: 2. Only candidates within edit distance 2 (inclusive) of the unknown token are
+   eligible.
+4. MAX SUGGESTIONS: at most 3. When more than 3 candidates tie or qualify, the first 3 in the
+   ordering below are taken.
+5. ORDERING / TIE-BREAK: primary sort by ascending edit distance; ties broken ALPHABETICALLY
+   (code-point order, ascending). This fully determines the suggestion set and order.
+
+Application:
+
+- The candidate set is the known-key set at the relevant scope (record fields, enum members,
+  discriminator values), as declared by the schema.
+- If no candidate is within distance 2, the `suggestion` slot renders empty (the message's
+  `{suggestion}` interpolates to the empty string; templates that append ` Did you mean {name}?`
+  omit that clause entirely).
+- With one qualifying candidate, the rendered clause is ` Did you mean {name}?`. With two or
+  three, ` Did you mean {n1}, {n2}, or {n3}?` (Oxford comma; two candidates: ` Did you mean {n1}
+  or {n2}?`). Candidate names render per A.1 as strings if not ident-shaped, bare otherwise.
+
+## Cross-references
+
+- Codes and the templates that interpolate these slots: `appendix-error-codes.md`.
+- Write-side revalidation and producer-current-only rule: `DESIGN.md` (canonical
+  serialization appendix).
+- Semantics of the constructs whose values are rendered here: `appendix-semantics.md`.
+- Certificate/doc-diff rendered values reuse Part A: `appendix-certificates.md`.
