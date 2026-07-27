@@ -97,6 +97,17 @@ identically across all four targets as part of full message-text identity (see E
    missing-required, index order for arrays. Phase-2 diagnostics follow phase 1, ordered by
    traversal order of containing records, then check-declaration order. Fixture-asserted order
    is emission order; renderers may not reorder.
+   - INTERLEAVING AMENDMENT (soft-freeze, 2026-07-27): item 6 pinned the order WITHIN each of
+     the present-key and missing-required groups but not the relative order BETWEEN them. Pinned
+     reading (the one the corpus already implied — `pgdesign-account-invalid` emits a missing
+     required field between the two present fields that bracket it in declaration order): within a
+     record, each missing-required diagnostic is emitted immediately before the present-key
+     diagnostic of the first field, in schema-declaration order, that is BOTH declared after it and
+     present in the document; a missing-required field declared after every present field is emitted
+     last. Present-key diagnostics keep document order; missing-required diagnostics keep
+     declaration order among themselves. Conformance: `order-present-keys-document-order` (pure
+     present-key reordering) and `order-mixed-present-and-missing` (a trailing missing-required
+     after two reordered present violations).
 7. Did-you-mean (cross-target normative): the pinned edit-distance metric, threshold, and
    tie-break (alphabetical) over the known-key set are in appendix-rendering.md. Every target
    implements it identically; the `suggestion` field is conformance-asserted as part of

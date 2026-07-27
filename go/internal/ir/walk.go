@@ -1,6 +1,8 @@
 package ir
 
 import (
+	"sort"
+
 	"github.com/smm-h/strictspec/go/internal/diag"
 	"github.com/smm-h/strictspec/go/internal/doc"
 	"github.com/smm-h/strictspec/go/internal/schema"
@@ -78,8 +80,40 @@ func (v *exec) walkRecord(t *schema.Type, n doc.Node, path diag.Path) {
 	}
 	matched := map[string]bool{}
 
-	// Declared-field pass (declaration order): present -> validate, absent+required -> missing.
-	for _, f := range t.Fields {
+	// Document key positions: present-key diagnostics emit in DOCUMENT order
+	// (spec/DESIGN.md primitives appendix item 6), so a record whose keys are
+	// reordered relative to the schema declaration emits its diagnostics in the
+	// order the keys appear in the document, not in declaration order.
+	docIndex := map[string]int{}
+	for i, e := range n.Entries() {
+		if _, seen := docIndex[e.Key]; !seen {
+			docIndex[e.Key] = i
+		}
+	}
+
+	// Classification pass (declaration order): decide each declared field's
+	// emission WITHOUT emitting yet, and record every matched document key. This
+	// separates the two orderings item 6 pins: present keys (document order) and
+	// missing-required (declaration order).
+	const (
+		actPresent = iota // present, validate the value
+		actAlias          // alias + canonical both present (exactly-one rule)
+	)
+	type action struct {
+		kind    int
+		name    string // canonical field name
+		typ     *schema.Type
+		key     string   // matched document key (present)
+		alias   string   // reported non-canonical spelling (alias case)
+		declIdx int      // schema-declaration index
+		docPos  int      // document position of the (earliest) matched key
+		before  []string // missing-required field names anchored before this one
+	}
+	var present []action // present + alias, sorted to document order below
+	var missing []string // missing-required field names, declaration order
+	var missingIdx []int // parallel declaration indices for anchoring
+
+	for i, f := range t.Fields {
 		var found []string
 		if hasKey(n, f.Name) {
 			found = append(found, f.Name)
@@ -98,27 +132,74 @@ func (v *exec) walkRecord(t *schema.Type, n doc.Node, path diag.Path) {
 					break
 				}
 			}
+			pos := docIndex[found[0]]
 			for _, fn := range found {
 				matched[fn] = true
+				if docIndex[fn] < pos {
+					pos = docIndex[fn]
+				}
 			}
-			v.emit("STRICTSPEC_ALIAS_BOTH_PRESENT", path, n, map[string]diag.Slot{
-				"alias":     diag.SlotIdentifier{Name: aliasName},
-				"canonical": diag.SlotIdentifier{Name: f.Name},
+			present = append(present, action{
+				kind: actAlias, name: f.Name, alias: aliasName, declIdx: i, docPos: pos,
 			})
 			continue
 		}
 		if len(found) == 1 {
 			key := found[0]
 			matched[key] = true
-			val, _ := entryOf(n, key)
-			v.walk(f.Type, val, appendKey(path, f.Name))
+			present = append(present, action{
+				kind: actPresent, name: f.Name, typ: f.Type, key: key,
+				declIdx: i, docPos: docIndex[key],
+			})
 			continue
 		}
 		if f.Required {
-			v.emit("STRICTSPEC_TYPE_MISSING_REQUIRED", path, n,
-				map[string]diag.Slot{"key": diag.SlotString{S: f.Name}})
+			missing = append(missing, f.Name)
+			missingIdx = append(missingIdx, i)
 		}
 	}
+
+	// Anchor each missing-required field (declaration order) immediately before
+	// the first present field declared after it, matching the pre-existing corpus
+	// (pgdesign-account-invalid, where a missing field sits between two present
+	// fields) and item 6's dated interleaving pin. Missing fields declared after
+	// every present field are trailing. `present` is still in declaration order
+	// here (declIdx and missingIdx both ascending), so a single merge suffices.
+	mi := 0
+	for pi := range present {
+		for mi < len(missing) && missingIdx[mi] < present[pi].declIdx {
+			present[pi].before = append(present[pi].before, missing[mi])
+			mi++
+		}
+	}
+	trailing := missing[mi:]
+
+	// Reorder present-key emissions to document order (stable: equal positions —
+	// impossible for distinct keys — keep declaration order).
+	sort.SliceStable(present, func(a, b int) bool {
+		return present[a].docPos < present[b].docPos
+	})
+
+	emitMissing := func(names []string) {
+		for _, name := range names {
+			v.emit("STRICTSPEC_TYPE_MISSING_REQUIRED", path, n,
+				map[string]diag.Slot{"key": diag.SlotString{S: name}})
+		}
+	}
+	for _, p := range present {
+		emitMissing(p.before)
+		switch p.kind {
+		case actAlias:
+			v.emit("STRICTSPEC_ALIAS_BOTH_PRESENT", path, n, map[string]diag.Slot{
+				"alias":     diag.SlotIdentifier{Name: p.alias},
+				"canonical": diag.SlotIdentifier{Name: p.name},
+			})
+		case actPresent:
+			val, _ := entryOf(n, p.key)
+			v.walk(p.typ, val, appendKey(path, p.name))
+		}
+	}
+	emitMissing(trailing)
 
 	// Unknown-key pass (document order). The root format_version gate field is exempt.
 	for _, e := range n.Entries() {
