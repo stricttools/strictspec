@@ -1,0 +1,187 @@
+name: Publish
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish (e.g. v1.2.3). Overrides the ref for
+          retry dispatch.
+        required: false
+        type: string
+
+# One publish run per tag: a workflow_dispatch retry at the same tag
+# queues behind the in-flight run instead of racing it. A publish is never
+# cancelled mid-flight.
+concurrency:
+  group: publish-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  gate:
+    name: Gate on CI
+    runs-on: ubuntu-latest
+    permissions:
+      checks: read
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GATE_TIMEOUT_MINUTES: '20'
+      GATE_GRACE_MINUTES: '5'
+      GATE_POLL_SECONDS: '15'
+      GATE_MARKER_ATTEMPTS: '5'
+      GATE_MARKER_RETRY_SECONDS: '5'
+      CI_CHECK_REGEX: ^(test)( \(.*\))?$
+    steps:
+      - name: Wait for CI to succeed on the release commit
+        run: |
+          set -euo pipefail
+
+          # Commit resolution -- explicit marker-first order (never reads the release
+          # event payload; dispatch retries have none, so this path is uniform for
+          # release events and dispatch retries alike):
+          #   (1) Marker: rlsbl writes the exact commit CI ran on into the GitHub
+          #       Release body as a machine-parseable line of the form
+          #           <!-- rlsbl-ci-sha: <40-hex> -->
+          #       Prefer it when present -- it pins the precise commit and is immune to
+          #       ref races. A just-created release can lag on a GitHub API read replica
+          #       (the marker is written at release creation but may not be visible on
+          #       the first read), so RETRY the read GATE_MARKER_ATTEMPTS times,
+          #       GATE_MARKER_RETRY_SECONDS apart, before concluding it is absent. The
+          #       tag is inputs.tag (TAG_INPUT) when dispatched with an explicit
+          #       override, else GITHUB_REF_NAME (matches the router resolver).
+          #   (2) Fallback: older releases predate the marker, so fall back to
+          #       $GITHUB_SHA, the tag's commit for both release and dispatch-at-tag.
+          extract_ci_sha() {
+            # Emit the first rlsbl-ci-sha marker SHA found on stdin, if any.
+            sed -n 's/.*<!-- rlsbl-ci-sha: \([0-9a-f]\{40\}\) -->.*/\1/p' | head -n1
+          }
+          tag="${TAG_INPUT:-$GITHUB_REF_NAME}"
+          marker_attempts="${GATE_MARKER_ATTEMPTS:-5}"
+          marker_retry_seconds="${GATE_MARKER_RETRY_SECONDS:-5}"
+          sha=""
+          attempt=1
+          while [ "$attempt" -le "$marker_attempts" ]; do
+            if body="$(gh release view "$tag" --json body --jq .body 2>/dev/null)"; then
+              sha="$(printf '%s\n' "$body" | extract_ci_sha)"
+            fi
+            if [ -n "$sha" ]; then
+              break
+            fi
+            if [ "$attempt" -lt "$marker_attempts" ]; then
+              echo "Publish gate: rlsbl-ci-sha marker not yet visible in the '$tag' release body (attempt $attempt/$marker_attempts); retrying in ${marker_retry_seconds}s..."
+              sleep "$marker_retry_seconds"
+            fi
+            attempt=$(( attempt + 1 ))
+          done
+          if [ -n "$sha" ]; then
+            echo "Publish gate: resolved release commit from rlsbl-ci-sha marker in the '$tag' release body."
+          else
+            sha="$GITHUB_SHA"
+            echo "Publish gate: no rlsbl-ci-sha marker after $marker_attempts attempt(s) on the '$tag' release body; falling back to \$GITHUB_SHA."
+          fi
+          echo "Publish gate: waiting for CI on $GITHUB_REF_NAME (commit $sha)"
+          echo "Check-run name filter: $CI_CHECK_REGEX"
+          # Timeout, grace window, and poll interval come from the job env above;
+          # edit them there if this repository's CI needs different limits.
+
+          now() { date +%s; }
+          start="$(now)"
+          deadline=$(( start + GATE_TIMEOUT_MINUTES * 60 ))
+          grace_deadline=$(( start + GATE_GRACE_MINUTES * 60 ))
+
+          while :; do
+            if ! resp="$(gh api --paginate "repos/$GITHUB_REPOSITORY/commits/$sha/check-runs?per_page=100")"; then
+              echo "Checks API request failed; retrying in ${GATE_POLL_SECONDS}s..."
+              sleep "$GATE_POLL_SECONDS"
+              continue
+            fi
+            # Match this project's CI check runs by name; exclude check runs that
+            # belong to THIS workflow run (the gate itself and the queued publish
+            # jobs would otherwise deadlock the poll loop).
+            # A retried CI run creates a BRAND-NEW check-run with the same name as the
+            # old one, so a stale failure would block the gate forever. Project id and
+            # started_at, then reduce to the latest check-run per name (max started_at,
+            # numeric id as tiebreak for retries within the same second) BEFORE the
+            # pending / not-success logic runs. This way the newest run decides: still
+            # running -> wait; genuinely red -> hard fail.
+            runs="$(jq -s --arg re "$CI_CHECK_REGEX" --arg run_id "$GITHUB_RUN_ID" '
+              [ .[].check_runs[]
+                | select(.name | test($re))
+                | select((.details_url // "") | contains("/actions/runs/" + $run_id + "/") | not)
+                | {name, status, conclusion, id, started_at} ]
+              | group_by(.name)
+              | map(sort_by(.started_at, .id) | last)' <<< "$resp")"
+            total="$(jq 'length' <<< "$runs")"
+
+            if [ "$total" -eq 0 ]; then
+              if [ "$(now)" -ge "$grace_deadline" ]; then
+                echo "::error::Publish gate: no CI check runs matching $CI_CHECK_REGEX appeared on $sha within $GATE_GRACE_MINUTES minutes."
+                echo "A scaffolded repository always has a CI workflow, so the release commit must produce CI check runs."
+                echo "If CI jobs were renamed, update CI_CHECK_REGEX in this workflow's gate job to match the new names."
+                exit 1
+              fi
+              echo "No matching CI check runs yet; retrying in ${GATE_POLL_SECONDS}s..."
+              sleep "$GATE_POLL_SECONDS"
+              continue
+            fi
+
+            pending="$(jq '[ .[] | select(.status != "completed") ] | length' <<< "$runs")"
+            if [ "$pending" -gt 0 ]; then
+              if [ "$(now)" -ge "$deadline" ]; then
+                echo "::error::Publish gate: timed out after $GATE_TIMEOUT_MINUTES minutes waiting for CI to complete on $sha."
+                jq -r '.[] | "  \(.name): status=\(.status) conclusion=\(.conclusion // "none")"' <<< "$runs"
+                exit 1
+              fi
+              echo "$pending of $total matching CI check runs still running; retrying in ${GATE_POLL_SECONDS}s..."
+              sleep "$GATE_POLL_SECONDS"
+              continue
+            fi
+
+            not_success="$(jq '[ .[] | select(.conclusion != "success") ]' <<< "$runs")"
+            if [ "$(jq 'length' <<< "$not_success")" -gt 0 ]; then
+              echo "::error::Publish gate: CI did not pass on $sha -- refusing to publish."
+              jq -r '.[] | "  \(.name): \(.conclusion)"' <<< "$not_success"
+              while IFS= read -r conclusion; do
+                case "$conclusion" in
+                  failure|timed_out)
+                    echo "CI concluded '$conclusion' on the release commit. Fix the failure, re-run the CI workflow to green on this exact commit (gh run rerun <run-id>), then re-dispatch this publish workflow at the tag ref: gh workflow run <publish workflow> --ref $GITHUB_REF_NAME"
+                    ;;
+                  cancelled)
+                    echo "A CI check run was CANCELLED. A cancelled run proves nothing about the commit, so the gate treats it as a hard failure instead of waiting for a conclusion that will never come. Re-run the cancelled CI workflow (gh run rerun <run-id>), then re-dispatch this publish workflow at the tag ref."
+                    ;;
+                  skipped)
+                    echo "A CI check run matching the filter was SKIPPED. The gate cannot treat a skipped check as passing: this project's own CI must actually run on the release commit. Check paths filters and job conditions, re-run CI on this commit, then re-dispatch this publish workflow at the tag ref."
+                    ;;
+                  *)
+                    echo "CI check concluded '$conclusion' (not success). The gate only proceeds when every matching check concluded success."
+                    ;;
+                esac
+              done <<< "$(jq -r '.[].conclusion' <<< "$not_success" | sort -u)"
+              exit 1
+            fi
+
+            echo "Publish gate: all $total matching CI check runs succeeded."
+            jq -r '.[] | "  \(.name): \(.conclusion)"' <<< "$runs"
+            exit 0
+          done
+  pypi:
+    needs: gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.tag || github.event.release.tag_name }}
+      - uses: astral-sh/setup-uv@v7
+      - name: Install gitleaks
+        run: |
+          GITLEAKS_VERSION=8.24.3
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar xz -C /usr/local/bin gitleaks
+      - run: uv build --out-dir dist
+      - name: Scan artifacts for secrets
+        run: |
+          gitleaks dir dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true

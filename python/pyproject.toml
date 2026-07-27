@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "strictspec"
+version = "0.0.0"
+description = "Strict multi-language schema toolchain for declarative spec files (Python runtime + CLI stub)"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "S. M. Hosseini", email = "m.hosseini@veliu.com" }]
+keywords = ["strictspec", "schema", "codegen", "validation", "toml", "rlsbl"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/strictspec"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[project.urls]
+Homepage = "https://github.com/smm-h/strictspec"
+Repository = "https://github.com/smm-h/strictspec"
