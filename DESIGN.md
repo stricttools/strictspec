@@ -104,7 +104,8 @@ No escape hatches, no lenient modes, no warnings, no implicit defaults.
 
 ## Architecture (directory map)
 
-- `spec/` — the constitution: schema language, constraint vocabulary, error model, primitives
+- `spec/` — the constitution: schema language, the pinned concrete TOML surface syntax
+  (appendix-surface-syntax.md), constraint vocabulary, error model, primitives
   appendix (read side), canonical-serialization appendix (write side), message-template
   appendix, generated API contract, union diagnostics, versioning and migration rules, the
   version-boundary invariant, the domain-check architecture (evidence resolvers + constraint

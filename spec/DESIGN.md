@@ -665,7 +665,10 @@ rejected when the target document syntax is known to be TOML; datetime range con
 compare same-kind scalars; cross-document constraint forms must reference only declared
 resolvers; named-type imports resolve only to type-definition files (types only — no cross-file
 constraints, no transitive imports); a sourced enum's baked arms must be fresh against their
-source document (staleness is a `gen`/`check` hard error).
+source document (staleness is a `gen`/`check` hard error); every schema/type-definition file
+declares `role` (`"schema"` or `"type-definitions"`) — the distinction is a declared literal,
+never inferred from shape — and a `role = "schema"` file names its `root` type. All of this is
+spelled in the single pinned surface (appendix-surface-syntax.md).
 The consumer manifest (strictspec.toml) is a document of a toolchain-shipped built-in schema —
 same gating, same migrations, meta-fixtures in conformance; it additionally declares stores
 and channels for boundary-checkpoint generation.

@@ -5,6 +5,13 @@ schema can't be written cleanly here, the spec is wrong and gets fixed now. Draf
 migration starting points, conformance corpus, and (character-preview) the acceptance-test
 source.
 
+STATUS (Phase 3.3, 2026-07-27): all fifteen drafts came back clean with their gap notes resolved;
+every draft has been NORMALIZED to the single pinned concrete TOML surface
+(spec/appendix-surface-syntax.md) — the notation each draft had to invent is superseded. Sample
+documents are unchanged (the pinned surface governs schemas/type files/migration files, not the
+documents they validate). A 16th construct-only exercise, `datetime-exercise/`, was added to close
+the datetime-scalar coverage gap. The construct set is FROZEN under the soft-freeze regime.
+
 Drafting order: claudestream and a private project FIRST — they stress migrations, unions, and
 numeric scalars, where spec gaps are most likely; write them before the comfortable ones. The
 freeze regime is SOFT until the first release (decision 3): implementation-driven amendments
@@ -39,6 +46,7 @@ so every draft doubles as a message-identity fixture).
 | 13 | shared-types exercise | (construct) | decision 21 (reopened): schemas importing named types from a dedicated type-definition file — types only, NO cross-file constraints, NO transitive imports. Positive draft plus the two meta-schema-rejection cases (a cross-file constraint reference; a transitive import) |
 | 14 | enum-baking exercise | (construct) | enum arms sourced from a named document with toolchain-enforced freshness (first-class construct): a schema declaring enum arms baked from a source document; the stale-baked-arms hard error in gen/check; the sanctioned data→schema dependency edge |
 | 15 | aggregates exercise | (construct) | count-limit and sum-limit (decision 23): aggregate constraint forms with literal bounds, positive and negative, at multiple scopes |
+| 16 | datetime exercise | (construct) | Phase 3.3 coverage closure: `date` / `time` / `datetime` (offset and local) scalar kinds + a same-kind datetime range; closes the gap batch 2 flagged (release-file has no datetime field) |
 
 ## Method
 
