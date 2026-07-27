@@ -6,10 +6,12 @@
 # exercise: rename_field + wrap_in_array, and a PARTIAL down-migration whose
 # per-document failure is the pinned unwrap-of-a-multi-element-list hard error.
 #
-# DRAFT MIGRATION NOTATION (surface not pinned by spec/):
+# MIGRATION SURFACE (spec/appendix-surface-syntax.md §9):
 #   [migration] header: schema / from_format_version / to_format_version / migration_set / description
 #   [[ops]] one per op from the CLOSED 13-op set; each declares `down`:
 #           "total" | "partial" | "irreversible" (reversibility taxonomy, decision 9)
+#   [[down_ops]] the AUTHOR-SUPPLIED inverse op sequence — the engine NEVER derives down ops
+#           (cluster 3d); `strictspec diff` verifies the declared taxonomy against the corpus.
 #   ops may move/rename/reshape/delete/inject-literals — NEVER compute a value from a value.
 
 [migration]
@@ -35,6 +37,14 @@ path = "$.budget.cost_thresholds"
 down = "partial"
 down_partial_reason = "The down op is unwrap_singleton; it is a canonical hard error (STRICTSPEC_MIGRATE_UNWRAP_NOT_SINGLETON) on any v2 document whose cost_thresholds has more than one element — a per-document failure, hence PARTIAL, not total."
 
-# Declared inverse (down) op sequence, for reference / taxonomy verification:
-#   unwrap_singleton $.budget.cost_thresholds   (partial: fails on >1 element)
-#   rename_field     $.budget.cost_thresholds -> $.budget.max_cost_usd   (total)
+# AUTHOR-SUPPLIED inverse (down) op sequence — executed for a down-migration, applied in order,
+# undoing the forward ops in reverse. The engine never derives these (cluster 3d).
+[[down_ops]]
+op = "unwrap_singleton"
+path = "$.budget.cost_thresholds"
+# partial: a canonical hard error on a >1-element cost_thresholds.
+
+[[down_ops]]
+op = "rename_field"
+from = "$.budget.cost_thresholds"
+to = "$.budget.max_cost_usd"

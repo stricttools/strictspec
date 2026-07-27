@@ -3,286 +3,266 @@
 # validate_pipelines_config, validate_pipeline_target_links) and
 # rlsbl/rlsbl/external_checks.py (validate_external_checks).
 # JSON syntax, so nullable unions are available (pipeline.target is string|null).
-# Notation as established in ../rlsbl-release-file/release-file.schema.toml.
+# Pinned surface (spec/appendix-surface-syntax.md).
 
-schema = "rlsbl-config"
+name = "rlsbl-config"
 meta_version = 1
 format_version = 1
-description = "Per-project rlsbl configuration: publish mode, targets, publish pipelines, and config-declared external checks. This is the future rlsbl state-layer surface."
-syntax = "json"
+document_syntax = "json"
+role = "schema"
+root = "Config"
 targets = ["python"]
+description = "Per-project rlsbl configuration: publish mode, targets, publish pipelines, and config-declared external checks. This is the future rlsbl state-layer surface."
 
-# ---------------------------------------------------------------------------
-# Root record (only the keys this draft models; rlsbl's config carries more —
-# batch_limits/services/test/env_file/push_timeout/coverage_unit — sketched as
-# optional leaves so the closed-record shape is honest about what exists)
-# ---------------------------------------------------------------------------
+[types.Config]
+type = "record"
 
-[record.ROOT.publish_mode]
+[types.Config.fields.publish_mode]
 type = "enum"
 required = true
 values = ["ci", "none"]
 description = "Required, no default (get_publish_mode raises when absent). \"ci\" publishes via CI; \"none\" suppresses. The removed `private` key is now a plain unknown-key error — see gap note."
 
-[record.ROOT.targets]
+[types.Config.fields.targets]
 type = "array"
-item = "TargetRef"
 required = false
 description = "Release targets. Each element is a bare string OR a {name,path} record — a node-kind union (scalar vs record). An empty list is a hard error in rlsbl; see gap note (array min_len does not capture the remediation)."
+[types.Config.fields.targets.item]
+type = "TargetRef"
 
-[record.ROOT.pipelines]
+[types.Config.fields.pipelines]
 type = "map"
 required = false
 key_pattern = "^[A-Za-z0-9_-]+$"
-value = "Pipeline"
 description = "Publish pipelines keyed by pipeline name."
+[types.Config.fields.pipelines.value]
+type = "Pipeline"
 
-[record.ROOT.external_checks]
+[types.Config.fields.external_checks]
 type = "array"
-item = "ExternalCheck"
 required = false
 description = "Config-declared subprocess checks (a discriminated union per entry)."
+[types.Config.fields.external_checks.item]
+type = "ExternalCheck"
 
-[record.ROOT.coverage_unit]
+[types.Config.fields.coverage_unit]
 type = "enum"
 required = false
 values = ["commit", "changeset-file"]
 description = "Changelog coverage mode. Selects which changelog-entry schema the consumer validates against (see ../rlsbl-changelog-entry)."
 
-# ---------------------------------------------------------------------------
-# TargetRef — a node-kind union: a bare string, or a {name,path} record
-# ---------------------------------------------------------------------------
+# external_check names unique across the list (attached to the root that owns external_checks).
+[[types.Config.constraints]]
+form = "unique-by"
+collection = "external_checks"
+field = "name"
+normalization = "none"
 
-[record.TargetRef]
-union = "node-kind"
+# REJECTED / consumer-native (Phase 3.3 vocabulary rejection rationale):
+#  - launcher forbidden when publish_mode == "none": a CROSS-SCOPE EXISTENTIAL forbidden-when
+#    (∃ pipeline with artifact == "launcher") over a nested map, gated on a root field. No
+#    vocabulary form; consumer-native. Revisit at rlsbl adoption.
+
+# --- named types ---
+
+# TargetRef — a node-kind union: a bare string, or a {name,path} record.
+[types.TargetRef]
+type = "node-kind-union"
 description = "String form (target name) OR record form."
-arms = { string = "string", record = "TargetObject" }
+[types.TargetRef.arms.string]
+type = "string"
+[types.TargetRef.arms.record]
+type = "TargetObject"
 
-[record.TargetObject.name]
+[types.TargetObject]
+type = "record"
+[types.TargetObject.fields.name]
 type = "string"
 required = true
 non_empty = true
-
-[record.TargetObject.path]
+[types.TargetObject.fields.path]
 type = "string"
 required = false
 
-# ---------------------------------------------------------------------------
-# Pipeline — mandatory type/local, mandatory target link, conditional keys
-# ---------------------------------------------------------------------------
+# Pipeline — mandatory type/local, mandatory target link, conditional keys.
+[types.Pipeline]
+type = "record"
 
-[record.Pipeline.type]
+[types.Pipeline.fields.type]
 type = "enum"
 required = true
-# Sourced from rlsbl.pipelines.PIPELINE_TYPES at gen time (decision 32,
-# enum-arms-sourced-from-a-document). Baked snapshot below; freshness is a
-# gen/check hard error (STRICTSPEC_ENUMSRC_STALE).
-values = ["npm", "pypi", "go", "cargo", "cloudflare-pages", "maven-central"]
-enum_source = { document = "rlsbl.pipelines:PIPELINE_TYPES", note = "illustrative baked arms; real set is whatever PIPELINE_TYPES holds at gen time" }
-description = "Pipeline kind. Required."
+description = "Pipeline kind. Required. Arms SOURCED from rlsbl.pipelines.PIPELINE_TYPES at gen time (decision 32); baked below, freshness a gen/check hard error (STRICTSPEC_ENUMSRC_STALE)."
+baked = ["npm", "pypi", "go", "cargo", "cloudflare-pages", "maven-central"]
+[types.Pipeline.fields.type.source]
+document = "rlsbl-pipeline-types.json"
+selector = "types[]"
+# Illustrative: the real arm set is whatever PIPELINE_TYPES holds at gen time.
 
-[record.Pipeline.local]
+[types.Pipeline.fields.local]
 type = "boolean"
 required = true
 description = "Whether the pipeline runs locally. Required (no default)."
 
-# The target LINK. string names a target in the sibling ROOT.targets list, or
-# null for a targetless publisher. JSON syntax makes the nullable union legal.
-[record.Pipeline.target]
-type = "union"
-union = "nullable"
-of = "string"
+# The target LINK. string names a target in the sibling Config.targets list, or null for a
+# targetless publisher. JSON syntax makes the nullable union legal.
+[types.Pipeline.fields.target]
+type = "nullable"
 required = true
-description = "Target name (must resolve in ROOT.targets — see constraint pipeline-target-resolves) or null (targetless publisher, e.g. docs deploy)."
+description = "Target name (must resolve in Config.targets — see constraint) or null (targetless publisher, e.g. docs deploy)."
+[types.Pipeline.fields.target.inner]
+type = "string"
 
-[record.Pipeline.provenance]
+[types.Pipeline.fields.provenance]
 type = "boolean"
 required = false
-description = "npm provenance. Required WHEN type == \"npm\" (see constraint npm-requires-provenance)."
+description = "npm provenance. Required WHEN type == \"npm\" (see constraint)."
 
-[record.Pipeline.artifact]
+[types.Pipeline.fields.artifact]
 type = "enum"
 required = false
 values = ["binary", "library", "launcher"]
 description = "Artifact kind. Required WHEN type == \"go\" (binary|library). \"launcher\" wraps a sibling binary pipeline (see constraints)."
 
-[record.Pipeline.wraps]
+[types.Pipeline.fields.wraps]
 type = "string"
 required = false
 description = "For a launcher: the name of the sibling pipeline whose artifact is \"binary\". Required WHEN artifact == \"launcher\"."
 
-[record.Pipeline.binary_source]
+[types.Pipeline.fields.binary_source]
 type = "enum"
 required = false
 values = ["github-release"]
 description = "For a launcher: where the wrapped binary comes from. Required WHEN artifact == \"launcher\"."
 
-[record.Pipeline.assets]
+[types.Pipeline.fields.assets]
 type = "boolean"
 required = false
 
-[record.Pipeline.max_asset_size_mb]
+[types.Pipeline.fields.max_asset_size_mb]
 type = "integer"
 required = false
 min = 1
 description = "Required WHEN assets == true OR custom_assets present."
 
-# ---------------------------------------------------------------------------
-# ExternalCheck — discriminated union on `kind`
-# ---------------------------------------------------------------------------
+# type == "npm" => provenance required
+[[types.Pipeline.constraints]]
+form = "conditional-required"
+field = "provenance"
+when = { field = "type", predicate = "equals", value = "npm" }
 
-[record.ExternalCheck]
-union = "discriminated"
+# type == "go" => artifact required
+[[types.Pipeline.constraints]]
+form = "conditional-required"
+field = "artifact"
+when = { field = "type", predicate = "equals", value = "go" }
+
+# artifact == "launcher" => wraps + binary_source required
+[[types.Pipeline.constraints]]
+form = "conditional-required"
+field = "wraps"
+when = { field = "artifact", predicate = "equals", value = "launcher" }
+
+[[types.Pipeline.constraints]]
+form = "conditional-required"
+field = "binary_source"
+when = { field = "artifact", predicate = "equals", value = "launcher" }
+
+# assets == true => max_asset_size_mb required
+[[types.Pipeline.constraints]]
+form = "conditional-required"
+field = "max_asset_size_mb"
+when = { field = "assets", predicate = "equals", value = true }
+
+# pipeline.target string must resolve to a Config.targets element (null exempt via nullable
+# short-circuit). Reference resolution into the sibling targets list.
+[[types.Pipeline.constraints]]
+form = "intra-document-references"
+reference = "target"
+resolves_into = "targets"
+resolves_by = "node-kind-union-key"
+description = "target names a configured release target (resolves against the scalar arm or the record arm's name). See gap note (node-kind resolution target)."
+
+# REJECTED / consumer-native (Phase 3.3 vocabulary rejection rationale):
+#  - wraps -> sibling.artifact == "binary": a REFERENCE-TARGET PREDICATE (resolve AND the resolved
+#    pipeline's artifact == "binary"). intra-document-references resolves existence only; the JOIN
+#    predicate on the resolved target is not a vocabulary form. Consumer-native; revisit at rlsbl
+#    adoption.
+
+# ExternalCheck — discriminated union on `kind`.
+[types.ExternalCheck]
+type = "discriminated-union"
 discriminator = "kind"
-arms = { structured = "StructuredCheck", freeform = "FreeformCheck" }
 description = "kind=\"structured\" (rlsbl-composed tool+paths) or kind=\"freeform\" (opaque shell command)."
+[types.ExternalCheck.arms.structured]
+type = "StructuredCheck"
+[types.ExternalCheck.arms.freeform]
+type = "FreeformCheck"
 
-# Shared fields live on each arm (strictspec discriminated-union arms are full
-# records; the common fields are repeated per arm by design — see gap note on
-# the absence of shared arm bases).
+# Shared fields live on each arm (strictspec discriminated-union arms are full records; the
+# common fields are repeated per arm by design — see gap note on the absence of shared arm bases).
 
-[record.StructuredCheck.kind]
+[types.StructuredCheck]
+type = "record"
+[types.StructuredCheck.fields.kind]
 type = "literal"
 value = "structured"
 required = true
-
-[record.StructuredCheck.name]
+[types.StructuredCheck.fields.name]
 type = "string"
 required = true
 non_empty = true
-pattern = "^[a-z][a-z0-9-]*$"
-description = "Check name; charset excludes glob metacharacters. Unique across external_checks (see constraint external-check-names-unique)."
-
-[record.StructuredCheck.tag]
+regex = "^[a-z][a-z0-9-]*$"
+description = "Check name; charset excludes glob metacharacters. Unique across external_checks (see constraint)."
+[types.StructuredCheck.fields.tag]
 type = "string"
 required = true
 non_empty = true
-
-[record.StructuredCheck.tool]
+[types.StructuredCheck.fields.tool]
 type = "enum"
 required = true
 values = ["mypy", "ruff-check", "ruff-format"]
-
-[record.StructuredCheck.paths]
+[types.StructuredCheck.fields.paths]
 type = "array"
-item = "string"
 required = true
 min_len = 1
 description = "Non-empty list of paths."
-
-[record.StructuredCheck.depends_on]
+[types.StructuredCheck.fields.paths.item]
+type = "string"
+[types.StructuredCheck.fields.depends_on]
 type = "array"
-item = "string"
 required = false
-description = "Check names this depends on. May name BUILT-IN checks not in this document — see gap note FINDING 3."
-
-[record.StructuredCheck.cwd]
+description = "Check names this depends on. May name BUILT-IN checks not in this document (OPEN-NAMESPACE reference; consumer-native — see gap note FINDING 3)."
+[types.StructuredCheck.fields.depends_on.item]
+type = "string"
+[types.StructuredCheck.fields.cwd]
 type = "string"
 required = false
 
-[record.FreeformCheck.kind]
+[types.FreeformCheck]
+type = "record"
+[types.FreeformCheck.fields.kind]
 type = "literal"
 value = "freeform"
 required = true
-
-[record.FreeformCheck.name]
+[types.FreeformCheck.fields.name]
 type = "string"
 required = true
 non_empty = true
-pattern = "^[a-z][a-z0-9-]*$"
-
-[record.FreeformCheck.tag]
+regex = "^[a-z][a-z0-9-]*$"
+[types.FreeformCheck.fields.tag]
 type = "string"
 required = true
 non_empty = true
-
-[record.FreeformCheck.command]
+[types.FreeformCheck.fields.command]
 type = "string"
 required = true
 non_empty = true
 description = "Opaque shell command. First token must resolve on PATH — a consumer-native check (strictspec cannot probe the filesystem for a binary)."
-
-[record.FreeformCheck.depends_on]
+[types.FreeformCheck.fields.depends_on]
 type = "array"
-item = "string"
 required = false
-
-[record.FreeformCheck.cwd]
+[types.FreeformCheck.fields.depends_on.item]
+type = "string"
+[types.FreeformCheck.fields.cwd]
 type = "string"
 required = false
-
-# ---------------------------------------------------------------------------
-# Constraints
-# ---------------------------------------------------------------------------
-
-# type == "npm" => provenance required
-[[constraint]]
-form = "conditional-required"
-scope = "$.pipelines[*]"
-field = "provenance"
-when = { field = "type", equals = "npm" }
-description = "npm pipelines must declare provenance."
-
-# type == "go" => artifact required
-[[constraint]]
-form = "conditional-required"
-scope = "$.pipelines[*]"
-field = "artifact"
-when = { field = "type", equals = "go" }
-description = "go pipelines must declare artifact (binary|library)."
-
-# artifact == "launcher" => wraps + binary_source required
-[[constraint]]
-form = "conditional-required"
-scope = "$.pipelines[*]"
-field = "wraps"
-when = { field = "artifact", equals = "launcher" }
-
-[[constraint]]
-form = "conditional-required"
-scope = "$.pipelines[*]"
-field = "binary_source"
-when = { field = "artifact", equals = "launcher" }
-
-# assets == true => max_asset_size_mb required
-[[constraint]]
-form = "conditional-required"
-scope = "$.pipelines[*]"
-field = "max_asset_size_mb"
-when = { field = "assets", equals = true }
-
-# pipeline.target string must resolve to a ROOT.targets element (null exempt via
-# nullable short-circuit). Reference resolution into the sibling targets list.
-[[constraint]]
-form = "intra-document-references"
-scope = "$.pipelines[*].target"
-resolves_into = "$.targets"
-resolves_by = "TargetRef.name-or-scalar"
-description = "target names a configured release target. See gap note (node-kind resolution target)."
-
-# external_check names unique across the list.
-[[constraint]]
-form = "unique-by"
-scope = "$.external_checks"
-key = "name"
-normalization = "none"
-
-# launcher.wraps must name a sibling pipeline whose artifact == "binary".
-# Reference resolution is expressible; the JOIN predicate (target.artifact ==
-# "binary") is NOT — see gap note FINDING 1.
-[[constraint]]
-form = "intra-document-references"
-scope = "$.pipelines[*].wraps"
-resolves_into = "$.pipelines"
-resolves_by = "map-key"
-target_predicate = "artifact == \"binary\""
-description = "wraps names a sibling pipeline that produces a binary. target_predicate is NOT a real vocabulary field — FINDING 1."
-
-# launcher forbidden when publish_mode == "none". Cross-scope existential:
-# NOT expressible (see gap note FINDING 2).
-[[constraint]]
-form = "forbidden-when"
-scope = "$"
-existential = "$.pipelines[*].artifact == \"launcher\""
-when = { field = "publish_mode", equals = "none" }
-description = "A launcher exists only to publish; publish_mode=none makes it contradictory. `existential` is NOT a real vocabulary field — FINDING 2."

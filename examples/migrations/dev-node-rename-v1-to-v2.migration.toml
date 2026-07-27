@@ -3,7 +3,7 @@
 # Models rlsbl's real workspace flag rename history: internal -> changelog_exempt -> dev_node.
 # Two rename_field migrations, each down: TOTAL (rename is fully reversible; no value is
 # computed, reshaped, or dropped). This file is step 1 (internal -> changelog_exempt).
-# Notation legend: see budget-v1-to-v2.migration.toml header.
+# Surface: see budget-v1-to-v2.migration.toml header (spec/appendix-surface-syntax.md §9).
 
 [migration]
 schema = "WorkspaceProject"
@@ -17,3 +17,9 @@ op = "rename_field"
 from = "$.internal"
 to = "$.changelog_exempt"
 down = "total"
+
+# AUTHOR-SUPPLIED inverse (down) op sequence — the engine never derives it (cluster 3d).
+[[down_ops]]
+op = "rename_field"
+from = "$.changelog_exempt"
+to = "$.internal"

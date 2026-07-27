@@ -1,129 +1,116 @@
 # strictspec paper schema — rlsbl release file (.rlsbl/releases/unreleased.toml)
 # Source of truth: rlsbl/rlsbl/release_file.py (ReleaseConfig, _validate_release_config).
-#
-# NOTATION (established by this draft batch; consistent across the four drafts
-# in this part). A schema is a TOML document of the meta-schema:
-#   - header keys: schema, meta_version, format_version, description, syntax,
-#     targets, optionally safe_integers.
-#   - `syntax` pins the document syntax so the meta-schema can reject a
-#     TOML-unusable construct (nullable union) at author time (spec DESIGN.md,
-#     Construct set: "Where document syntax is known at schema-validation time").
-#   - [record.<Name>] declares a closed record; [record.<Name>.<field>] a field.
-#   - field keys: type, required, description, plus type-specific (values for
-#     enum; min/max/exclusive_min/exclusive_max for ranges; non_empty/min_len/
-#     max_len/pattern for strings; item/min_len/max_len for arrays; key_pattern/
-#     value for maps; union/discriminator/arms for unions; opaque+consumer_check
-#     or unchecked+unchecked_reason for opaque leaves).
-#   - [[constraint]] declares one constraint-vocabulary form: form, scope, and
-#     form-specific keys. `when = { field, equals|in }` expresses a value-
-#     triggered condition (spec appendix-semantics.md §3.24).
+# Pinned surface (spec/appendix-surface-syntax.md): bare header + `role`/`root`; the root is a
+# named record; constraints are nesting-scoped `[[types.<Name>.constraints]]`; conditions use the
+# closed `when = { field, predicate, value/values }` set.
 
-schema = "rlsbl-release-file"
+name = "rlsbl-release-file"
 meta_version = 1
 format_version = 1
-description = "A single-project rlsbl release descriptor: bump type, target selection, and release prose. Round-trips comment-preserving TOML (within-backend fixpoint)."
-syntax = "toml"
+document_syntax = "toml"
+role = "schema"
+root = "ReleaseConfig"
 targets = ["python", "go"]
+description = "A single-project rlsbl release descriptor: bump type, target selection, and release prose. Round-trips comment-preserving TOML (within-backend fixpoint)."
 
-# ---------------------------------------------------------------------------
-# Root record
-# ---------------------------------------------------------------------------
+[types.ReleaseConfig]
+type = "record"
 
-[record.ROOT.bump]
+[types.ReleaseConfig.fields.bump]
 type = "enum"
 required = true
 values = ["patch", "minor", "major", "infra", "prerelease"]
 description = "Version bump type. (VALID_BUMP_TYPES.)"
 
-[record.ROOT.include]
+[types.ReleaseConfig.fields.include]
 type = "array"
-item = "string"
 required = true
 description = "Target names to release. May be empty; disjoint from `exclude` (see constraint include-exclude-disjoint)."
+[types.ReleaseConfig.fields.include.item]
+type = "string"
 
-[record.ROOT.exclude]
+[types.ReleaseConfig.fields.exclude]
 type = "array"
-item = "string"
 required = true
 description = "Target names to skip. Disjoint from `include`."
+[types.ReleaseConfig.fields.exclude.item]
+type = "string"
 
 # `targets` is a typed map: target name -> per-target config record. Optional;
 # each key must also appear in `include` (see constraint target-in-include).
-[record.ROOT.targets]
+[types.ReleaseConfig.fields.targets]
 type = "map"
 required = false
 key_pattern = "^[a-z][a-z0-9-]*$"
-value = "TargetConfig"
 description = "Per-target configuration, keyed by target name."
+[types.ReleaseConfig.fields.targets.value]
+type = "TargetConfig"
 
-[record.ROOT.description]
+[types.ReleaseConfig.fields.description]
 type = "string"
 required = true
 non_empty = true
 description = "Short summary of the release. Whitespace-only is rejected (non_empty is checked after the write-side lexeme; see gap note on strip())."
 
-[record.ROOT.context]
+[types.ReleaseConfig.fields.context]
 type = "string"
 required = false
 description = "Optional multiline prose explaining why the changes were made. Absent when unset — never null (TOML has no null; see gap note)."
 
-[record.ROOT.preid]
+[types.ReleaseConfig.fields.preid]
 type = "enum"
 required = false
 values = ["alpha", "beta", "rc", "stable"]
 description = "Pre-release identifier. Coupled to `bump` (see constraints preid-stable-requires-prerelease and infra-forbids-preid)."
 
-[record.ROOT.blog]
+[types.ReleaseConfig.fields.blog]
 type = "boolean"
 required = false
 description = "Whether to generate a blog post for this release."
 
-# ---------------------------------------------------------------------------
-# TargetConfig — per-target overrides (only `mode` is recognized today)
-# ---------------------------------------------------------------------------
+# --- Constraints (attached at the root record that owns the fields) ---
 
-[record.TargetConfig.mode]
-type = "enum"
-required = false
-values = ["ota", "build"]
-description = "Flutter delivery mode. (VALID_TARGET_MODES.) Required for the `flutter` target — see gap note (INEXPRESSIBLE literal-element gate)."
-
-# ---------------------------------------------------------------------------
-# Constraints (intra-document constraint vocabulary)
-# ---------------------------------------------------------------------------
-
-# preid = "stable" is only valid with bump = "prerelease".
-[[constraint]]
-form = "conditional-required"
-scope = "$"
+# preid == "stable" requires bump == "prerelease" — a conditional VALUE-equality (the
+# `conditional-value` form added in Phase 3.3; formerly an approximated conditional-required).
+[[types.ReleaseConfig.constraints]]
+form = "conditional-value"
 field = "bump"
 equals_literal = "prerelease"
-when = { field = "preid", equals = "stable" }
-description = "When preid == \"stable\", bump must be \"prerelease\"."
-note = "Approximation: strictspec conditional-required tests field PRESENCE, not that a present sibling equals a literal. See gap note (partial)."
+when = { field = "preid", predicate = "equals", value = "stable" }
+description = "When preid == \"stable\", bump must equal \"prerelease\"."
 
-# bump = "infra" forbids preid.
-[[constraint]]
+# bump == "infra" forbids preid.
+[[types.ReleaseConfig.constraints]]
 form = "forbidden-when"
-scope = "$"
 field = "preid"
-when = { field = "bump", equals = "infra" }
+when = { field = "bump", predicate = "equals", value = "infra" }
 description = "infra releases cannot carry a preid (they cannot be pre-releases)."
 
 # Every key of `targets` must appear in `include`.
-[[constraint]]
+[[types.ReleaseConfig.constraints]]
 form = "intra-document-references"
-scope = "$.targets"
-reference = "map-key"
-resolves_into = "$.include"
+reference = "targets"
+resolves_into = "include"
+resolves_by = "map-key"
 description = "A [targets.<name>] section is only valid when <name> is in `include`."
 
-# include and exclude must be element-disjoint. NO vocabulary form fits (see
-# gap note): this is element-level set disjointness between two arrays, not the
-# field-level `mutual exclusion` form. Declared here as the intended semantics
-# with the closest (wrong) form flagged.
-[[constraint]]
-form = "mutual-exclusion"
-scope = "$"
-fields = ["include", "exclude"]
-description = "INTENDED: no element appears in both include and exclude. EXPRESSED FORM IS WRONG — see gap note FINDING 1."
+# include and exclude must be element-disjoint — the `collections-disjoint` form added in
+# Phase 3.3 (element-level set disjointness; this rule is the form's origin, replacing the former
+# mis-citation as `mutual exclusion`).
+[[types.ReleaseConfig.constraints]]
+form = "collections-disjoint"
+left = "include"
+right = "exclude"
+normalization = "none"
+description = "No element appears in both include and exclude."
+
+# --- named types ---
+
+# TargetConfig — per-target overrides (only `mode` is recognized today).
+[types.TargetConfig]
+type = "record"
+[types.TargetConfig.fields.mode]
+type = "enum"
+required = false
+values = ["ota", "build"]
+description = "Flutter delivery mode. (VALID_TARGET_MODES.) The 'flutter' target's required-mode rule is a literal-element gate — consumer-native (rejected form; see gap note)."

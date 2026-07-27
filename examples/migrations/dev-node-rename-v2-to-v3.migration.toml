@@ -1,7 +1,7 @@
 # strictspec migration — rlsbl dev_node naming history, step 2 of 2 (PURE-RENAME chain)
 #
 # Step 2: changelog_exempt -> dev_node. Pure rename, down: TOTAL.
-# Notation legend: see budget-v1-to-v2.migration.toml header.
+# Surface: see budget-v1-to-v2.migration.toml header (spec/appendix-surface-syntax.md §9).
 
 [migration]
 schema = "WorkspaceProject"
@@ -15,3 +15,9 @@ op = "rename_field"
 from = "$.changelog_exempt"
 to = "$.dev_node"
 down = "total"
+
+# AUTHOR-SUPPLIED inverse (down) op sequence — the engine never derives it (cluster 3d).
+[[down_ops]]
+op = "rename_field"
+from = "$.dev_node"
+to = "$.changelog_exempt"
