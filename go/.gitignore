@@ -20,3 +20,4 @@ target/
 .env.local
 *.local-only
 .conformance-adapter
+/gencodes
