@@ -52,8 +52,11 @@ silently changes.
 
 ### 3. Byte-identity under no-op (`test/03-byte-identity.test.mjs`) — PASS
 
-Reconstructing the document by copying every byte around each value range yields
-the identical original text — no canonicalization, no reflow, no lost bytes.
+The whole document is reconstructed once from the original inter-node gaps plus
+each value node's lexeme recovered through its source range; sorting nodes by
+range start and asserting the ranges are non-overlapping is a precondition, so
+the tiling genuinely proves each range locates its lexeme. The result is
+byte-identical to the original — no canonicalization, no reflow, no lost bytes.
 Ranges are in-bounds and non-overlapping; parsing does not mutate the source.
 
 ### 4. Targeted edit fidelity (`test/04-targeted-edits.test.mjs`) — PASS
