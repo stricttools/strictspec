@@ -30,7 +30,7 @@ from . import _tomldoc as _tomldoc
 # paired to it exactly (see require_runtime_version). rlsbl bumps this
 # __version__ in source on release (Python pypi target); the version-pairing
 # test asserts it matches pyproject, so drift is impossible.
-__version__ = "0.0.0"
+__version__ = "0.1.0"
 Version = __version__
 
 __all__ = [

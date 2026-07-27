@@ -4,10 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "strictspec"
-version = "0.0.0"
+version = "0.1.0"
 description = "Strict multi-language schema toolchain for declarative spec files (Python runtime + CLI stub)"
 readme = "README.md"
 requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "S. M. Hosseini", email = "m.hosseini@veliu.com" }]
 keywords = ["strictspec", "schema", "codegen", "validation", "toml", "rlsbl"]
 classifiers = [
@@ -17,6 +19,9 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = ["tomlkit"]
+
+[project.scripts]
+strictspec = "strictspec._launcher:main"
 
 [dependency-groups]
 dev = ["pytest"]
