@@ -1,0 +1,35 @@
+[releasables.py-strictspec]
+# Version bump type: patch, minor, major, infra, or prerelease
+bump = ""
+# Short description of this release (required)
+description = ""
+# Optional context explaining why these changes were made
+context = ""
+# Pre-release identifier: alpha, beta, rc, or stable
+# preid = ""
+include = ["pypi"]
+exclude = []
+
+[releasables.go-strictspec]
+# Version bump type: patch, minor, major, infra, or prerelease
+bump = ""
+# Short description of this release (required)
+description = ""
+# Optional context explaining why these changes were made
+context = ""
+# Pre-release identifier: alpha, beta, rc, or stable
+# preid = ""
+include = ["go"]
+exclude = []
+
+[releasables.ts-strictspec]
+# Version bump type: patch, minor, major, infra, or prerelease
+bump = ""
+# Short description of this release (required)
+description = ""
+# Optional context explaining why these changes were made
+context = ""
+# Pre-release identifier: alpha, beta, rc, or stable
+# preid = ""
+include = ["npm"]
+exclude = []
