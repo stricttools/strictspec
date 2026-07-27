@@ -1,0 +1,17 @@
+name = "pgdesign-account-valid"
+category = "construct-coverage"
+provenance = "derived-from(examples/pgdesign-scalars/account.valid.toml, verified against spec)"
+description = """
+A pgdesign table document using the custom scalars identifier / pgtype / sql-expression (registered
+in the pgdesign manifest). Well-formed identifier name, valid pgtype references, non-empty check
+expressions. Validates clean.
+
+NOTE: the companion account.invalid document is intentionally NOT converted -- one of its expected
+diagnostics renders the `pgtype` scalar's regex in a `pattern` (string) slot, and how a regex with
+backslashes renders in a message (A.2 backslash-escaping vs verbatim) is not pinned by
+appendix-rendering. Flagged in the harness report as an underspecified rendering case."""
+schema = "_schemas/pgdesign-table.toml"
+input = "_inputs/pgdesign/account.valid.toml"
+
+[expected]
+valid = true

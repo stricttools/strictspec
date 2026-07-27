@@ -1,0 +1,22 @@
+format_version = 1
+name = "account"
+comment = "One customer account."
+
+[columns.id]
+type = "bigint"
+
+[columns.email]
+type = "text"
+check = "email ~ '^[^@]+@[^@]+$'"
+
+[columns.balance]
+type = "numeric(12,2)"
+default_expr = "0"
+nullable = false
+
+[columns.tags]
+type = "text[]"
+nullable = true
+
+[checks.balance_nonneg]
+expr = "balance >= 0"

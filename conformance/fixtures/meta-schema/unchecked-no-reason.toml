@@ -1,0 +1,17 @@
+name = "meta-unchecked-no-reason"
+category = "meta-schema"
+provenance = "derived-from(examples/claudestream-agent/fixtures/unchecked-no-reason.reject.toml, verified against spec)"
+description = """
+Meta-schema rejection: an opaque leaf declares `unchecked = true` but omits the mandatory
+`unchecked_reason`. STRICTSPEC_SCHEMA_UNCHECKED_NO_REASON (decision 29) -- the blind spot must be
+legible on record."""
+schema = "_schemas/meta-schema.toml"
+input = "_inputs/meta/unchecked-no-reason.toml"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_SCHEMA_UNCHECKED_NO_REASON"
+path = "$.types.ToolSchema.fields.input_schema"
+slots = {}

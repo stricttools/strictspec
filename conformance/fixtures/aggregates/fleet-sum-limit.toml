@@ -1,0 +1,24 @@
+name = "aggregates-fleet-sum-limit"
+category = "aggregates"
+provenance = "derived-from(examples/aggregates-exercise/fail-sum/fleet.toml, verified against spec)"
+description = """
+The sum-limit constraint (sum of memory_mb <= 4096) is violated: 3 services x 2048 = 6144. Only the
+sum form fires (count within budget), isolating STRICTSPEC_CROSS_SUM_LIMIT at the fleet root. `field`
+renders bare (identifier-shaped); `source` double-quoted; `actual`/`limit` are bare integers."""
+schema = "_schemas/aggregates-fleet.toml"
+input = "_inputs/aggregates/fail-sum-fleet.toml"
+
+[evidence]
+"documents-in(services/*.toml)" = [
+  { name = "big1", memory_mb = 2048 },
+  { name = "big2", memory_mb = 2048 },
+  { name = "big3", memory_mb = 2048 },
+]
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_CROSS_SUM_LIMIT"
+path = "$"
+slots = { field = "memory_mb", source = '"documents-in(services/*.toml)"', actual = "6144", limit = "4096" }

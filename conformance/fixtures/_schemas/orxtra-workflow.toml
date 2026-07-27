@@ -1,0 +1,227 @@
+name = "workflow"
+meta_version = 1
+format_version = 1
+document_syntax = "toml"
+role = "schema"
+root = "Workflow"
+targets = ["python"]
+description = "An orxtra workflow: a recursive task tree with execution-mode selection, conditional requirements, and intra-document dependency references."
+# Source: orxtra/scheduler/_loader.py (_parse_task, load_workflow) and _validator.py
+# (_count_execution_modes, _validate_agent_fields, _validate_conditional_fields,
+# _validate_dependencies). Stretch draft (examples/DESIGN.md draft 8). Pinned surface.
+
+[types.Workflow]
+type = "record"
+
+# ---- top-level workflow record ----
+[types.Workflow.fields.workflow]
+type = "record"
+required = true
+[types.Workflow.fields.workflow.fields.name]
+type = "string"
+required = true
+non_empty = true
+[types.Workflow.fields.workflow.fields.description]
+type = "string"
+required = true
+non_empty = true
+[types.Workflow.fields.workflow.fields.escalation_policy]
+type = "enum"
+required = false
+values = ["retry", "escalate", "abort"]
+
+[types.Workflow.fields.tasks]
+type = "array"
+required = true
+min_len = 1                 # "Workflow must have at least one task" (_validate_structure)
+[types.Workflow.fields.tasks.item]
+type = "Task"
+
+# Optional top-level dependency map: task_name -> [dep task_names]. The loader merges this into
+# each task's depends_on. Keys and values are intra-document references to task names.
+[types.Workflow.fields.dependencies]
+type = "map"
+required = false
+key_pattern = "^[A-Za-z0-9_-]+$"
+order = "incidental"
+[types.Workflow.fields.dependencies.value]
+type = "array"
+[types.Workflow.fields.dependencies.value.item]
+type = "string"
+
+[types.Workflow.fields.services]
+type = "array"
+required = false
+[types.Workflow.fields.services.item]
+type = "ServiceConfig"
+
+# ---- reusable execution-check type (prechecks / postchecks) ----
+[types.Execution]
+type = "record"
+[types.Execution.fields.scripts]
+type = "array"
+required = false
+[types.Execution.fields.scripts.item]
+type = "string"          # "module:callable" references
+[types.Execution.fields.agents]
+type = "array"
+required = false
+[types.Execution.fields.agents.item]
+type = "record"
+[types.Execution.fields.agents.item.fields.agent]
+type = "string"
+required = true
+[types.Execution.fields.agents.item.fields.task]
+type = "string"
+required = true
+[types.Execution.fields.agents.item.fields.block_threshold]
+type = "enum"
+required = true
+values = ["info", "warning", "error", "critical"]
+[types.Execution.fields.agents.item.fields.variables]
+type = "array"
+required = false
+[types.Execution.fields.agents.item.fields.variables.item]
+type = "string"
+
+[types.ServiceConfig]
+type = "record"
+[types.ServiceConfig.fields.name]
+type = "string"
+required = true
+
+# ---- the recursive Task type ----
+[types.Task]
+type = "record"
+description = "A unit of work; may nest via subtasks (recursion, depth-capped)."
+[types.Task.fields.name]
+type = "string"
+required = true
+non_empty = true
+
+# execution-mode fields (exactly one mode; see constraints below)
+[types.Task.fields.agent]
+type = "string"
+required = false
+[types.Task.fields.task_prompt]
+type = "string"
+required = false
+[types.Task.fields.callable]
+type = "string"
+required = false
+[types.Task.fields.wait_for]
+type = "string"
+required = false
+[types.Task.fields.decision_point]
+type = "boolean"
+required = false
+[types.Task.fields.subtasks]
+type = "array"
+required = false
+[types.Task.fields.subtasks.item]
+type = "Task"            # RECURSIVE self-reference
+
+# agent-mode support fields
+[types.Task.fields.timeout]
+type = "integer"
+required = false
+min = 1
+[types.Task.fields.context_refinement]
+type = "boolean"
+required = false
+
+# retry fields
+[types.Task.fields.retry]
+type = "integer"
+required = false
+min = 0
+[types.Task.fields.retry_resume]
+type = "boolean"
+required = false
+[types.Task.fields.retry_inject_failure]
+type = "boolean"
+required = false
+
+# for_each fields
+[types.Task.fields.for_each]
+type = "string"
+required = false
+[types.Task.fields.for_each_abort_on_failure]
+type = "boolean"
+required = false
+[types.Task.fields.max_concurrency]
+type = "integer"
+required = false
+min = 1
+
+# misc
+[types.Task.fields.depends_on]
+type = "array"
+required = false
+[types.Task.fields.depends_on.item]
+type = "string"          # intra-document references to sibling task names
+[types.Task.fields.variables]
+type = "array"
+required = false
+[types.Task.fields.variables.item]
+type = "string"
+[types.Task.fields.category]
+type = "string"
+required = false
+[types.Task.fields.prechecks]
+type = "Execution"
+required = false
+[types.Task.fields.postchecks]
+type = "Execution"
+required = false
+
+# ---- Task constraints (intra-document, phase 2) ----
+
+# Execution-mode selection decomposes cleanly:
+#   co-presence(agent, task_prompt) + exactly-one-of(agent, callable, subtasks, wait_for, decision_point)
+# yields "exactly one execution mode" even though agent-mode is a two-field group.
+[[types.Task.constraints]]
+form = "co-presence"
+fields = ["agent", "task_prompt"]
+[[types.Task.constraints]]
+form = "exactly-one-of"
+fields = ["agent", "callable", "subtasks", "wait_for", "decision_point"]
+
+# agent-mode ⇒ timeout and context_refinement required (presence-triggered).
+[[types.Task.constraints]]
+form = "conditional-required"
+field = "timeout"
+when = { field = "agent", predicate = "present" }
+[[types.Task.constraints]]
+form = "conditional-required"
+field = "context_refinement"
+when = { field = "agent", predicate = "present" }
+
+# retry > 0 ⇒ retry_resume, retry_inject_failure required. Modeled as retry != 0, which is EXACT
+# only because retry's domain is non-negative (min = 0). Numeric comparison predicates are rejected
+# (cluster 2c); the honest origin is `retry != 0`. See gap note finding 2.
+[[types.Task.constraints]]
+form = "conditional-required"
+field = "retry_resume"
+when = { field = "retry", predicate = "not-equals", value = 0 }
+[[types.Task.constraints]]
+form = "conditional-required"
+field = "retry_inject_failure"
+when = { field = "retry", predicate = "not-equals", value = 0 }
+
+# for_each present ⇒ for_each_abort_on_failure, max_concurrency required.
+[[types.Task.constraints]]
+form = "conditional-required"
+field = "for_each_abort_on_failure"
+when = { field = "for_each", predicate = "present" }
+[[types.Task.constraints]]
+form = "conditional-required"
+field = "max_concurrency"
+when = { field = "for_each", predicate = "present" }
+
+# depends_on entries must resolve to declared task names within the document.
+[[types.Task.constraints]]
+form = "intra-document-references"
+reference = "depends_on"
+resolves_into = "tasks"
+resolves_by = "field:name"

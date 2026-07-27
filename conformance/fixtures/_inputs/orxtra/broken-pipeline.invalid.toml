@@ -1,0 +1,40 @@
+# Invalid workflow. Phase-1 types are all correct so phase-2 constraints fire. Contains four
+# strictspec-catchable violations PLUS a dependency cycle that strictspec CANNOT catch (see gap
+# note finding 4 — the expected consumer-native tail).
+[workflow]
+name = "broken-pipeline"
+description = "Demonstrates the catchable and the uncatchable."
+
+# (1) exactly-one-of violation: agent-mode AND callable-mode both present.
+[[tasks]]
+name = "two-modes"
+agent = "coder"
+task_prompt = "do a thing"
+timeout = 600
+context_refinement = false
+callable = "myproject.steps:also_this"
+
+# (2) two conditional-required violations: retry != 0 but retry_resume/retry_inject_failure absent.
+[[tasks]]
+name = "bad-retry"
+callable = "myproject.steps:c"
+retry = 3
+
+# (3) intra-document-references violation: depends_on names a task that does not exist.
+[[tasks]]
+name = "orphan-dep"
+callable = "myproject.steps:d"
+depends_on = ["ghost"]
+
+# (4) dependency CYCLE loop-a <-> loop-b. Both refs resolve, so intra-document-references PASSES;
+# strictspec has no acyclicity form, so it accepts this. orxtra's topological_sort raises
+# CycleError. This is the expected consumer-native tail.
+[[tasks]]
+name = "loop-a"
+callable = "myproject.steps:a"
+depends_on = ["loop-b"]
+
+[[tasks]]
+name = "loop-b"
+callable = "myproject.steps:b"
+depends_on = ["loop-a"]

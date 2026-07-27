@@ -1,0 +1,26 @@
+# INVALID type-definition file — rejection fixture.
+# A type-definition file may declare TYPES ONLY. Declaring a constraint (here a cross-field
+# `ordered-pair`) is a meta-schema rejection: STRICTSPEC_IMPORT_CROSS_FILE_CONSTRAINT
+# (appendix-error-codes 6; appendix-semantics 3.20). The file is annotated, never imported.
+
+name = "geometry-types-bad-constraint"
+meta_version = 1
+format_version = 1
+role = "type-definitions"
+description = "REJECTION FIXTURE: a type file must not carry constraints."
+
+[types.Span]
+type = "record"
+[types.Span.fields.lo]
+type = "number"
+required = true
+[types.Span.fields.hi]
+type = "number"
+required = true
+
+# >>> The offending declaration. Constraints are not permitted in a type-definition file. <<<
+[[types.Span.constraints]]
+form = "ordered-pair"
+less = "lo"
+than = "hi"
+# Expected: STRICTSPEC_IMPORT_CROSS_FILE_CONSTRAINT at file `geometry-types-bad-constraint.toml`

@@ -1,0 +1,9 @@
+name = "predraw-scene-valid"
+category = "construct-coverage"
+provenance = "derived-from(examples/predraw-scene/samples/scene.valid.json, verified against spec)"
+description = "A predraw scene: recursive element tree, node-kind-union fill (string-or-gradient), NUMBER scalars, tuples, canonical alias spellings. Validates clean."
+schema = "_schemas/predraw-scene.toml"
+input = "_inputs/predraw/scene.valid.json"
+
+[expected]
+valid = true

@@ -1,0 +1,13 @@
+name = "wavescript-valid-embedded-bank"
+category = "construct-coverage"
+provenance = "derived-from(examples/wavescript-score/valid-01-embedded-bank.json, verified against spec)"
+description = """
+A wavescript score (format_version 2): global fields, an embedded_bank map of topology-tagged
+presets (discriminated union on `topology`), and tracks whose `instrument` resolves into
+embedded_bank. Every gate-conditional param respects its forbidden-when / conditional-required /
+conditional-value rule, so the document validates clean."""
+schema = "_schemas/wavescript-score.schema.toml"
+input = "_inputs/wavescript/valid-01-embedded-bank.json"
+
+[expected]
+valid = true

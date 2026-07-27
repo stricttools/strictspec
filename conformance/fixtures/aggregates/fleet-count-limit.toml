@@ -1,0 +1,26 @@
+name = "aggregates-fleet-count-limit"
+category = "aggregates"
+provenance = "derived-from(examples/aggregates-exercise/fail-count/fleet.toml, verified against spec)"
+description = """
+The count-limit constraint (<= 8) is violated: the resolver returns 9 service documents. Only the
+count form fires (sum stays within budget), isolating STRICTSPEC_CROSS_COUNT_LIMIT at the fleet
+root. `source` renders double-quoted (the resolver expression is not identifier-shaped)."""
+schema = "_schemas/aggregates-fleet.toml"
+input = "_inputs/aggregates/fail-count-fleet.toml"
+
+[evidence]
+"documents-in(services/*.toml)" = [
+  { name = "s1", memory_mb = 256 }, { name = "s2", memory_mb = 256 },
+  { name = "s3", memory_mb = 256 }, { name = "s4", memory_mb = 256 },
+  { name = "s5", memory_mb = 256 }, { name = "s6", memory_mb = 256 },
+  { name = "s7", memory_mb = 256 }, { name = "s8", memory_mb = 256 },
+  { name = "s9", memory_mb = 256 },
+]
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_CROSS_COUNT_LIMIT"
+path = "$"
+slots = { actual = "9", source = '"documents-in(services/*.toml)"', limit = "8" }

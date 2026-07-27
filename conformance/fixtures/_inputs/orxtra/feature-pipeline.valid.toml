@@ -1,0 +1,34 @@
+# Adapted from orxtra/examples/simple_workflow.toml. Valid: each task has exactly one execution
+# mode (agent + task_prompt), depends_on references resolve, no cycle.
+[workflow]
+name = "feature-pipeline"
+description = "Implement a feature with tests and lint check."
+
+[[tasks]]
+name = "implement"
+agent = "coder"
+task_prompt = "Implement the feature described in the project spec."
+timeout = 600
+context_refinement = false
+
+[[tasks]]
+name = "test"
+agent = "coder"
+task_prompt = "Write tests for the implementation."
+timeout = 600
+context_refinement = false
+depends_on = ["implement"]
+
+[tasks.postchecks]
+scripts = ["myproject.checks:pytest_passes"]
+
+[[tasks]]
+name = "lint"
+agent = "coder"
+task_prompt = "Fix any lint issues found by ruff."
+timeout = 300
+context_refinement = false
+depends_on = ["implement"]
+
+[tasks.postchecks]
+scripts = ["myproject.checks:ruff_passes"]

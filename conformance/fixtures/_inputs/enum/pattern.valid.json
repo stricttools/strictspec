@@ -1,0 +1,9 @@
+{
+  "format_version": 1,
+  "bpm": 120,
+  "hits": [
+    { "step": 0, "sound": "kick" },
+    { "step": 4, "sound": "snare" },
+    { "step": 2, "sound": "hat" }
+  ]
+}

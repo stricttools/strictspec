@@ -1,0 +1,16 @@
+name = "orxtra-feature-pipeline-valid"
+category = "construct-coverage"
+provenance = "derived-from(examples/orxtra-workflow/feature-pipeline.valid.toml, verified against spec)"
+description = """
+An orxtra workflow: each task has exactly one execution mode, depends_on references resolve, no
+cycle. Validates clean.
+
+NOTE: the orxtra sample docs omit `format_version`; this fixture follows the draft's modeled
+phase-2 outcome (the draft did not model the document gate). If the gate-first rule applies, an
+implemented target would emit STRICTSPEC_GATE_ABSENT first -- a deliberate open question flagged in
+the harness report, not silently resolved here."""
+schema = "_schemas/orxtra-workflow.toml"
+input = "_inputs/orxtra/feature-pipeline.valid.toml"
+
+[expected]
+valid = true

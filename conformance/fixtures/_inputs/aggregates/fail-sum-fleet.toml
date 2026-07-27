@@ -1,0 +1,4 @@
+format_version = 1
+name = "memory-hungry-tier"
+# count = 3 (>=1 and <=8, OK); sum(memory_mb) = 2048 * 3 = 6144 (> 4096, VIOLATES sum-limit).
+# Only the sum form is violated, isolating STRICTSPEC_CROSS_SUM_LIMIT.

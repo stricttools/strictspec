@@ -1,0 +1,15 @@
+name = "rlsbl-release-valid"
+category = "construct-coverage"
+provenance = "derived-from(examples/rlsbl-release-file/valid-01-infra.toml, verified against spec)"
+description = """
+An rlsbl release file (comment-carrying TOML): bump enum, description, triple-quoted context,
+include/exclude lists, optional preid absent. Validates clean.
+
+NOTE: release files carry no `format_version` field (the draft treats this as intended for this
+config-style schema). Same gate open-question as the orxtra fixtures; this fixture follows the
+draft's modeled outcome."""
+schema = "_schemas/rlsbl-release-file.toml"
+input = "_inputs/rlsbl-release/valid-01-infra.toml"
+
+[expected]
+valid = true

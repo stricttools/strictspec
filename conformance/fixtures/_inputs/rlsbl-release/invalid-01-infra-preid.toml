@@ -1,0 +1,19 @@
+# INVALID. An infra release that also sets preid — forbidden-when fires.
+# Also demonstrates the include/exclude disjointness the vocabulary cannot
+# express: "pypi" appears in BOTH lists (a real bug rlsbl catches, strictspec
+# would MISS with the mis-chosen mutual-exclusion form — see gap note FINDING 1).
+#
+# Expected ordered diagnostics (structural phase-1 clean; phase-2 forms):
+#   1. STRICTSPEC_INTRA_FORBIDDEN_WHEN
+#      path: $.preid
+#      slots: key="preid", path="$", condition="bump == \"infra\""
+#   (The include/exclude overlap is NOT reported — the schema's mutual-exclusion
+#    form checks field co-presence, and both fields ARE present-and-nonempty,
+#    which the form treats as the two-present violation only if it read fields,
+#    not elements. This false-negative-on-elements is FINDING 1.)
+
+bump = "infra"
+description = "bad: infra release cannot be a pre-release, and pypi is double-listed"
+preid = "rc"
+include = ["npm", "pypi"]
+exclude = ["pypi"]

@@ -1,0 +1,22 @@
+name = "rlsbl-release-infra-preid"
+category = "construct-coverage"
+provenance = "derived-from(examples/rlsbl-release-file/invalid-01-infra-preid.toml, re-verified against spec)"
+description = """
+An infra release that also sets `preid` -- forbidden-when fires:
+STRICTSPEC_INTRA_FORBIDDEN_WHEN. (The document also double-lists "pypi" in include and exclude,
+which the schema's field-level mutual-exclusion form cannot catch at the element level -- the
+draft's FINDING 1; not reported here by design.) Same format_version/gate caveat as rlsbl-release-
+valid.
+
+Path convention: the diagnostic attaches at the offending field `$.preid` and the message's `{path}`
+slot follows it (consistent with the wavescript forbidden-when fixtures)."""
+schema = "_schemas/rlsbl-release-file.toml"
+input = "_inputs/rlsbl-release/invalid-01-infra-preid.toml"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_INTRA_FORBIDDEN_WHEN"
+path = "$.preid"
+slots = { key = "preid", condition = 'bump == "infra"' }

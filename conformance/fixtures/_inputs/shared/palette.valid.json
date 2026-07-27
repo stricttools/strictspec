@@ -1,0 +1,7 @@
+{
+  "format_version": 1,
+  "swatches": {
+    "midnight": { "name": "midnight", "r": 20, "g": 24, "b": 48 },
+    "sand": { "name": "sand", "r": 210, "g": 190, "b": 140 }
+  }
+}

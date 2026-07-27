@@ -1,0 +1,32 @@
+name = "shared-types-canvas-invalid"
+category = "shared-types"
+provenance = "derived-from(examples/shared-types-exercise/canvas.invalid.json, re-verified against spec)"
+description = """
+Three diagnostics in traversal order. `background` "Midnight" fails the ColorName anchored regex
+(leading capital). `shapes[0]` (matched `circle` arm) has radius 0, violating PositiveInt's
+exclusive-min > 0. `shapes[1]` has an unknown discriminator "hexagon" -- no arm is validated.
+
+RE-VERIFICATION CORRECTIONS vs the draft gap note: (1) the radius diagnostic sits inside the
+matched `circle` arm, so its path carries the `(circle)` arm step per the path grammar; (2) the
+discriminator diagnostic names the union VALUE `$.shapes[1]` (consistent with node-kind unions),
+not the `.kind` field."""
+schema = "_schemas/shared-canvas.toml"
+input = "_inputs/shared/canvas.invalid.json"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_VALUE_STRING_REGEX"
+path = "$.background"
+slots = { actual = '"Midnight"', pattern = '"^[a-z][a-z0-9-]{0,31}$"' }
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_VALUE_NUM_TOO_SMALL_EXCLUSIVE"
+path = "$.shapes[0](circle).radius"
+slots = { actual = "0", limit = "0" }
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_UNION_DISCRIMINATOR_UNKNOWN"
+path = "$.shapes[1]"
+slots = { got = '"hexagon"', expected = '["circle", "rect"]', suggestion = "" }

@@ -1,0 +1,16 @@
+name = "aggregates-fleet-pass"
+category = "aggregates"
+provenance = "derived-from(examples/aggregates-exercise/pass/fleet.toml, verified against spec)"
+description = "A fleet root hosting count-limit (<= 8) and sum-limit (memory_mb <= 4096) constraints over sibling service documents resolved by documents-in(services/*.toml). Pinned evidence: 3 services, memory 512+512+1024 = 2048. Validates clean."
+schema = "_schemas/aggregates-fleet.toml"
+input = "_inputs/aggregates/pass-fleet.toml"
+
+[evidence]
+"documents-in(services/*.toml)" = [
+  { name = "web", memory_mb = 512 },
+  { name = "api", memory_mb = 512 },
+  { name = "worker", memory_mb = 1024 },
+]
+
+[expected]
+valid = true

@@ -1,0 +1,9 @@
+name = "enum-sourcing-drum-pattern-valid"
+category = "enum-sourcing"
+provenance = "derived-from(examples/enum-baking-exercise/pattern.valid.json, verified against spec)"
+description = "A drum pattern whose hit sounds are all members of the enum baked from sounds.registry.json (kick/snare/hat). Validation reads only the baked arms, never the source. Validates clean."
+schema = "_schemas/enum-drum-pattern.toml"
+input = "_inputs/enum/pattern.valid.json"
+
+[expected]
+valid = true

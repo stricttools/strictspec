@@ -1,0 +1,17 @@
+name = "meta-opaque-no-stance"
+category = "meta-schema"
+provenance = "derived-from(examples/claudestream-agent/fixtures/opaque-no-stance.reject.toml, verified against spec)"
+description = """
+Meta-schema rejection: the INPUT is a schema (validated as a document of the meta-schema) whose
+opaque JSON leaf `input_schema` declares neither `consumer_check` nor `unchecked`. Every opaque
+leaf must declare its strictspec-blind stance: STRICTSPEC_SCHEMA_OPAQUE_NO_STANCE (decision 29)."""
+schema = "_schemas/meta-schema.toml"
+input = "_inputs/meta/opaque-no-stance.toml"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_SCHEMA_OPAQUE_NO_STANCE"
+path = "$.types.ToolSchema.fields.input_schema"
+slots = {}

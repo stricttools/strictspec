@@ -1,0 +1,16 @@
+name = "meta-import-transitive"
+category = "meta-schema"
+provenance = "derived-from(examples/shared-types-exercise/INVALID-types-transitive.toml, verified against spec)"
+description = """
+Meta-schema rejection: a type-definition file that itself declares `imports`. Type files are leaves
+in the import graph; a transitive import is STRICTSPEC_IMPORT_TRANSITIVE."""
+schema = "_schemas/meta-schema.toml"
+input = "_inputs/meta/types-transitive.toml"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_IMPORT_TRANSITIVE"
+path = "$"
+slots = { file = '"geometry-types-transitive.toml"' }

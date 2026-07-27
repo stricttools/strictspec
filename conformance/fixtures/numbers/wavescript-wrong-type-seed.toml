@@ -1,0 +1,18 @@
+name = "wavescript-wrong-type-seed"
+category = "numbers"
+provenance = "derived-from(examples/wavescript-score/valid-01-embedded-bank.json, mutated: seed is the float 1.5)"
+description = """
+`seed` is declared `integer`; the document supplies the float lexeme 1.5. A float lexeme where an
+integer is required is STRICTSPEC_TYPE_NOT_INTEGER (appendix-error-codes sec. 11, `3.0` vs `3`).
+`got` renders the offending lexeme class, `float`. The type check fails before the range check, so
+the range bound never reports."""
+schema = "_schemas/wavescript-score.schema.toml"
+input = "_inputs/wavescript/mut-wrong-type-seed.json"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_TYPE_NOT_INTEGER"
+path = "$.seed"
+slots = { got = "float" }

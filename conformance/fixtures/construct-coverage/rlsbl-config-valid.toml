@@ -1,0 +1,9 @@
+name = "rlsbl-config-valid"
+category = "construct-coverage"
+provenance = "derived-from(examples/rlsbl-config/valid-01.json, verified against spec)"
+description = "An rlsbl .rlsbl/config.json (format_version 1): publish_mode enum, targets list, nested typed pipeline maps, external-checks records. Validates clean."
+schema = "_schemas/rlsbl-config.toml"
+input = "_inputs/rlsbl-config/valid-01.json"
+
+[expected]
+valid = true

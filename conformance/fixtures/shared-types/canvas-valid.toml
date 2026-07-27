@@ -1,0 +1,9 @@
+name = "shared-types-canvas-valid"
+category = "shared-types"
+provenance = "derived-from(examples/shared-types-exercise/canvas.valid.json, verified against spec)"
+description = "A canvas schema importing named types (Point, PositiveInt, ColorName) from a shared type-definition file. Lowercase color name, positive radius, valid shape arms. Validates clean."
+schema = "_schemas/shared-canvas.toml"
+input = "_inputs/shared/canvas.valid.json"
+
+[expected]
+valid = true

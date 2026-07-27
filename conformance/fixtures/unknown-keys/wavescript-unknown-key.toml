@@ -1,0 +1,18 @@
+name = "wavescript-unknown-key"
+category = "unknown-keys"
+provenance = "derived-from(examples/wavescript-score/valid-01-embedded-bank.json, mutated: added unknown key `wobble` to svf_pad params)"
+description = """
+The per-topology parameter whitelist is a closed record: a key not declared on SubtractiveParams is
+the unknown-key invariant. `wobble` is far (edit distance > 2) from every declared param name, so
+the did-you-mean `suggestion` slot renders empty (appendix-rendering Part C). The rest of the
+document is valid, so this is the only diagnostic."""
+schema = "_schemas/wavescript-score.schema.toml"
+input = "_inputs/wavescript/mut-unknown-key.json"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_KEY_UNKNOWN"
+path = '$.embedded_bank["svf_pad"](subtractive).params'
+slots = { key = "wobble" }

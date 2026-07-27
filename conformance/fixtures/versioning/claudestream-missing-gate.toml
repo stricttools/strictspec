@@ -1,0 +1,17 @@
+name = "claudestream-missing-gate"
+category = "versioning"
+provenance = "derived-from(examples/claudestream-agent/samples/missing-gate.agent.json, verified against spec)"
+description = """
+The `format_version` gate runs FIRST. The document omits `format_version`, so
+STRICTSPEC_GATE_ABSENT fires with the structured remediation payload and structural checks do not
+run."""
+schema = "_schemas/claudestream-agent.toml"
+input = "_inputs/claudestream/missing-gate.agent.json"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_GATE_ABSENT"
+path = "$"
+slots = { schema = "AgentDefinition", expected = "1", invocation = "strictspec migrate --schema AgentDefinition --to 1 <paths>" }

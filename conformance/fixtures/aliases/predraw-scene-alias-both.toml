@@ -1,0 +1,17 @@
+name = "predraw-scene-alias-both"
+category = "aliases"
+provenance = "derived-from(examples/predraw-scene/samples/scene.invalid-alias-both.json, verified against spec)"
+description = """
+A rect element supplies BOTH the alias `stroke_width` and its canonical `strokeWidth`. Aliases are
+exempt from unknown-key errors, but supplying both spellings is STRICTSPEC_ALIAS_BOTH_PRESENT. The
+path carries the matched discriminated-union arm step `(rectElement)`."""
+schema = "_schemas/predraw-scene.toml"
+input = "_inputs/predraw/scene.invalid-alias-both.json"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_ALIAS_BOTH_PRESENT"
+path = "$.elements[0](rectElement)"
+slots = { alias = "stroke_width", canonical = "strokeWidth" }

@@ -1,0 +1,32 @@
+name = "canvas"
+meta_version = 1
+format_version = 1
+document_syntax = "json"
+role = "schema"
+root = "Canvas"
+targets = ["go", "python", "ts"]
+safe_integers = true   # mandatory because a TS target is declared (appendix-semantics 3.17)
+description = "A drawing canvas: a background colour plus an ordered list of shapes."
+
+# Import named types from the shared type-definition file. Types only.
+imports = [ { file = "types-geometry.toml", types = ["Point", "Shape", "ColorName"] } ]
+
+[types.Canvas]
+type = "record"
+
+[types.Canvas.fields.background]
+type = "ColorName"
+required = true
+description = "Imported scalar-refinement type."
+
+[types.Canvas.fields.shapes]
+type = "array"
+required = true
+description = "Imported union type used as the array element type."
+[types.Canvas.fields.shapes.item]
+type = "Shape"
+
+[types.Canvas.fields.origin]
+type = "Point"
+required = false
+description = "Optional imported record type; absent binds as ABSENT (no defaults, decision 30)."

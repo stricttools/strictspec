@@ -1,0 +1,17 @@
+name = "wavescript-gate-wrong-type"
+category = "versioning"
+provenance = "derived-from(examples/wavescript-score/valid-01-embedded-bank.json, mutated: format_version is the string \"2\")"
+description = """
+`format_version` must be an integer; the document carries the string "2". The gate rejects it with
+STRICTSPEC_GATE_WRONG_TYPE and the structured remediation payload. `got` renders the offending
+value per appendix-rendering A.1 (a string, double-quoted)."""
+schema = "_schemas/wavescript-score.schema.toml"
+input = "_inputs/wavescript/mut-gate-wrong-type.json"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_GATE_WRONG_TYPE"
+path = "$"
+slots = { got = '"2"', schema = "wavescript-score", expected = "2", invocation = "strictspec migrate --schema wavescript-score --to 2 <paths>" }

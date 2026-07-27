@@ -1,0 +1,44 @@
+# Manifest fragment — custom scalar registration (appendix-custom-scalars.md).
+# Registration lives in the manifest, NOT in schemas, and TRAVELS WITH the schema: a schema
+# using `identifier`/`pgtype`/`sql-expression` is only meaningful alongside this manifest.
+# `strictspec gen` reads both; a schema referencing an unregistered scalar is
+# STRICTSPEC_SCALAR_UNKNOWN. pgdesign is the first consumer (decision 3; DESIGN.md donor list).
+
+meta_version = 1
+format_version = 1
+
+# --- 6.1 identifier: the PRECISE-refinement end of the spectrum ---
+# The regex FULLY captures the grammar; `length` caps at the Postgres 63-code-point limit
+# (the regex alone cannot cap length).
+[[scalars]]
+name = "identifier"
+base = "string"
+lexeme_rule = "^[A-Za-z_][A-Za-z0-9_]*$"
+length = { max = 63 }
+bindings = { go = "string", python = "str", ts = "string" }
+rendering = { inherits = "string" }
+description = "A SQL/programming identifier; anchored, RE2, fully captured by the regex."
+
+# --- 6.2 pgtype: SURFACE-syntax refinement ---
+# Captures the SHAPE of a type reference (optionally-qualified name, optional parenthesised
+# params, optional array suffix). EXISTENCE of the type is a domain fact outside any regex.
+[[scalars]]
+name = "pgtype"
+base = "string"
+lexeme_rule = "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)?(\\([0-9]+(,[0-9]+)?\\))?(\\[\\])?$"
+length = { max = 128 }
+bindings = { go = "string", python = "str", ts = "string" }
+rendering = { inherits = "string" }
+description = "A Postgres type reference by SURFACE SYNTAX: int4, pg_catalog.numeric, numeric(10,2), text[]."
+
+# --- 6.3 sql-expression: the EFFECTIVELY-OPAQUE end of the spectrum ---
+# SQL is not a regular language; the regex can only assert NON-EMPTINESS. `length` is the only
+# meaningful check. Grammaticality/semantics are a consumer-native check downstream.
+[[scalars]]
+name = "sql-expression"
+base = "string"
+lexeme_rule = "^.+$"
+length = { min = 1, max = 8192 }
+bindings = { go = "string", python = "str", ts = "string" }
+rendering = { inherits = "string" }
+description = "An arbitrary SQL expression fragment (CHECK body, default expr). Only non-emptiness/length checked."

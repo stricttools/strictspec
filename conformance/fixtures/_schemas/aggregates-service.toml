@@ -1,0 +1,34 @@
+name = "service"
+meta_version = 1
+format_version = 1
+document_syntax = "toml"
+role = "schema"
+root = "Service"
+targets = ["go", "python"]
+description = "One service in a fleet: image, memory reservation, replica count."
+
+[types.Service]
+type = "record"
+
+[types.Service.fields.name]
+type = "string"
+required = true
+non_empty = true
+
+[types.Service.fields.image]
+type = "string"
+required = true
+non_empty = true
+
+[types.Service.fields.memory_mb]
+type = "integer"
+required = true
+min = 64
+max = 8192
+description = "Per-replica memory reservation in MiB. Summed by the fleet budget."
+
+[types.Service.fields.replicas]
+type = "integer"
+required = true
+min = 1
+max = 20

@@ -1,0 +1,17 @@
+name = "wavescript-gate-absent"
+category = "versioning"
+provenance = "derived-from(examples/wavescript-score/valid-01-embedded-bank.json, mutated: format_version removed)"
+description = """
+The document `format_version` gate runs FIRST, before structural validation. With the field
+absent, STRICTSPEC_GATE_ABSENT fires and short-circuits everything else; the diagnostic carries the
+structured remediation payload (schema, expected version, and the literal migrate invocation)."""
+schema = "_schemas/wavescript-score.schema.toml"
+input = "_inputs/wavescript/mut-gate-absent.json"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_GATE_ABSENT"
+path = "$"
+slots = { schema = "wavescript-score", expected = "2", invocation = "strictspec migrate --schema wavescript-score --to 2 <paths>" }

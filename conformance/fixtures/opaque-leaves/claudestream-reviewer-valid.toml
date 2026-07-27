@@ -1,0 +1,9 @@
+name = "claudestream-reviewer-valid"
+category = "opaque-leaves"
+provenance = "derived-from(examples/claudestream-agent/samples/reviewer.agent.json, verified against spec)"
+description = "A claudestream AgentDefinition (format_version 1) exercising tools with an opaque input_schema (declared stance), sandbox, budget, and stream fields. Validates clean."
+schema = "_schemas/claudestream-agent.toml"
+input = "_inputs/claudestream/reviewer.agent.json"
+
+[expected]
+valid = true

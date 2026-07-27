@@ -1,0 +1,18 @@
+name = "meta-import-cross-file-constraint"
+category = "meta-schema"
+provenance = "derived-from(examples/shared-types-exercise/INVALID-types-with-constraint.toml, verified against spec)"
+description = """
+Meta-schema rejection: the INPUT is a type-definition file (validated AS A DOCUMENT of the built-in
+meta-schema). A type-definition file may declare TYPES ONLY; this one declares an `ordered-pair`
+constraint, which is STRICTSPEC_IMPORT_CROSS_FILE_CONSTRAINT. The `file` slot is the offending
+file's name."""
+schema = "_schemas/meta-schema.toml"
+input = "_inputs/meta/types-with-constraint.toml"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_IMPORT_CROSS_FILE_CONSTRAINT"
+path = "$"
+slots = { file = '"geometry-types-bad-constraint.toml"' }

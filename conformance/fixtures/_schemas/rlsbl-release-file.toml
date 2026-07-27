@@ -1,0 +1,116 @@
+# strictspec paper schema — rlsbl release file (.rlsbl/releases/unreleased.toml)
+# Source of truth: rlsbl/rlsbl/release_file.py (ReleaseConfig, _validate_release_config).
+# Pinned surface (spec/appendix-surface-syntax.md): bare header + `role`/`root`; the root is a
+# named record; constraints are nesting-scoped `[[types.<Name>.constraints]]`; conditions use the
+# closed `when = { field, predicate, value/values }` set.
+
+name = "rlsbl-release-file"
+meta_version = 1
+format_version = 1
+document_syntax = "toml"
+role = "schema"
+root = "ReleaseConfig"
+targets = ["python", "go"]
+description = "A single-project rlsbl release descriptor: bump type, target selection, and release prose. Round-trips comment-preserving TOML (within-backend fixpoint)."
+
+[types.ReleaseConfig]
+type = "record"
+
+[types.ReleaseConfig.fields.bump]
+type = "enum"
+required = true
+values = ["patch", "minor", "major", "infra", "prerelease"]
+description = "Version bump type. (VALID_BUMP_TYPES.)"
+
+[types.ReleaseConfig.fields.include]
+type = "array"
+required = true
+description = "Target names to release. May be empty; disjoint from `exclude` (see constraint include-exclude-disjoint)."
+[types.ReleaseConfig.fields.include.item]
+type = "string"
+
+[types.ReleaseConfig.fields.exclude]
+type = "array"
+required = true
+description = "Target names to skip. Disjoint from `include`."
+[types.ReleaseConfig.fields.exclude.item]
+type = "string"
+
+# `targets` is a typed map: target name -> per-target config record. Optional;
+# each key must also appear in `include` (see constraint target-in-include).
+[types.ReleaseConfig.fields.targets]
+type = "map"
+required = false
+key_pattern = "^[a-z][a-z0-9-]*$"
+description = "Per-target configuration, keyed by target name."
+[types.ReleaseConfig.fields.targets.value]
+type = "TargetConfig"
+
+[types.ReleaseConfig.fields.description]
+type = "string"
+required = true
+non_empty = true
+description = "Short summary of the release. Whitespace-only is rejected (non_empty is checked after the write-side lexeme; see gap note on strip())."
+
+[types.ReleaseConfig.fields.context]
+type = "string"
+required = false
+description = "Optional multiline prose explaining why the changes were made. Absent when unset — never null (TOML has no null; see gap note)."
+
+[types.ReleaseConfig.fields.preid]
+type = "enum"
+required = false
+values = ["alpha", "beta", "rc", "stable"]
+description = "Pre-release identifier. Coupled to `bump` (see constraints preid-stable-requires-prerelease and infra-forbids-preid)."
+
+[types.ReleaseConfig.fields.blog]
+type = "boolean"
+required = false
+description = "Whether to generate a blog post for this release."
+
+# --- Constraints (attached at the root record that owns the fields) ---
+
+# preid == "stable" requires bump == "prerelease" — a conditional VALUE-equality (the
+# `conditional-value` form added in Phase 3.3; formerly an approximated conditional-required).
+[[types.ReleaseConfig.constraints]]
+form = "conditional-value"
+field = "bump"
+equals_literal = "prerelease"
+when = { field = "preid", predicate = "equals", value = "stable" }
+description = "When preid == \"stable\", bump must equal \"prerelease\"."
+
+# bump == "infra" forbids preid.
+[[types.ReleaseConfig.constraints]]
+form = "forbidden-when"
+field = "preid"
+when = { field = "bump", predicate = "equals", value = "infra" }
+description = "infra releases cannot carry a preid (they cannot be pre-releases)."
+
+# Every key of `targets` must appear in `include`.
+[[types.ReleaseConfig.constraints]]
+form = "intra-document-references"
+reference = "targets"
+resolves_into = "include"
+resolves_by = "map-key"
+description = "A [targets.<name>] section is only valid when <name> is in `include`."
+
+# include and exclude must be element-disjoint — the `collections-disjoint` form added in
+# Phase 3.3 (element-level set disjointness; this rule is the form's origin, replacing the former
+# mis-citation as `mutual exclusion`).
+[[types.ReleaseConfig.constraints]]
+form = "collections-disjoint"
+left = "include"
+right = "exclude"
+normalization = "none"
+description = "No element appears in both include and exclude."
+
+# --- named types ---
+
+# TargetConfig — per-target overrides (only `mode` is recognized today).
+[types.TargetConfig]
+type = "record"
+[types.TargetConfig.fields.mode]
+type = "enum"
+required = false
+values = ["ota", "build"]
+description = "Flutter delivery mode. (VALID_TARGET_MODES.) The 'flutter' target's required-mode rule is a literal-element gate — consumer-native (rejected form; see gap note)."

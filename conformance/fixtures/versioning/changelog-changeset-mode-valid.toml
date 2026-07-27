@@ -1,0 +1,9 @@
+name = "changelog-changeset-mode-valid"
+category = "versioning"
+provenance = "derived-from(examples/rlsbl-changelog-entry/valid-changeset-file-mode.jsonl, verified against spec)"
+description = "A per-line JSONL changelog stream (changeset-file-coverage mode): entries omit `commits` (covered by changeset files instead), each line format_version 1. Every line validates."
+schema = "_schemas/rlsbl-changelog-changeset-mode.toml"
+input = "_inputs/changelog/valid-changeset-file-mode.jsonl"
+
+[expected]
+valid = true

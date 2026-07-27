@@ -1,0 +1,28 @@
+# META-SCHEMA REJECTION FIXTURE.
+# An opaque JSON leaf that declares NEITHER `unchecked` NOR `consumer_check`.
+# Validating this SCHEMA (a document of the meta-schema) must hard-error:
+#   STRICTSPEC_SCHEMA_OPAQUE_NO_STANCE · path $.types.ToolSchema.fields.input_schema
+# (decision 29). Every opaque leaf must declare its strictspec-blind stance on record.
+
+name = "AgentDefinition"
+meta_version = 1
+format_version = 1
+document_syntax = "json"
+role = "schema"
+root = "AgentDefinition"
+description = "Rejection fixture — opaque leaf with no stance."
+
+[types.AgentDefinition]
+type = "record"
+[types.AgentDefinition.fields.tools]
+type = "array"
+required = false
+[types.AgentDefinition.fields.tools.item]
+type = "ToolSchema"
+
+[types.ToolSchema]
+type = "record"
+[types.ToolSchema.fields.input_schema]
+type = "opaque"
+required = false
+# NO `unchecked` and NO `consumer_check` — this is the meta-schema violation.

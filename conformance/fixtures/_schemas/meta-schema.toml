@@ -1,0 +1,22 @@
+# Placeholder for the toolchain-shipped BUILT-IN META-SCHEMA (the schema of
+# schemas). Meta-schema rejection fixtures validate a strictspec schema/type-
+# definition file (their `input`) AS A DOCUMENT of this meta-schema; the expected
+# outcome is a STRICTSPEC_SCHEMA_* / STRICTSPEC_IMPORT_* diagnostic.
+#
+# The real built-in meta-schema is authored in the pinned TOML surface
+# (spec/appendix-surface-syntax.md) and ships with the toolchain; when an
+# implemented target lands, it validates schema documents against that real
+# artifact. Until then this file is an existence marker so the fixture loader
+# accepts these fixtures (targets are unimplemented, so nothing executes it).
+name = "strictspec-meta-schema"
+meta_version = 1
+format_version = 1
+document_syntax = "toml"
+role = "schema"
+root = "MetaSchema"
+description = "Built-in meta-schema placeholder (see comment above)."
+
+[types.MetaSchema]
+type = "opaque"
+unchecked = true
+unchecked_reason = "Placeholder; the real meta-schema ships with the toolchain and lands with the first implemented target."

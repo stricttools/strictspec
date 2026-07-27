@@ -1,0 +1,53 @@
+{
+  "format_version": "2",
+  "title": "filter-upgrades",
+  "sample_rate": 44100,
+  "tempo": 100,
+  "seed": 1,
+  "master_gain": 0.5,
+  "embedded_bank": {
+    "svf_pad": {
+      "topology": "subtractive",
+      "params": {
+        "source": "saw",
+        "unison": 2,
+        "filter_type": "svf_bp",
+        "cutoff": 1200,
+        "q": 3.0,
+        "attack": 0.25,
+        "decay": 0.3,
+        "sustain": 0.7,
+        "release": 0.5
+      }
+    },
+    "ladder_accent": {
+      "topology": "subtractive",
+      "params": {
+        "source": "saw",
+        "filter_type": "ladder_lp",
+        "cutoff": 700,
+        "resonance": 0.9,
+        "filter_keytrack": 0.7,
+        "attack": 0.004,
+        "decay": 0.16,
+        "sustain": 0.2,
+        "release": 0.12
+      }
+    }
+  },
+  "tracks": [
+    {
+      "name": "pad",
+      "instrument": "svf_pad",
+      "gain": 0.35,
+      "pattern": "[a2,c3,e3]:1/1 [f2,a2,c3]",
+      "repeat": 2
+    },
+    {
+      "name": "accent",
+      "instrument": "ladder_accent",
+      "gain": 0.4,
+      "pattern": "a3:1/8 c4 e4 a4"
+    }
+  ]
+}

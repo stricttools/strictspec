@@ -1,0 +1,9 @@
+name = "shared-types-palette-valid"
+category = "shared-types"
+provenance = "derived-from(examples/shared-types-exercise/palette.valid.json, verified against spec)"
+description = "A palette schema sharing the same type-definition file as the canvas schema (typed map of swatches). Validates clean."
+schema = "_schemas/shared-palette.toml"
+input = "_inputs/shared/palette.valid.json"
+
+[expected]
+valid = true

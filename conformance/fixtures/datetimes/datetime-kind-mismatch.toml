@@ -1,0 +1,18 @@
+name = "datetime-kind-mismatch"
+category = "datetimes"
+provenance = "derived-from(examples/datetime-exercise/invalid-01-kind-and-range.json, verified against spec)"
+description = """
+recorded_at is an OFFSET-typed field but the value "2025-06-01T13:37:00" is a LOCAL datetime
+lexeme (no offset). The datetime KIND check fires during structural (phase 1) validation. A kind
+mismatch short-circuits the range comparison for that field, so no STRICTSPEC_VALUE_DATETIME_BEFORE
+is emitted here (gap-note, verified against appendix-error-codes.md sec. 11 / appendix-semantics)."""
+schema = "_schemas/datetime.schema.toml"
+input = "_inputs/datetime/invalid-01-kind-and-range.json"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_TYPE_DATETIME_KIND"
+path = "$.recorded_at"
+slots = { expected = "offset", got = "local" }

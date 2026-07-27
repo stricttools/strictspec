@@ -1,0 +1,22 @@
+name = "enum-sourcing-drum-pattern-bad-sound"
+category = "enum-sourcing"
+provenance = "derived-from(examples/enum-baking-exercise/pattern.invalid.json, re-verified against spec)"
+description = """
+hits[1].sound = "cowbell" is not a member of the baked enum {kick, snare, hat, clap, tom}:
+STRICTSPEC_TYPE_NOT_ENUM_MEMBER. No candidate is within did-you-mean edit distance 2 of "cowbell",
+so `suggestion` renders empty.
+
+RE-VERIFICATION CORRECTION vs the draft gap note: `expected` is a `list<string>` slot, rendered in
+the pinned truncated inline form (appendix-rendering A.5 / appendix-error-codes sec. 2) -- at most 3
+elements shown, then `, ...`. The gap note listed all 5; the rendered form is
+`["kick", "snare", "hat", ...]`."""
+schema = "_schemas/enum-drum-pattern.toml"
+input = "_inputs/enum/pattern.invalid.json"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_TYPE_NOT_ENUM_MEMBER"
+path = "$.hits[1].sound"
+slots = { got = '"cowbell"', expected = '["kick", "snare", "hat", ...]', suggestion = "" }

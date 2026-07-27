@@ -1,0 +1,18 @@
+name = "predraw-scene-unrepresentable-number"
+category = "numbers"
+provenance = "derived-from(examples/predraw-scene/samples/scene.invalid-unrepresentable-number.json, verified against spec)"
+description = """
+`width` is a NUMBER scalar; the document supplies the integer lexeme 9007199254740993 (2^53 + 1),
+which float64 cannot represent exactly. The `number` scalar refuses silent precision loss with
+STRICTSPEC_NUM_UNREPRESENTABLE. The integer lexeme renders bare (no quotes) per appendix-rendering
+A.1."""
+schema = "_schemas/predraw-scene.toml"
+input = "_inputs/predraw/scene.invalid-unrepresentable-number.json"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_NUM_UNREPRESENTABLE"
+path = "$.width"
+slots = { actual = "9007199254740993" }

@@ -1,0 +1,61 @@
+name = "pg-table"
+meta_version = 1
+format_version = 1
+document_syntax = "toml"
+role = "schema"
+root = "Table"
+targets = ["go"]
+description = "A small pgdesign table-definition fragment using the three custom scalars."
+# Source material: pgdesign/internal/parse/types.go — RawTable, RawColumn, RawCheck field types.
+# Custom scalars identifier/pgtype/sql-expression are registered in strictspec.toml (this dir).
+
+[types.Table]
+type = "record"
+
+[types.Table.fields.name]
+type = "identifier"
+required = true
+description = "Table name — RawTable.Name."
+
+[types.Table.fields.comment]
+type = "string"
+required = true
+non_empty = true
+description = "pgdesign convention: all tables require a comment."
+
+# Columns keyed by identifier -> column record. RawTable.Columns / RawColumn.
+[types.Table.fields.columns]
+type = "map"
+required = true
+key_pattern = "^[A-Za-z_][A-Za-z0-9_]*$"
+order = "semantic"   # column order is semantic in pgdesign (PostgreSQL column order)
+[types.Table.fields.columns.value]
+type = "record"
+[types.Table.fields.columns.value.fields.type]
+type = "pgtype"
+required = true
+description = "RawColumn.Type — a PG type reference."
+[types.Table.fields.columns.value.fields.nullable]
+type = "boolean"
+required = false
+description = "RawColumn.Nullable; absent = NOT NULL by default (pgdesign convention)."
+[types.Table.fields.columns.value.fields.default_expr]
+type = "sql-expression"
+required = false
+description = "RawColumn.DefaultExpr — a SQL default expression."
+[types.Table.fields.columns.value.fields.check]
+type = "sql-expression"
+required = false
+description = "A per-column CHECK body."
+
+# CHECK constraints keyed by identifier -> { expr }. RawTable.Checks / RawCheck.
+[types.Table.fields.checks]
+type = "map"
+required = false
+key_pattern = "^[A-Za-z_][A-Za-z0-9_]*$"
+order = "incidental"
+[types.Table.fields.checks.value]
+type = "record"
+[types.Table.fields.checks.value.fields.expr]
+type = "sql-expression"
+required = true

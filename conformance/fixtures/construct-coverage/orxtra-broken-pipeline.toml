@@ -1,0 +1,36 @@
+name = "orxtra-broken-pipeline"
+category = "construct-coverage"
+provenance = "derived-from(examples/orxtra-workflow/broken-pipeline.invalid.toml, re-verified against spec)"
+description = """
+Four phase-2 violations in traversal order: tasks[0] has two execution modes (exactly-one-of);
+tasks[1] sets retry != 0 without the two conditionally-required resume/inject fields; tasks[2]
+depends_on an undefined task "ghost" (intra-document reference). The dependency cycle in tasks[3-4]
+is NOT catchable declaratively (no acyclicity form) -- the expected consumer-native tail.
+
+RE-VERIFICATION: `fields` is a `list<string>` slot rendered in the truncated inline form (max 3 +
+`, ...`; the exactly-one-of set has 5 members). Same gate caveat as the orxtra valid fixture."""
+schema = "_schemas/orxtra-workflow.toml"
+input = "_inputs/orxtra/broken-pipeline.invalid.toml"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_INTRA_EXACTLY_ONE_OF"
+path = "$.tasks[0]"
+slots = { fields = '["agent", "callable", "subtasks", ...]', actual = '["agent", "callable"]' }
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_INTRA_CONDITIONAL_REQUIRED"
+path = "$.tasks[1]"
+slots = { key = "retry_resume", condition = "retry != 0" }
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_INTRA_CONDITIONAL_REQUIRED"
+path = "$.tasks[1]"
+slots = { key = "retry_inject_failure", condition = "retry != 0" }
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_INTRA_REFERENCE_UNRESOLVED"
+path = "$.tasks[2].depends_on[0]"
+slots = { value = '"ghost"' }

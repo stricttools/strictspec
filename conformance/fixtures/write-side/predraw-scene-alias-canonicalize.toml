@@ -1,0 +1,13 @@
+name = "predraw-scene-alias-canonicalize"
+category = "write-side"
+provenance = "derived-from(examples/predraw-scene/samples/scene.alias-canonicalize.json, verified against spec)"
+description = """
+VALID input using aliased spellings (`children` for `elements`, `stroke_width`/`stroke_opacity`
+for `strokeWidth`/`strokeOpacity`). The read verdict is VALID; the write side canonicalizes the
+aliases while preserving untouched values byte-for-byte (within-backend fixpoint). Only the read
+verdict is asserted here (the write-side byte-fixpoint assertion lands with the write path)."""
+schema = "_schemas/predraw-scene.toml"
+input = "_inputs/predraw/scene.alias-canonicalize.json"
+
+[expected]
+valid = true

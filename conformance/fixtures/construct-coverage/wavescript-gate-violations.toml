@@ -1,0 +1,41 @@
+name = "wavescript-gate-violations"
+category = "construct-coverage"
+provenance = "derived-from(examples/wavescript-score/invalid-01-gate-violations.json, re-verified against score.schema.toml)"
+description = """
+Phase 1 (structural) is clean; phase-2 constraint forms fire in containing-record traversal order
+(bad_filter before noise_unison) then constraint-declaration order within each params record.
+
+RE-VERIFICATION CORRECTION vs the draft gap note: the gap note (authored before the Phase 3.3
+`conditional-value` form was added to the schema) marked noise_unison's `unison = 4` as a MISSED
+violation and listed only 3 diagnostics. The current schema DOES declare
+`conditional-value field=unison equals_literal=1 when source in [noise, pink, brown]`, so the
+unison violation IS now emitted -- 4 diagnostics, not 3. Condition strings are rendered with a
+consistent scheme (equals `==`, not-equals `!=`, membership `in [...]`, string literals quoted)."""
+schema = "_schemas/wavescript-score.schema.toml"
+input = "_inputs/wavescript/invalid-01-gate-violations.json"
+
+[expected]
+valid = false
+
+# bad_filter (source=saw, filter_type=none): declaration order -> q (#2), harm2_level (#5).
+[[expected.diagnostics]]
+code = "STRICTSPEC_INTRA_FORBIDDEN_WHEN"
+path = '$.embedded_bank["bad_filter"](subtractive).params.q'
+slots = { key = "q", condition = 'filter_type in ["none", "ladder_lp"]' }
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_INTRA_FORBIDDEN_WHEN"
+path = '$.embedded_bank["bad_filter"](subtractive).params.harm2_level'
+slots = { key = "harm2_level", condition = 'source != "sine"' }
+
+# noise_unison (source=noise, filter_type=lowpass, unison=4, cutoff absent):
+# conditional-required cutoff (#8), then conditional-value unison (#10).
+[[expected.diagnostics]]
+code = "STRICTSPEC_INTRA_CONDITIONAL_REQUIRED"
+path = '$.embedded_bank["noise_unison"](subtractive).params'
+slots = { key = "cutoff", condition = 'filter_type != "none"' }
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_INTRA_CONDITIONAL_VALUE"
+path = '$.embedded_bank["noise_unison"](subtractive).params.unison'
+slots = { key = "unison", expected = "1", got = "4", condition = 'source in ["noise", "pink", "brown"]' }

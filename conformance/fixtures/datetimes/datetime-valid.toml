@@ -1,0 +1,9 @@
+name = "datetime-valid"
+category = "datetimes"
+provenance = "derived-from(examples/datetime-exercise/valid-01.json, verified against spec)"
+description = "date / time / offset-datetime (with same-kind range) / optional local datetime, all well-formed."
+schema = "_schemas/datetime.schema.toml"
+input = "_inputs/datetime/valid-01.json"
+
+[expected]
+valid = true

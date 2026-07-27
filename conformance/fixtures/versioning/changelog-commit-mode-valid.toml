@@ -1,0 +1,9 @@
+name = "changelog-commit-mode-valid"
+category = "versioning"
+provenance = "derived-from(examples/rlsbl-changelog-entry/valid-commit-mode.jsonl, verified against spec)"
+description = "A per-line JSONL changelog stream (commit-coverage mode), each line carrying integer format_version 1: a user-facing entry with type, a non-user-facing entry, and an id-carrying fix. Every line validates."
+schema = "_schemas/rlsbl-changelog-commit-mode.toml"
+input = "_inputs/changelog/valid-commit-mode.jsonl"
+
+[expected]
+valid = true

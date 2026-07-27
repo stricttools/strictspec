@@ -1,0 +1,64 @@
+# TYPE-DEFINITION FILE (decision 21). Types only — no root, no constraints, no imports.
+# It is itself a document of the meta-schema: it carries meta_version + format_version and
+# is gated/migrated exactly like a schema (spec/DESIGN.md — Construct set; appendix-semantics
+# 3.20). `role = "type-definitions"` is the DECLARED discriminator (never inferred from shape;
+# appendix-surface-syntax.md §4): a type file carries `[types.*]` only, no `root`/`targets`.
+
+name = "geometry-types"
+meta_version = 1
+format_version = 1
+role = "type-definitions"
+description = "Shared geometry and colour types imported by the canvas and palette schemas."
+
+# --- scalar-refinement type: a named refinement of a base scalar (a scalar site with refinements;
+#     no `kind = "scalar"` wrapper — appendix-surface-syntax.md §3.1) ---
+[types.PositiveInt]
+type = "integer"
+exclusive_min = 0
+description = "A strictly positive int64."
+
+# --- scalar-refinement over a string with a value regex (RE2-subset, anchored) ---
+[types.ColorName]
+type = "string"
+regex = "^[a-z][a-z0-9-]{0,31}$"
+description = "A lower-kebab palette colour identifier, 1..32 code points."
+
+# --- record type ---
+[types.Point]
+type = "record"
+description = "A 2-D point in canvas coordinates."
+[types.Point.fields.x]
+type = "number"
+required = true
+[types.Point.fields.y]
+type = "number"
+required = true
+
+# --- discriminated-union type; arms reuse the scalar-refinement types above by name ---
+[types.Shape]
+type = "discriminated-union"
+discriminator = "kind"
+description = "A drawable shape."
+[types.Shape.arms.circle.fields.kind]
+type = "literal"
+value = "circle"
+required = true
+[types.Shape.arms.circle.fields.center]
+type = "Point"
+required = true
+[types.Shape.arms.circle.fields.radius]
+type = "PositiveInt"
+required = true
+[types.Shape.arms.rect.fields.kind]
+type = "literal"
+value = "rect"
+required = true
+[types.Shape.arms.rect.fields.origin]
+type = "Point"
+required = true
+[types.Shape.arms.rect.fields.width]
+type = "PositiveInt"
+required = true
+[types.Shape.arms.rect.fields.height]
+type = "PositiveInt"
+required = true

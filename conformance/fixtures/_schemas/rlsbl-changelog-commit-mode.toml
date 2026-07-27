@@ -1,0 +1,90 @@
+# strictspec paper schema — rlsbl JSONL changelog entry, COMMIT coverage mode.
+# Source of truth: rlsbl/rlsbl/changelog/schema.py (ChangelogEntry,
+# validate_schema with coverage_unit="commit"). One document = one JSONL line.
+# Pinned surface (spec/appendix-surface-syntax.md).
+#
+# MODE SPLIT (see gap-note.md): coverage_unit is a PROJECT-CONFIG value
+# (.rlsbl/config.json), NOT a field on the entry line. There is therefore no
+# in-document discriminator, so the two modes are TWO SEPARATE SCHEMAS selected
+# by the consumer from config — explicit mode selection, the strictspec-blessed
+# alternative to silent runtime degradation. This is the commit-mode schema;
+# the changeset-file-mode schema is its sibling.
+
+name = "rlsbl-changelog-entry-commit"
+meta_version = 1
+format_version = 1
+document_syntax = "jsonl"
+role = "schema"
+root = "ChangelogEntry"
+targets = ["python"]
+description = "One JSONL changelog line in commit-coverage mode: commits required, id optional."
+
+[types.ChangelogEntry]
+type = "record"
+
+[types.ChangelogEntry.fields.format_version]
+type = "integer"
+required = true
+description = "Per-line format_version (JSONL per-line gate). Stamped by the bootstrap conversion script for pre-versioning entries — see gap note."
+
+[types.ChangelogEntry.fields.commits]
+type = "array"
+required = true
+min_len = 1
+description = "Commit hashes. REQUIRED and non-empty in commit mode (validate_schema: \"commits is empty\")."
+[types.ChangelogEntry.fields.commits.item]
+type = "string"
+
+[types.ChangelogEntry.fields.user_facing]
+type = "boolean"
+required = true
+description = "Whether this entry appears in the published changelog."
+
+[types.ChangelogEntry.fields.description]
+type = "string"
+required = false
+non_empty = true
+description = "Markdown one-liner. REQUIRED WHEN user_facing == true (see constraint)."
+
+[types.ChangelogEntry.fields.type]
+type = "enum"
+required = false
+values = ["feature", "fix", "breaking"]
+description = "Entry type. REQUIRED WHEN user_facing == true (see constraint)."
+
+[types.ChangelogEntry.fields.release_type]
+type = "enum"
+required = false
+values = ["ota", "build"]
+description = "Flutter target release channel. Optional, unconstrained by user_facing."
+
+[types.ChangelogEntry.fields.id]
+type = "string"
+required = false
+description = "Stable ULID-style identifier. OPTIONAL in commit mode (present on newer entries, absent on historical ones)."
+
+[types.ChangelogEntry.fields.packages]
+type = "array"
+required = false
+[types.ChangelogEntry.fields.packages.item]
+type = "string"
+
+# description required when user_facing == true
+[[types.ChangelogEntry.constraints]]
+form = "conditional-required"
+field = "description"
+when = { field = "user_facing", predicate = "equals", value = true }
+
+# type required when user_facing == true
+[[types.ChangelogEntry.constraints]]
+form = "conditional-required"
+field = "type"
+when = { field = "user_facing", predicate = "equals", value = true }
+
+# Cross-document (stream-level) constraint: set-coverage. Every commit in the unreleased range is
+# covered by at least one entry's commits[]. Evidence via the commits-in-range resolver.
+[[types.ChangelogEntry.constraints]]
+form = "set-coverage"
+collection = "commits"
+source = "commits-in-range(<last_tag>, HEAD)"
+description = "Every commit in <last_tag>..HEAD appears in some entry's commits[]. Changelog-only commits are exempt (see gap note)."
