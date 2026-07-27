@@ -1,52 +1,42 @@
 # strictspec schema — a private project ConstraintManifest (paper draft)
-#
-# DRAFT NOTATION LEGEND (the concrete meta-schema TOML surface syntax is NOT
-# pinned by spec/ — see gap-note.md finding #1). Conventions used here:
-#   [schema]                      header: name/meta_version/format_version/
-#                                 document_syntax/description
-#   [types.<Name>]                a named type; kind = record|discriminated-union|
-#                                 node-kind-union
-#   [types.<Name>.fields.<f>]     a field: type/required/regex/min/max/min_length/
-#                                 nullable/aliases/description
-#   [root]                        the document root record
-#   [[root.constraints]] / [[types.<N>.constraints]]
-#                                 phase-2 constraint-vocabulary forms, attached at
-#                                 the record scope that owns the collection/siblings
-#   type = "<Named>"              a named-type reference (item/value types too)
+# Authored in the pinned surface (spec/appendix-surface-syntax.md): bare header, root-as-named-type
+# via `root`, `role`, kind-typed `[types.<Name>]`, uniform `.fields.*` / `.item` sites, and
+# nesting-scoped `[[types.<Name>.constraints]]`.
 # Translated from schemas/constraint-manifest.schema.json (a private project, JSON docs).
 
-[schema]
 name = "ConstraintManifest"
 meta_version = 1
 format_version = 1
 document_syntax = "json"
+role = "schema"
+root = "ConstraintManifest"
 description = "Constraint manifest for semantic painting (v1). Palette-classed layers store ramp roles; this document defines the palette, the classes (index ranges into the palette), and the alpha policy."
 
-[root]
-kind = "record"
+[types.ConstraintManifest]
+type = "record"
 
-[root.fields.version]
+[types.ConstraintManifest.fields.version]
 type = "string"
 required = true
 regex = '^\d+\.\d+\.\d+$'
 description = "Semver version of the manifest content."
 
-[root.fields.palette]
+[types.ConstraintManifest.fields.palette]
 type = "array"
 required = true
 description = "Ordered list of hex RGB colors (#rrggbb). Pairwise distinct (case-insensitive)."
-[root.fields.palette.items]
+[types.ConstraintManifest.fields.palette.item]
 type = "string"
 regex = '^#[0-9a-fA-F]{6}$'
 
-[root.fields.classes]
+[types.ConstraintManifest.fields.classes]
 type = "array"
 required = true
 description = "Palette classes: non-overlapping, in-bounds index ranges into the palette."
-[root.fields.classes.items]
+[types.ConstraintManifest.fields.classes.item]
 type = "PaletteClass"
 
-[root.fields.alphaPolicy]
+[types.ConstraintManifest.fields.alphaPolicy]
 type = "literal"
 required = true
 value = "binary"
@@ -55,30 +45,31 @@ description = "Alpha policy. Only \"binary\" is legal in v1."
 # --- x- keyword mappings (see gap-note.md) ---
 
 # x-pairwise-distinct: "case-insensitive"  ->  pairwise-distinct, normalization case-fold
-[[root.constraints]]
+[[types.ConstraintManifest.constraints]]
 form = "pairwise-distinct"
 collection = "palette"
 normalization = "case-fold"
 
 # x-unique-field: "id"  ->  unique-by, field id
-[[root.constraints]]
+[[types.ConstraintManifest.constraints]]
 form = "unique-by"
 collection = "classes"
 field = "id"
 normalization = "none"
 
-# x-range-nonoverlap: {start,len,boundsFrom:palette}  ->  ranges-disjoint (half-open)
-[[root.constraints]]
+# x-range-nonoverlap: {start,len}  ->  ranges-disjoint (half-open). Each range is first well-formed
+# per ordered-pair (start < start+len), then half-open disjointness is evaluated. The in-bounds
+# leg (start+len <= len(palette)) is consumer-native (not part of ranges-disjoint; cluster 3c).
+[[types.ConstraintManifest.constraints]]
 form = "ranges-disjoint"
 collection = "classes"
 start = "start"
 length = "len"
-bounds_from = "palette"
 
 # --- named types ---
 
 [types.PaletteClass]
-kind = "record"
+type = "record"
 description = "A named, non-overlapping index range into the manifest palette."
 [types.PaletteClass.fields.id]
 type = "string"

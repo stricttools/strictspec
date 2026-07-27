@@ -1,94 +1,94 @@
 # strictspec schema — a private project PartManifest (paper draft)
-# Notation legend: see constraint-manifest.toml header.
-# Translated from schemas/part-manifest.schema.json (a private project, JSON docs).
+# Pinned surface (spec/appendix-surface-syntax.md). Translated from
+# schemas/part-manifest.schema.json (a private project, JSON docs).
 
-[schema]
 name = "PartManifest"
 meta_version = 1
 format_version = 1
 document_syntax = "json"
+role = "schema"
+root = "PartManifest"
 description = "a private project part-manifest export format (v1). Composable sprite parts: stacking order, palette classes into a shared master palette, per-part variant strips, anchors, and pairing."
 
-[root]
-kind = "record"
+[types.PartManifest]
+type = "record"
 
-[root.fields.format]
+[types.PartManifest.fields.format]
 type = "literal"
 required = true
 value = "private-project-part-manifest"
 description = "Self-identifying document type."
 
-[root.fields.version]
+[types.PartManifest.fields.version]
 type = "string"
 required = true
 regex = '^\d+\.\d+\.\d+$'
 description = "Format version. v1 emits \"1.0.0\"."
 
-[root.fields.frame]
+[types.PartManifest.fields.frame]
 type = "FrameSpec"
 required = true
 description = "Shared cell geometry and anchor for ALL parts."
 
-[root.fields.alphaPolicy]
+[types.PartManifest.fields.alphaPolicy]
 type = "literal"
 required = true
 value = "binary"
 description = "Only legal v1 value."
 
-[root.fields.palette]
+[types.PartManifest.fields.palette]
 type = "array"
 required = true
 description = "Master palette copied from the constraint manifest. Empty array when the project has no manifest."
-[root.fields.palette.items]
+[types.PartManifest.fields.palette.item]
 type = "string"
 regex = '^#[0-9a-fA-F]{6}$'
 
-[root.fields.classes]
+[types.PartManifest.fields.classes]
 type = "array"
 required = true
 description = "Palette classes copied from the constraint manifest."
-[root.fields.classes.items]
+[types.PartManifest.fields.classes.item]
 type = "PaletteClass"
 
-[root.fields.parts]
+[types.PartManifest.fields.parts]
 type = "array"
 required = true
 description = "Composable sprite parts, sorted by zOrder ascending."
-[root.fields.parts.items]
+[types.PartManifest.fields.parts.item]
 type = "Part"
 
-[root.fields.pairings]
+[types.PartManifest.fields.pairings]
 type = "array"
 required = true
 description = "Part-level index-locks. May be empty."
-[root.fields.pairings.items]
+[types.PartManifest.fields.pairings.item]
 type = "Pairing"
 
 # --- x- keyword mappings + prose-only rules (see gap-note.md) ---
 
 # x-pairwise-distinct on palette
-[[root.constraints]]
+[[types.PartManifest.constraints]]
 form = "pairwise-distinct"
 collection = "palette"
 normalization = "case-fold"
 
 # x-unique-field: "id" on classes
-[[root.constraints]]
+[[types.PartManifest.constraints]]
 form = "unique-by"
 collection = "classes"
 field = "id"
 normalization = "none"
 
-# x-range-nonoverlap on classes
-[[root.constraints]]
+# x-range-nonoverlap on classes (half-open; well-formed-first; no in-bounds leg, cluster 3c)
+[[types.PartManifest.constraints]]
 form = "ranges-disjoint"
 collection = "classes"
 start = "start"
 length = "len"
-bounds_from = "palette"
 
 # x-unique-field: "name" on parts
-[[root.constraints]]
+[[types.PartManifest.constraints]]
 form = "unique-by"
 collection = "parts"
 field = "name"
@@ -98,7 +98,7 @@ normalization = "none"
 # in the source and is NOT enforced by the generator. Expressible as unique-by,
 # added here as a real strictspec check (a strengthening the source only stated
 # in prose). See gap-note.md.
-[[root.constraints]]
+[[types.PartManifest.constraints]]
 form = "unique-by"
 collection = "parts"
 field = "zOrder"
@@ -107,7 +107,7 @@ normalization = "none"
 # --- named types ---
 
 [types.FrameSpec]
-kind = "record"
+type = "record"
 description = "Shared cell geometry and anchor applied to every part."
 [types.FrameSpec.fields.width]
 type = "integer"
@@ -125,7 +125,7 @@ type = "integer"
 required = true
 
 [types.PaletteClass]
-kind = "record"
+type = "record"
 description = "A palette class copied from the constraint manifest."
 [types.PaletteClass.fields.id]
 type = "string"
@@ -148,7 +148,7 @@ type = "boolean"
 required = false
 
 [types.Variant]
-kind = "record"
+type = "record"
 description = "One variant row of a part's sprite strip."
 [types.Variant.fields.index]
 type = "integer"
@@ -166,18 +166,19 @@ min = 1
 type = "array"
 required = true
 description = "Per-frame durations in ms (length frameCount, no nulls)."
-[types.Variant.fields.frameDurationsMs.items]
+[types.Variant.fields.frameDurationsMs.item]
 type = "integer"
 min = 1
 
 [types.StripSet]
-kind = "record"
+type = "record"
 description = "Strip file names for a part."
 [types.StripSet.fields.indexed]
-type = "string"
+type = "nullable"
 required = true
-nullable = true
 description = "Role-indexed strip file; null exactly when paletteClassId is null."
+[types.StripSet.fields.indexed.inner]
+type = "string"
 [types.StripSet.fields.rgba]
 type = "string"
 required = true
@@ -185,7 +186,7 @@ min_length = 1
 description = "Resolved-RGBA strip file; always present."
 
 [types.PartGrid]
-kind = "record"
+type = "record"
 description = "Cell layout of a part's strip images."
 [types.PartGrid.fields.frameWidth]
 type = "integer"
@@ -209,7 +210,7 @@ required = true
 min = 0
 
 [types.Part]
-kind = "record"
+type = "record"
 description = "A composable sprite part."
 [types.Part.fields.name]
 type = "string"
@@ -224,15 +225,16 @@ type = "integer"
 required = true
 description = "Stacking order, lower composites first; unique across parts."
 [types.Part.fields.paletteClassId]
-type = "string"
+type = "nullable"
 required = true
-nullable = true
 description = "Class whose ramp all role pixels use; null = pure-rgba part."
+[types.Part.fields.paletteClassId.inner]
+type = "string"
 [types.Part.fields.variants]
 type = "array"
 required = true
-min_items = 1
-[types.Part.fields.variants.items]
+min_len = 1
+[types.Part.fields.variants.item]
 type = "Variant"
 [types.Part.fields.strips]
 type = "StripSet"
@@ -242,7 +244,7 @@ type = "PartGrid"
 required = true
 
 [types.Pairing]
-kind = "record"
+type = "record"
 description = "A part-level index-lock binding two parts."
 [types.Pairing.fields.partA]
 type = "string"
@@ -259,4 +261,4 @@ min_length = 1
 [[types.Pairing.constraints]]
 form = "ordered-pair"
 less = "partA"
-greater = "partB"
+than = "partB"

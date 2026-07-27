@@ -1,7 +1,8 @@
 # strictspec schema — claudestream AgentDefinition (paper draft, GREENFIELD)
 #
 # At-rest documents: .claudestream/agents/<name>.agent.json
-# Notation legend: see ../private-project/constraint-manifest.toml header. Opaque leaf:
+# Authored in the pinned surface (spec/appendix-surface-syntax.md): bare header, root-as-named-type
+# via `root`, `role`, uniform `[types.<Name>.fields.*]` sites. Opaque leaf:
 #   type = "opaque" + ( unchecked = true + unchecked_reason = "..."  |  consumer_check = "..." )
 # Field set read from claudestream/_agent.py (AgentDefinition) and _options.py
 # (ToolSchema, Budget, Sandbox, McpOptions, StreamOptions) + policy.py (Sandbox).
@@ -11,70 +12,71 @@
 # `format_version` gate — the exact three-way "version" disambiguation the spec draws
 # (document format_version vs schema meta_version vs a consumer's own semantic version).
 
-[schema]
 name = "AgentDefinition"
 meta_version = 1
 format_version = 1
 document_syntax = "json"
+role = "schema"
+root = "AgentDefinition"
 description = "A complete claudestream agent definition, loadable from a .agent.json file."
 
-[root]
-kind = "record"
+[types.AgentDefinition]
+type = "record"
 
-[root.fields.name]
+[types.AgentDefinition.fields.name]
 type = "string"
 required = true
 min_length = 1
 description = "Agent identifier, also used as the session name."
 
-[root.fields.prompt_template]
+[types.AgentDefinition.fields.prompt_template]
 type = "string"
 required = true
 min_length = 1
 description = "System prompt with {variable} placeholders to resolve."
 
-[root.fields.version]
+[types.AgentDefinition.fields.version]
 type = "string"
 required = true
 description = "The agent definition's own semantic version (distinct from the strictspec format_version gate)."
 
-[root.fields.description]
+[types.AgentDefinition.fields.description]
 type = "string"
 required = false
 description = "Human-readable summary (source default \"\" -> optional-absent, decision 30)."
 
-[root.fields.tools]
+[types.AgentDefinition.fields.tools]
 type = "array"
 required = false
 description = "Tool schemas the agent can use; absent means no tools (source None -> optional-absent)."
-[root.fields.tools.items]
+[types.AgentDefinition.fields.tools.item]
 type = "ToolSchema"
 
-[root.fields.sandbox]
+[types.AgentDefinition.fields.sandbox]
 type = "Sandbox"
 required = false
 
-[root.fields.budget]
+[types.AgentDefinition.fields.budget]
 type = "Budget"
 required = false
 
-[root.fields.model]
+[types.AgentDefinition.fields.model]
 type = "string"
 required = false
 description = "Model override; absent falls back to SessionConfig.model."
 
-[root.fields.mcp]
+[types.AgentDefinition.fields.mcp]
 type = "McpOptions"
 required = false
 
-[root.fields.stream]
+[types.AgentDefinition.fields.stream]
 type = "StreamOptions"
 required = false
 
 # --- named types ---
 
 [types.ToolSchema]
-kind = "record"
+type = "record"
 description = "Tool schema without handler — JSON-serializable."
 [types.ToolSchema.fields.name]
 type = "string"
@@ -96,36 +98,36 @@ required = false
 description = "MCP server name that hosts this tool."
 
 [types.Budget]
-kind = "record"
+type = "record"
 description = "Cost/turn/token threshold lists. All values non-negative (validate_budget)."
 [types.Budget.fields.cost_thresholds]
 type = "array"
 required = false
 description = "USD amounts that trigger BudgetThreshold events. THE FLAGSHIP MIGRATION TARGET (max_cost_usd -> cost_thresholds, see ../migrations)."
-[types.Budget.fields.cost_thresholds.items]
+[types.Budget.fields.cost_thresholds.item]
 type = "number"
 min = 0
 [types.Budget.fields.turn_thresholds]
 type = "array"
 required = false
-[types.Budget.fields.turn_thresholds.items]
+[types.Budget.fields.turn_thresholds.item]
 type = "integer"
 min = 0
 [types.Budget.fields.token_thresholds]
 type = "array"
 required = false
-[types.Budget.fields.token_thresholds.items]
+[types.Budget.fields.token_thresholds.item]
 type = "integer"
 min = 0
 
 [types.Sandbox]
-kind = "record"
+type = "record"
 description = "Declarative sandbox configuration."
 [types.Sandbox.fields.tools]
 type = "array"
 required = false
 description = "Tool allow-list; absent means all tools allowed (source None -> optional-absent)."
-[types.Sandbox.fields.tools.items]
+[types.Sandbox.fields.tools.item]
 type = "string"
 [types.Sandbox.fields.bare]
 type = "boolean"
@@ -134,7 +136,7 @@ description = "Suppress CLAUDE.md loading (source default false -> optional-abse
 [types.Sandbox.fields.write_paths]
 type = "array"
 required = false
-[types.Sandbox.fields.write_paths.items]
+[types.Sandbox.fields.write_paths.item]
 type = "string"
 [types.Sandbox.fields.log_violations]
 type = "boolean"
@@ -144,19 +146,19 @@ type = "boolean"
 required = false
 
 [types.McpOptions]
-kind = "record"
+type = "record"
 description = "External MCP server configuration. Fields have no source defaults -> required when mcp is present."
 [types.McpOptions.fields.config_files]
 type = "array"
 required = true
-[types.McpOptions.fields.config_files.items]
+[types.McpOptions.fields.config_files.item]
 type = "string"
 [types.McpOptions.fields.strict]
 type = "boolean"
 required = true
 
 [types.StreamOptions]
-kind = "record"
+type = "record"
 description = "Stream output behavior. Fields have no source defaults -> required when stream is present."
 [types.StreamOptions.fields.verbose]
 type = "boolean"
