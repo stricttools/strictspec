@@ -23,4 +23,6 @@ target/
 .gen-adapter
 .gen-cache/
 /strictspec
+/gen-adapter
+/conformance-adapter
 /gencodes
