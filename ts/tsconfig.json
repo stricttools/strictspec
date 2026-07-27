@@ -6,6 +6,7 @@
 		"lib": ["es2023"],
 		"types": ["node"],
 		"strict": true,
+		"resolveJsonModule": true,
 		"skipLibCheck": true,
 		"noUncheckedIndexedAccess": true,
 		"exactOptionalPropertyTypes": true,
