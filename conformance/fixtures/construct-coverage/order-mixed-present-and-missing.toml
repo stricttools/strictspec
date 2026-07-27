@@ -1,0 +1,40 @@
+name = "order-mixed-present-and-missing"
+category = "construct-coverage"
+provenance = "hand-authored"
+description = """
+Mixed traversal-order case (spec/DESIGN.md primitives appendix item 6 and its dated interleaving
+pin). The schema declares three required integer fields in the order alpha, beta, zeta. The document
+supplies beta then alpha (REORDERED, both carrying float lexemes that violate the integer type) and
+OMITS zeta. The pinned emission order is:
+
+1. `$.beta`  = 1.5 -> STRICTSPEC_TYPE_NOT_INTEGER (present key, document order).
+2. `$.alpha` = 2.5 -> STRICTSPEC_TYPE_NOT_INTEGER (present key, document order).
+3. `$` missing `zeta` -> STRICTSPEC_TYPE_MISSING_REQUIRED (missing-required, declaration order).
+
+Present-key diagnostics come first in DOCUMENT order (beta, alpha); the missing-required diagnostic
+for zeta is anchored at its schema-declaration position. zeta is declared after every present field,
+so its diagnostic is trailing -- the unambiguous case where both the document-order rule for present
+keys and the declaration-order rule for missing-required agree. The pre-existing corpus fixture
+pgdesign-account-invalid pins the complementary case where a missing-required field is declared
+BETWEEN two present fields and is therefore emitted between their diagnostics."""
+schema = "_schemas/order-mixed-missing.toml"
+input_inline = '{"format_version": 1, "beta": 1.5, "alpha": 2.5}'
+input_syntax = "json"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_TYPE_NOT_INTEGER"
+path = "$.beta"
+slots = { got = "float" }
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_TYPE_NOT_INTEGER"
+path = "$.alpha"
+slots = { got = "float" }
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_TYPE_MISSING_REQUIRED"
+path = "$"
+slots = { key = "zeta" }

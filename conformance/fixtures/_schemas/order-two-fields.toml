@@ -1,0 +1,22 @@
+# Minimal ordering schema: a root record declaring two required integer fields
+# in the DECLARATION order alpha, beta. Used by the traversal-order fixtures that
+# pin present-key diagnostic emission to DOCUMENT order (spec/DESIGN.md primitives
+# appendix item 6). Deliberately trivial: the only thing under test is emission
+# order when a document reorders present keys relative to declaration.
+name = "order-two-fields"
+meta_version = 1
+format_version = 1
+document_syntax = "json"
+role = "schema"
+root = "Rec"
+targets = ["go"]
+description = "A two-field record for pinning present-key emission order to document order."
+
+[types.Rec]
+type = "record"
+[types.Rec.fields.alpha]
+type = "integer"
+required = true
+[types.Rec.fields.beta]
+type = "integer"
+required = true

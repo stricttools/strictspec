@@ -1,0 +1,27 @@
+# Minimal mixed-ordering schema: a root record declaring three required integer
+# fields in DECLARATION order alpha, beta, zeta. The mixed traversal-order fixture
+# supplies beta and alpha (reordered, both violating) and OMITS zeta, exercising
+# present-key diagnostics in document order together with a missing-required
+# diagnostic in declaration order. zeta is declared LAST so its missing-required
+# diagnostic is unambiguously trailing (spec/DESIGN.md primitives appendix item 6
+# and its dated interleaving pin).
+name = "order-mixed-missing"
+meta_version = 1
+format_version = 1
+document_syntax = "json"
+role = "schema"
+root = "Rec"
+targets = ["go"]
+description = "A three-field record for pinning present-key document order alongside a trailing missing-required."
+
+[types.Rec]
+type = "record"
+[types.Rec.fields.alpha]
+type = "integer"
+required = true
+[types.Rec.fields.beta]
+type = "integer"
+required = true
+[types.Rec.fields.zeta]
+type = "integer"
+required = true

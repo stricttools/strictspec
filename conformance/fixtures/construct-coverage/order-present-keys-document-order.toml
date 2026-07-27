@@ -1,0 +1,30 @@
+name = "order-present-keys-document-order"
+category = "construct-coverage"
+provenance = "hand-authored"
+description = """
+Pins present-key diagnostic emission to DOCUMENT order (spec/DESIGN.md primitives appendix item 6:
+\"document order for present keys\"). The schema declares two required integer fields in the order
+alpha, beta; the document supplies them REORDERED as beta then alpha, both carrying float lexemes
+that violate the integer type. Diagnostics must follow the document key order beta, alpha -- NOT the
+schema-declaration order alpha, beta.
+
+This is the regression guard for the walker emitting present-key diagnostics in declaration order:
+before the fix the walker iterated declared fields in declaration order, yielding [$.alpha, $.beta],
+which reverses the pinned document order [$.beta, $.alpha] and breaks cross-target emission-order
+identity."""
+schema = "_schemas/order-two-fields.toml"
+input_inline = '{"format_version": 1, "beta": 1.5, "alpha": 2.5}'
+input_syntax = "json"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_TYPE_NOT_INTEGER"
+path = "$.beta"
+slots = { got = "float" }
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_TYPE_NOT_INTEGER"
+path = "$.alpha"
+slots = { got = "float" }
