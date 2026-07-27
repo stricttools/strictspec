@@ -1,0 +1,21 @@
+# INVALID type-definition file — rejection fixture.
+# Transitive imports are forbidden: a type-definition file may NOT import another file.
+# Expected: STRICTSPEC_IMPORT_TRANSITIVE at file `geometry-types-transitive.toml`
+# (appendix-error-codes 6; appendix-semantics 3.20). Annotated, never imported.
+
+name = "geometry-types-transitive"
+meta_version = 1
+format_version = 1
+description = "REJECTION FIXTURE: a type file must not import another file."
+
+# >>> The offending declaration. Type files are leaves in the import graph. <<<
+imports = [ { file = "types-geometry.toml", types = ["Point"] } ]
+
+[types.Segment]
+kind = "record"
+[types.Segment.fields.a]
+type = "Point"   # would-be transitive use of an imported type
+required = true
+[types.Segment.fields.b]
+type = "Point"
+required = true
