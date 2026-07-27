@@ -43,6 +43,21 @@ func newApp() *strictcli.App {
 			strictcli.BoolFlag("structural-only", "Run phase-1 structural checks only"),
 			strictcli.BoolFlag("with-domain-checks", "Also run the phase-2 constraint vocabulary"),
 		}}),
+		// Cross-document evidence: each --collection glob hosts the in-process
+		// `documents-in(...)` resolver — its matching documents become the
+		// evidence set for collection-shaped cross-document forms (count-limit,
+		// sum-limit, ...). Anchored at --collection-root, resolved lexicographically
+		// (appendix-surface-syntax §5.1). Repeatable. Without it, a schema carrying
+		// a collection-shaped cross-document form under --with-domain-checks is a
+		// hard error (a resolver that cannot be satisfied is never a skip).
+		strictcli.WithFlags(
+			strictcli.StringFlag("collection",
+				"Glob hosting an in-process documents-in(...) evidence collection (repeatable)",
+				strictcli.Repeatable(), strictcli.Unique(false)),
+			strictcli.StringFlag("collection-root",
+				"Root the --collection globs are anchored at (default: cwd)",
+				strictcli.Default(".")),
+		),
 	)
 
 	app.Command("check", "Check schema authoring validity and generated-code freshness",

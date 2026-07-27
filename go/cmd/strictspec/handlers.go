@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/smm-h/strictcli/go/strictcli"
 	"github.com/smm-h/strictspec/go/internal/diag"
+	"github.com/smm-h/strictspec/go/internal/diffeng"
 	"github.com/smm-h/strictspec/go/internal/doc"
 	"github.com/smm-h/strictspec/go/internal/emit"
 	"github.com/smm-h/strictspec/go/internal/export"
@@ -17,6 +19,7 @@ import (
 	"github.com/smm-h/strictspec/go/internal/migrate"
 	"github.com/smm-h/strictspec/go/internal/render"
 	"github.com/smm-h/strictspec/go/internal/schema"
+	"github.com/smm-h/strictspec/go/internal/strdecode"
 	"github.com/smm-h/strictspec/go/internal/tomldoc"
 	"github.com/smm-h/strictspec/go/strictspec"
 )
@@ -109,11 +112,48 @@ func validateHandler(ctx *strictcli.Context, kwargs map[string]interface{}) stri
 		printDiags(ctx, sdiags)
 		return strictcli.Exit(1)
 	}
-	if withDomain && hasCrossDocumentForms(s) {
-		ctx.Error("--with-domain-checks: this build has no evidence resolver for the schema's " +
-			"cross-document constraints (count-limit / sum-limit). Cross-document domain checks are " +
-			"unavailable here; a resolver that cannot be satisfied is a hard error, never a skip.")
-		return strictcli.Exit(1)
+	// Cross-document domain checks: host each collection-shaped resolver
+	// (documents-in(glob)) in-process from the --collection evidence set. A
+	// resolver that isn't collection-shaped, or a collection-shaped resolver
+	// with no --collection to satisfy it, is a hard error naming the resolver —
+	// never a silent skip.
+	var evidence map[string][]map[string]any
+	if withDomain {
+		resolvers := crossDocResolvers(s)
+		var collectionShaped []string
+		for _, r := range resolvers {
+			if _, ok := parseCollectionResolver(r); ok {
+				collectionShaped = append(collectionShaped, r)
+				continue
+			}
+			ctx.Error(fmt.Sprintf("--with-domain-checks: cross-document resolver %q is not a "+
+				"collection-shaped documents-in(...) resolver; this build has no host for it "+
+				"(a resolver that cannot be satisfied is a hard error, never a skip)", r))
+			return strictcli.Exit(1)
+		}
+		if len(collectionShaped) > 0 {
+			collections := stringSlice(kwargs, "collection")
+			if len(collections) == 0 {
+				ctx.Error(fmt.Sprintf("--with-domain-checks: the schema's cross-document "+
+					"constraint(s) require evidence resolver(s) %s; pass --collection <glob> to host "+
+					"the collection in-process. A collection-shaped resolver with no --collection is a "+
+					"hard error, never a skip.", strings.Join(collectionShaped, ", ")))
+				return strictcli.Exit(1)
+			}
+			collRoot, _ := strictcli.GetOpt[string](kwargs, "collection_root")
+			if collRoot == "" {
+				collRoot = "."
+			}
+			evDocs, everr := loadCollectionEvidence(collRoot, collections)
+			if everr != nil {
+				ctx.Error(everr.Error())
+				return strictcli.Exit(1)
+			}
+			evidence = map[string][]map[string]any{}
+			for _, r := range collectionShaped {
+				evidence[r] = evDocs
+			}
+		}
 	}
 	scalars := schema.LoadManifestScalars(s.Dir)
 	prog := ir.Compile(s, scalars)
@@ -126,7 +166,7 @@ func validateHandler(ctx *strictcli.Context, kwargs map[string]interface{}) stri
 			anyBad = true
 			continue
 		}
-		diags := validateOne(prog, src, syntaxOf(docPath), structuralOnly)
+		diags := validateOne(prog, src, syntaxOf(docPath), structuralOnly, evidence)
 		if len(diags) == 0 {
 			ctx.Info(fmt.Sprintf("%s: OK", docPath))
 			continue
@@ -141,7 +181,7 @@ func validateHandler(ctx *strictcli.Context, kwargs map[string]interface{}) stri
 	return strictcli.Exit(0)
 }
 
-func validateOne(prog *ir.Program, src []byte, syntax string, structuralOnly bool) []diag.Diagnostic {
+func validateOne(prog *ir.Program, src []byte, syntax string, structuralOnly bool, evidence map[string][]map[string]any) []diag.Diagnostic {
 	switch syntax {
 	case "jsonl":
 		docs, perr := jsondoc.ParseLines(src)
@@ -156,7 +196,7 @@ func validateOne(prog *ir.Program, src []byte, syntax string, structuralOnly boo
 				ls = starts[i]
 			}
 			out = append(out, ir.Execute(prog, d.Root, ir.ExecOptions{
-				Format: doc.FormatJSONL, StructuralOnly: structuralOnly,
+				Format: doc.FormatJSONL, StructuralOnly: structuralOnly, Evidence: evidence,
 				JSONL: true, Line: i + 1, LineStart: ls,
 			})...)
 		}
@@ -166,13 +206,174 @@ func validateOne(prog *ir.Program, src []byte, syntax string, structuralOnly boo
 		if perr != nil {
 			return []diag.Diagnostic{parseDiag(perr)}
 		}
-		return ir.Execute(prog, d.Root, ir.ExecOptions{Format: doc.FormatTOML, StructuralOnly: structuralOnly})
+		return ir.Execute(prog, d.Root, ir.ExecOptions{Format: doc.FormatTOML, StructuralOnly: structuralOnly, Evidence: evidence})
 	default:
 		d, perr := jsondoc.Parse(src)
 		if perr != nil {
 			return []diag.Diagnostic{parseDiag(perr)}
 		}
-		return ir.Execute(prog, d.Root, ir.ExecOptions{Format: doc.FormatJSON, StructuralOnly: structuralOnly})
+		return ir.Execute(prog, d.Root, ir.ExecOptions{Format: doc.FormatJSON, StructuralOnly: structuralOnly, Evidence: evidence})
+	}
+}
+
+// crossDocResolvers collects the evidence-resolver names of every cross-document
+// constraint in the schema (Selection for count-/sum-limit; Source for
+// set-coverage / cross-collection-unique / named-reference-must-resolve),
+// deduplicated in first-seen order.
+func crossDocResolvers(s *schema.Schema) []string {
+	seen := map[string]bool{}
+	var out []string
+	add := func(r string) {
+		if r == "" || seen[r] {
+			return
+		}
+		seen[r] = true
+		out = append(out, r)
+	}
+	var walk func(t *schema.Type)
+	walk = func(t *schema.Type) {
+		if t == nil {
+			return
+		}
+		for _, c := range t.Constraints {
+			switch c.Form {
+			case "count-limit", "sum-limit":
+				add(c.Selection)
+			case "set-coverage", "cross-collection-unique", "named-reference-must-resolve":
+				add(c.Source)
+			}
+		}
+		for _, f := range t.Fields {
+			walk(f.Type)
+		}
+		for _, a := range t.Arms {
+			walk(a.Type)
+		}
+		walk(t.Item)
+		walk(t.Value)
+		walk(t.Inner)
+	}
+	for _, name := range s.TypeOrder {
+		walk(s.Types[name])
+	}
+	return out
+}
+
+// parseCollectionResolver reports whether a resolver name is collection-shaped —
+// the closed documents-in(glob) form (appendix-surface-syntax §5.1) — and returns
+// its embedded glob. Only collection-shaped resolvers can be hosted in-process by
+// --collection; any other resolver form is a hard error at the call site.
+func parseCollectionResolver(resolver string) (string, bool) {
+	const prefix = "documents-in("
+	if strings.HasPrefix(resolver, prefix) && strings.HasSuffix(resolver, ")") {
+		return resolver[len(prefix) : len(resolver)-1], true
+	}
+	return "", false
+}
+
+// loadCollectionEvidence resolves the --collection globs (anchored at root,
+// lexicographic) and loads each matching document into an evidence record. This
+// is the CLI's in-process host for documents-in(...) resolvers; it mirrors the
+// evidence set the conformance fixtures pass to the adapter (a resolver name ->
+// list of document field maps).
+func loadCollectionEvidence(root string, globs []string) ([]map[string]any, error) {
+	var out []map[string]any
+	seen := map[string]bool{}
+	for _, g := range globs {
+		files, err := diffeng.ResolveGlob(root, g)
+		if err != nil {
+			return nil, err
+		}
+		for _, f := range files {
+			if seen[f] {
+				continue
+			}
+			seen[f] = true
+			ed, lerr := loadEvidenceDoc(f)
+			if lerr != nil {
+				return nil, lerr
+			}
+			out = append(out, ed)
+		}
+	}
+	return out, nil
+}
+
+// loadEvidenceDoc parses one collection document into a flat field map. Only
+// top-level scalar fields are lifted — the cross-document forms consume `name`
+// (identity) and the summed field, both scalars; nested structure is irrelevant
+// to count/sum evidence.
+func loadEvidenceDoc(path string) (map[string]any, error) {
+	src, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	syntax := syntaxOf(path)
+	var root doc.Node
+	switch syntax {
+	case "toml":
+		d, perr := tomldoc.Parse(src)
+		if perr != nil {
+			return nil, fmt.Errorf("collection document %s: %w", path, perr)
+		}
+		root = d.Root
+	case "jsonl":
+		ds, perr := jsondoc.ParseLines(src)
+		if perr != nil {
+			return nil, fmt.Errorf("collection document %s: %w", path, perr)
+		}
+		if len(ds) == 0 {
+			return nil, fmt.Errorf("collection document %s: empty JSONL stream", path)
+		}
+		root = ds[0].Root
+	default:
+		d, perr := jsondoc.Parse(src)
+		if perr != nil {
+			return nil, fmt.Errorf("collection document %s: %w", path, perr)
+		}
+		root = d.Root
+	}
+	m := map[string]any{}
+	if root == nil || root.Kind() != doc.Record {
+		return m, nil
+	}
+	for _, e := range root.Entries() {
+		if v, ok := nativeScalar(e.Value, syntax); ok {
+			m[e.Key] = v
+		}
+	}
+	return m, nil
+}
+
+// nativeScalar lifts a scalar document node to a Go value matching the evidence
+// contract the IR engine consumes (int64 / float64 / string / bool). Non-scalar
+// nodes report ok=false and are omitted.
+func nativeScalar(n doc.Node, syntax string) (any, bool) {
+	if n == nil {
+		return nil, false
+	}
+	switch n.Kind() {
+	case doc.String:
+		if syntax == "toml" {
+			return strdecode.TOML(n.Lexeme()), true
+		}
+		return strdecode.JSON(n.Lexeme()), true
+	case doc.Integer:
+		i, err := strconv.ParseInt(n.Lexeme(), 10, 64)
+		if err != nil {
+			return nil, false
+		}
+		return i, true
+	case doc.Float:
+		f, err := strconv.ParseFloat(n.Lexeme(), 64)
+		if err != nil {
+			return nil, false
+		}
+		return f, true
+	case doc.Bool:
+		return n.Lexeme() == "true", true
+	default:
+		return nil, false
 	}
 }
 
@@ -428,38 +629,6 @@ func walkOpaque(t *schema.Type, emit func(path, kind, detail string)) {
 	walkOpaque(t.Item, emit)
 	walkOpaque(t.Value, emit)
 	walkOpaque(t.Inner, emit)
-}
-
-func hasCrossDocumentForms(s *schema.Schema) bool {
-	found := false
-	for _, name := range s.TypeOrder {
-		walkConstraints(s.Types[name], func(form string) {
-			switch form {
-			case "count-limit", "sum-limit", "set-coverage",
-				"cross-collection-unique", "named-reference-must-resolve":
-				found = true
-			}
-		})
-	}
-	return found
-}
-
-func walkConstraints(t *schema.Type, emit func(form string)) {
-	if t == nil {
-		return
-	}
-	for _, c := range t.Constraints {
-		emit(c.Form)
-	}
-	for _, f := range t.Fields {
-		walkConstraints(f.Type, emit)
-	}
-	for _, a := range t.Arms {
-		walkConstraints(a.Type, emit)
-	}
-	walkConstraints(t.Item, emit)
-	walkConstraints(t.Value, emit)
-	walkConstraints(t.Inner, emit)
 }
 
 func writeGenerated(path, content string) error {
