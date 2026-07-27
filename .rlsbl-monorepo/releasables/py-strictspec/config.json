@@ -2,16 +2,6 @@
   "publish_mode": "ci",
   "coverage_unit": "commit",
   "batch_limits": {
-    "exclusions": [
-      {
-        "reason": "non-user-facing batch",
-        "entries": [
-          {
-            "version": "unreleased",
-            "line": 2
-          }
-        ]
-      }
-    ]
+    "exclusions": []
   }
 }
