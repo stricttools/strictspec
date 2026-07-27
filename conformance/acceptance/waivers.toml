@@ -1,0 +1,44 @@
+# Acceptance-test WAIVER LIST — FROZEN (conformance/DESIGN.md, "The acceptance test").
+#
+# Verdict parity between strictspec and a private project's legacy validators (pydantic +
+# legacy TS) is STRICT except the entries below, where divergence is the PASS
+# condition: strictspec's stricter verdict is correct BY DEFINITION and the legacy
+# validator's acceptance is the defect. Every entry names the specific legacy defect
+# it covers AND the EXPECTED strictspec diagnostic codes/paths, so the entry asserts
+# strictspec's CORRECT behaviour — not merely "ignore this divergence".
+#
+# FROZEN: the acceptance test asserts the set of observed (document, legacy-target)
+# divergences equals EXACTLY the set covered here. Adding OR removing an entry after
+# the freeze fails the test (a new divergence is a real regression to investigate; a
+# vanished one means a legacy validator changed and the capture must be re-run).
+#
+# All three waived documents diverge IDENTICALLY on both legacy targets (legacy
+# ACCEPTS, strictspec REJECTS). Two defect classes appear:
+#   * the lexical-number class — waived wholesale per DESIGN (legacy TS necessarily
+#     parses with JSON.parse, which erases the integer/float lexeme distinction;
+#     legacy pydantic coerces float->int in lax mode). strictspec binds `integer`
+#     to the integer lexeme class and rejects a float lexeme.
+#   * duplicate JSON object keys — legacy parses with json.loads / JSON.parse, which
+#     silently keep the LAST value (the duplicated/typo'd key vanishes — the deadliest
+#     failure mode for agent-authored files). strictspec hard-errors on the duplicate.
+
+[[waivers]]
+document = "mut-lexical-float-seed"
+legacy_targets = ["pydantic", "ts"]
+defect = "Lexical-number: an integer field (randomizer.seed) receives the float lexeme 7.0. pydantic lax int coercion accepts it (float->int); legacy TS parsed with JSON.parse (7.0 -> 7, Number.isInteger true). strictspec rejects the float lexeme in an integer field."
+strictspec_codes = ["STRICTSPEC_TYPE_NOT_INTEGER"]
+strictspec_paths = ["$.randomizer.seed"]
+
+[[waivers]]
+document = "mut-lexical-float-amplitude"
+legacy_targets = ["pydantic", "ts"]
+defect = "Lexical-number at a nested scope: an integer field (oscillators.functions[0].amplitudePx, inside the matched `sine` arm) receives the float lexeme 1.0. Same class as mut-lexical-float-seed — pydantic coerces, legacy TS JSON.parse erases the distinction; strictspec rejects."
+strictspec_codes = ["STRICTSPEC_TYPE_NOT_INTEGER"]
+strictspec_paths = ["$.oscillators.functions[0](sine).amplitudePx"]
+
+[[waivers]]
+document = "mut-duplicate-json-key"
+legacy_targets = ["pydantic", "ts"]
+defect = "Duplicate JSON object key: the root `version` key appears twice. Legacy pydantic (json.loads) and legacy TS (JSON.parse) both silently keep the last value, so the duplication vanishes and the document validates. strictspec hard-errors at parse time on the duplicate key on every backend."
+strictspec_codes = ["STRICTSPEC_PARSE_JSON_SYNTAX"]
+strictspec_paths = ["$"]
