@@ -10,16 +10,19 @@ every draft has been NORMALIZED to the single pinned concrete TOML surface
 (spec/appendix-surface-syntax.md) — the notation each draft had to invent is superseded. Sample
 documents are unchanged (the pinned surface governs schemas/type files/migration files, not the
 documents they validate). A 16th construct-only exercise, `datetime-exercise/`, was added to close
-the datetime-scalar coverage gap. The construct set is FROZEN under the soft-freeze regime.
+the datetime-scalar coverage gap. The construct set is STABLE BUT GROWING (decision 3, growth
+phase): the analyzed corpus settled it, and further additions go through the examples/ gap-note
+process.
 
 Drafting order: claudestream and a private project FIRST — they stress migrations, unions, and
 numeric scalars, where spec gaps are most likely; write them before the comfortable ones. The
-freeze regime is SOFT until the first release (decision 3): implementation-driven amendments
-(semantics corrections, error-code catalogue growth) before the first release are normal, but
-no NEW construct enters without the gap-note process. The construct-freeze GATE is ALL of the
-drafts below coming back clean PLUS the gap-note items resolved in spec/; the binding freeze is
-the first release. Some drafts are drawn from corpus-DRAFT sources (BetterClaude, imagine) —
-paper schemas that stress the freeze without being adoption artifacts.
+construct set is STABLE BUT GROWING in the growth phase (decision 3): amendments (semantics
+corrections, error-code catalogue growth) are normal and expected, recorded per release, and a
+new construct enters only through the gap-note process. The construct-set stability GATE is ALL of
+the drafts below coming back clean PLUS the gap-note items resolved in spec/; released-surface
+compatibility is governed by semver at release boundaries. Some drafts are drawn from corpus-DRAFT
+sources (BetterClaude, imagine) — paper schemas that stress the construct set without being
+adoption artifacts.
 
 Every schema header carries both fields per the versioning rules: `meta_version` (the
 schema-language version) and `format_version` (what its documents must carry). Expected
@@ -54,7 +57,8 @@ Each draft: the schema in strictspec TOML, two or three real documents from the 
 (one valid, one or two invalid with expected ordered code+path diagnostics — including at
 least one write-side case where applicable: a migration output or canonicalized alias), and a
 gap note — anything the spec could not express, fed back into spec/DESIGN.md either as a
-change or as an explicit exclusion. The construct set freezes only after every draft comes back
-clean or the spec has absorbed its findings, and the binding freeze is the first release
-(soft-freeze regime, decision 3). Construct-only exercises (drafts 13–15) are drafted from the
+change or as an explicit exclusion. The construct set is considered settled only after every draft
+comes back clean or the spec has absorbed its findings; thereafter additions go through this same
+gap-note process (growth phase, decision 3), and released-surface compatibility is governed by
+semver at release boundaries. Construct-only exercises (drafts 13–15) are drafted from the
 spec itself rather than a source project; their gap notes are the deliverable.

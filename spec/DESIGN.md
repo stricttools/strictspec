@@ -100,7 +100,7 @@ identically across all four targets as part of full message-text identity (see E
    missing-required, index order for arrays. Phase-2 diagnostics follow phase 1, ordered by
    traversal order of containing records, then check-declaration order. Fixture-asserted order
    is emission order; renderers may not reorder.
-   - INTERLEAVING AMENDMENT (soft-freeze, 2026-07-27): item 6 pinned the order WITHIN each of
+   - INTERLEAVING AMENDMENT (2026-07-27): item 6 pinned the order WITHIN each of
      the present-key and missing-required groups but not the relative order BETWEEN them. Pinned
      reading (the one the corpus already implied — `pgdesign-account-invalid` emits a missing
      required field between the two present fields that bracket it in declaration order): within a
@@ -173,7 +173,7 @@ What every emitter emits, uniformly:
   insertion-ordered); tuples -> fixed-size forms; `number` -> float64/`number`/`float`;
   datetimes -> the backend's pinned datetime binding (Go the RETAINED LEXEME as a `string`, kind
   guard retained; Python datetime/date/time; TS a tagged runtime type — never the platform Date
-  for local kinds). DATETIME-BINDING AMENDMENT (soft-freeze, 2026-07-27): the Go binding is the
+  for local kinds). DATETIME-BINDING AMENDMENT (2026-07-27): the Go binding is the
   retained lexeme string, NOT a parsed `time.Time`. Parsing to `time.Time` would normalize on read
   (rewrite a `+00:00` offset to `Z`, drop written sub-second precision), violating the
   lexeme-retention invariant (appendix item 11: lexemes retained, no normalization on read). The
@@ -203,22 +203,24 @@ What every emitter emits, uniformly:
 
 ## Construct set
 
-STATUS — FROZEN under the SOFT-FREEZE regime (decision 3), as of Phase 3.3 (2026-07-27). The
-construct-freeze GATE is MET: all fifteen examples/ drafts came back clean (or with findings
-absorbed into spec/), and every gap note carries a resolved RESOLUTION (Phase 3.3) block. The
-freeze absorbed, over its two amendment rounds: the pinned concrete TOML surface syntax
-(appendix-surface-syntax.md); the aggregate forms count-limit/sum-limit; the intra-document forms
-conditional-value and collections-disjoint; the closed six-kind gated-form condition set; and the
-enum-source selector grammar, ranges-disjoint well-formedness, migration author-supplied down-ops,
-and aggregate-selection pins. Six candidate shapes were REJECTED with recorded rationale (numeric
-comparison predicates, array-contains-literal gates, reference-target predicates, cross-scope
-existential forbidden-when, open-namespace reference resolution, enum-typed map keys). Under the
-SOFT-freeze regime this frozen set still admits implementation-driven amendments (semantics
-corrections, error-code catalogue growth) before the first release — recorded per release — but NO
-new construct enters without the examples/ gap-note process. The BINDING freeze is the first
-release.
+STATUS — STABLE BUT GROWING in the GROWTH PHASE (decision 3, as reframed 2026-07-28), settled as
+of Phase 3.3 (2026-07-27). The construct-set stability GATE is MET: all fifteen examples/ drafts
+came back clean (or with findings absorbed into spec/), and every gap note carries a resolved
+RESOLUTION (Phase 3.3) block. The construct set absorbed, over its two amendment rounds: the pinned
+concrete TOML surface syntax (appendix-surface-syntax.md); the aggregate forms
+count-limit/sum-limit; the intra-document forms conditional-value and collections-disjoint; the
+closed six-kind gated-form condition set; and the enum-source selector grammar, ranges-disjoint
+well-formedness, migration author-supplied down-ops, and aggregate-selection pins. Six candidate
+shapes were REJECTED with recorded rationale (numeric comparison predicates, array-contains-literal
+gates, reference-target predicates, cross-scope existential forbidden-when, open-namespace reference
+resolution, enum-typed map keys) — kept as recorded history; a later recurrence is a
+vocabulary-evolution conversation. Additions and amendments (new constructs via the examples/
+gap-note process; semantics corrections; error-code catalogue growth) are NORMAL and EXPECTED in
+the growth phase, recorded per release through the existing discipline; a new construct still
+enters only through the examples/ gap-note process. Released-surface compatibility is governed by
+semver at release boundaries.
 
-Bounded to the analyzed corpus. The construct-freeze gate was all examples/ drafts (claudestream
+Bounded to the analyzed corpus. The construct-set stability gate was all examples/ drafts (claudestream
 and a private project first; the construct-only exercises for shared types, enum baking, and aggregates;
 and the BetterClaude and imagine corpus-DRAFT sources) coming back clean plus resolved gap notes.
 This SUPERSEDES the former demobl/F/step paper-schema precondition — those donors left the corpus.
@@ -389,7 +391,7 @@ field names do not resolve on the element record).
 
 ### Vocabulary rejection rationale (recorded, revisit on recurrence)
 
-The following shapes surfaced in the freeze drafts and are REJECTED (each single-consumer or
+The following shapes surfaced in the examples/ drafts and are REJECTED (each single-consumer or
 expressible/consumer-native; recorded so a later recurrence is a vocabulary-evolution
 conversation, not an escape hatch):
 
@@ -486,7 +488,7 @@ Rules:
   unsupported = hard error using the three-message pattern with a STRUCTURED remediation
   payload: got format_version, expected format_version, schema id, migration-set id, and the
   exact `strictspec migrate` invocation. No inference, no ranges, no legacy modes.
-- GATE-TERMINAL (soft-freeze amendment, 2026-07-27): a gate failure TERMINATES that document's
+- GATE-TERMINAL (amendment, 2026-07-27): a gate failure TERMINATES that document's
   validation — no structural (phase 1) or domain (phase 2) diagnostics are emitted for a document
   whose gate did not pass. The gate runs first and, on failure, is the SOLE diagnostic for that
   document (per JSONL line for streams). This pins the previously-implicit ordering (the generated

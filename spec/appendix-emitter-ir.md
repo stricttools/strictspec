@@ -8,8 +8,9 @@ description: "The shared emitter IR: the single intermediate representation stri
 > any change to the IR node set or the generation scheme is a breaking-class, changelog-covered
 > release event that triggers full conformance-fixture regeneration.
 >
-> META NOTE: Under the soft-freeze regime, pre-release refinements to the IR node set are
-> expected and recorded per-release. The binding freeze is the first release.
+> META NOTE: strictspec is in its GROWTH PHASE — the IR node set is STABLE BUT GROWING;
+> refinements are normal and expected, recorded per-release through the existing discipline, with
+> released-surface compatibility governed by semver at release boundaries.
 
 The shared emitter IR is the single intermediate representation from which strictspec generates
 every target's validator AND renderer. This appendix sketches its purpose, node set, generation
@@ -86,7 +87,7 @@ emission order; renderers may not reorder).
   renderer tables: for each `STRICTSPEC_*` code, a target-native function/table entry that takes
   the slot bindings and produces the pinned message text, using the target-native implementation
   of the rendering pin (`appendix-rendering.md`).
-- WHERE THE RENDERER TABLE LIVES (soft-freeze amendment, 2026-07-27): the per-target renderer
+- WHERE THE RENDERER TABLE LIVES (amendment, 2026-07-27): the per-target renderer
   table is part of the TARGET'S RUNTIME, generated ONCE by the toolchain's OWN codegen from the
   catalogue (`appendix-error-codes.md`) when the runtime is built — NOT emitted per consumer
   `gen` run. A consumer's generated validator IMPORTS the renderer table from the runtime it is
@@ -132,7 +133,7 @@ The exclusions are what keep the four-target identity guarantee TRACTABLE: a clo
 free, hook-free, target-neutral node set is small enough to implement identically four times and
 to audit against hand-authored spec fixtures.
 
-## Soft-freeze amendment log
+## Amendment log
 
 - 2026-07-27 — §3: clarified WHERE the per-target renderer table lives. It is part of the
   target's RUNTIME, generated once by the toolchain's own codegen from the catalogue when the

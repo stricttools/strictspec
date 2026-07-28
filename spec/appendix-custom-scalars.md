@@ -7,10 +7,11 @@ description: "Normative surface for registering custom scalars in strictspec: na
 > registration is part of the language design (decision 3; construct set). VERSIONED: any change
 > to the registration surface is a breaking-class, changelog-covered release event.
 >
-> META NOTE: Under the soft-freeze regime, pre-release refinements to the registration surface
-> are expected and recorded per-release. Build-sequencing note (decision 3): custom scalars are
-> built AFTER the acceptance test — that is an implementation ordering, never a design exclusion.
-> pgdesign is the first consumer.
+> META NOTE: strictspec is in its GROWTH PHASE — the registration surface is STABLE BUT GROWING;
+> refinements are normal and expected, recorded per-release through the existing discipline, with
+> released-surface compatibility governed by semver at release boundaries. Build-sequencing note
+> (decision 3): custom scalars are built AFTER the acceptance test — that is an implementation
+> ordering, never a design exclusion. pgdesign is the first consumer.
 
 A custom scalar is a NAMED refinement of a built-in base lexeme class, with a toolchain-
 registered lexeme rule, per-target bindings, and rendering entries. Registration is DECLARATIVE

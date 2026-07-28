@@ -9,9 +9,10 @@ description: "Normative strictspec value rendering: canonical float and string f
 > breaking-class, changelog-covered release event triggering full conformance-fixture
 > regeneration.
 >
-> META NOTE: Under the soft-freeze regime, pre-release refinements to these rules (truncation
-> length, escape forms, edge outcomes) are expected and recorded per-release. The binding
-> freeze is the first release.
+> META NOTE: strictspec is in its GROWTH PHASE — these rules are STABLE BUT GROWING; refinements
+> (truncation length, escape forms, edge outcomes) are normal and expected, recorded per-release
+> through the existing discipline, with released-surface compatibility governed by semver at
+> release boundaries.
 
 This appendix pins two things that must be byte-identical everywhere: how a value is rendered
 inside a diagnostic message (read side) AND how a constructed value is serialized (write side),
@@ -272,9 +273,10 @@ would corrupt those already-rendered inner literals. The same verbatim-insertion
 `{condition}` slot of the `STRICTSPEC_DIFF_*` claim diagnostics (`STRICTSPEC_DIFF_VIOLATED`,
 `STRICTSPEC_DIFF_ADJUDICATION_MISSING`), whose `{condition}` is a claim expression, not a value.
 
-## Soft-freeze amendment log
+## Amendment log
 
-Per the soft-freeze regime (see the META NOTE above), pre-release refinements are recorded here.
+Growth-phase refinements to this appendix are recorded here (see the META NOTE above), each dated
+and carrying its rationale.
 
 - 2026-07-27 — Added A.7: regex-valued string slots render identically to any other string slot
   (double-quoted, A.2 escaping applied uniformly, A.4 truncation); no verbatim special case.

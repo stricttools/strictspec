@@ -31,8 +31,12 @@ amended again 2026-07-27 after a long decision round: the freeze regime, the TS 
 choice, migrable-retirement decoupling, the Go module path, a normative format_version bump
 rule, reopened schema sharing, aggregate constraints, same-version flip-scan, the launcher
 distribution mechanism, the corpus/roadmap/donor rewrite, and several new rulings were written
-in — marked AMENDED 2026-07-27. Trust-adopted rulings (the `%%` provenance convention) carry a
-[%%] tag; deliberate owner picks carry none.
+in — marked AMENDED 2026-07-27. It was amended again 2026-07-28: the FREEZE FRAMING WAS RETIRED —
+the construct set, constraint vocabulary, migration op set, and error-code catalogue are STABLE
+BUT GROWING in the growth phase, not frozen; additions and amendments are normal and expected,
+still going through the existing discipline, and released-surface compatibility is governed by
+semver at release boundaries — marked AMENDED 2026-07-28. Trust-adopted rulings (the `%%`
+provenance convention) carry a [%%] tag; deliberate owner picks carry none.
 
 ## Motivation (evidence)
 
@@ -64,7 +68,7 @@ normal-form work) remains consumer code, out of scope by declaration.
 |---|----------|--------|
 | 1 | Name | strictspec (renamed 2026-07-22 from the project's former working name; verified available on PyPI, npm, and GitHub — no repos of that name anywhere — and re-confirmed by the owner 2026-07-27; name approved). There are NO separate binary wrapper packages: the former -bin wrappers are eliminated (decision 31) — the CLI ships inside the runtime packages, so strictspec is the only published name on every registry |
 | 2 | License | MIT, plus an explicit statement: code the generator emits into consumer repos is unencumbered — no license obligation attaches to generated output |
-| 3 | Scope & freeze | These documents design the COMPLETE software; there is no "v0" scope boundary. The construct set is bounded to the analyzed corpus. AMENDED 2026-07-27 [%%]: the freeze regime is SOFT until the first release — no NEW construct enters without the examples/ gap-note process, but implementation-driven amendments (semantics corrections, error-code catalogue growth) before the first release are normal and recorded. The binding freeze IS the first release. Custom scalar registration is part of the language design. Build sequencing (acceptance test first, then the rest) is an implementation concern, never a design boundary. This SUPERSEDES the former demobl/F/step paper-schema precondition — those donors left the corpus; the construct-freeze gate is now all examples/ drafts coming back clean plus resolved gap notes |
+| 3 | Scope & freeze | These documents design the COMPLETE software; there is no "v0" scope boundary. The construct set is bounded to the analyzed corpus. AMENDED 2026-07-27 [%%]: the freeze regime is SOFT until the first release — no NEW construct enters without the examples/ gap-note process, but implementation-driven amendments (semantics corrections, error-code catalogue growth) before the first release are normal and recorded. The binding freeze IS the first release. Custom scalar registration is part of the language design. Build sequencing (acceptance test first, then the rest) is an implementation concern, never a design boundary. This SUPERSEDES the former demobl/F/step paper-schema precondition — those donors left the corpus; the construct-freeze gate is now all examples/ drafts coming back clean plus resolved gap notes. AMENDED 2026-07-28 (owner decision, deliberate): the FREEZE FRAMING IS RETIRED. strictspec is in its GROWTH PHASE — the construct set, the constraint vocabulary, the migration op set, and the error-code catalogue are STABLE BUT GROWING; additions and amendments are NORMAL and EXPECTED. The PROCESS is unchanged (gap-note process for new constructs, a semantics-appendix entry required before a construct ships, dated amendment logs, recorded rationale, red-green fixtures) — only the freeze ceremony and freeze vocabulary are removed. Single-consumer demand is still weighed against generality and the existing rejection rationales stand as recorded history, but "it would break the freeze" is no longer a valid argument. Released-surface compatibility is governed by semver at release boundaries, not by a freeze. This SUPERSEDES the "soft-freeze until first release / binding freeze IS the first release" framing earlier in this cell |
 | 4 | Enforcement | Codegen-primary. The internal interpreter is a FOURTH CONFORMANCE TARGET. `strictspec validate` requires an explicit mode: `--structural-only` or `--with-domain-checks`. No default. AMENDED: because domain checks are portable (decision 23), the CLI hosts them natively — `--with-domain-checks` runs the constraint engine (the cross-document vocabulary) with the toolchain's evidence resolvers; a resolver the current environment cannot satisfy is a hard error, never a skip |
 | 5 | Backends | Python + Go + TypeScript generated code. TS has FULL FORMAT PARITY — lossless, lexeme-retaining TOML and JSONL alongside JSON — so four-target identity holds for every format. AMENDED 2026-07-27 [%%]: lossless TOML in TS is built on the `toml-eslint-parser` library (AST ranges + text-splicing, proven by strictcli's TS implementation), NOT a from-scratch parser — the earlier "no suitable lossless library exists" claim was falsified in-ecosystem. CONFIRMED by the validation spike in conformance/spikes/toml-eslint-parser/ (24 tests passing; VERDICT: CONFIRMS; sole caveat: range-based splicing only, never `node.number`) |
 | 6 | Toolchain language | Go. One static binary hosts generator, interpreter, migration engine, constraint engine, diff engine, CLI. Built on go-toml-edit; absorbs migrable's engine code (minus CEL) and pgdesign's diagnostics/coercers. a private project's emitters ported as templates. Value-computing migrations are deliberately not offered; a consumer needing one writes a one-off conversion script plus a normal declarative migration for the structural part. VERIFIED 2026-07-12: no consumer uses the dropped ops — transform/raw/merge_defaults_by_key were exercised only by migrable's own tests and docs. AMENDED 2026-07-27: strictspec absorbs migrable's engine as before, but migrable-THE-PROJECT's retirement is DECOUPLED from this plan — its one remaining consumer is outside this corpus, so retiring migrable is tracked separately and gates nothing here |
@@ -124,7 +128,7 @@ No escape hatches, no lenient modes, no warnings, no implicit defaults.
   including the constraint engine and evidence-resolver parity.
 - `examples/` — paper schemas drafted before implementation; claudestream and a private project
   first; construct-only exercises (shared types, enum baking, aggregates) plus corpus-DRAFT
-  sources (BetterClaude, imagine) round out the construct-freeze gate (decision 3, soft-freeze).
+  sources (BetterClaude, imagine) round out the construct-set stability gate (decision 3).
 
 ## Distribution
 
@@ -160,7 +164,7 @@ orxtra, wavescript, plus selfdoc directives (late slot). REMOVED from the corpus
 wakethemup and howmuchleft (no declarability relevance); tunebox (dead — superseded by
 wavescript); toolstream (owner decision — stays code-first); incantino, demobl, F, and step
 (dead/archived). BetterClaude and imagine are corpus-DRAFT sources (paper schemas that stress
-the freeze; not yet consumers). mage is independent — evaluate later.
+the construct set; not yet consumers). mage is independent — evaluate later.
 
 ADOPTION WAVE 1:
 
@@ -221,13 +225,15 @@ always-latest rule.
 
 SHIPPED AND ADOPTED (2026-07-28). The toolchain is RELEASED at 0.1.0 across all four
 distribution channels: PyPI (Python), npm (TypeScript), Go module (Go), and GitHub Release
-assets. The binding construct-set freeze (decision 3) is now in force as of this first release.
+assets. The construct set, constraint vocabulary, migration op set, and error-code catalogue are
+STABLE BUT GROWING in the growth phase (decision 3); released-surface compatibility from 0.1.0
+onward is governed by semver at release boundaries, not by a freeze.
 
 - Four-target conformance is GREEN: 42 fixtures, 168 checks pass (42 × 4 targets), cross-target
   parity zero findings (verdict + code + path + message identical across Python, Go, TS, and the
   reference target).
-- The acceptance test is GREEN with the 3-entry FROZEN waiver list (the three recorded,
-  intentionally-waived divergences; no additions permitted without reopening the freeze).
+- The acceptance test is GREEN with the 3-entry LOCKED waiver list (the three recorded,
+  intentionally-waived divergences; no additions permitted without an explicit owner decision).
 - Adopted consumers (roadmap items closed): predraw; claudestream (deploy gate discharged via its
   FIRST REAL adjudication file); a private project (dual-target generator DELETED); orxtra; rlsbl
   (release-file gate + certificate deploy gate + changelog engine, with the fleet-wide per-line
@@ -239,7 +245,8 @@ assets. The binding construct-set freeze (decision 3) is now in force as of this
 - Checkpoints recorded (not yet consumers): BetterClaude (paper contracts standing; its monorepo
   adoption unstarted), imagine (corpus-only standing), mage (independent standing).
 
-Below is the pre-release freeze record, retained for provenance:
+Below is the pre-release construct-set-stability record, retained for provenance (it uses the
+original "freeze" framing, retired 2026-07-28 per decision 3):
 
 CONSTRUCT SET FROZEN (soft-freeze regime, decision 3) as of Phase 3.3 (2026-07-27): spec/ is
 redrafted in full (Phase 1), all fifteen examples/ drafts came back clean with their gap notes
@@ -253,11 +260,11 @@ amendments before the first release are still normal and recorded).
 Phases, in order (all complete as of 2026-07-28):
 
 1. ~~Redraft spec/ in full.~~ DONE (Phase 1).
-2. ~~Draft examples/ and resolve the gap notes to reach the construct-freeze gate.~~ DONE
-   (Phase 2 + Phase 3.3; construct set frozen under the soft-freeze regime).
+2. ~~Draft examples/ and resolve the gap notes to reach the construct-set stability gate.~~ DONE
+   (Phase 2 + Phase 3.3; construct set settled, stable-but-growing per decision 3).
 3. ~~Scaffold the monorepo (the Go-tag question is closed — see Pre-scaffolding verification).~~ DONE.
-4. ~~Build toward the acceptance test.~~ DONE (acceptance test green with the 3-entry frozen waiver list).
-5. ~~A SINGLE release at the very end (this is the binding construct-set freeze).~~ DONE (0.1.0 on
-   PyPI + npm + Go module + GitHub Release assets; the freeze is now binding).
+4. ~~Build toward the acceptance test.~~ DONE (acceptance test green with the 3-entry locked waiver list).
+5. ~~A SINGLE release at the very end (the first release that ships the construct set and appendices).~~ DONE (0.1.0 on
+   PyPI + npm + Go module + GitHub Release assets; released-surface compatibility now governed by semver at release boundaries).
 6. ~~Then the adoption waves (wave 1, wave 2, late).~~ DONE except wavescript (BLOCKED) and the
    BetterClaude/imagine/mage checkpoints (recorded) — see the migration roadmap above.

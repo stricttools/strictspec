@@ -7,11 +7,12 @@ description: "Normative output shapes for the strictspec diff certificate, adjud
 > pinned here are conformance-tested as toolchain GOLDEN OUTPUT (single-engine determinism, not
 > multi-target execution). Any change is a breaking-class, changelog-covered release event.
 >
-> META NOTE: Under the soft-freeze regime, pre-release field additions and refinements are
-> expected and recorded per-release. The binding freeze is the first release. The certificate
-> format is FORWARD-COMPATIBLE with the future analyzer's `proven` grade (decision 25): the
-> analyzer emits the SAME format, and the gate consumes certificates without caring which engine
-> produced them.
+> META NOTE: strictspec is in its GROWTH PHASE — these shapes are STABLE BUT GROWING; field
+> additions and refinements are normal and expected, recorded per-release through the existing
+> discipline, with released-surface compatibility governed by semver at release boundaries. The
+> certificate format is FORWARD-COMPATIBLE with the future analyzer's `proven` grade (decision 25):
+> the analyzer emits the SAME format, and the gate consumes certificates without caring which
+> engine produced them.
 
 This appendix pins three artifacts:
 

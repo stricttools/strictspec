@@ -8,11 +8,11 @@ description: "The normative catalogue of strictspec STRICTSPEC_* error codes wit
 > changelog-covered release event that triggers full conformance-fixture regeneration
 > (see `DESIGN.md` — Error model, Appendix stability policy).
 >
-> META NOTE: strictspec is under the SOFT-FREEZE regime until its first release. Pre-release
-> catalogue GROWTH — new codes for newly discovered hard-error conditions, wording refinement,
-> slot-set corrections — is EXPECTED and recorded here, not exceptional. The binding freeze is
-> the first release. After the first release, this catalogue only grows; existing codes are
-> permanent.
+> META NOTE: strictspec is in its GROWTH PHASE — this catalogue is STABLE BUT GROWING. Catalogue
+> GROWTH — new codes for newly discovered hard-error conditions, wording refinement, slot-set
+> corrections — is EXPECTED and recorded here through the existing discipline, not exceptional.
+> The catalogue only grows; existing (released) codes are permanent, and released-surface
+> compatibility is governed by semver at release boundaries.
 
 ## 1. Scope
 
@@ -40,9 +40,9 @@ did-you-mean pin in that appendix.
      The code does not change when wording changes.
   3. Slot NAMES and TYPES are part of the pinned template. Adding, removing, or retyping a slot
      is a wording-class change under rule 2.
-  4. Catalogue GROWTH (new codes) before the first release is expected under the soft-freeze
-     regime and is recorded per-release; after the first release, new codes accompany new
-     language constructs or newly surfaced hard-error conditions and are additive only.
+  4. Catalogue GROWTH (new codes) is expected in the growth phase and recorded per-release
+     through the existing discipline; new codes accompany new language constructs or newly
+     surfaced hard-error conditions and are additive only. Released codes are permanent.
 - Slot notation in templates: `{name}` interpolates a value of the declared slot type,
   rendered per `appendix-rendering.md`. Braces are literal delimiters; a template never
   contains an unlisted slot. Slot types:
@@ -61,7 +61,7 @@ did-you-mean pin in that appendix.
   - `identifier` — a schema-declared name, rendered bare.
   - `version` — an integer `format_version` or `meta_version`, rendered as decimal digits.
   - `list<T>` — the pinned truncated inline form (A.5).
-- SLOT-RENDERING AMENDMENT (soft-freeze, 2026-07-27): `string` slots are PROSE and render BARE;
+- SLOT-RENDERING AMENDMENT (2026-07-27): `string` slots are PROSE and render BARE;
   document-derived values (including regex patterns) use the `value` type and render per A.1.
   The three regex-pattern slots (`STRICTSPEC_VALUE_STRING_REGEX`, `STRICTSPEC_VALUE_MAP_KEY_REGEX`,
   `STRICTSPEC_SCALAR_LEXEME`) are RE-TYPED from `string` to `value` (string-kinded) so they keep
@@ -296,7 +296,7 @@ is no separate union code for that case.
 | `STRICTSPEC_DEPTH_EXCEEDED` | `Document nesting at {path} exceeds the maximum validation depth of {limit}.` | path: path, limit: int | Fires before CPython stack exhaustion; canonical diagnostic. |
 <!-- The two pipes in `\|n\|` are ESCAPED so this row is valid markdown (a literal `|`
      inside a table cell must be `\|`). The rendered template text is `(|n| >= 2^53)`
-     unchanged. Do not "un-escape" them. (soft-freeze formatting amendment 2026-07-27) -->
+     unchanged. Do not "un-escape" them. (formatting amendment 2026-07-27) -->
 | `STRICTSPEC_NUM_SAFE_INTEGER` | `Integer {actual} at {path} exceeds the safe-integer range (\|n\| >= 2^53) required by `safe_integers`.` | actual: value, path: path | Schema-wide when declared; identical verdict across backends. |
 | `STRICTSPEC_NUM_UNREPRESENTABLE` | `Lexeme {actual} at {path} cannot be represented exactly as float64; the `number` scalar refuses silent precision loss.` | actual: value, path: path | number-scalar unrepresentable lexeme. |
 | `STRICTSPEC_NUM_INT_OVERFLOW` | `Integer lexeme {actual} at {path} overflows int64.` | actual: value, path: path | Integer lexeme beyond int64. |

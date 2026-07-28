@@ -183,7 +183,7 @@ Criterion:
   strictspec's correct behavior, not merely "ignore this divergence." The lexical-number class
   wholesale on legacy targets is waived the same way (legacy TS necessarily parsed with
   JSON.parse; legacy pydantic coerces) — strictspec's stricter verdicts on those fixtures are
-  correct by definition. Once the acceptance test goes green the list is FROZEN: adding any
+  correct by definition. Once the acceptance test goes green the list is LOCKED: adding any
   entry afterward is a hard error.
 - On reject: normalized legacy path SET must be a subset of strictspec's (pydantic sprays
   per-arm errors and stops at the first model_validator; strictspec reports one arm, all errors).

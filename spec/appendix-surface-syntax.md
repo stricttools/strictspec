@@ -11,8 +11,9 @@ description: "The single concrete TOML surface syntax for every strictspec autho
 > VERSIONED: any change to the surface is a breaking-class, changelog-covered release event that
 > triggers full conformance-fixture regeneration.
 >
-> META NOTE: Under the soft-freeze regime, pre-release refinements to the surface (key spellings,
-> site shapes) are expected and recorded per-release. The binding freeze is the first release.
+> META NOTE: strictspec is in its GROWTH PHASE — this surface is STABLE BUT GROWING; refinements
+> (key spellings, site shapes) are normal and expected, recorded per-release through the existing
+> discipline, with released-surface compatibility governed by semver at release boundaries.
 
 ## 1. Why this appendix exists, and which notation won
 
@@ -20,8 +21,9 @@ description: "The single concrete TOML surface syntax for every strictspec autho
 "adapted from incantino (header + per-field type/required/values/description)", but until now no
 appendix pinned the actual grammar — how records, maps, unions, constraints, aliases, named types,
 imports, enum sourcing, opaque leaves, and migration files are spelled. The three examples/ drafting
-batches each invented a divergent notation, and the divergence itself was the largest freeze
-finding (every private-project/claudestream/predraw/wavescript/rlsbl/betterclaude gap note raised it).
+batches each invented a divergent notation, and the divergence itself was the largest
+surface-notation finding (every private-project/claudestream/predraw/wavescript/rlsbl/betterclaude gap
+note raised it).
 
 The three invented notations were:
 
@@ -363,7 +365,7 @@ The surface never re-defines paths.
   in favour of the single `type` key and the uniform `.item`/`.value`/`.fields`/`.arms`/`.elements`
   subtable sites (criterion 5).
 
-## Soft-freeze amendment log
+## Amendment log
 
 - 2026-07-27 — §9: PINNED the `add_field`/`set_value` op-key convention to `path`/`value`. Earlier
   prose read `field`/`value` for add/set, but the shipped engine (and the migrable donor it mirrors)

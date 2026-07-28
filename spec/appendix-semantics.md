@@ -8,8 +8,10 @@ description: "Formal per-construct semantics of strictspec: the denotational fra
 > semantics cannot ship (decision 25). Any change is a breaking-class, changelog-covered release
 > event.
 >
-> META NOTE: Under the soft-freeze regime, pre-release semantics CORRECTIONS are expected and
-> recorded per-release (decision 3). The binding freeze is the first release.
+> META NOTE: strictspec is in its GROWTH PHASE — this appendix is STABLE BUT GROWING; semantics
+> CORRECTIONS and per-construct additions are normal and expected, recorded per-release through the
+> existing discipline (decision 3), with released-surface compatibility governed by semver at
+> release boundaries.
 >
 > DEFERRAL (decision 25, amended 2026-07-27): the DENOTATIONAL FRAME, the PER-CONSTRUCT
 > semantics, the VERDICT ALGEBRA, and the CLOSED UNDECIDABILITY CATALOGUE are written now and
