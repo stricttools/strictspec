@@ -1,7 +1,6 @@
 {
   "changelog_format_version_enforced": true,
   "publish_mode": "ci",
-  "coverage_unit": "commit",
   "batch_limits": {
     "exclusions": []
   }
