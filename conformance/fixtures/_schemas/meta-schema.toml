@@ -4,10 +4,10 @@
 # outcome is a STRICTSPEC_SCHEMA_* / STRICTSPEC_IMPORT_* diagnostic.
 #
 # The real built-in meta-schema is authored in the pinned TOML surface
-# (spec/appendix-surface-syntax.md) and ships with the toolchain; when an
-# implemented target lands, it validates schema documents against that real
-# artifact. Until then this file is an existence marker so the fixture loader
-# accepts these fixtures (targets are unimplemented, so nothing executes it).
+# (spec/appendix-surface-syntax.md) and ships with the toolchain; the live
+# targets validate schema documents against that real artifact. This file is
+# only an existence marker so the fixture loader accepts these fixtures
+# without duplicating the shipped meta-schema in the corpus.
 name = "strictspec-meta-schema"
 meta_version = 1
 format_version = 1
@@ -19,4 +19,4 @@ description = "Built-in meta-schema placeholder (see comment above)."
 [types.MetaSchema]
 type = "opaque"
 unchecked = true
-unchecked_reason = "Placeholder; the real meta-schema ships with the toolchain and lands with the first implemented target."
+unchecked_reason = "Placeholder; the real meta-schema ships with the toolchain."
