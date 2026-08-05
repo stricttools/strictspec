@@ -2,7 +2,7 @@
   "version": 1,
   "files": {
     "VERSION": "f7af902eefb89f3a2216d798078294bb927e71c64bad70551f80effabd375875",
-    ".github/workflows/publish.yml": "78e9ace683d07f073aa5b3fa2fa20269626f3feb519d19027522bbedae1b399d",
+    ".github/workflows/publish.yml": "7323380d94b523961aeaff046c004ccbdfd91cd918817a6e91685455b5a987bd",
     ".gitignore": "c32366f560dbf628eb04a94d25e8d8acf719605b2ea27d31047df16e13580c04"
   }
 }

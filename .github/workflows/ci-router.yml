@@ -26,8 +26,13 @@ jobs:
           strictspec:
             - 'python/**'
             - 'python/**'
-          go-strictspec: 'go/**'
-          ts-strictspec: 'ts/**'
+            - '.rlsbl-monorepo/releasables/py-strictspec/CHANGELOG.md'
+          go-strictspec:
+            - 'go/**'
+            - '.rlsbl-monorepo/releasables/go-strictspec/CHANGELOG.md'
+          ts-strictspec:
+            - 'ts/**'
+            - '.rlsbl-monorepo/releasables/ts-strictspec/CHANGELOG.md'
           conformance:
             - 'conformance/**'
             - 'python/**'

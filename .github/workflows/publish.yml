@@ -11,18 +11,8 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Release tag to publish (e.g. pkga@v1.2.3). Overrides the
+        description: Release tag to publish (e.g. pkga@v1.2.3). Overrides the 
           ref for retry dispatch.
-        required: false
-        type: string
-      # MANUAL EDIT (rlsbl gap: publish-router-project-dispatch). Lets a fixed
-      # publish router on a non-tag ref (e.g. a dev branch) publish one specific
-      # project: the gate resolver and each job `if` fall back to this input
-      # when the ref/tag is not a release tag. rlsbl does not yet generate it --
-      # re-apply if the router is regenerated.
-      project:
-        description: Project to publish when dispatching from a non-tag ref
-          (e.g. ts-strictspec). Ignored when the ref/tag input is a release tag.
         required: false
         type: string
 concurrency:
@@ -34,17 +24,16 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       checks: read
+      contents: read
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
       GATE_TIMEOUT_MINUTES: '20'
       GATE_GRACE_MINUTES: '5'
       GATE_POLL_SECONDS: '15'
       GATE_MARKER_ATTEMPTS: '5'
       GATE_MARKER_RETRY_SECONDS: '5'
       TAG_INPUT: ${{ inputs.tag }}
-      # MANUAL EDIT (rlsbl gap: publish-router-project-dispatch): re-apply if the
-      # router is regenerated. Feeds the non-tag-ref project fallback below.
-      PROJECT_INPUT: ${{ inputs.project }}
     steps:
     - name: Resolve releasing project's CI checks from the tag ref
       run: |
@@ -73,30 +62,9 @@ jobs:
             regex='^(conformance\-ci) / '
             ;;
           *)
-            # MANUAL EDIT (rlsbl gap: publish-router-project-dispatch). When the
-            # ref is not a release tag (dev-branch dispatch), select the project
-            # from the `project` workflow_dispatch input. re-apply if the router
-            # is regenerated.
-            case "${PROJECT_INPUT:-}" in
-              py-strictspec)
-                regex='^(strictspec\-ci) / '
-                ;;
-              go-strictspec)
-                regex='^(go\-strictspec\-ci) / '
-                ;;
-              ts-strictspec)
-                regex='^(ts\-strictspec\-ci) / '
-                ;;
-              conformance)
-                regex='^(conformance\-ci) / '
-                ;;
-              *)
-                echo "::error::Publish gate: ref '$tag_ref' matches no project tag prefix and no 'project' input was given (known projects: py-strictspec, go-strictspec, ts-strictspec, conformance)."
-                echo "To retry a release publish, dispatch this workflow at the tag ref: gh workflow run publish.yml --ref <tag>"
-                echo "To publish from a non-tag ref, pass the project input: gh workflow run publish.yml --ref <branch> -f project=<name>"
-                exit 1
-                ;;
-            esac
+            echo "::error::Publish gate: ref '$tag_ref' matches no project tag prefix (known prefixes: py-strictspec@v, go-strictspec@v, ts-strictspec@v, conformance@v)."
+            echo "To retry a release publish, dispatch this workflow at the tag ref: gh workflow run publish.yml --ref <tag>"
+            exit 1
             ;;
         esac
         echo "CI_CHECK_REGEX=$regex" >> "$GITHUB_ENV"
@@ -185,7 +153,8 @@ jobs:
           if [ "$total" -eq 0 ]; then
             if [ "$(now)" -ge "$grace_deadline" ]; then
               echo "::error::Publish gate: no CI check runs matching $CI_CHECK_REGEX appeared on $sha within $GATE_GRACE_MINUTES minutes."
-              echo "A scaffolded repository always has a CI workflow, so the release commit must produce CI check runs."
+              echo "A scaffolded repository always has a CI workflow, and rlsbl verifies CI on this exact commit BEFORE tagging it, so check runs must exist here."
+              echo "Their absence means the check runs were deleted, the commit resolution is wrong, or this tag was created outside rlsbl."
               echo "If CI jobs were renamed, update CI_CHECK_REGEX in this workflow's gate job to match the new names."
               exit 1
             fi
@@ -213,13 +182,18 @@ jobs:
             while IFS= read -r conclusion; do
               case "$conclusion" in
                 failure|timed_out)
-                  echo "CI concluded '$conclusion' on the release commit. Fix the failure, re-run the CI workflow to green on this exact commit (gh run rerun <run-id>), then re-dispatch this publish workflow at the tag ref: gh workflow run <publish workflow> --ref $GITHUB_REF_NAME"
+                  echo "CI concluded '$conclusion' on the release commit."
+                  echo "rlsbl tags and releases a commit only AFTER its CI has gone green, so reaching this branch means one of: CI was re-run on an already-released commit and regressed, a required check was added after the release, or this tag/Release was created outside rlsbl."
+                  echo "Do NOT re-dispatch this publish workflow expecting a different answer -- a failure baked into the code at this commit fails identically every time, and there is no way to make this tag green."
+                  echo "Remedy: fix forward on the release branch and cut a NEW release with 'rlsbl release run' (its own CI gate must go green before it is tagged), then mark this one with 'rlsbl release deprecate <version>'."
                   ;;
                 cancelled)
-                  echo "A CI check run was CANCELLED. A cancelled run proves nothing about the commit, so the gate treats it as a hard failure instead of waiting for a conclusion that will never come. Re-run the cancelled CI workflow (gh run rerun <run-id>), then re-dispatch this publish workflow at the tag ref."
+                  echo "A CI check run was CANCELLED. A cancelled run proves nothing about the commit, so the gate treats it as a hard failure instead of waiting for a conclusion that will never come."
+                  echo "Remedy: re-run the cancelled CI workflow on this exact commit (gh run rerun <run-id>). If it concludes success, re-dispatch this publish workflow at the tag ref: gh workflow run <publish workflow> --ref $GITHUB_REF_NAME"
                   ;;
                 skipped)
-                  echo "A CI check run matching the filter was SKIPPED. The gate cannot treat a skipped check as passing: this project's own CI must actually run on the release commit. Check paths filters and job conditions, re-run CI on this commit, then re-dispatch this publish workflow at the tag ref."
+                  echo "A CI check run matching the filter was SKIPPED. The gate cannot treat a skipped check as passing: this project must actually run its own CI on the release commit."
+                  echo "Remedy: check paths filters and job conditions so CI runs for this project, re-run CI on this commit, then re-dispatch this publish workflow at the tag ref."
                   ;;
                 *)
                   echo "CI check concluded '$conclusion' (not success). The gate only proceeds when every matching check concluded success."
@@ -262,8 +236,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    if: startsWith(inputs.tag || github.ref_name, 'py-strictspec@v') || inputs.project
-      == 'py-strictspec'
+    if: startsWith(inputs.tag || github.ref_name, 'py-strictspec@v')
     defaults:
       run:
         working-directory: python
@@ -300,36 +273,42 @@ jobs:
       env:
         RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # MANUAL EDIT (rlsbl gap: goreleaser-monorepo-tags). OSS goreleaser cannot
-      # parse the monorepo tag `go-strictspec@vX.Y.Z` as semver and has no
-      # `monorepo:` block (Pro-only). Strip the `go-strictspec@` prefix and hand
-      # goreleaser the bare `vX.Y.Z` via GORELEASER_CURRENT_TAG. rlsbl does not
-      # yet generate this step, so a re-run of `rlsbl monorepo sync`/`scaffold`
-      # will drop it -- re-apply it if the router is regenerated.
-    - name: Resolve goreleaser tag (strip monorepo prefix)
+    - name: Derive the bare semver tag for goreleaser
+      id: bare-tag
+      if: steps.check-go.outputs.skip != 'true'
       run: |
-        TAG="${RELEASE_TAG}"
-        echo "GORELEASER_CURRENT_TAG=${TAG##*@}" >> "$GITHUB_ENV"
+        # Strip any "<name>@" / "<path>/" prefix: keep the trailing vX.Y.Z[-pre].
+        BARE=$(printf '%s' "${RELEASE_TAG}" | sed -E 's/^.*(v[0-9]+\.[0-9]+\.[0-9]+.*)$/\1/')
+        echo "tag=${BARE}" >> "$GITHUB_OUTPUT"
       env:
         RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
-    # MANUAL EDIT (rlsbl gap: goreleaser-monorepo-tags). `--skip=validate` is
-    # required so goreleaser does not reject the synthetic bare `vX.Y.Z`
-    # GORELEASER_CURRENT_TAG -- no git tag by that bare name exists (the real
-    # tag is the prefixed `go-strictspec@vX.Y.Z`), so the default tag-name
-    # validation would fail with "git tag vX.Y.Z was not made against commit".
-    # rlsbl does not yet generate this arg -- re-apply if the router is
-    # regenerated.
     - uses: goreleaser/goreleaser-action@v7
       if: steps.check-go.outputs.skip != 'true'
       with:
         version: ~> v2
-        args: release --clean --skip=validate
+        args: release --clean --skip=publish,announce,validate
       env:
+        GORELEASER_CURRENT_TAG: ${{ steps.bare-tag.outputs.tag }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload release assets to the release tag
+      if: steps.check-go.outputs.skip != 'true'
+      run: |
+        # dist/ holds the archives plus checksums.txt (the literal filename
+        # the launcher shims verify against). --clobber keeps a re-dispatch
+        # at the same tag idempotent.
+        shopt -s nullglob
+        ASSETS=(dist/*.tar.gz dist/*.zip dist/checksums.txt)
+        if [ ${#ASSETS[@]} -eq 0 ]; then
+          echo "::error::goreleaser produced no assets in dist/"
+          exit 1
+        fi
+        gh release upload "${RELEASE_TAG}" "${ASSETS[@]}" --clobber
+      env:
+        RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     permissions:
       contents: write
-    if: startsWith(inputs.tag || github.ref_name, 'go-strictspec@v') || inputs.project
-      == 'go-strictspec'
+    if: startsWith(inputs.tag || github.ref_name, 'go-strictspec@v')
     defaults:
       run:
         working-directory: go
@@ -344,8 +323,6 @@ jobs:
       with:
         node-version: 24
         registry-url: https://registry.npmjs.org
-    - name: Install dependencies (incl. devDependencies for prepack build)
-      run: npm ci
     - name: Install gitleaks
       run: |
         GITLEAKS_VERSION=8.24.3
@@ -353,6 +330,8 @@ jobs:
     - name: Scan source for secrets
       run: |
         gitleaks dir .
+    - name: Install dependencies
+      run: npm ci
     - name: Check if already published
       id: check-npm
       run: |
@@ -380,8 +359,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    if: startsWith(inputs.tag || github.ref_name, 'ts-strictspec@v') || inputs.project
-      == 'ts-strictspec'
+    if: startsWith(inputs.tag || github.ref_name, 'ts-strictspec@v')
     defaults:
       run:
         working-directory: ts
