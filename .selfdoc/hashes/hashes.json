@@ -1,0 +1,45 @@
+{
+  "_hash_version": 3,
+  "en/DESIGN.md": {
+    "content": "0e00f096ee68c12fb9f1eca06815a0d40f32e5022d4655e3e6fa1ca9438b2593",
+    "description": "e1f22585c8549a7d193dfed92c447c1ad1e2d5f890e469194814666a9c473013"
+  },
+  "en/appendix-certificates.md": {
+    "content": "06474ee66bf5eabeb45f5146a98f65958208ccc9776cd18abb2fea3c7f7f8734",
+    "description": "a3b4966853cd8d28db31d8a04258cea04c9c63203f99d96664ab920ba7d4db2a"
+  },
+  "en/appendix-custom-scalars.md": {
+    "content": "8dbbbca7308e139d2be5e6857eca14cf522112ef1b33963b3acc45e34602b60e",
+    "description": "1f4915fd9234c32bd9b9d2194ed0b0ec8ece5ac5e9e2c8aa59db91aa65c09257"
+  },
+  "en/appendix-emitter-ir.md": {
+    "content": "bcc135e1c32599603e535eb1b192243964225bb8275226101879c6f70963526e",
+    "description": "998c7b46092151502dcbecd12cda50f3535689a99215e74b763c35765c071d8f"
+  },
+  "en/appendix-error-codes.md": {
+    "content": "d40acae283e620c16c396f3610cd47a3435658e93cd54ff6454a7efedeeb2c1f",
+    "description": "bc2de6b267ea0bd57f48a8d7099e5a0fc6221597be0b174cae719f482c183e2a"
+  },
+  "en/appendix-rendering.md": {
+    "content": "b3663ba5bb71c69887fb184a93b72d759894a501194429378a994c0fc41e0323",
+    "description": "819624592b8921114291eeeb7cf946fc2027f8cc7daa07c6a1c5380f50a894db"
+  },
+  "en/appendix-semantics.md": {
+    "content": "c8bdd9d372a09732b2f456a739d2f6c2bd477b5b111a063f7ff8f3a3a0a5872b",
+    "description": "3dde5407836c2fa39a32b94511fd42d0715626cc52d4369c54526486662ab36f"
+  },
+  "en/appendix-surface-syntax.md": {
+    "content": "405c0ce4a13c938fab642a2bb15ad74b0ae197e40ed63cda9373dc0bae4b0984",
+    "description": "658548636ebfecac9e5e9c1b8753bd39e1a9f530bc0f5eb8f015b060a810856f"
+  },
+  "en/gen-index.md": {
+    "content": "465065906c2f4f4c15b64f0f265f17e24ef0f70978870aa8156d759d5c230aca",
+    "description": "b502f61891cf450fac4658ee7c1b5d306bd9cac3c79332430d08df8f0eaeb7a5",
+    "seed_hash": "b502f61891cf450fac4658ee7c1b5d306bd9cac3c79332430d08df8f0eaeb7a5"
+  },
+  "en/go-strictspec.md": {
+    "content": "773f8dcb2934b9b525ee54d892715963857c07b1f69e8640df59789314ea1036",
+    "description": "657f7af98f3fbb52e12667e41970697529b2a41d40bccde5303f388143c5dd48",
+    "source_docstring": "b21d9454bf20bcdd38d16156914232cd343e54999372c2761f58866c65b5d0cc"
+  }
+}
