@@ -1,6 +1,14 @@
 {
   "version": "0.1.0",
-  "base_url": "https://strictspec.smmh.dev",
+  "base_url": "https://smmh.dev/strictspec/",
+  "search_engine": "pagefind",
+  "author": {
+    "name": "SMMH",
+    "url": "https://smmh.dev",
+    "same_as": [
+      "https://github.com/smm-h"
+    ]
+  },
   "source": [
     {
       "path": "go/strictspec",
@@ -11,8 +19,7 @@
   "output": "spec/_build/",
   "versions": [
     {
-      "version": "0.1.0",
-      "indexed": true
+      "version": "0.1.0"
     }
   ],
   "locales": [
