@@ -11,4 +11,4 @@ order: 90
 
 # API Reference
 
-- [go/strictspec](go-strictspec.html)
+- [go/strictspec](../go-strictspec/)
