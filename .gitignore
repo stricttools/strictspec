@@ -2,7 +2,6 @@ node_modules/
 dist/
 dist-test/
 spec/_build/
-.selfdoc/
 __pycache__/
 *.pyc
 *.egg-info/

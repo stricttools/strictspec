@@ -1,0 +1,1013 @@
+{
+  "schema_version": 1,
+  "name": "strictspec",
+  "slug": "strictspec",
+  "version": "0.1.0",
+  "description": "Strict multi-language schema toolchain for declarative spec files. The spec/ constitution is the language reference (schema language, constraint vocabulary, op set, error model, and normative appendices).",
+  "language": "go",
+  "base_url": "https://smmh.dev/strictspec",
+  "pages": [
+    {
+      "path": "DESIGN.md",
+      "title": "spec/ \u2014 The strictspec Schema Language",
+      "type": "doc",
+      "headings": [
+        {
+          "level": 1,
+          "text": "spec/ \u2014 The strictspec Schema Language",
+          "anchor": "spec-the-strictspec-schema-language"
+        },
+        {
+          "level": 2,
+          "text": "Document model",
+          "anchor": "document-model"
+        },
+        {
+          "level": 2,
+          "text": "Primitives appendix (read side, normative)",
+          "anchor": "primitives-appendix-read-side-normative"
+        },
+        {
+          "level": 2,
+          "text": "Canonical serialization appendix (write side, normative)",
+          "anchor": "canonical-serialization-appendix-write-side-normative"
+        },
+        {
+          "level": 2,
+          "text": "Generated API contract (normative)",
+          "anchor": "generated-api-contract-normative"
+        },
+        {
+          "level": 2,
+          "text": "Construct set",
+          "anchor": "construct-set"
+        },
+        {
+          "level": 2,
+          "text": "Union diagnostics (normative)",
+          "anchor": "union-diagnostics-normative"
+        },
+        {
+          "level": 2,
+          "text": "Cross-field and cross-document constraint vocabulary",
+          "anchor": "cross-field-and-cross-document-constraint-vocabulary"
+        },
+        {
+          "level": 3,
+          "text": "Condition set (closed) for gated forms",
+          "anchor": "condition-set-closed-for-gated-forms"
+        },
+        {
+          "level": 3,
+          "text": "Vocabulary rejection rationale (recorded, revisit on recurrence)",
+          "anchor": "vocabulary-rejection-rationale-recorded-revisit-on-recurrence"
+        },
+        {
+          "level": 2,
+          "text": "Domain checks \u2014 portable by construction",
+          "anchor": "domain-checks-portable-by-construction"
+        },
+        {
+          "level": 2,
+          "text": "Unknown-key policy",
+          "anchor": "unknown-key-policy"
+        },
+        {
+          "level": 2,
+          "text": "Versioning, migrations, and the version-boundary invariant",
+          "anchor": "versioning-migrations-and-the-version-boundary-invariant"
+        },
+        {
+          "level": 2,
+          "text": "Accepted-set semantics, diff, and doc-diff",
+          "anchor": "accepted-set-semantics-diff-and-doc-diff"
+        },
+        {
+          "level": 2,
+          "text": "Error model",
+          "anchor": "error-model"
+        },
+        {
+          "level": 2,
+          "text": "Export: JSON Schema and structured metadata",
+          "anchor": "export-json-schema-and-structured-metadata"
+        },
+        {
+          "level": 2,
+          "text": "Meta-schema, self-hosting, and bootstrap",
+          "anchor": "meta-schema-self-hosting-and-bootstrap"
+        }
+      ]
+    },
+    {
+      "path": "appendix-certificates.md",
+      "title": "Appendix: Diff Certificate, Adjudication File, and doc-diff Output (normative)",
+      "type": "doc",
+      "headings": [
+        {
+          "level": 1,
+          "text": "Appendix: Diff Certificate, Adjudication File, and doc-diff Output (normative)",
+          "anchor": "appendix-diff-certificate-adjudication-file-and-doc-diff-output-normative"
+        },
+        {
+          "level": 2,
+          "text": "Part A \u2014 The diff certificate",
+          "anchor": "part-a-the-diff-certificate"
+        },
+        {
+          "level": 3,
+          "text": "A.1 Top-level fields",
+          "anchor": "a1-top-level-fields"
+        },
+        {
+          "level": 3,
+          "text": "A.2 Corpus identity object",
+          "anchor": "a2-corpus-identity-object"
+        },
+        {
+          "level": 3,
+          "text": "A.3 Per-claim entry",
+          "anchor": "a3-per-claim-entry"
+        },
+        {
+          "level": 3,
+          "text": "A.4 Counterexample object",
+          "anchor": "a4-counterexample-object"
+        },
+        {
+          "level": 3,
+          "text": "A.5 Grade semantics and the gate rule (normative)",
+          "anchor": "a5-grade-semantics-and-the-gate-rule-normative"
+        },
+        {
+          "level": 2,
+          "text": "Part B \u2014 The adjudication file",
+          "anchor": "part-b-the-adjudication-file"
+        },
+        {
+          "level": 3,
+          "text": "B.1 Adjudication top-level",
+          "anchor": "b1-adjudication-top-level"
+        },
+        {
+          "level": 3,
+          "text": "B.2 Adjudication entry",
+          "anchor": "b2-adjudication-entry"
+        },
+        {
+          "level": 2,
+          "text": "Part C \u2014 doc-diff output",
+          "anchor": "part-c-doc-diff-output"
+        },
+        {
+          "level": 3,
+          "text": "C.1 doc-diff top-level",
+          "anchor": "c1-doc-diff-top-level"
+        },
+        {
+          "level": 3,
+          "text": "C.2 Delta entry",
+          "anchor": "c2-delta-entry"
+        },
+        {
+          "level": 2,
+          "text": "Self-validation (dogfooding)",
+          "anchor": "self-validation-dogfooding"
+        },
+        {
+          "level": 2,
+          "text": "Cross-references",
+          "anchor": "cross-references"
+        }
+      ]
+    },
+    {
+      "path": "appendix-custom-scalars.md",
+      "title": "Appendix: Custom Scalar Registration (normative)",
+      "type": "doc",
+      "headings": [
+        {
+          "level": 1,
+          "text": "Appendix: Custom Scalar Registration (normative)",
+          "anchor": "appendix-custom-scalar-registration-normative"
+        },
+        {
+          "level": 2,
+          "text": "1. The registration surface",
+          "anchor": "1-the-registration-surface"
+        },
+        {
+          "level": 2,
+          "text": "2. Rendering entries",
+          "anchor": "2-rendering-entries"
+        },
+        {
+          "level": 2,
+          "text": "3. Error-code allocation",
+          "anchor": "3-error-code-allocation"
+        },
+        {
+          "level": 2,
+          "text": "4. Placement and travel",
+          "anchor": "4-placement-and-travel"
+        },
+        {
+          "level": 2,
+          "text": "5. Conformance obligations",
+          "anchor": "5-conformance-obligations"
+        },
+        {
+          "level": 2,
+          "text": "6. Worked examples (pgdesign, the first consumer's set)",
+          "anchor": "6-worked-examples-pgdesign-the-first-consumers-set"
+        },
+        {
+          "level": 3,
+          "text": "6.1 identifier",
+          "anchor": "61-identifier"
+        },
+        {
+          "level": 3,
+          "text": "6.2 pgtype",
+          "anchor": "62-pgtype"
+        },
+        {
+          "level": 3,
+          "text": "6.3 sql-expression",
+          "anchor": "63-sql-expression"
+        },
+        {
+          "level": 2,
+          "text": "Cross-references",
+          "anchor": "cross-references"
+        }
+      ]
+    },
+    {
+      "path": "appendix-emitter-ir.md",
+      "title": "Appendix: The Shared Emitter IR (normative)",
+      "type": "doc",
+      "headings": [
+        {
+          "level": 1,
+          "text": "Appendix: The Shared Emitter IR (normative)",
+          "anchor": "appendix-the-shared-emitter-ir-normative"
+        },
+        {
+          "level": 2,
+          "text": "1. Purpose and the identity argument",
+          "anchor": "1-purpose-and-the-identity-argument"
+        },
+        {
+          "level": 3,
+          "text": "1.1 The common-mode-bug risk and its countermeasure",
+          "anchor": "11-the-common-mode-bug-risk-and-its-countermeasure"
+        },
+        {
+          "level": 2,
+          "text": "2. The IR node set",
+          "anchor": "2-the-ir-node-set"
+        },
+        {
+          "level": 3,
+          "text": "2.1 Schema-shape nodes",
+          "anchor": "21-schema-shape-nodes"
+        },
+        {
+          "level": 3,
+          "text": "2.2 Diagnostic-emission nodes",
+          "anchor": "22-diagnostic-emission-nodes"
+        },
+        {
+          "level": 2,
+          "text": "3. The generation scheme",
+          "anchor": "3-the-generation-scheme"
+        },
+        {
+          "level": 2,
+          "text": "4. What is deliberately NOT in the IR",
+          "anchor": "4-what-is-deliberately-not-in-the-ir"
+        },
+        {
+          "level": 2,
+          "text": "Amendment log",
+          "anchor": "amendment-log"
+        },
+        {
+          "level": 2,
+          "text": "Cross-references",
+          "anchor": "cross-references"
+        }
+      ]
+    },
+    {
+      "path": "appendix-error-codes.md",
+      "title": "Appendix: Error-Code Catalogue and Message Templates (normative)",
+      "type": "doc",
+      "headings": [
+        {
+          "level": 1,
+          "text": "Appendix: Error-Code Catalogue and Message Templates (normative)",
+          "anchor": "appendix-error-code-catalogue-and-message-templates-normative"
+        },
+        {
+          "level": 2,
+          "text": "1. Scope",
+          "anchor": "1-scope"
+        },
+        {
+          "level": 2,
+          "text": "2. Code grammar and stability rules",
+          "anchor": "2-code-grammar-and-stability-rules"
+        },
+        {
+          "level": 2,
+          "text": "3. Closed area set",
+          "anchor": "3-closed-area-set"
+        },
+        {
+          "level": 2,
+          "text": "4. Parse errors (`STRICTSPEC_PARSE_*`)",
+          "anchor": "4-parse-errors-strictspec_parse_"
+        },
+        {
+          "level": 2,
+          "text": "5. Meta-schema violations (`STRICTSPEC_SCHEMA_*`)",
+          "anchor": "5-meta-schema-violations-strictspec_schema_"
+        },
+        {
+          "level": 2,
+          "text": "6. Import violations (`STRICTSPEC_IMPORT_*`)",
+          "anchor": "6-import-violations-strictspec_import_"
+        },
+        {
+          "level": 2,
+          "text": "7. Enum-sourcing errors (`STRICTSPEC_ENUMSRC_*`)",
+          "anchor": "7-enum-sourcing-errors-strictspec_enumsrc_"
+        },
+        {
+          "level": 2,
+          "text": "8. Version-gate errors (`STRICTSPEC_GATE_*`)",
+          "anchor": "8-version-gate-errors-strictspec_gate_"
+        },
+        {
+          "level": 2,
+          "text": "9. meta_version-gate errors (`STRICTSPEC_METAGATE_*`)",
+          "anchor": "9-meta_version-gate-errors-strictspec_metagate_"
+        },
+        {
+          "level": 2,
+          "text": "10. Unknown and duplicate keys (`STRICTSPEC_KEY_*`)",
+          "anchor": "10-unknown-and-duplicate-keys-strictspec_key_"
+        },
+        {
+          "level": 2,
+          "text": "11. Type mismatches (`STRICTSPEC_TYPE_*`)",
+          "anchor": "11-type-mismatches-strictspec_type_"
+        },
+        {
+          "level": 2,
+          "text": "12. Value-constraint violations (`STRICTSPEC_VALUE_*`)",
+          "anchor": "12-value-constraint-violations-strictspec_value_"
+        },
+        {
+          "level": 2,
+          "text": "13. Intra-document constraint violations (`STRICTSPEC_INTRA_*`)",
+          "anchor": "13-intra-document-constraint-violations-strictspec_intra_"
+        },
+        {
+          "level": 2,
+          "text": "14. Cross-document constraint violations (`STRICTSPEC_CROSS_*`)",
+          "anchor": "14-cross-document-constraint-violations-strictspec_cross_"
+        },
+        {
+          "level": 2,
+          "text": "15. Union dispatch errors (`STRICTSPEC_UNION_*`)",
+          "anchor": "15-union-dispatch-errors-strictspec_union_"
+        },
+        {
+          "level": 2,
+          "text": "16. Alias, depth, number (`STRICTSPEC_ALIAS_*`, `STRICTSPEC_DEPTH_*`, `STRICTSPEC_NUM_*`)",
+          "anchor": "16-alias-depth-number-strictspec_alias_-strictspec_depth_-strictspec_num_"
+        },
+        {
+          "level": 2,
+          "text": "17. Migration errors (`STRICTSPEC_MIGRATE_*`)",
+          "anchor": "17-migration-errors-strictspec_migrate_"
+        },
+        {
+          "level": 2,
+          "text": "17a. Write-path serialization refusals (`STRICTSPEC_SERIALIZE_*`)",
+          "anchor": "17a-write-path-serialization-refusals-strictspec_serialize_"
+        },
+        {
+          "level": 2,
+          "text": "17b. Live-channel version-negotiation refusals (`STRICTSPEC_CHANNEL_*`)",
+          "anchor": "17b-live-channel-version-negotiation-refusals-strictspec_channel_"
+        },
+        {
+          "level": 2,
+          "text": "18. Diff / certificate errors (`STRICTSPEC_DIFF_*`)",
+          "anchor": "18-diff-certificate-errors-strictspec_diff_"
+        },
+        {
+          "level": 2,
+          "text": "19. doc-diff errors (`STRICTSPEC_DOCDIFF_*`)",
+          "anchor": "19-doc-diff-errors-strictspec_docdiff_"
+        },
+        {
+          "level": 2,
+          "text": "20. CLI / manifest errors (`STRICTSPEC_MANIFEST_*`)",
+          "anchor": "20-cli-manifest-errors-strictspec_manifest_"
+        },
+        {
+          "level": 2,
+          "text": "21. Custom-scalar errors (`STRICTSPEC_SCALAR_*`)",
+          "anchor": "21-custom-scalar-errors-strictspec_scalar_"
+        },
+        {
+          "level": 2,
+          "text": "22. Cross-references",
+          "anchor": "22-cross-references"
+        }
+      ]
+    },
+    {
+      "path": "appendix-rendering.md",
+      "title": "Appendix: Value Rendering, Path Grammar, and Did-You-Mean (normative)",
+      "type": "doc",
+      "headings": [
+        {
+          "level": 1,
+          "text": "Appendix: Value Rendering, Path Grammar, and Did-You-Mean (normative)",
+          "anchor": "appendix-value-rendering-path-grammar-and-did-you-mean-normative"
+        },
+        {
+          "level": 2,
+          "text": "Part A \u2014 Value rendering",
+          "anchor": "part-a-value-rendering"
+        },
+        {
+          "level": 3,
+          "text": "A.1 Diagnostic value rendering (read side, in messages)",
+          "anchor": "a1-diagnostic-value-rendering-read-side-in-messages"
+        },
+        {
+          "level": 3,
+          "text": "A.2 String escaping (both sides)",
+          "anchor": "a2-string-escaping-both-sides"
+        },
+        {
+          "level": 3,
+          "text": "A.3 Float rendering (canonical) \u2014 constructed values only",
+          "anchor": "a3-float-rendering-canonical-constructed-values-only"
+        },
+        {
+          "level": 3,
+          "text": "A.4 String truncation (diagnostic messages only)",
+          "anchor": "a4-string-truncation-diagnostic-messages-only"
+        },
+        {
+          "level": 3,
+          "text": "A.5 Container inline rendering (diagnostic messages only)",
+          "anchor": "a5-container-inline-rendering-diagnostic-messages-only"
+        },
+        {
+          "level": 3,
+          "text": "A.6 Write-side value rendering (serialization, normative)",
+          "anchor": "a6-write-side-value-rendering-serialization-normative"
+        },
+        {
+          "level": 3,
+          "text": "A.7 Regex patterns render as value slots (normative)",
+          "anchor": "a7-regex-patterns-render-as-value-slots-normative"
+        },
+        {
+          "level": 2,
+          "text": "Part B \u2014 Path grammar (EBNF, normative)",
+          "anchor": "part-b-path-grammar-ebnf-normative"
+        },
+        {
+          "level": 2,
+          "text": "Part C \u2014 Did-you-mean (normative, pinned)",
+          "anchor": "part-c-did-you-mean-normative-pinned"
+        },
+        {
+          "level": 2,
+          "text": "Part D \u2014 Gated-constraint condition rendering (normative)",
+          "anchor": "part-d-gated-constraint-condition-rendering-normative"
+        },
+        {
+          "level": 2,
+          "text": "Amendment log",
+          "anchor": "amendment-log"
+        },
+        {
+          "level": 2,
+          "text": "Cross-references",
+          "anchor": "cross-references"
+        }
+      ]
+    },
+    {
+      "path": "appendix-semantics.md",
+      "title": "Appendix: Formal Semantics and the Undecidability Catalogue (normative)",
+      "type": "doc",
+      "headings": [
+        {
+          "level": 1,
+          "text": "Appendix: Formal Semantics and the Undecidability Catalogue (normative)",
+          "anchor": "appendix-formal-semantics-and-the-undecidability-catalogue-normative"
+        },
+        {
+          "level": 2,
+          "text": "1. The denotational frame",
+          "anchor": "1-the-denotational-frame"
+        },
+        {
+          "level": 2,
+          "text": "2. Verdict algebra (three-valued)",
+          "anchor": "2-verdict-algebra-three-valued"
+        },
+        {
+          "level": 2,
+          "text": "3. Per-construct semantics",
+          "anchor": "3-per-construct-semantics"
+        },
+        {
+          "level": 3,
+          "text": "3.1 Closed record",
+          "anchor": "31-closed-record"
+        },
+        {
+          "level": 3,
+          "text": "3.2 Typed map (regex keys)",
+          "anchor": "32-typed-map-regex-keys"
+        },
+        {
+          "level": 3,
+          "text": "3.3 Named type",
+          "anchor": "33-named-type"
+        },
+        {
+          "level": 3,
+          "text": "3.4 Recursive reference (pinned depth limit)",
+          "anchor": "34-recursive-reference-pinned-depth-limit"
+        },
+        {
+          "level": 3,
+          "text": "3.5 Discriminated union",
+          "anchor": "35-discriminated-union"
+        },
+        {
+          "level": 3,
+          "text": "3.6 Node-kind union",
+          "anchor": "36-node-kind-union"
+        },
+        {
+          "level": 3,
+          "text": "3.7 Nullable union (T | null)",
+          "anchor": "37-nullable-union-t-null"
+        },
+        {
+          "level": 3,
+          "text": "3.8 String scalar",
+          "anchor": "38-string-scalar"
+        },
+        {
+          "level": 3,
+          "text": "3.9 Integer scalar",
+          "anchor": "39-integer-scalar"
+        },
+        {
+          "level": 3,
+          "text": "3.10 Float scalar",
+          "anchor": "310-float-scalar"
+        },
+        {
+          "level": 3,
+          "text": "3.11 Number scalar",
+          "anchor": "311-number-scalar"
+        },
+        {
+          "level": 3,
+          "text": "3.12 Boolean, date, time, datetime scalars",
+          "anchor": "312-boolean-date-time-datetime-scalars"
+        },
+        {
+          "level": 3,
+          "text": "3.13 Enums",
+          "anchor": "313-enums"
+        },
+        {
+          "level": 3,
+          "text": "3.14 Literal constant",
+          "anchor": "314-literal-constant"
+        },
+        {
+          "level": 3,
+          "text": "3.15 Value constraints \u2014 numeric range",
+          "anchor": "315-value-constraints-numeric-range"
+        },
+        {
+          "level": 3,
+          "text": "3.16 Value constraints \u2014 datetime range, string length, regex, array length, non-empty",
+          "anchor": "316-value-constraints-datetime-range-string-length-regex-array-length-non-empty"
+        },
+        {
+          "level": 3,
+          "text": "3.17 safe_integers mode",
+          "anchor": "317-safe_integers-mode"
+        },
+        {
+          "level": 3,
+          "text": "3.18 Tuples",
+          "anchor": "318-tuples"
+        },
+        {
+          "level": 3,
+          "text": "3.19 Aliases",
+          "anchor": "319-aliases"
+        },
+        {
+          "level": 3,
+          "text": "3.20 Shared named-type imports (decision 21)",
+          "anchor": "320-shared-named-type-imports-decision-21"
+        },
+        {
+          "level": 3,
+          "text": "3.21 Enum arms sourced from a document (decision 32)",
+          "anchor": "321-enum-arms-sourced-from-a-document-decision-32"
+        },
+        {
+          "level": 3,
+          "text": "3.22 Custom scalar registration",
+          "anchor": "322-custom-scalar-registration"
+        },
+        {
+          "level": 3,
+          "text": "3.23 Per-field descriptions",
+          "anchor": "323-per-field-descriptions"
+        },
+        {
+          "level": 3,
+          "text": "3.24 Intra-document constraint forms",
+          "anchor": "324-intra-document-constraint-forms"
+        },
+        {
+          "level": 3,
+          "text": "3.25 Cross-document constraint forms",
+          "anchor": "325-cross-document-constraint-forms"
+        },
+        {
+          "level": 2,
+          "text": "4. The CLOSED undecidability catalogue",
+          "anchor": "4-the-closed-undecidability-catalogue"
+        },
+        {
+          "level": 2,
+          "text": "5. Deferral note",
+          "anchor": "5-deferral-note"
+        },
+        {
+          "level": 2,
+          "text": "Cross-references",
+          "anchor": "cross-references"
+        }
+      ]
+    },
+    {
+      "path": "appendix-surface-syntax.md",
+      "title": "Appendix: The Concrete TOML Surface Syntax (normative)",
+      "type": "doc",
+      "headings": [
+        {
+          "level": 1,
+          "text": "Appendix: The Concrete TOML Surface Syntax (normative)",
+          "anchor": "appendix-the-concrete-toml-surface-syntax-normative"
+        },
+        {
+          "level": 2,
+          "text": "1. Why this appendix exists, and which notation won",
+          "anchor": "1-why-this-appendix-exists-and-which-notation-won"
+        },
+        {
+          "level": 3,
+          "text": "1.1 Selection (in the priority order `DESIGN.md` fixed for this decision)",
+          "anchor": "11-selection-in-the-priority-order-designmd-fixed-for-this-decision"
+        },
+        {
+          "level": 2,
+          "text": "2. The type site \u2014 the one uniform unit",
+          "anchor": "2-the-type-site-the-one-uniform-unit"
+        },
+        {
+          "level": 2,
+          "text": "3. Kinds",
+          "anchor": "3-kinds"
+        },
+        {
+          "level": 3,
+          "text": "3.1 Scalars and refinements",
+          "anchor": "31-scalars-and-refinements"
+        },
+        {
+          "level": 3,
+          "text": "3.2 Record, map, array, tuple",
+          "anchor": "32-record-map-array-tuple"
+        },
+        {
+          "level": 3,
+          "text": "3.3 Enums and literals",
+          "anchor": "33-enums-and-literals"
+        },
+        {
+          "level": 3,
+          "text": "3.4 Unions and nullable",
+          "anchor": "34-unions-and-nullable"
+        },
+        {
+          "level": 3,
+          "text": "3.5 Opaque leaves",
+          "anchor": "35-opaque-leaves"
+        },
+        {
+          "level": 2,
+          "text": "4. Header and file roles",
+          "anchor": "4-header-and-file-roles"
+        },
+        {
+          "level": 2,
+          "text": "5. Named types, the root, and constraints",
+          "anchor": "5-named-types-the-root-and-constraints"
+        },
+        {
+          "level": 3,
+          "text": "5.1 Constraint bodies",
+          "anchor": "51-constraint-bodies"
+        },
+        {
+          "level": 3,
+          "text": "5.2 The condition object (`when`) \u2014 closed predicate set",
+          "anchor": "52-the-condition-object-when-closed-predicate-set"
+        },
+        {
+          "level": 2,
+          "text": "6. Imports",
+          "anchor": "6-imports"
+        },
+        {
+          "level": 2,
+          "text": "7. Enum-sourcing selector grammar (pinned)",
+          "anchor": "7-enum-sourcing-selector-grammar-pinned"
+        },
+        {
+          "level": 2,
+          "text": "8. Custom-scalar registration (manifest side)",
+          "anchor": "8-custom-scalar-registration-manifest-side"
+        },
+        {
+          "level": 2,
+          "text": "9. Migration files",
+          "anchor": "9-migration-files"
+        },
+        {
+          "level": 2,
+          "text": "10. Path grammar reuse",
+          "anchor": "10-path-grammar-reuse"
+        },
+        {
+          "level": 2,
+          "text": "11. Rejected surface features (rationale)",
+          "anchor": "11-rejected-surface-features-rationale"
+        },
+        {
+          "level": 2,
+          "text": "Amendment log",
+          "anchor": "amendment-log"
+        },
+        {
+          "level": 2,
+          "text": "Cross-references",
+          "anchor": "cross-references"
+        }
+      ]
+    },
+    {
+      "path": "gen-index.md",
+      "title": "API Reference",
+      "type": "doc",
+      "headings": [
+        {
+          "level": 1,
+          "text": "API Reference",
+          "anchor": "api-reference"
+        }
+      ]
+    },
+    {
+      "path": "go-strictspec.md",
+      "title": "go/strictspec",
+      "type": "doc",
+      "headings": [
+        {
+          "level": 1,
+          "text": "go/strictspec",
+          "anchor": "gostrictspec"
+        },
+        {
+          "level": 2,
+          "text": "go/strictspec",
+          "anchor": "gostrictspec"
+        },
+        {
+          "level": 3,
+          "text": "KindRecord",
+          "anchor": "kindrecord"
+        },
+        {
+          "level": 3,
+          "text": "KindArray",
+          "anchor": "kindarray"
+        },
+        {
+          "level": 3,
+          "text": "KindString",
+          "anchor": "kindstring"
+        },
+        {
+          "level": 3,
+          "text": "KindInteger",
+          "anchor": "kindinteger"
+        },
+        {
+          "level": 3,
+          "text": "KindFloat",
+          "anchor": "kindfloat"
+        },
+        {
+          "level": 3,
+          "text": "KindBool",
+          "anchor": "kindbool"
+        },
+        {
+          "level": 3,
+          "text": "KindNull",
+          "anchor": "kindnull"
+        },
+        {
+          "level": 3,
+          "text": "KindDatetime",
+          "anchor": "kinddatetime"
+        },
+        {
+          "level": 3,
+          "text": "KindDate",
+          "anchor": "kinddate"
+        },
+        {
+          "level": 3,
+          "text": "KindTime",
+          "anchor": "kindtime"
+        },
+        {
+          "level": 3,
+          "text": "Version",
+          "anchor": "version"
+        },
+        {
+          "level": 3,
+          "text": "Diagnostic",
+          "anchor": "diagnostic"
+        },
+        {
+          "level": 3,
+          "text": "Result",
+          "anchor": "result"
+        },
+        {
+          "level": 3,
+          "text": "Program",
+          "anchor": "program"
+        },
+        {
+          "level": 3,
+          "text": "Kind",
+          "anchor": "kind"
+        },
+        {
+          "level": 3,
+          "text": "Value",
+          "anchor": "value"
+        },
+        {
+          "level": 3,
+          "text": "KV",
+          "anchor": "kv"
+        },
+        {
+          "level": 3,
+          "text": "CompileEmbedded",
+          "anchor": "compileembedded"
+        },
+        {
+          "level": 3,
+          "text": "CheckRuntimeVersion",
+          "anchor": "checkruntimeversion"
+        },
+        {
+          "level": 3,
+          "text": "RequireRuntimeVersion",
+          "anchor": "requireruntimeversion"
+        },
+        {
+          "level": 3,
+          "text": "LoadValue",
+          "anchor": "loadvalue"
+        },
+        {
+          "level": 3,
+          "text": "LoadValues",
+          "anchor": "loadvalues"
+        },
+        {
+          "level": 3,
+          "text": "Program.Validate",
+          "anchor": "programvalidate"
+        },
+        {
+          "level": 3,
+          "text": "Program.ValidateWithEvidence",
+          "anchor": "programvalidatewithevidence"
+        },
+        {
+          "level": 3,
+          "text": "Program.ValidateValue",
+          "anchor": "programvalidatevalue"
+        },
+        {
+          "level": 3,
+          "text": "Program.ValidateValueWithEvidence",
+          "anchor": "programvalidatevaluewithevidence"
+        },
+        {
+          "level": 3,
+          "text": "Value.Kind",
+          "anchor": "valuekind"
+        },
+        {
+          "level": 3,
+          "text": "Value.Field",
+          "anchor": "valuefield"
+        },
+        {
+          "level": 3,
+          "text": "Value.Entries",
+          "anchor": "valueentries"
+        },
+        {
+          "level": 3,
+          "text": "Value.Items",
+          "anchor": "valueitems"
+        },
+        {
+          "level": 3,
+          "text": "Value.AsString",
+          "anchor": "valueasstring"
+        },
+        {
+          "level": 3,
+          "text": "Value.Int",
+          "anchor": "valueint"
+        },
+        {
+          "level": 3,
+          "text": "Value.Float",
+          "anchor": "valuefloat"
+        },
+        {
+          "level": 3,
+          "text": "Value.Number",
+          "anchor": "valuenumber"
+        },
+        {
+          "level": 3,
+          "text": "Value.Bool",
+          "anchor": "valuebool"
+        },
+        {
+          "level": 3,
+          "text": "Value.Datetime",
+          "anchor": "valuedatetime"
+        },
+        {
+          "level": 3,
+          "text": "Value.IsNull",
+          "anchor": "valueisnull"
+        }
+      ]
+    }
+  ],
+  "posts": [],
+  "last_gen": "2026-08-12T03:47:56.146751+00:00"
+}
