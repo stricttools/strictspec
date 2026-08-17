@@ -27,7 +27,7 @@ import (
 // --- gen --------------------------------------------------------------------
 
 func genHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strictcli.Outcome {
-	manifestPath := strictcli.Get[string](kwargs, "manifest")
+	manifestPath := optStr(kwargs, "manifest", "strictspec.toml")
 	m, err := manifest.Load(manifestPath)
 	if err != nil {
 		ctx.Error(err.Error())
@@ -58,7 +58,7 @@ func genHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strictcli
 				return strictcli.Exit(1)
 			}
 			outPath := filepath.Join(dir, tgt.Output)
-			if werr := writeGenerated(outPath, src); werr != nil {
+			if werr := writeGenerated(ctx, outPath, src); werr != nil {
 				ctx.Error(werr.Error())
 				return strictcli.Exit(1)
 			}
@@ -66,7 +66,7 @@ func genHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strictcli
 			generatedPaths = append(generatedPaths, tgt.Output)
 		}
 	}
-	if err := ensureGitattributes(dir, generatedPaths); err != nil {
+	if err := ensureGitattributes(ctx, dir, generatedPaths); err != nil {
 		ctx.Error(err.Error())
 		return strictcli.Exit(1)
 	}
@@ -131,20 +131,35 @@ func diagError(d diag.Diagnostic) error {
 
 // --- validate ---------------------------------------------------------------
 
+// validateMode is the elected `mode` selector flattened into the three facts the
+// handler consumes. The evidence fields are populated only by the
+// with-domain-checks arm, because that is the only scope that declares them.
+type validateMode struct {
+	structuralOnly bool
+	withDomain     bool
+	collections    []string
+	collectionRoot string
+}
+
 func validateHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strictcli.Outcome {
 	schemaPath := strictcli.Get[string](kwargs, "schema")
 	docs := stringSlice(kwargs, "documents")
-	structuralOnly, _ := strictcli.GetOpt[bool](kwargs, "structural_only")
-	withDomain, _ := strictcli.GetOpt[bool](kwargs, "with_domain_checks")
-	if structuralOnly == withDomain {
-		// Mutex should prevent this, but guard: exactly one mode is required.
-		ctx.Error("validate requires exactly one of --structural-only or --with-domain-checks")
-		return strictcli.Exit(2)
-	}
-	if len(docs) == 0 {
-		ctx.Error("validate requires at least one document")
-		return strictcli.Exit(2)
-	}
+	// Exactly one mode is elected by the framework (the `mode` selector), and a
+	// variadic ArgRequired() means at least one document -- neither needs a hand
+	// guard here. Match is exhaustive against the declaration, so adding a third
+	// mode breaks this switch rather than silently falling through it.
+	mode := strictcli.Match(strictcli.GetElected(kwargs, "mode"),
+		strictcli.When(ModeStructuralOnly, func(f strictcli.Fields) validateMode {
+			return validateMode{structuralOnly: true}
+		}),
+		strictcli.When(ModeWithDomainChecks, func(f strictcli.Fields) validateMode {
+			return validateMode{
+				withDomain:     true,
+				collections:    stringSlice(f, "collection"),
+				collectionRoot: strictcli.Get[string](f, "collection_root"),
+			}
+		}),
+	)
 
 	s, sdiags, err := schema.LoadFile(schemaPath)
 	if err != nil {
@@ -163,7 +178,7 @@ func validateHandler(ctx *strictcli.Context, kwargs map[string]interface{}) stri
 	// with no --collection to satisfy it, is a hard error naming the resolver —
 	// never a silent skip.
 	var evidence map[string][]map[string]any
-	if withDomain {
+	if mode.withDomain {
 		resolvers := crossDocResolvers(s)
 		var collectionShaped []string
 		for _, r := range resolvers {
@@ -177,19 +192,14 @@ func validateHandler(ctx *strictcli.Context, kwargs map[string]interface{}) stri
 			return strictcli.Exit(1)
 		}
 		if len(collectionShaped) > 0 {
-			collections := stringSlice(kwargs, "collection")
-			if len(collections) == 0 {
+			if len(mode.collections) == 0 {
 				ctx.Error(fmt.Sprintf("--with-domain-checks: the schema's cross-document "+
 					"constraint(s) require evidence resolver(s) %s; pass --collection <glob> to host "+
 					"the collection in-process. A collection-shaped resolver with no --collection is a "+
 					"hard error, never a skip.", strings.Join(collectionShaped, ", ")))
 				return strictcli.Exit(1)
 			}
-			collRoot, _ := strictcli.GetOpt[string](kwargs, "collection_root")
-			if collRoot == "" {
-				collRoot = "."
-			}
-			evDocs, everr := loadCollectionEvidence(collRoot, collections)
+			evDocs, everr := loadCollectionEvidence(mode.collectionRoot, mode.collections)
 			if everr != nil {
 				ctx.Error(everr.Error())
 				return strictcli.Exit(1)
@@ -211,7 +221,7 @@ func validateHandler(ctx *strictcli.Context, kwargs map[string]interface{}) stri
 			anyBad = true
 			continue
 		}
-		diags := validateOne(prog, src, syntaxOf(docPath), structuralOnly, evidence)
+		diags := validateOne(prog, src, syntaxOf(docPath), mode.structuralOnly, evidence)
 		if len(diags) == 0 {
 			ctx.Info(fmt.Sprintf("%s: OK", docPath))
 			continue
@@ -524,17 +534,17 @@ func checkMigrationFiles(ctx *strictcli.Context, dir string) bool {
 // --- init -------------------------------------------------------------------
 
 func initHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strictcli.Outcome {
-	manifestPath := strictcli.Get[string](kwargs, "manifest")
+	manifestPath := optStr(kwargs, "manifest", "strictspec.toml")
 	if _, err := os.Stat(manifestPath); err == nil {
 		ctx.Error(fmt.Sprintf("%s already exists (init refuses to overwrite)", manifestPath))
 		return strictcli.Exit(1)
 	}
-	if err := os.WriteFile(manifestPath, []byte(manifestSkeleton), 0o644); err != nil {
+	if _, err := ctx.Effects().Write(manifestPath, manifestSkeleton); err != nil {
 		ctx.Error(err.Error())
 		return strictcli.Exit(1)
 	}
 	dir := filepath.Dir(manifestPath)
-	if err := ensureGitattributes(dir, nil); err != nil {
+	if err := ensureGitattributes(ctx, dir, nil); err != nil {
 		ctx.Error(err.Error())
 		return strictcli.Exit(1)
 	}
@@ -546,7 +556,15 @@ func initHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strictcl
 
 func exportHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strictcli.Outcome {
 	schemaPath := strictcli.Get[string](kwargs, "schema")
-	output, _ := strictcli.GetOpt[string](kwargs, "output")
+	// Absence means stdout, exactly as --output's own help declares. The
+	// destination is decided by PRESENCE, not by comparing the value against "":
+	// an explicit `--output ""` is an invocation that named a path, and it is
+	// refused as one rather than silently re-read as "no output path".
+	output, haveOutput := strictcli.GetOpt[string](kwargs, "output")
+	if haveOutput && output == "" {
+		ctx.Error("--output was given an empty path; omit --output to write to stdout")
+		return strictcli.Exit(2)
+	}
 
 	s, sdiags, err := schema.LoadFile(schemaPath)
 	if err != nil {
@@ -565,12 +583,12 @@ func exportHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strict
 		ctx.Error(eerr.Error())
 		return strictcli.Exit(1)
 	}
-	if output == "" {
+	if !haveOutput {
 		os.Stdout.Write(out)
 		os.Stdout.Write([]byte("\n"))
 		return strictcli.Exit(0)
 	}
-	if err := os.WriteFile(output, append(out, '\n'), 0o644); err != nil {
+	if _, err := ctx.Effects().Write(output, append(out, '\n')); err != nil {
 		ctx.Error(err.Error())
 		return strictcli.Exit(1)
 	}
@@ -656,23 +674,32 @@ func walkOpaque(t *schema.Type, emit func(path, kind, detail string)) {
 	walkOpaque(t.Inner, emit)
 }
 
-func writeGenerated(path, content string) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+// writeGenerated writes one generated file through the effects handle, so a dry
+// run records the four steps instead of performing any of them. Generated files
+// land 0444, and an existing one is chmodded writable first -- that chmod is a
+// mutation like any other and is recorded as one.
+func writeGenerated(ctx *strictcli.Context, path, content string) error {
+	fx := ctx.Effects()
+	if _, err := fx.Mkdir(filepath.Dir(path)); err != nil {
 		return err
 	}
-	// chmod before overwrite (generated files land 0444).
 	if _, err := os.Stat(path); err == nil {
-		_ = os.Chmod(path, 0o644)
+		if _, cerr := fx.Chmod(path, 0o644); cerr != nil {
+			return cerr
+		}
 	}
-	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+	if _, err := fx.Write(path, content); err != nil {
 		return err
 	}
-	return os.Chmod(path, 0o444)
+	_, err := fx.Chmod(path, 0o444)
+	return err
 }
 
-// ensureGitattributes appends LF rules for the generated paths (byte-compare
-// dies under autocrlf) if not already present.
-func ensureGitattributes(dir string, paths []string) error {
+// ensureGitattributes adds LF rules for the generated paths (byte-compare dies
+// under autocrlf) if not already present. The effects method set has no append
+// member by design, so the file is read, the new content composed in full, and
+// written in one recordable step -- byte-identical to the append it replaces.
+func ensureGitattributes(ctx *strictcli.Context, dir string, paths []string) error {
 	gaPath := filepath.Join(dir, ".gitattributes")
 	existing := ""
 	if b, err := os.ReadFile(gaPath); err == nil {
@@ -688,18 +715,16 @@ func ensureGitattributes(dir string, paths []string) error {
 	if len(add) == 0 {
 		return nil
 	}
-	f, err := os.OpenFile(gaPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
+	var b strings.Builder
+	b.WriteString(existing)
 	if existing != "" && !strings.HasSuffix(existing, "\n") {
-		f.WriteString("\n")
+		b.WriteString("\n")
 	}
 	for _, line := range add {
-		f.WriteString(line + "\n")
+		b.WriteString(line + "\n")
 	}
-	return nil
+	_, err := ctx.Effects().Write(gaPath, b.String())
+	return err
 }
 
 func syntaxOf(path string) string {

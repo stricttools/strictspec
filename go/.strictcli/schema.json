@@ -1,259 +1,371 @@
 {
-  "commands": {
-    "check": {
-      "flags": [
-        {
-          "default": "strictspec.toml",
-          "help": "Path to the strictspec.toml manifest",
-          "name": "manifest",
-          "type": "str"
-        }
-      ],
-      "help": "Check schema authoring validity and generated-code freshness",
-      "name": "check"
-    },
-    "diff": {
-      "args": [
-        {
-          "help": "Path to the schema at format_version N",
-          "name": "old-schema"
-        },
-        {
-          "help": "Path to the schema at format_version N+1",
-          "name": "new-schema"
-        }
-      ],
-      "flags": [
-        {
-          "help": "REQUIRED corpus glob (anchored at --corpus-root, lexicographic)",
-          "name": "corpus",
-          "type": "str"
-        },
-        {
-          "default": ".",
-          "help": "Root the corpus glob is anchored at (default: cwd)",
-          "name": "corpus-root",
-          "type": "str"
-        },
-        {
-          "default": "",
-          "help": "Path to the migration file between the two versions",
-          "name": "migration",
-          "type": "str"
-        },
-        {
-          "default": "",
-          "help": "Path to a committed adjudication file to acknowledge",
-          "name": "adjudication",
-          "type": "str"
-        },
-        {
-          "default": false,
-          "help": "Force same-version narrowing scan (no migration)",
-          "name": "same-version",
-          "negatable": true,
-          "type": "bool"
-        }
-      ],
-      "help": "Compare a schema at two format_versions over a corpus; emit a certificate",
-      "name": "diff"
-    },
-    "doc-diff": {
-      "args": [
-        {
-          "help": "Path to the schema file",
-          "name": "schema"
-        },
-        {
-          "help": "Path to the OLD document",
-          "name": "old-document"
-        },
-        {
-          "help": "Path to the NEW document",
-          "name": "new-document"
-        }
-      ],
-      "help": "Structural per-path delta of two documents of one schema",
-      "name": "doc-diff"
-    },
-    "export": {
-      "args": [
-        {
-          "help": "Path to the schema file",
-          "name": "schema"
-        }
-      ],
-      "flags": [
-        {
-          "default": "",
-          "help": "Output path (default: stdout)",
-          "name": "output",
-          "type": "str"
-        }
-      ],
-      "help": "Export a schema to JSON Schema (advisory; lossy per the constitution)",
-      "name": "export"
-    },
-    "gen": {
-      "flags": [
-        {
-          "default": "strictspec.toml",
-          "help": "Path to the strictspec.toml manifest",
-          "name": "manifest",
-          "type": "str"
-        }
-      ],
-      "help": "Generate validator code from the manifest (strictspec.toml)",
-      "name": "gen"
-    },
-    "init": {
-      "flags": [
-        {
-          "default": "strictspec.toml",
-          "help": "Path to the strictspec.toml manifest to create",
-          "name": "manifest",
-          "type": "str"
-        }
-      ],
-      "help": "Scaffold a minimal strictspec.toml manifest and .gitattributes",
-      "name": "init"
-    },
-    "migrate": {
-      "args": [
-        {
-          "help": "Path to the target (current-version) schema file",
-          "name": "schema"
-        },
-        {
-          "help": "One or more document files to migrate",
-          "name": "documents",
-          "variadic": true
-        }
-      ],
-      "flags": [
-        {
-          "help": "Target format_version (must equal the schema's current format_version)",
-          "name": "to",
-          "type": "int"
-        },
-        {
-          "default": ".",
-          "help": "Directory of *.migration.toml files forming the chain",
-          "name": "migrations",
-          "type": "str"
-        },
-        {
-          "default": false,
-          "help": "Render the would-be output and diagnostics without writing",
-          "name": "dry-run",
-          "negatable": true,
-          "type": "bool"
-        }
-      ],
-      "help": "Migrate document(s) up to the schema's current format_version",
-      "name": "migrate"
-    },
-    "validate": {
-      "args": [
-        {
-          "help": "Path to the schema file",
-          "name": "schema"
-        },
-        {
-          "help": "One or more document files to validate",
-          "name": "documents",
-          "variadic": true
-        }
-      ],
-      "constraints": [
-        {
-          "flags": [
-            "structural-only",
-            "with-domain-checks"
-          ],
-          "type": "mutex"
-        }
-      ],
-      "flags": [
-        {
-          "default": [],
-          "help": "Glob hosting an in-process documents-in(...) evidence collection (repeatable)",
-          "name": "collection",
-          "repeatable": true,
-          "type": "str"
-        },
-        {
-          "default": ".",
-          "help": "Root the --collection globs are anchored at (default: cwd)",
-          "name": "collection-root",
-          "type": "str"
-        },
-        {
-          "help": "Run phase-1 structural checks only",
-          "name": "structural-only",
-          "negatable": true,
-          "type": "bool"
-        },
-        {
-          "help": "Also run the phase-2 constraint vocabulary",
-          "name": "with-domain-checks",
-          "negatable": true,
-          "type": "bool"
-        }
-      ],
-      "help": "Validate document(s) against a schema and render diagnostics",
-      "name": "validate"
-    }
-  },
+  "schema_version": 2,
   "defaults": {
+    "schema_version": 2,
     "app": {
-      "commands": {},
-      "config": false,
-      "deprecated": {},
       "env_prefix": null,
+      "config": false,
+      "config_format": "json",
+      "config_path": null,
+      "config_conflict_mode": "cli-wins",
+      "proc_observe_allowlist": [],
       "global_flags": [],
+      "commands": {},
       "groups": {},
-      "tag_contracts": {}
-    },
-    "arg": {
-      "choices": null,
-      "default": null,
-      "required": true,
-      "type": "str",
-      "variadic": false
-    },
-    "command": {
-      "args": [],
-      "constraints": [],
-      "flags": [],
-      "hidden": false,
-      "interactive": false,
-      "passthrough": false,
-      "tags": []
+      "deprecated": {},
+      "tag_contracts": {},
+      "checks": {},
+      "config_fields": {},
+      "infra": {}
     },
     "flag": {
-      "choices": null,
-      "default": null,
+      "short": null,
       "env": null,
       "env_separator": null,
-      "hidden": false,
+      "prefixed": true,
+      "choices": null,
+      "elect_by": null,
+      "unique": false,
+      "conflict_mode": null,
       "negatable": null,
-      "repeatable": false,
-      "short": null,
-      "unique": false
+      "nullable": false
+    },
+    "arg": {
+      "variadic": false,
+      "choices": null
+    },
+    "choice": {
+      "flags": []
+    },
+    "choice_record": {
+      "help": null
+    },
+    "command": {
+      "consequential": false,
+      "dry_run_supported": true,
+      "dry_run_unsupported_reason": null,
+      "update_of": null,
+      "write_mode": null,
+      "payload_schema": null,
+      "owns_stdout": false,
+      "passthrough": false,
+      "flags": [],
+      "flag_sets": [],
+      "args": [],
+      "tags": [],
+      "constraints": [],
+      "hidden": false,
+      "interactive": false,
+      "config_fields": [],
+      "grants": [],
+      "forwarding": null
     },
     "group": {
       "commands": {},
-      "deprecated": {},
       "groups": {},
-      "hidden": false,
-      "tags": []
+      "deprecated": {},
+      "tags": [],
+      "hidden": false
     },
-    "schema_version": 1
+    "config_field": {
+      "default": null,
+      "bound_commands": []
+    },
+    "check": {
+      "scope": null
+    },
+    "infra": {
+      "roots": [],
+      "handshakes": [],
+      "connections": []
+    }
   },
-  "help": "strictspec: strict, byte-identical schema validation and code generation",
-  "name": "strictspec",
   "project_id": "github.com/smm-h/strictspec/go",
-  "schema_version": 1,
-  "version": "0.1.0"
+  "name": "strictspec",
+  "version": "0.1.0",
+  "help": "strictspec: strict, byte-identical schema validation and code generation",
+  "commands": {
+    "gen": {
+      "name": "gen",
+      "help": "Generate validator code from the manifest (strictspec.toml)",
+      "effect": "mutating",
+      "flags": [
+        {
+          "name": "manifest",
+          "help": "Path to the strictspec.toml manifest; omitted means strictspec.toml",
+          "value_schema": {
+            "type": "string"
+          },
+          "presence": "optional"
+        }
+      ]
+    },
+    "validate": {
+      "name": "validate",
+      "help": "Validate document(s) against a schema and render diagnostics",
+      "effect": "read_only",
+      "flags": [
+        {
+          "name": "mode",
+          "help": "Which check phases to run",
+          "presence": "required",
+          "choices": [
+            {
+              "name": "structural-only",
+              "help": "Run phase-1 structural checks only"
+            },
+            {
+              "name": "with-domain-checks",
+              "help": "Also run the phase-2 constraint vocabulary",
+              "flags": [
+                {
+                  "name": "collection",
+                  "help": "Glob hosting an in-process documents-in(...) evidence collection (repeatable)",
+                  "value_schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "presence": "optional"
+                },
+                {
+                  "name": "collection-root",
+                  "help": "Root the --collection globs are anchored at",
+                  "value_schema": {
+                    "type": "string"
+                  },
+                  "presence": "default",
+                  "default": "."
+                }
+              ]
+            }
+          ],
+          "elect_by": "member-flags"
+        }
+      ],
+      "args": [
+        {
+          "name": "schema",
+          "help": "Path to the schema file",
+          "value_schema": {
+            "type": "string"
+          },
+          "presence": "required"
+        },
+        {
+          "name": "documents",
+          "help": "One or more document files to validate",
+          "value_schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "presence": "required",
+          "variadic": true
+        }
+      ]
+    },
+    "check": {
+      "name": "check",
+      "help": "Check schema authoring validity and generated-code freshness",
+      "effect": "read_only",
+      "flags": [
+        {
+          "name": "manifest",
+          "help": "Path to the strictspec.toml manifest",
+          "value_schema": {
+            "type": "string"
+          },
+          "presence": "default",
+          "default": "strictspec.toml"
+        }
+      ]
+    },
+    "init": {
+      "name": "init",
+      "help": "Scaffold a minimal strictspec.toml manifest and .gitattributes",
+      "effect": "mutating",
+      "flags": [
+        {
+          "name": "manifest",
+          "help": "Path to the strictspec.toml manifest to create; omitted means strictspec.toml",
+          "value_schema": {
+            "type": "string"
+          },
+          "presence": "optional"
+        }
+      ]
+    },
+    "export": {
+      "name": "export",
+      "help": "Export a schema to JSON Schema (advisory; lossy per the constitution)",
+      "effect": "mutating",
+      "flags": [
+        {
+          "name": "output",
+          "help": "Output path; omitted means stdout",
+          "value_schema": {
+            "type": "string"
+          },
+          "presence": "optional"
+        }
+      ],
+      "args": [
+        {
+          "name": "schema",
+          "help": "Path to the schema file",
+          "value_schema": {
+            "type": "string"
+          },
+          "presence": "required"
+        }
+      ]
+    },
+    "migrate": {
+      "name": "migrate",
+      "help": "Migrate document(s) up to the schema's current format_version",
+      "effect": "mutating",
+      "flags": [
+        {
+          "name": "to",
+          "help": "Target format_version (must equal the schema's current format_version)",
+          "value_schema": {
+            "type": "integer"
+          },
+          "presence": "required"
+        },
+        {
+          "name": "migrations",
+          "help": "Directory of *.migration.toml files forming the chain; omitted means the current directory",
+          "value_schema": {
+            "type": "string"
+          },
+          "presence": "optional"
+        }
+      ],
+      "args": [
+        {
+          "name": "schema",
+          "help": "Path to the target (current-version) schema file",
+          "value_schema": {
+            "type": "string"
+          },
+          "presence": "required"
+        },
+        {
+          "name": "documents",
+          "help": "One or more document files to migrate",
+          "value_schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "presence": "required",
+          "variadic": true
+        }
+      ]
+    },
+    "diff": {
+      "name": "diff",
+      "help": "Compare a schema at two format_versions over a corpus; emit a certificate",
+      "effect": "read_only",
+      "flags": [
+        {
+          "name": "corpus",
+          "help": "Corpus glob (anchored at --corpus-root, lexicographic)",
+          "value_schema": {
+            "type": "string"
+          },
+          "presence": "required"
+        },
+        {
+          "name": "corpus-root",
+          "help": "Root the corpus glob is anchored at",
+          "value_schema": {
+            "type": "string"
+          },
+          "presence": "default",
+          "default": "."
+        },
+        {
+          "name": "migration",
+          "help": "Path to the migration file between the two versions",
+          "value_schema": {
+            "type": "string"
+          },
+          "presence": "optional"
+        },
+        {
+          "name": "adjudication",
+          "help": "Path to a committed adjudication file to acknowledge",
+          "value_schema": {
+            "type": "string"
+          },
+          "presence": "optional"
+        },
+        {
+          "name": "same-version",
+          "help": "Force same-version narrowing scan (no migration)",
+          "value_schema": {
+            "type": "boolean"
+          },
+          "presence": "default",
+          "default": false,
+          "negatable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "old-schema",
+          "help": "Path to the schema at format_version N",
+          "value_schema": {
+            "type": "string"
+          },
+          "presence": "required"
+        },
+        {
+          "name": "new-schema",
+          "help": "Path to the schema at format_version N+1",
+          "value_schema": {
+            "type": "string"
+          },
+          "presence": "required"
+        }
+      ]
+    },
+    "doc-diff": {
+      "name": "doc-diff",
+      "help": "Structural per-path delta of two documents of one schema",
+      "effect": "read_only",
+      "args": [
+        {
+          "name": "schema",
+          "help": "Path to the schema file",
+          "value_schema": {
+            "type": "string"
+          },
+          "presence": "required"
+        },
+        {
+          "name": "old-document",
+          "help": "Path to the OLD document",
+          "value_schema": {
+            "type": "string"
+          },
+          "presence": "required"
+        },
+        {
+          "name": "new-document",
+          "help": "Path to the NEW document",
+          "value_schema": {
+            "type": "string"
+          },
+          "presence": "required"
+        }
+      ]
+    }
+  }
 }

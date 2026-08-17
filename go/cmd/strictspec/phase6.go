@@ -25,13 +25,12 @@ import (
 func migrateHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strictcli.Outcome {
 	schemaPath := strictcli.Get[string](kwargs, "schema")
 	to := int64(strictcli.Get[int](kwargs, "to"))
-	migDir := strictcli.Get[string](kwargs, "migrations")
-	dryRun, _ := strictcli.GetOpt[bool](kwargs, "dry_run")
+	// Absence means the current directory, exactly as --migrations' help declares.
+	migDir := optStr(kwargs, "migrations", ".")
+	// --dry-run is framework-owned; it is never declared and arrives on ctx.
+	// A variadic ArgRequired() already means at least one document.
+	dryRun := ctx.DryRun()
 	docs := stringSlice(kwargs, "documents")
-	if len(docs) == 0 {
-		ctx.Error("migrate requires at least one document")
-		return strictcli.Exit(2)
-	}
 
 	prog, err := loadProgram(ctx, schemaPath)
 	if err != nil {
@@ -104,6 +103,9 @@ func migrateHandler(ctx *strictcli.Context, kwargs map[string]interface{}) stric
 		outputs = append(outputs, pending{path: docPath, output: res.Output})
 	}
 
+	// Under --dry-run the framework's would-do log names each write and rename;
+	// the would-be document bytes are the detail that log cannot carry, so they
+	// are still rendered per file.
 	if dryRun {
 		for _, p := range outputs {
 			ctx.Info(fmt.Sprintf("--- %s (dry-run, would write) ---", p.path))
@@ -112,21 +114,25 @@ func migrateHandler(ctx *strictcli.Context, kwargs map[string]interface{}) stric
 				os.Stdout.Write([]byte("\n"))
 			}
 		}
-		return strictcli.Exit(0)
 	}
 
-	// Rename sweep only after all succeeded: write temp then rename each.
+	// Rename sweep only after all succeeded (all-or-nothing atomicity): write
+	// temp then rename each. Every step goes through the effects handle, so a
+	// dry run records the sweep instead of performing it.
+	fx := ctx.Effects()
 	for _, p := range outputs {
 		tmp := p.path + ".strictspec-migrate.tmp"
-		if err := os.WriteFile(tmp, p.output, 0o644); err != nil {
+		if _, err := fx.Write(tmp, p.output); err != nil {
 			ctx.Error(err.Error())
 			return strictcli.Exit(1)
 		}
-		if err := os.Rename(tmp, p.path); err != nil {
+		if _, err := fx.Rename(tmp, p.path); err != nil {
 			ctx.Error(err.Error())
 			return strictcli.Exit(1)
 		}
-		ctx.Info(fmt.Sprintf("migrated %s to format_version %d", p.path, to))
+		if !dryRun {
+			ctx.Info(fmt.Sprintf("migrated %s to format_version %d", p.path, to))
+		}
 	}
 	return strictcli.Exit(0)
 }
@@ -137,13 +143,16 @@ func diffHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strictcl
 	oldSchemaPath := strictcli.Get[string](kwargs, "old-schema")
 	newSchemaPath := strictcli.Get[string](kwargs, "new-schema")
 	corpus := strictcli.Get[string](kwargs, "corpus")
-	migPath, _ := strictcli.GetOpt[string](kwargs, "migration")
-	adjPath, _ := strictcli.GetOpt[string](kwargs, "adjudication")
-	sameVersionFlag, _ := strictcli.GetOpt[bool](kwargs, "same_version")
-	root, _ := strictcli.GetOpt[string](kwargs, "corpus_root")
-	if root == "" {
-		root = "."
-	}
+	// --migration and --adjudication are optional: absence is delivered AS
+	// absence, so the two booleans decide whether each step runs. Nothing here
+	// compares a value against "" -- an explicit empty path is a path the
+	// invocation named, and it fails as one when it is opened.
+	migPath, haveMig := strictcli.GetOpt[string](kwargs, "migration")
+	adjPath, haveAdj := strictcli.GetOpt[string](kwargs, "adjudication")
+	// diff is read_only, so --same-version and --corpus-root may (and do) carry
+	// declared defaults; the framework always supplies them.
+	sameVersionFlag := strictcli.Get[bool](kwargs, "same_version")
+	root := strictcli.Get[string](kwargs, "corpus_root")
 
 	oldProg, err := loadProgram(ctx, oldSchemaPath)
 	if err != nil {
@@ -154,7 +163,7 @@ func diffHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strictcl
 		return strictcli.Exit(1)
 	}
 	var mig *migrate.Migration
-	if migPath != "" {
+	if haveMig {
 		m, mdiags, merr := loadMigrationFile(migPath)
 		if merr != nil {
 			ctx.Error(merr.Error())
@@ -195,7 +204,7 @@ func diffHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strictcl
 		return strictcli.Exit(1)
 	}
 	var adj *diffeng.Adjudication
-	if adjPath != "" {
+	if haveAdj {
 		adjSrc, aerr := os.ReadFile(adjPath)
 		if aerr != nil {
 			ctx.Error(aerr.Error())
