@@ -3,6 +3,11 @@
 Filed 2026-08-09 from an external investigation of this project's CLI surface. Read-only
 analysis; no code was changed.
 
+SPLIT: this is the part of the original file whose work is done. The three items that were
+NOT resolved — the `check` command name collision, the `migrate` structured-diff preview, and
+the `WithConsequential()` decision for `migrate` — were split out into
+`todo/strictcli-effects-regime-open-decisions.md` and remain active. Nothing below is reworded.
+
 ## Context
 
 `go/go.mod` requires `github.com/smm-h/strictcli/go v0.27.0`. The current release is
@@ -72,7 +77,6 @@ reject the flag at parse time (`error: unknown flag '--dry-run'`), and `migrate`
 4. Route the **9 direct effect call sites across 5 functions** (`initHandler`, `exportHandler`,
    `writeGenerated`, `ensureGitattributes`, `migrateHandler` — all in `cmd/strictspec/`) through
    `ctx.Effects()`.
-5. Consider `WithConsequential()` for `migrate` (in-place rewrite of user documents).
 6. **No command needs `WithDryRunUnsupported`.** Both writers already compute everything in
    memory before touching disk (`gen` emits to a string; `migrate` builds an all-or-nothing
    pending slice), and no later step reads state an earlier step wrote.
@@ -88,27 +92,6 @@ reject the flag at parse time (`error: unknown flag '--dry-run'`), and `migrate`
 Not blockers: the subprocess and writes in `internal/emit/build.go` and `tools/gencodes` are
 not reachable from the CLI (they serve the conformance adapter, which is not a strictcli app),
 and the bypass lint scans within a package.
-
-## Blocker: the `check` command name collision
-
-The `effects-bypass` lint only materializes when the check system is enabled
-(`WithChecks`/`WithChecksEmbed`), and enabling it **auto-registers a framework command named
-`check`**. This project already owns `check` as one of its eight documented commands, and
-strictcli has no duplicate-command guard — so the lint is unreachable as things stand.
-
-**Recommendation: rename this project's `check` command** so the check system can be enabled
-and the lint wired up. It is a breaking CLI change on a 0.1.0 tool, which is the cheapest it
-will ever be; the alternative is permanently forgoing the one static guard against effect-seam
-drift. The rename needs a decision on the new spelling (something like `verify` or
-`check-generated`) plus updates to the charter, the CLI reference, and any consumer scripts.
-
-## Requirement: do not regress the migrate preview
-
-Today `migrate --dry-run` prints the full would-be document bytes. The framework's would-do log
-prints `write <path> (N bytes)` instead, so a naive migration **loses detail**. The charter
-promises a "per-file structured diff", which neither the current code nor the framework log
-delivers — so this is the moment to build it rather than a regression to tolerate. Treat the
-structured per-file diff as the target output for `migrate` under preview.
 
 ## Affected files
 
