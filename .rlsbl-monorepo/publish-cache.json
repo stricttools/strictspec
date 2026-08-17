@@ -1,7 +1,7 @@
 {
   "__rlsbl_version__": "0.117.0",
   "py-strictspec": "bfa60b4f497b67e71b31336e0373a3730aca9b16e6b35d1f7a3e003ee406c01a",
-  "go-strictspec": "dba0ecc806143bdea51c0d2b7870d3302c77dff7d7405aec6ceaae31a75631ed",
+  "go-strictspec": "aa652d7283b76984ae03aeaed8f5ddf92a70a0584e359c44fbd0c02f33a37117",
   "ts-strictspec": "e5e163e6e1b261effbd02cf8d26fdb2d3239094d3694410063d61499323bf7c3",
   "conformance": "7323380d94b523961aeaff046c004ccbdfd91cd918817a6e91685455b5a987bd"
 }

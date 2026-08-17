@@ -325,6 +325,7 @@ jobs:
       with:
         version: ~> v2
         args: release --clean --skip=publish,announce,validate
+        workdir: go
       env:
         GORELEASER_CURRENT_TAG: ${{ steps.bare-tag.outputs.tag }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
