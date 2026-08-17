@@ -1,0 +1,13 @@
+{
+  "items": [
+    {
+      "base_version": "0.2.0",
+      "bump": "patch",
+      "name": "strictspec",
+      "registry": "pypi",
+      "tag": "strictspec@v0.2.1",
+      "target_version": "0.2.1"
+    }
+  ],
+  "section_type": "releasables"
+}
