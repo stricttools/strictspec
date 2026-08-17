@@ -49,20 +49,20 @@ jobs:
         # with an explicit tag input also resolves the correct project.
         tag_ref="${TAG_INPUT:-$GITHUB_REF_NAME}"
         case "$tag_ref" in
-          "py-strictspec@v"*)
-            regex='^(strictspec\-ci) / '
+          "go-strictspec@v"*)
+            regex='^(py\-strictspec\-ci) / '
             ;;
           "go-strictspec@v"*)
             regex='^(go\-strictspec\-ci) / '
             ;;
-          "ts-strictspec@v"*)
+          "go-strictspec@v"*)
             regex='^(ts\-strictspec\-ci) / '
             ;;
           "conformance@v"*)
             regex='^(conformance\-ci) / '
             ;;
           *)
-            echo "::error::Publish gate: ref '$tag_ref' matches no project tag prefix (known prefixes: py-strictspec@v, go-strictspec@v, ts-strictspec@v, conformance@v)."
+            echo "::error::Publish gate: ref '$tag_ref' matches no project tag prefix (known prefixes: go-strictspec@v, go-strictspec@v, go-strictspec@v, conformance@v)."
             echo "To retry a release publish, dispatch this workflow at the tag ref: gh workflow run publish.yml --ref <tag>"
             exit 1
             ;;
@@ -141,13 +141,51 @@ jobs:
           # numeric id as tiebreak for retries within the same second) BEFORE the
           # pending / not-success logic runs. This way the newest run decides: still
           # running -> wait; genuinely red -> hard fail.
+          # Recency alone cannot decide a SKIP, though. A `run_all` router dispatch
+          # deliberately puts two check runs of the same name on one commit: "skipped"
+          # from the push-triggered suite whose paths filter found nothing, and a real
+          # conclusion from the dispatched suite. The push suite stamps its skip only
+          # when its `detect` job finally releases the job, routinely AFTER the
+          # dispatched run concluded -- so the latest-per-name run is the skip, and a
+          # commit whose jobs all ran would be refused. When the latest check for a
+          # name is skipped it is therefore replaced by the latest COMPLETED
+          # non-skipped check of that same name, in whichever suite: success passes,
+          # failure fails, and a name that is only ever skipped still blocks.
+          # Then one more collapse, for the one case a per-name grouping cannot see:
+          # GitHub does not expand a matrix for a job its `if` skipped, so the whole job
+          # becomes ONE check run under the unsuffixed name ("cli-ci / test"), while the
+          # run that actually executes it emits one per leg ("cli-ci / test (3.12)").
+          # They never share a name, so the skip would outlive the run that answered it
+          # -- exactly the state a `run_all` router dispatch leaves behind. A skipped
+          # check is dropped when a COMPLETED, non-skipped check for the SAME job (its
+          # matrix expansion, by name) exists; the legs are then judged on their own
+          # conclusions, so a red leg still fails. Nothing else covers a skip: not a
+          # sibling job, not a merely prefix-sharing name, and not a leg that was
+          # itself skipped.
+          # Mirrors rlsbl.ci_checks.latest_check_runs -- the two gates answer the same
+          # question and must never diverge.
           runs="$(jq -s --arg re "$CI_CHECK_REGEX" --arg run_id "$GITHUB_RUN_ID" '
             [ .[].check_runs[]
               | select(.name | test($re))
               | select((.details_url // "") | contains("/actions/runs/" + $run_id + "/") | not)
               | {name, status, conclusion, id, started_at} ]
             | group_by(.name)
-            | map(sort_by(.started_at, .id) | last)' <<< "$resp")"
+            | map(
+                . as $g
+                | ($g | sort_by(.started_at, .id) | last) as $newest
+                | (if $newest.conclusion == "skipped"
+                   then ([ $g[] | select(.status == "completed" and .conclusion != "skipped") ]
+                         | sort_by(.started_at, .id) | last // $newest)
+                   else $newest end))
+            | . as $latest
+            | map(. as $c
+                | select(
+                    $c.conclusion != "skipped"
+                    or ([ $latest[]
+                          | select((.name | startswith($c.name + " ("))
+                                   and .status == "completed"
+                                   and .conclusion != "skipped") ]
+                        | length) == 0))' <<< "$resp")"
           total="$(jq 'length' <<< "$runs")"
 
           if [ "$total" -eq 0 ]; then
@@ -213,7 +251,7 @@ jobs:
     permissions: {}
     steps:
     - run: echo 'No publish target for this release tag'
-  strictspec-pypi:
+  py-strictspec-pypi:
     needs: gate
     runs-on: ubuntu-latest
     steps:
@@ -236,7 +274,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    if: startsWith(inputs.tag || github.ref_name, 'py-strictspec@v')
+    if: startsWith(inputs.tag || github.ref_name, 'go-strictspec@v')
     defaults:
       run:
         working-directory: python
@@ -359,7 +397,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    if: startsWith(inputs.tag || github.ref_name, 'ts-strictspec@v')
+    if: startsWith(inputs.tag || github.ref_name, 'go-strictspec@v')
     defaults:
       run:
         working-directory: ts

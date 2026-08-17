@@ -1,19 +1,17 @@
 
-[[releasables]]
-name = "py-strictspec"
-
+# strictspec is one tool: the Go CLI plus the per-language launcher/runtime
+# packages, whose exact version pairing (DESIGN decision 31) requires a single
+# version. All three packages are members of one releasable.
 [[releasables]]
 name = "go-strictspec"
-
-[[releasables]]
-name = "ts-strictspec"
 
 
 [[projects]]
 path = "python"
-name = "strictspec"
-releasable = "py-strictspec"
+name = "py-strictspec"
+releasable = "go-strictspec"
 watch = ["python/**"]
+import_name = "strictspec"
 
 
 [[projects]]
@@ -25,7 +23,7 @@ releasable = "go-strictspec"
 [[projects]]
 path = "ts"
 name = "ts-strictspec"
-releasable = "ts-strictspec"
+releasable = "go-strictspec"
 
 [[projects]]
 path = "conformance/"
