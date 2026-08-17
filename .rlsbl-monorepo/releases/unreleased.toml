@@ -1,10 +1,19 @@
 [releasables.strictspec]
 # Version bump type: patch, minor, major, infra, or prerelease
-bump = ""
+bump = "patch"
 # Short description of this release (required)
-description = ""
+description = "Publish the Go CLI archives with the release: goreleaser now runs inside the module directory."
 # Optional context explaining why these changes were made
-context = ""
+context = """
+0.2.0 published to PyPI, npm and the Go module proxy, but its GitHub Release
+carried no CLI archives: the Go publish job ran goreleaser at the repository
+root, where there is no .goreleaser.yml and no main package, because a job's
+defaults.run.working-directory reaches `run:` steps only and never an action.
+The first-run launchers in the Python and npm packages download exactly those
+archives, so a 0.2.0 launcher could not fetch its binary. This patch names the
+module directory on the action and goes out immediately rather than waiting for
+the next natural release.
+"""
 # Pre-release channel: alpha, beta, rc, or stable (ordered;
 # demotion is an error). Per package, so one workspace release
 # can ship some packages stable and others as alphas. See
