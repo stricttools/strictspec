@@ -1,10 +1,26 @@
 [releasables.strictspec]
 # Version bump type: patch, minor, major, infra, or prerelease
-bump = ""
+bump = "minor"
 # Short description of this release (required)
-description = ""
+description = "strictspec as one releasable: the Go CLI's effects-regime and declaration-regime migrations (strictcli 0.33), with the Python and npm launcher/runtime packages version-locked to the generator by construction."
 # Optional context explaining why these changes were made
-context = ""
+context = """
+strictspec is one tool -- the Go CLI -- plus per-language launcher/runtime
+packages whose exact version-pairing charter (DESIGN decision 31) demands a
+single version. The three separate releasables it shipped 0.1.0 under were
+scaffold inheritance, not design, and they made the pairing a convention that
+each release had to honour by hand. They are now one releasable: one version,
+one changelog, one release, so the pairing holds by construction. This is the
+first release under that shape, and the reason the Python and npm packages
+move to 0.2.0 without functional changes of their own.
+
+The Go CLI's own changes are its migration onto strictcli 0.33: every writing
+command routes its disk mutations through the effects handle (so `--dry-run`
+reports instead of writing), `validate`'s evidence flags are scoped to
+`--with-domain-checks` instead of being silently ignored under
+`--structural-only`, and an explicitly empty flag value is refused rather than
+read as absent.
+"""
 # Pre-release channel: alpha, beta, rc, or stable (ordered;
 # demotion is an error). Per package, so one workspace release
 # can ship some packages stable and others as alphas. See
