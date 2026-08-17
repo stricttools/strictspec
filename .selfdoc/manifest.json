@@ -817,197 +817,198 @@
         },
         {
           "level": 2,
-          "text": "go/strictspec",
+          "text": "`go/strictspec`",
           "anchor": "gostrictspec"
         },
         {
           "level": 3,
-          "text": "KindRecord",
+          "text": "`KindRecord`",
           "anchor": "kindrecord"
         },
         {
           "level": 3,
-          "text": "KindArray",
+          "text": "`KindArray`",
           "anchor": "kindarray"
         },
         {
           "level": 3,
-          "text": "KindString",
+          "text": "`KindString`",
           "anchor": "kindstring"
         },
         {
           "level": 3,
-          "text": "KindInteger",
+          "text": "`KindInteger`",
           "anchor": "kindinteger"
         },
         {
           "level": 3,
-          "text": "KindFloat",
+          "text": "`KindFloat`",
           "anchor": "kindfloat"
         },
         {
           "level": 3,
-          "text": "KindBool",
+          "text": "`KindBool`",
           "anchor": "kindbool"
         },
         {
           "level": 3,
-          "text": "KindNull",
+          "text": "`KindNull`",
           "anchor": "kindnull"
         },
         {
           "level": 3,
-          "text": "KindDatetime",
+          "text": "`KindDatetime`",
           "anchor": "kinddatetime"
         },
         {
           "level": 3,
-          "text": "KindDate",
+          "text": "`KindDate`",
           "anchor": "kinddate"
         },
         {
           "level": 3,
-          "text": "KindTime",
+          "text": "`KindTime`",
           "anchor": "kindtime"
         },
         {
           "level": 3,
-          "text": "Version",
+          "text": "`Version`",
           "anchor": "version"
         },
         {
           "level": 3,
-          "text": "Diagnostic",
+          "text": "`Diagnostic`",
           "anchor": "diagnostic"
         },
         {
           "level": 3,
-          "text": "Result",
+          "text": "`Result`",
           "anchor": "result"
         },
         {
           "level": 3,
-          "text": "Program",
+          "text": "`Program`",
           "anchor": "program"
         },
         {
           "level": 3,
-          "text": "Kind",
+          "text": "`Kind`",
           "anchor": "kind"
         },
         {
           "level": 3,
-          "text": "Value",
+          "text": "`Value`",
           "anchor": "value"
         },
         {
           "level": 3,
-          "text": "KV",
+          "text": "`KV`",
           "anchor": "kv"
         },
         {
           "level": 3,
-          "text": "CompileEmbedded",
+          "text": "`CompileEmbedded`",
           "anchor": "compileembedded"
         },
         {
           "level": 3,
-          "text": "CheckRuntimeVersion",
+          "text": "`CheckRuntimeVersion`",
           "anchor": "checkruntimeversion"
         },
         {
           "level": 3,
-          "text": "RequireRuntimeVersion",
+          "text": "`RequireRuntimeVersion`",
           "anchor": "requireruntimeversion"
         },
         {
           "level": 3,
-          "text": "LoadValue",
+          "text": "`LoadValue`",
           "anchor": "loadvalue"
         },
         {
           "level": 3,
-          "text": "LoadValues",
+          "text": "`LoadValues`",
           "anchor": "loadvalues"
         },
         {
           "level": 3,
-          "text": "Program.Validate",
+          "text": "`Program.Validate`",
           "anchor": "programvalidate"
         },
         {
           "level": 3,
-          "text": "Program.ValidateWithEvidence",
+          "text": "`Program.ValidateWithEvidence`",
           "anchor": "programvalidatewithevidence"
         },
         {
           "level": 3,
-          "text": "Program.ValidateValue",
+          "text": "`Program.ValidateValue`",
           "anchor": "programvalidatevalue"
         },
         {
           "level": 3,
-          "text": "Program.ValidateValueWithEvidence",
+          "text": "`Program.ValidateValueWithEvidence`",
           "anchor": "programvalidatevaluewithevidence"
         },
         {
           "level": 3,
-          "text": "Value.Kind",
+          "text": "`Value.Kind`",
           "anchor": "valuekind"
         },
         {
           "level": 3,
-          "text": "Value.Field",
+          "text": "`Value.Field`",
           "anchor": "valuefield"
         },
         {
           "level": 3,
-          "text": "Value.Entries",
+          "text": "`Value.Entries`",
           "anchor": "valueentries"
         },
         {
           "level": 3,
-          "text": "Value.Items",
+          "text": "`Value.Items`",
           "anchor": "valueitems"
         },
         {
           "level": 3,
-          "text": "Value.AsString",
+          "text": "`Value.AsString`",
           "anchor": "valueasstring"
         },
         {
           "level": 3,
-          "text": "Value.Int",
+          "text": "`Value.Int`",
           "anchor": "valueint"
         },
         {
           "level": 3,
-          "text": "Value.Float",
+          "text": "`Value.Float`",
           "anchor": "valuefloat"
         },
         {
           "level": 3,
-          "text": "Value.Number",
+          "text": "`Value.Number`",
           "anchor": "valuenumber"
         },
         {
           "level": 3,
-          "text": "Value.Bool",
+          "text": "`Value.Bool`",
           "anchor": "valuebool"
         },
         {
           "level": 3,
-          "text": "Value.Datetime",
+          "text": "`Value.Datetime`",
           "anchor": "valuedatetime"
         },
         {
           "level": 3,
-          "text": "Value.IsNull",
+          "text": "`Value.IsNull`",
           "anchor": "valueisnull"
         }
       ]
     }
   ],
   "posts": [],
-  "last_gen": "2026-08-12T03:47:56.146751+00:00"
+  "last_gen": "2026-08-17T17:11:43.901320+00:00",
+  "theme": "minimal"
 }
