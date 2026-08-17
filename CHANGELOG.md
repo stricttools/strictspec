@@ -2,7 +2,30 @@
 
 # strictspec
 
-## Unreleased
+## 0.2.0
+
+strictspec as one releasable: the Go CLI's effects-regime and declaration-regime migrations (strictcli 0.33), with the Python and npm launcher/runtime packages version-locked to the generator by construction.
+
+<details>
+<summary>Context</summary>
+
+strictspec is one tool -- the Go CLI -- plus per-language launcher/runtime
+packages whose exact version-pairing charter (DESIGN decision 31) demands a
+single version. The three separate releasables it shipped 0.1.0 under were
+scaffold inheritance, not design, and they made the pairing a convention that
+each release had to honour by hand. They are now one releasable: one version,
+one changelog, one release, so the pairing holds by construction. This is the
+first release under that shape, and the reason the Python and npm packages
+move to 0.2.0 without functional changes of their own.
+
+The Go CLI's own changes are its migration onto strictcli 0.33: every writing
+command routes its disk mutations through the effects handle (so `--dry-run`
+reports instead of writing), `validate`'s evidence flags are scoped to
+`--with-domain-checks` instead of being silently ignored under
+`--structural-only`, and an explicitly empty flag value is refused rather than
+read as absent.
+
+</details>
 
 ### Breaking
 
@@ -11,6 +34,7 @@
 ### Features
 
 - [go-strictspec] **`--dry-run` on every writing command.** `gen`, `init`, `export` and `migrate` route every disk mutation through the framework's effects handle, so `--dry-run` reports what each would write, rename or chmod and touches nothing. `migrate --dry-run` still renders the would-be document bytes.
+- [go-strictspec, py-strictspec, ts-strictspec] **One version for all three packages.** The Go CLI, the `strictspec` PyPI package and the `strictspec` npm package are now a single release unit: one version, one changelog, one release. The exact runtime/CLI pairing the first-run launchers rely on now holds by construction, and a version moves for all three even when only one of them changed.
 
 ### Fixes
 
