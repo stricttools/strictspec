@@ -90,14 +90,9 @@ path = "schemas/shared-canvas.toml"
 	}
 }
 
-func TestValidateRequiresMode(t *testing.T) {
-	schema := filepath.Join(fixturesSchemas(t), "shared-canvas.toml")
-	// No mode flag -> the required mutex rejects it (non-zero exit).
-	r := newApp().Test([]string{"validate", schema, "/dev/null"})
-	if r.ExitCode == 0 {
-		t.Fatal("validate without --structural-only/--with-domain-checks must fail")
-	}
-}
+// The "validate requires a mode" case moved to effects_regime_test.go, where it
+// asserts the framework's own unsatisfied-selector sentence rather than only a
+// non-zero exit.
 
 func TestExportProducesJSONSchema(t *testing.T) {
 	dir := t.TempDir()
