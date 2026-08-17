@@ -1,0 +1,13 @@
+{
+  "items": [
+    {
+      "base_version": "0.1.0",
+      "bump": "minor",
+      "name": "strictspec",
+      "registry": "pypi",
+      "tag": "strictspec@v0.2.0",
+      "target_version": "0.2.0"
+    }
+  ],
+  "section_type": "releasables"
+}
