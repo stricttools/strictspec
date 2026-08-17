@@ -3,13 +3,13 @@
 # packages, whose exact version pairing (DESIGN decision 31) requires a single
 # version. All three packages are members of one releasable.
 [[releasables]]
-name = "go-strictspec"
+name = "strictspec"
 
 
 [[projects]]
 path = "python"
 name = "py-strictspec"
-releasable = "go-strictspec"
+releasable = "strictspec"
 watch = ["python/**"]
 import_name = "strictspec"
 
@@ -17,13 +17,13 @@ import_name = "strictspec"
 [[projects]]
 path = "go"
 name = "go-strictspec"
-releasable = "go-strictspec"
+releasable = "strictspec"
 
 
 [[projects]]
 path = "ts"
 name = "ts-strictspec"
-releasable = "go-strictspec"
+releasable = "strictspec"
 
 [[projects]]
 path = "conformance/"

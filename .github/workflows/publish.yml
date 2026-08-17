@@ -49,20 +49,20 @@ jobs:
         # with an explicit tag input also resolves the correct project.
         tag_ref="${TAG_INPUT:-$GITHUB_REF_NAME}"
         case "$tag_ref" in
-          "go-strictspec@v"*)
-            regex='^(py\-strictspec\-ci) / '
-            ;;
-          "go-strictspec@v"*)
-            regex='^(go\-strictspec\-ci) / '
-            ;;
-          "go-strictspec@v"*)
-            regex='^(ts\-strictspec\-ci) / '
-            ;;
           "conformance@v"*)
             regex='^(conformance\-ci) / '
             ;;
+          "strictspec@v"*)
+            regex='^(py\-strictspec\-ci) / '
+            ;;
+          "strictspec@v"*)
+            regex='^(go\-strictspec\-ci) / '
+            ;;
+          "strictspec@v"*)
+            regex='^(ts\-strictspec\-ci) / '
+            ;;
           *)
-            echo "::error::Publish gate: ref '$tag_ref' matches no project tag prefix (known prefixes: go-strictspec@v, go-strictspec@v, go-strictspec@v, conformance@v)."
+            echo "::error::Publish gate: ref '$tag_ref' matches no project tag prefix (known prefixes: strictspec@v, strictspec@v, strictspec@v, conformance@v)."
             echo "To retry a release publish, dispatch this workflow at the tag ref: gh workflow run publish.yml --ref <tag>"
             exit 1
             ;;
@@ -274,7 +274,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    if: startsWith(inputs.tag || github.ref_name, 'go-strictspec@v')
+    if: startsWith(inputs.tag || github.ref_name, 'strictspec@v')
     defaults:
       run:
         working-directory: python
@@ -346,7 +346,7 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     permissions:
       contents: write
-    if: startsWith(inputs.tag || github.ref_name, 'go-strictspec@v')
+    if: startsWith(inputs.tag || github.ref_name, 'strictspec@v')
     defaults:
       run:
         working-directory: go
@@ -397,7 +397,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    if: startsWith(inputs.tag || github.ref_name, 'go-strictspec@v')
+    if: startsWith(inputs.tag || github.ref_name, 'strictspec@v')
     defaults:
       run:
         working-directory: ts
