@@ -1,0 +1,11 @@
+# Archived by rlsbl at release time. This release had no unreleased.toml
+# (a batch member takes its metadata from the batch release file); the
+# archive is written so later changelog regenerations keep the
+# description and context.
+# strictspec document version gate (do not remove)
+format_version = 1
+bump = "minor"
+include = ["pypi", "go", "npm"]
+exclude = []
+description = "strictspec as one releasable: the Go CLI's effects-regime and declaration-regime migrations (strictcli 0.33), with the Python and npm launcher/runtime packages version-locked to the generator by construction."
+context = "strictspec is one tool -- the Go CLI -- plus per-language launcher/runtime\npackages whose exact version-pairing charter (DESIGN decision 31) demands a\nsingle version. The three separate releasables it shipped 0.1.0 under were\nscaffold inheritance, not design, and they made the pairing a convention that\neach release had to honour by hand. They are now one releasable: one version,\none changelog, one release, so the pairing holds by construction. This is the\nfirst release under that shape, and the reason the Python and npm packages\nmove to 0.2.0 without functional changes of their own.\n\nThe Go CLI's own changes are its migration onto strictcli 0.33: every writing\ncommand routes its disk mutations through the effects handle (so `--dry-run`\nreports instead of writing), `validate`'s evidence flags are scoped to\n`--with-domain-checks` instead of being silently ignored under\n`--structural-only`, and an explicitly empty flag value is refused rather than\nread as absent."
