@@ -1,0 +1,11 @@
+# Archived by rlsbl at release time. This release had no unreleased.toml
+# (a batch member takes its metadata from the batch release file); the
+# archive is written so later changelog regenerations keep the
+# description and context.
+# strictspec document version gate (do not remove)
+format_version = 1
+bump = "patch"
+include = ["pypi", "go", "npm"]
+exclude = []
+description = "Publish the Go CLI archives with the release: goreleaser now runs inside the module directory."
+context = "0.2.0 published to PyPI, npm and the Go module proxy, but its GitHub Release\ncarried no CLI archives: the Go publish job ran goreleaser at the repository\nroot, where there is no .goreleaser.yml and no main package, because a job's\ndefaults.run.working-directory reaches `run:` steps only and never an action.\nThe first-run launchers in the Python and npm packages download exactly those\narchives, so a 0.2.0 launcher could not fetch its binary. This patch names the\nmodule directory on the action and goes out immediately rather than waiting for\nthe next natural release."
