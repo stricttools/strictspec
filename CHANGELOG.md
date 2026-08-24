@@ -2,6 +2,27 @@
 
 # strictspec
 
+## 0.2.2
+
+Fixes the Python CLI's first-run download URL, which pointed at a retired release tag and 404'd.
+
+<details>
+<summary>Context</summary>
+
+The Python launcher still built its GitHub Release URL from the per-package
+`go-strictspec@v<version>` tag that the releasable-group migration retired.
+Releases have been tagged `strictspec@v<version>` since that migration and
+carry the goreleaser archives and `checksums.txt` there, so every fresh
+install of a 0.2.x wheel failed on its first `strictspec` invocation with
+`HTTP Error 404` and the CLI was unusable until the cache was seeded by hand.
+This is a fix-forward patch for that shipped defect.
+
+</details>
+
+### Fixes
+
+- [py-strictspec] **The Python CLI's first run downloads its toolchain binary again.** The `strictspec` console script built its GitHub Release URL from the retired per-package tag, so a fresh install's first invocation died with `HTTP Error 404` instead of fetching and caching the Go binary. It now reads from the `strictspec@v<version>` release the assets actually live on, and the manual-install instructions in the failure message point there too.
+
 ## 0.2.1
 
 Publish the Go CLI archives with the release: goreleaser now runs inside the module directory.

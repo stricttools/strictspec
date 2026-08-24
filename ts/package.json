@@ -1,6 +1,6 @@
 {
 	"name": "strictspec",
-	"version": "0.2.1",
+	"version": "0.2.2",
 	"license": "MIT",
 	"type": "module",
 	"description": "TypeScript runtime library and CLI stub for strictspec",
