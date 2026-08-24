@@ -5,20 +5,20 @@
 // I/O and library-only installs never touch the network).
 //
 // On the FIRST CLI invocation this stub resolves the package's exact version,
-// downloads the matching go-strictspec GitHub Release asset for the current
+// downloads the matching strictspec GitHub Release asset for the current
 // platform, verifies its SHA-256 against the release's checksums.txt, caches it
 // under a platform-appropriate cache directory, then execs it -- passing argv
 // through. Subsequent invocations exec the cached binary directly (no network).
 // Node stdlib only -- zero runtime dependencies.
 //
 // The binary is the goreleaser-built `strictspec` archive on the
-// `go-strictspec@vX.Y.Z` GitHub Release (go/.goreleaser.yml). Runtime package
+// `strictspec@vX.Y.Z` GitHub Release (go/.goreleaser.yml). Runtime package
 // version == strictspec release version, so lazy download and the exact
 // version-pairing rule (decision 19) agree by construction.
 //
 // Adapted from rlsbl's npm/shim-firstrun.cjs.tpl; the sole strictspec change is
 // that the binary lives on the prefixed monorepo-releasable tag
-// `go-strictspec@vX.Y.Z` rather than a bare `vX.Y.Z` tag.
+// `strictspec@vX.Y.Z` rather than a bare `vX.Y.Z` tag.
 "use strict";
 
 const fs = require("fs");
@@ -31,9 +31,11 @@ const { execFileSync, spawnSync } = require("child_process");
 const GITHUB_REPO = "smm-h/strictspec";
 const ASSET_PROJECT = "strictspec";
 const BINARY_NAME = "strictspec";
-// The go releasable's tag prefix on the shared monorepo GitHub Releases: the Go
-// binary is published under `go-strictspec@vX.Y.Z`, not a bare `vX.Y.Z` tag.
-const GO_RELEASABLE_TAG_PREFIX = "go-strictspec@v";
+// The releasable GROUP's tag prefix on the shared monorepo GitHub Releases. All
+// three language packages ship as one releasable named `strictspec`, so the Go
+// binary is published under `strictspec@vX.Y.Z`, not a bare `vX.Y.Z` tag and not
+// the retired per-package `go-strictspec@vX.Y.Z` one.
+const RELEASABLE_TAG_PREFIX = "strictspec@v";
 
 // process.platform/arch -> goreleaser (Os, Arch) naming.
 const OS_MAP = { linux: "linux", darwin: "darwin", win32: "windows" };
@@ -59,8 +61,8 @@ function assetName(version) {
 
 function releaseBaseUrl(version) {
   // `@` is a valid path character; GitHub serves release assets under the
-  // literal `go-strictspec@vX.Y.Z` tag.
-  return `https://github.com/${GITHUB_REPO}/releases/download/${GO_RELEASABLE_TAG_PREFIX}${version}`;
+  // literal `strictspec@vX.Y.Z` tag.
+  return `https://github.com/${GITHUB_REPO}/releases/download/${RELEASABLE_TAG_PREFIX}${version}`;
 }
 
 // Platform-specific cache directory for the downloaded binary. Linux:

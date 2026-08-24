@@ -34,13 +34,22 @@ test("assetName has the goreleaser default shape", () => {
 	);
 });
 
-test("releaseBaseUrl targets the go-strictspec@ releasable tag", () => {
-	// The critical strictspec adaptation: the Go binary lives on the
-	// `go-strictspec@vX.Y.Z` releasable tag, not a bare `vX.Y.Z` tag.
+test("releaseBaseUrl targets the strictspec@ releasable-group tag", () => {
+	// The critical strictspec adaptation: the Go binary lives on the releasable
+	// group's `strictspec@vX.Y.Z` tag, not a bare `vX.Y.Z` tag. The retired
+	// per-package `go-strictspec@vX.Y.Z` spelling has no release behind it from
+	// the releasable-group migration onward, so a launcher still asking for it
+	// 404s on its very first run.
 	assert.equal(
-		launcher.releaseBaseUrl("0.1.0"),
-		"https://github.com/smm-h/strictspec/releases/download/go-strictspec@v0.1.0",
+		launcher.releaseBaseUrl("0.2.2"),
+		"https://github.com/smm-h/strictspec/releases/download/strictspec@v0.2.2",
 	);
+});
+
+test("releaseBaseUrl never uses the retired per-package tag", () => {
+	// The failure message's manual-install instructions interpolate this same
+	// base URL, so pinning it here covers the remediation text too.
+	assert.ok(!launcher.releaseBaseUrl("9.9.9").includes("go-strictspec@"));
 });
 
 test("expectedDigest matches by filename", () => {
