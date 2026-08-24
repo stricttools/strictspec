@@ -1,10 +1,18 @@
 [releasables.strictspec]
 # Version bump type: patch, minor, major, infra, or prerelease
-bump = ""
+bump = "patch"
 # Short description of this release (required)
-description = ""
+description = "Fixes the Python CLI's first-run download URL, which pointed at a retired release tag and 404'd."
 # Optional context explaining why these changes were made
-context = ""
+context = """
+The Python launcher still built its GitHub Release URL from the per-package
+`go-strictspec@v<version>` tag that the releasable-group migration retired.
+Releases have been tagged `strictspec@v<version>` since that migration and
+carry the goreleaser archives and `checksums.txt` there, so every fresh
+install of a 0.2.x wheel failed on its first `strictspec` invocation with
+`HTTP Error 404` and the CLI was unusable until the cache was seeded by hand.
+This is a fix-forward patch for that shipped defect.
+"""
 # Pre-release channel: alpha, beta, rc, or stable (ordered;
 # demotion is an error). Per package, so one workspace release
 # can ship some packages stable and others as alphas. See
