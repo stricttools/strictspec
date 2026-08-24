@@ -1,0 +1,11 @@
+# Archived by rlsbl at release time. This release had no unreleased.toml
+# (a batch member takes its metadata from the batch release file); the
+# archive is written so later changelog regenerations keep the
+# description and context.
+# strictspec document version gate (do not remove)
+format_version = 1
+bump = "patch"
+include = ["pypi", "go", "npm"]
+exclude = []
+description = "Ships the npm CLI's first-run download fix; restores npm publishing."
+context = "The npm launcher carried the same stale release-tag defect the Python one did:\nit built its GitHub Release URL from the retired per-package\n`go-strictspec@v<version>` prefix, so a fresh install's first `strictspec`\ninvocation 404'd before it could fetch the Go binary. 0.2.2 fixed the Python\nside and shipped to PyPI, but its npm publish failed on a registry permission\nerror, so no npm user ever received it and the newest package on npm remained\nthe affected 0.2.1. With the npm credential restored, this release carries the\nfix to the npm package."
