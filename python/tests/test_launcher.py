@@ -49,13 +49,43 @@ def test_asset_name_windows(windows_arm64):
     assert _launcher.asset_name("2.3.4") == "strictspec_2.3.4_windows_arm64.zip"
 
 
-def test_release_base_url_uses_go_releasable_prefixed_tag():
-    # The critical strictspec adaptation: the Go binary lives on the
-    # `go-strictspec@vX.Y.Z` releasable tag, not a bare `vX.Y.Z` tag.
-    url = _launcher.release_base_url("0.1.0")
+def test_release_base_url_uses_releasable_group_tag():
+    # The critical strictspec adaptation: the Go binary lives on the releasable
+    # group's `strictspec@vX.Y.Z` tag, not a bare `vX.Y.Z` tag. The retired
+    # per-package `go-strictspec@vX.Y.Z` spelling has no release behind it from
+    # the releasable-group migration onward, so a launcher still asking for it
+    # 404s on its very first run.
+    url = _launcher.release_base_url("0.2.1")
     assert url == (
-        "https://github.com/smm-h/strictspec/releases/download/go-strictspec@v0.1.0"
+        "https://github.com/smm-h/strictspec/releases/download/strictspec@v0.2.1"
     )
+
+
+def test_release_tag_prefix_is_not_the_retired_per_package_one():
+    assert _launcher.RELEASABLE_TAG_PREFIX == "strictspec@v"
+    assert "go-strictspec@" not in _launcher.release_base_url("9.9.9")
+
+
+def test_download_failure_remediation_points_at_the_live_release(
+    linux_amd64, tmp_path, monkeypatch
+):
+    # The manual-install instructions in the hard error must name the SAME
+    # (live) release URL the download used -- a remediation pointing at a
+    # retired tag is a second 404 handed to the user.
+    version = "0.2.1"
+    monkeypatch.setattr(_launcher, "_installed_version", lambda: version)
+    monkeypatch.setattr(_launcher, "cache_dir", lambda: tmp_path)
+
+    def _fail(url):
+        raise OSError("HTTP Error 404: Not Found")
+
+    monkeypatch.setattr(_launcher, "_download", _fail)
+
+    with pytest.raises(RuntimeError) as excinfo:
+        _launcher.ensure_binary()
+    message = str(excinfo.value)
+    assert "releases/download/strictspec@v0.2.1" in message
+    assert "go-strictspec@" not in message
 
 
 def test_expected_digest_matches_filename():

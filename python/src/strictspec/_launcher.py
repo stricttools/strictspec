@@ -11,16 +11,16 @@ Subsequent invocations reuse the cached binary (no network). Python stdlib only
 -- zero runtime dependencies.
 
 The binary is the goreleaser-built ``strictspec`` archive on the
-``go-strictspec@vX.Y.Z`` GitHub Release (go/.goreleaser.yml). The launcher
-resolves ITS OWN installed version and downloads the matching go-strictspec
-Release asset: runtime package version == strictspec release version, so the
-lazy download and the exact version-pairing rule (decision 19) agree by
-construction. A failed download is a hard error with manual-install remediation,
-never a silent fallback (decision 31).
+``strictspec@vX.Y.Z`` GitHub Release (go/.goreleaser.yml). The launcher
+resolves ITS OWN installed version and downloads the matching Release asset:
+runtime package version == strictspec release version, so the lazy download and
+the exact version-pairing rule (decision 19) agree by construction. A failed
+download is a hard error with manual-install remediation, never a silent
+fallback (decision 31).
 
 This is adapted from rlsbl's ``pypi/shim-launcher.py.tpl``; the sole strictspec
 difference is that the binary lives on the prefixed monorepo-releasable tag
-``go-strictspec@vX.Y.Z`` rather than a bare ``vX.Y.Z`` tag.
+``strictspec@vX.Y.Z`` rather than a bare ``vX.Y.Z`` tag.
 """
 
 import hashlib
@@ -42,9 +42,11 @@ ASSET_PROJECT = "strictspec"
 BINARY_NAME = "strictspec"
 # The installed distribution whose version keys the download.
 DIST_NAME = "strictspec"
-# The go releasable's tag prefix on the shared monorepo GitHub Releases. The Go
-# binary is published under `go-strictspec@vX.Y.Z`, not a bare `vX.Y.Z` tag.
-GO_RELEASABLE_TAG_PREFIX = "go-strictspec@v"
+# The releasable GROUP's tag prefix on the shared monorepo GitHub Releases. All
+# three language packages ship as one releasable named `strictspec`, so the Go
+# binary is published under `strictspec@vX.Y.Z`, not a bare `vX.Y.Z` tag and not
+# the retired per-package `go-strictspec@vX.Y.Z` one.
+RELEASABLE_TAG_PREFIX = "strictspec@v"
 
 
 def _installed_version():
@@ -90,10 +92,10 @@ def asset_name(version):
 
 
 def release_base_url(version):
-    # The Go binary is on the go-strictspec releasable's GitHub Release, whose
-    # tag is `go-strictspec@vX.Y.Z` (NOT a bare `vX.Y.Z` tag). `@` is a valid
-    # path character and GitHub serves release assets under it literally.
-    return f"https://github.com/{GITHUB_REPO}/releases/download/{GO_RELEASABLE_TAG_PREFIX}{version}"
+    # The Go binary is on the strictspec releasable's GitHub Release, whose tag
+    # is `strictspec@vX.Y.Z` (NOT a bare `vX.Y.Z` tag). `@` is a valid path
+    # character and GitHub serves release assets under it literally.
+    return f"https://github.com/{GITHUB_REPO}/releases/download/{RELEASABLE_TAG_PREFIX}{version}"
 
 
 def cache_dir():
