@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-17T17:20:47Z",
+  "generated_at": "2026-08-24T09:01:38Z",
   "package_count": 4,
   "packages": {
     "py-strictspec": {
@@ -7,7 +7,7 @@
       "targets": [
         "pypi"
       ],
-      "version": "0.2.1",
+      "version": "0.2.2",
       "description": null,
       "deps": [],
       "rdeps": [],
@@ -21,7 +21,7 @@
       "targets": [
         "go"
       ],
-      "version": "0.2.1",
+      "version": "0.2.2",
       "description": null,
       "deps": [],
       "rdeps": [],
@@ -35,7 +35,7 @@
       "targets": [
         "npm"
       ],
-      "version": "0.2.1",
+      "version": "0.2.2",
       "description": null,
       "deps": [],
       "rdeps": [],
