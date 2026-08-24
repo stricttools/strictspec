@@ -2,6 +2,28 @@
 
 # strictspec
 
+## 0.2.3
+
+Ships the npm CLI's first-run download fix; restores npm publishing.
+
+<details>
+<summary>Context</summary>
+
+The npm launcher carried the same stale release-tag defect the Python one did:
+it built its GitHub Release URL from the retired per-package
+`go-strictspec@v<version>` prefix, so a fresh install's first `strictspec`
+invocation 404'd before it could fetch the Go binary. 0.2.2 fixed the Python
+side and shipped to PyPI, but its npm publish failed on a registry permission
+error, so no npm user ever received it and the newest package on npm remained
+the affected 0.2.1. With the npm credential restored, this release carries the
+fix to the npm package.
+
+</details>
+
+### Fixes
+
+- [ts-strictspec] **The npm CLI's first run downloads its toolchain binary again.** The `strictspec` npm bin built its GitHub Release URL from the retired per-package tag, so a fresh install's first invocation died with a 404 instead of fetching and caching the Go binary -- the same defect the Python launcher had. It now reads from the `strictspec@v<version>` release the assets actually live on. No published npm version carries this fix yet: 0.2.2 never reached the registry, so the newest package on npm is still the affected 0.2.1.
+
 ## 0.2.2
 
 Fixes the Python CLI's first-run download URL, which pointed at a retired release tag and 404'd.
