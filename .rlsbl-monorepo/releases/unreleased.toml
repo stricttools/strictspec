@@ -1,10 +1,19 @@
 [releasables.strictspec]
 # Version bump type: patch, minor, major, infra, or prerelease
-bump = ""
+bump = "patch"
 # Short description of this release (required)
-description = ""
+description = "Ships the npm CLI's first-run download fix; restores npm publishing."
 # Optional context explaining why these changes were made
-context = ""
+context = """
+The npm launcher carried the same stale release-tag defect the Python one did:
+it built its GitHub Release URL from the retired per-package
+`go-strictspec@v<version>` prefix, so a fresh install's first `strictspec`
+invocation 404'd before it could fetch the Go binary. 0.2.2 fixed the Python
+side and shipped to PyPI, but its npm publish failed on a registry permission
+error, so no npm user ever received it and the newest package on npm remained
+the affected 0.2.1. With the npm credential restored, this release carries the
+fix to the npm package.
+"""
 # Pre-release channel: alpha, beta, rc, or stable (ordered;
 # demotion is an error). Per package, so one workspace release
 # can ship some packages stable and others as alphas. See
