@@ -33,20 +33,20 @@ jobs:
         filters: |
           py-strictspec:
             - 'python/**'
-            - 'python/**'
+            - '.github/workflows/ci-router.yml'
             - '.rlsbl-monorepo/releasables/strictspec/CHANGELOG.md'
           go-strictspec:
             - 'go/**'
+            - '.github/workflows/ci-router.yml'
             - '.rlsbl-monorepo/releasables/strictspec/CHANGELOG.md'
           ts-strictspec:
             - 'ts/**'
+            - '.github/workflows/ci-router.yml'
             - '.rlsbl-monorepo/releasables/strictspec/CHANGELOG.md'
           conformance:
             - 'conformance/**'
-            - 'python/**'
-            - 'go/**'
-            - 'ts/**'
-            - 'spec/**'
+            - '.github/workflows/ci-router.yml'
+        predicate-quantifier: some-with-excludes
   py-strictspec-ci-test:
     runs-on: ubuntu-latest
     strategy:
