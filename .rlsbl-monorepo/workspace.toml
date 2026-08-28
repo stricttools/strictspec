@@ -10,7 +10,6 @@ name = "strictspec"
 path = "python"
 name = "py-strictspec"
 releasable = "strictspec"
-watch = ["python/**"]
 import_name = "strictspec"
 
 
@@ -30,4 +29,9 @@ path = "conformance/"
 name = "conformance"
 dev_only = true
 releasable = false
-watch = ["python/**", "go/**", "ts/**", "spec/**"]
+
+[[projects]]
+path = "."
+name = "root"
+dev_only = true
+releasable = false
