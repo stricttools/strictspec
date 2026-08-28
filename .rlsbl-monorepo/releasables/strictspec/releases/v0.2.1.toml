@@ -9,3 +9,9 @@ include = ["pypi", "go", "npm"]
 exclude = []
 description = "Publish the Go CLI archives with the release: goreleaser now runs inside the module directory."
 context = "0.2.0 published to PyPI, npm and the Go module proxy, but its GitHub Release\ncarried no CLI archives: the Go publish job ran goreleaser at the repository\nroot, where there is no .goreleaser.yml and no main package, because a job's\ndefaults.run.working-directory reaches `run:` steps only and never an action.\nThe first-run launchers in the Python and npm packages download exactly those\narchives, so a 0.2.0 launcher could not fetch its binary. This patch names the\nmodule directory on the action and goes out immediately rather than waiting for\nthe next natural release."
+candidate_sha = "df8a7fa01b4981f687a66dc0a5880937689f7a03"
+
+[tree_hashes]
+go = "af4b893dd09478777586adcfcb13071e123b1e92"
+python = "9f38addfcb8a995c686f1fa56282c075877b93f0"
+ts = "99870e0612b637ced310e931cb68a62a7c4d55eb"

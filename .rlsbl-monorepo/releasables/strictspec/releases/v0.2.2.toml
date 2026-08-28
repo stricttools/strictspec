@@ -9,3 +9,9 @@ include = ["pypi", "go", "npm"]
 exclude = []
 description = "Fixes the Python CLI's first-run download URL, which pointed at a retired release tag and 404'd."
 context = "The Python launcher still built its GitHub Release URL from the per-package\n`go-strictspec@v<version>` tag that the releasable-group migration retired.\nReleases have been tagged `strictspec@v<version>` since that migration and\ncarry the goreleaser archives and `checksums.txt` there, so every fresh\ninstall of a 0.2.x wheel failed on its first `strictspec` invocation with\n`HTTP Error 404` and the CLI was unusable until the cache was seeded by hand.\nThis is a fix-forward patch for that shipped defect."
+candidate_sha = "7d298322748ed7fc9911b379de5bcba8b9296b20"
+
+[tree_hashes]
+go = "3d837f76448d30d84f8451da383e8737c164b77d"
+python = "7323cea1e1408e86c37f84b02039959d607fb2b8"
+ts = "10dd32354dd0ab9628a31f15eb5eb7cdab1f2537"

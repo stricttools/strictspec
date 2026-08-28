@@ -1,3 +1,5 @@
+# strictspec document version gate (do not remove)
+format_version = 1
 # Version bump type: patch, minor, major, infra, or prerelease
 bump = "minor"
 # Short description of this release (required)
@@ -20,3 +22,9 @@ construction.
 # preid = ""
 include = ["go", "pypi", "npm"]
 exclude = []
+candidate_sha = "8259f275537f764c24ffcd6cecf8a6af8ff97871"
+
+[tree_hashes]
+go = "1937e9da194775d5ad76133c95658628820f58fc"
+python = "20de9267bda8d0f269ea6cc05f9ebba2a0bd58d0"
+ts = "16c966b65b8dc8fb63ba16df774f2e225ea998c8"
