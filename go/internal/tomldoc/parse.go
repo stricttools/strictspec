@@ -30,14 +30,14 @@ func Parse(src []byte) (*doc.Document, *doc.ParseError) {
 // toParseError converts a go-toml-edit error into a typed doc.ParseError,
 // preserving the substrate's line/column/byte-offset when available.
 func toParseError(err error) *doc.ParseError {
-	var pe *tomledit.ParseError
+	var pe *tomledit.Error
 	if errors.As(err, &pe) {
 		return &doc.ParseError{
 			Format: doc.FormatTOML,
 			Position: doc.Position{
-				Line:       pe.Line,
-				Column:     pe.Column,
-				ByteOffset: pe.Offset,
+				Line:       pe.Pos.Line,
+				Column:     pe.Pos.Column,
+				ByteOffset: pe.Pos.Offset,
 			},
 			Message: pe.Message,
 		}
@@ -95,33 +95,34 @@ func (c *converter) docEndPos() doc.Position {
 // buildRoot folds the flat TOML AST (root key/values, [table] and
 // [[array-table]] headers, dotted keys, inline tables) into the doc record
 // tree, then finalizes it into an immutable doc.Node.
-func (c *converter) buildRoot(root *tomledit.DocumentNode) doc.Node {
+func (c *converter) buildRoot(root *tomledit.Document) doc.Node {
 	rootSpan := doc.Span{Start: doc.Position{Line: 1, Column: 1, ByteOffset: 0}, End: c.docEndPos()}
 	b := newBuilder(rootSpan)
-	for _, child := range root.Children {
+	for _, child := range root.Children() {
 		switch n := child.(type) {
 		case *tomledit.KeyValueNode:
 			c.addKV(b, n)
 		case *tomledit.TableNode:
 			hdr := c.span(n.Span())
-			t := c.descend(b, n.KeyPath, hdr, hdr)
+			t := c.descend(b, n.KeyPath(), hdr, hdr)
 			if !t.span.IsValid() {
 				t.span = hdr
 			}
-			for _, ch := range n.Children {
+			for _, ch := range n.Children() {
 				if kv, ok := ch.(*tomledit.KeyValueNode); ok {
 					c.addKV(t, kv)
 				}
 			}
 		case *tomledit.ArrayTableNode:
 			hdr := c.span(n.Span())
-			parentPath := n.KeyPath[:len(n.KeyPath)-1]
-			last := n.KeyPath[len(n.KeyPath)-1]
+			keyPath := n.KeyPath()
+			parentPath := keyPath[:len(keyPath)-1]
+			last := keyPath[len(keyPath)-1]
 			parent := c.descend(b, parentPath, hdr, hdr)
 			s := parent.note(last, hdr)
 			entry := newBuilder(hdr)
 			s.arr = append(s.arr, entry)
-			for _, ch := range n.Children {
+			for _, ch := range n.Children() {
 				if kv, ok := ch.(*tomledit.KeyValueNode); ok {
 					c.addKV(entry, kv)
 				}
@@ -135,12 +136,12 @@ func (c *converter) buildRoot(root *tomledit.DocumentNode) doc.Node {
 // implicit records and converting the value (including inline tables and
 // arrays) into doc nodes.
 func (c *converter) addKV(b *builder, kv *tomledit.KeyValueNode) {
-	keySpan := c.span(kv.Key.Span())
-	parts := kv.Key.Parts
+	keySpan := c.span(kv.Key().Span())
+	parts := kv.Key().Parts()
 	b = c.descend(b, parts[:len(parts)-1], keySpan, keySpan)
 	key := parts[len(parts)-1]
 	s := b.note(key, keySpan)
-	s.value = c.convertValue(kv.Val)
+	s.value = c.convertValue(kv.Val())
 }
 
 // descend resolves a key path to the target builder, creating implicit records
@@ -183,14 +184,15 @@ func (c *converter) convertValue(node tomledit.Node) doc.Node {
 	case *tomledit.LocalTimeNode:
 		return doc.NewScalar(doc.TimeLocal, string(n.Raw()), sp)
 	case *tomledit.ArrayNode:
-		items := make([]doc.Node, 0, len(n.Elements))
-		for _, el := range n.Elements {
+		elements := n.Elements()
+		items := make([]doc.Node, 0, len(elements))
+		for _, el := range elements {
 			items = append(items, c.convertValue(el))
 		}
 		return doc.NewArray(items, sp)
 	case *tomledit.InlineTableNode:
 		ib := newBuilder(sp)
-		for _, ch := range n.Children {
+		for _, ch := range n.Children() {
 			if kv, ok := ch.(*tomledit.KeyValueNode); ok {
 				c.addKV(ib, kv)
 			}
