@@ -221,6 +221,19 @@ jobs:
           # Strip any "<name>@" / "<path>/" prefix: keep the trailing vX.Y.Z[-pre].
           BARE=$(printf '%s' "${RELEASE_TAG}" | sed -E 's/^.*(v[0-9]+\.[0-9]+\.[0-9]+.*)$/\1/')
           echo "tag=${BARE}" >> "$GITHUB_OUTPUT"
+          # goreleaser 2.18.1 reads GORELEASER_CURRENT_TAG's tag contents while
+          # getting git state, BEFORE --skip=validate can excuse anything, and a
+          # name no tag carries aborts the run: `couldn't get tag contents:
+          # unexpected git tag output for "v0.2.4": ""`. 2.18.0 tolerated it, so
+          # 0.2.4 published zero binaries and its launcher shims had nothing to
+          # download. This repository only carries the prefixed tags, so create
+          # the bare one locally at the released commit. It is a lightweight tag
+          # (an annotated one needs a tagger identity no CI checkout sets) and
+          # nothing pushes it: goreleaser runs --skip=publish and the archives go
+          # up through `gh release upload` against the prefixed tag.
+          if ! git rev-parse -q --verify "refs/tags/${BARE}" >/dev/null; then
+            git tag "${BARE}" "$(git rev-parse HEAD)"
+          fi
         env:
           RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
       - uses: goreleaser/goreleaser-action@v7
