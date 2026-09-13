@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-08-24T10:07:14Z",
-  "package_count": 4,
+  "generated_at": "2026-09-13T01:01:46Z",
+  "package_count": 5,
   "packages": {
     "py-strictspec": {
       "path": "python",
       "targets": [
         "pypi"
       ],
-      "version": "0.2.3",
+      "version": "0.2.4",
       "description": null,
       "deps": [],
       "rdeps": [],
@@ -21,7 +21,7 @@
       "targets": [
         "go"
       ],
-      "version": "0.2.3",
+      "version": "0.2.4",
       "description": null,
       "deps": [],
       "rdeps": [],
@@ -35,7 +35,7 @@
       "targets": [
         "npm"
       ],
-      "version": "0.2.3",
+      "version": "0.2.4",
       "description": null,
       "deps": [],
       "rdeps": [],
@@ -57,6 +57,18 @@
       "dev_only": true,
       "releasable_flag": false,
       "test_only": false
+    },
+    "root": {
+      "path": ".",
+      "targets": [],
+      "version": null,
+      "description": null,
+      "deps": [],
+      "rdeps": [],
+      "library": false,
+      "dev_only": true,
+      "releasable_flag": false,
+      "test_only": false
     }
   },
   "graph": {
@@ -64,12 +76,14 @@
       "conformance",
       "go-strictspec",
       "py-strictspec",
+      "root",
       "ts-strictspec"
     ],
     "root_nodes": [
       "conformance",
       "go-strictspec",
       "py-strictspec",
+      "root",
       "ts-strictspec"
     ],
     "max_depth": 0,
@@ -77,6 +91,7 @@
       "conformance",
       "go-strictspec",
       "py-strictspec",
+      "root",
       "ts-strictspec"
     ]
   }
