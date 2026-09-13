@@ -1,0 +1,17 @@
+# Archived by rlsbl at release time. This release had no unreleased.toml
+# (a batch member takes its metadata from the batch release file); the
+# archive is written so later changelog regenerations keep the
+# description and context.
+# strictspec document version gate (do not remove)
+format_version = 1
+bump = "patch"
+include = ["pypi", "go", "npm"]
+exclude = []
+description = "Release archives are built again"
+context = "The 0.2.4 publish job failed under goreleaser-action 2.18.1, which reads the\nbare semver tag's contents and errored with `couldn't get tag contents: unexpected\ngit tag output for \"v0.2.4\"`, so that release carried no binary archives and the\nPyPI and npm launchers had nothing to download. The publish workflow now creates\nthe bare `v<version>` tag locally before invoking goreleaser."
+candidate_sha = "e5d68840bbb34cc4469591402ce2377933d07f81"
+
+[tree_hashes]
+go = "1fad7bcba1048ed1f2b914e8a0e4bd39efd20db2"
+python = "f6b040d81cecfd87f4d1a11e90a466bfc3e11054"
+ts = "29ad77234c6ce76c74c8e7aa6f42722219c2c937"
