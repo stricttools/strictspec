@@ -1,0 +1,17 @@
+# Archived by rlsbl at release time. This release had no unreleased.toml
+# (a batch member takes its metadata from the batch release file); the
+# archive is written so later changelog regenerations keep the
+# description and context.
+# strictspec document version gate (do not remove)
+format_version = 1
+bump = "patch"
+include = ["pypi", "go", "npm"]
+exclude = []
+description = "Clearer TOML parse errors, on go-toml-edit 0.4.0."
+context = "The Go TOML reader moved to go-toml-edit 0.4.0, whose diagnostics name tokens in plain language and report accurate byte offsets, so a syntax error in a spec file now points at the right place and reads like a sentence."
+candidate_sha = "c6f929df1f82bec48e2f52b9bb55cab79a59e500"
+
+[tree_hashes]
+go = "af85542ea65e61109cb58fa3b8f7df8233b6fa8f"
+python = "0e809d16e27799e09c681505d4ff734663b48165"
+ts = "83d18103c7287732c283fefb68ca1081149fb59c"
