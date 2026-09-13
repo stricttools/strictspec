@@ -1,10 +1,16 @@
 [releasables.strictspec]
 # Version bump type: patch, minor, major, infra, or prerelease
-bump = ""
+bump = "patch"
 # Short description of this release (required)
-description = ""
+description = "Release archives are built again"
 # Optional context explaining why these changes were made
-context = ""
+context = """
+The 0.2.4 publish job failed under goreleaser-action 2.18.1, which reads the
+bare semver tag's contents and errored with `couldn't get tag contents: unexpected
+git tag output for "v0.2.4"`, so that release carried no binary archives and the
+PyPI and npm launchers had nothing to download. The publish workflow now creates
+the bare `v<version>` tag locally before invoking goreleaser.
+"""
 # Pre-release channel: alpha, beta, rc, or stable (ordered;
 # demotion is an error). Per package, so one workspace release
 # can ship some packages stable and others as alphas. See
