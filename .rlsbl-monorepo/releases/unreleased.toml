@@ -1,10 +1,10 @@
 [releasables.strictspec]
 # Version bump type: patch, minor, major, infra, or prerelease
-bump = ""
+bump = "patch"
 # Short description of this release (required)
-description = ""
+description = "Clearer TOML parse errors, on go-toml-edit 0.4.0."
 # Optional context explaining why these changes were made
-context = ""
+context = "The Go TOML reader moved to go-toml-edit 0.4.0, whose diagnostics name tokens in plain language and report accurate byte offsets, so a syntax error in a spec file now points at the right place and reads like a sentence."
 # Pre-release channel: alpha, beta, rc, or stable (ordered;
 # demotion is an error). Per package, so one workspace release
 # can ship some packages stable and others as alphas. See
