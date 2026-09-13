@@ -2,6 +2,21 @@
 
 # strictspec
 
+## 0.2.4
+
+Clearer TOML parse errors, on go-toml-edit 0.4.0.
+
+<details>
+<summary>Context</summary>
+
+The Go TOML reader moved to go-toml-edit 0.4.0, whose diagnostics name tokens in plain language and report accurate byte offsets, so a syntax error in a spec file now points at the right place and reads like a sentence.
+
+</details>
+
+### Fixes
+
+- [go-strictspec] **Clearer TOML parse errors.** Syntax diagnostics now read in plain language (`expected ']', got newline` instead of `expected RightBracket, got Newline`), and a parse error's byte offset is now correct instead of frequently reported as 0.
+
 ## 0.2.3
 
 Ships the npm CLI's first-run download fix; restores npm publishing.
