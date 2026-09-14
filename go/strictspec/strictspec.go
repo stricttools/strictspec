@@ -1,7 +1,11 @@
-// Package strictspec is the PUBLIC Go runtime: the stable surface that generated
-// strictspec validator code imports (go/DESIGN.md, "Runtime subpackage"). It is
-// deliberately minimal and stable-facing — this surface becomes semver-bound at
-// release. It re-exports the diagnostics model, document loading for the three
+// Package strictspec is the public Go runtime of strictspec, the schema
+// toolchain that turns one TOML schema into Go, Python and TypeScript validators
+// reporting identical verdicts, error codes, paths and messages for JSON, TOML
+// and JSONL files.
+//
+// This is the PUBLIC surface that generated strictspec validator code imports
+// (go/DESIGN.md, "Runtime subpackage"). It is deliberately minimal and
+// stable-facing — this surface becomes semver-bound at release. It re-exports the diagnostics model, document loading for the three
 // syntaxes, the version-pairing guard, the tagged document value (the second
 // entry point) with its coercers, and the constraint-engine entry (validation is
 // driven by the shared emitter IR, internal/ir, so a generated Go validator runs
