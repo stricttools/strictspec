@@ -3,7 +3,11 @@
 	"version": "0.2.5",
 	"license": "MIT",
 	"type": "module",
-	"description": "TypeScript runtime library and CLI stub for strictspec",
+	"description": "schema toolchain that turns one TOML schema into Go, Python and TypeScript validators reporting identical verdicts, error codes, paths and messages for JSON, TOML and JSONL files (TypeScript runtime and CLI)",
+	"homepage": "https://smmh.dev/strictspec/",
+	"bugs": {
+		"url": "https://github.com/smm-h/strictspec/issues"
+	},
 	"bin": {
 		"strictspec": "bin/strictspec.cjs"
 	},
@@ -42,6 +46,11 @@
 		"typescript": "^7.0.2"
 	},
 	"keywords": [
+		"strictspec",
+		"schema",
+		"codegen",
+		"validation",
+		"toml",
 		"rlsbl"
 	]
 }
