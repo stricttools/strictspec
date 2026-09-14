@@ -3,7 +3,7 @@
   "name": "strictspec",
   "slug": "strictspec",
   "version": "0.1.0",
-  "description": "Strict multi-language schema toolchain for declarative spec files. The spec/ constitution is the language reference (schema language, constraint vocabulary, op set, error model, and normative appendices).",
+  "description": "schema toolchain that turns one TOML schema into Go, Python and TypeScript validators reporting identical verdicts, error codes, paths and messages for JSON, TOML and JSONL files",
   "language": "go",
   "base_url": "https://smmh.dev/strictspec",
   "pages": [
@@ -1009,6 +1009,6 @@
     }
   ],
   "posts": [],
-  "last_gen": "2026-08-17T17:11:43.901320+00:00",
+  "last_gen": "2026-09-14T15:29:43.935931+00:00",
   "theme": "minimal"
 }
