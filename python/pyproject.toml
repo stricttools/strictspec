@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "strictspec"
 version = "0.2.5"
-description = "Strict multi-language schema toolchain for declarative spec files (Python runtime + CLI stub)"
+description = "schema toolchain that turns one TOML schema into Go, Python and TypeScript validators reporting identical verdicts, error codes, paths and messages for JSON, TOML and JSONL files (Python runtime and CLI)"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -33,5 +33,8 @@ packages = ["src/strictspec"]
 testpaths = ["tests"]
 
 [project.urls]
-Homepage = "https://github.com/smm-h/strictspec"
+Homepage = "https://smmh.dev/strictspec/"
+Documentation = "https://smmh.dev/strictspec/"
 Repository = "https://github.com/smm-h/strictspec"
+Issues = "https://github.com/smm-h/strictspec/issues"
+Changelog = "https://github.com/smm-h/strictspec/blob/main/CHANGELOG.md"
