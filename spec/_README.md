@@ -9,8 +9,8 @@ messages for JSON, TOML and JSONL files. It is for projects whose config and
 data files are read by more than one language — and increasingly written by AI
 agents — where a document one reader accepts must never be a document another
 reader rejects. Its distinctive property is identity rather than approximation:
-values are tagged and lexeme-retaining, and a shared conformance suite holds all
-four targets (Go, Python, TypeScript, and the reference interpreter) to the same
+values are tagged and lexeme-retaining, and a shared conformance suite holds
+every target (Go, Python, TypeScript, and the reference interpreter) to the same
 verdict, the same error code, the same path, and the same rendered message text.
 
 ## Install
@@ -58,8 +58,8 @@ strictspec validate --structural-only schema.toml doc.toml
 strictspec validate --with-domain-checks schema.toml doc.toml
 ```
 
-The CLI is eight commands: `gen`, `check`, `validate`, `migrate`, `export`,
-`init`, `diff`, `doc-diff`. Format evolution is declarative: migrations are
+The CLI is `gen`, `check`, `validate`, `migrate`, `export`, `init`, `diff` and
+`doc-diff`. Format evolution is declarative: migrations are
 closed op lists executed by `strictspec migrate`, never applied automatically by
 a receiver, and `strictspec diff` compares a schema at two `format_version`s
 over a corpus and emits a certificate.
@@ -79,4 +79,4 @@ never pinning.
 The `spec/` constitution is the language-neutral definition of the schema
 language, the constraint vocabulary, the migration op set, the error model, and
 the normative appendices. Every backend and the internal interpreter implement
-it, and the conformance suite enforces it across all four targets.
+it, and the conformance suite enforces it across every target.
