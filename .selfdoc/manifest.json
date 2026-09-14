@@ -1006,9 +1006,31 @@
           "anchor": "valueisnull"
         }
       ]
+    },
+    {
+      "path": "index.md",
+      "title": "strictspec",
+      "type": "doc",
+      "headings": [
+        {
+          "level": 1,
+          "text": "strictspec",
+          "anchor": "strictspec"
+        },
+        {
+          "level": 2,
+          "text": "What is here",
+          "anchor": "what-is-here"
+        },
+        {
+          "level": 2,
+          "text": "The CLI",
+          "anchor": "the-cli"
+        }
+      ]
     }
   ],
   "posts": [],
-  "last_gen": "2026-09-14T15:29:43.935931+00:00",
+  "last_gen": "2026-09-14T15:32:20.499664+00:00",
   "theme": "minimal"
 }
