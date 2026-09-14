@@ -1,6 +1,8 @@
 {
   "version": "0.1.0",
-  "base_url": "https://smmh.dev/strictspec/",
+  "description": "schema toolchain that turns one TOML schema into Go, Python and TypeScript validators reporting identical verdicts, error codes, paths and messages for JSON, TOML and JSONL files",
+  "repo": "https://github.com/smm-h/strictspec",
+  "base_url": "https://smmh.dev/strictspec",
   "search_engine": "pagefind",
   "author": {
     "name": "SMMH",
@@ -17,6 +19,9 @@
   ],
   "docs": "spec/",
   "output": "spec/_build/",
+  "root_files": [
+    "spec/_README.md"
+  ],
   "versions": [
     {
       "version": "0.1.0"
@@ -29,9 +34,13 @@
       "default": true
     }
   ],
-  "description": "Strict multi-language schema toolchain for declarative spec files. The spec/ constitution is the language reference (schema language, constraint vocabulary, op set, error model, and normative appendices).",
-  "deploy": {
-    "provider": "cloudflare-pages",
-    "project": "strictspec"
+  "topology": {
+    "slug": "strictspec",
+    "docs_base": "https://smmh.dev",
+    "posts_base": "https://smmh.dev/blog"
+  },
+  "assembly": {
+    "repo": "smm-h/selfdoc-cache",
+    "pages_project": "smmh"
   }
 }
