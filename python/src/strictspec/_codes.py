@@ -558,10 +558,10 @@ CATALOGUE: dict[str, Entry] = {
     'STRICTSPEC_MANIFEST_PAIRING_MISMATCH': Entry(
         code='STRICTSPEC_MANIFEST_PAIRING_MISMATCH',
         area='MANIFEST',
-        template='Runtime version {actual} does not match generated-code version {expected}; regenerate against the paired release.',
+        template='Generated code at {path} declares generated-code format {got}, which this runtime does not read; regenerate with `strictspec gen`.',
         slots=(
-            SlotSpec('actual', SlotType.VERSION),
-            SlotSpec('expected', SlotType.VERSION),
+            SlotSpec('path', SlotType.PATH),
+            SlotSpec('got', SlotType.INT),
         ),
     ),
     'STRICTSPEC_MANIFEST_UNKNOWN_RESOLVER': Entry(

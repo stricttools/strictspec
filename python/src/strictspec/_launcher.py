@@ -14,7 +14,7 @@ The binary is the goreleaser-built ``strictspec`` archive on the
 ``strictspec@vX.Y.Z`` GitHub Release (go/.goreleaser.yml). The launcher
 resolves ITS OWN installed version and downloads the matching Release asset:
 runtime package version == strictspec release version, so the lazy download and
-the exact version-pairing rule (decision 19) agree by construction. A failed
+the packaged CLI are always the same release. A failed
 download is a hard error with manual-install remediation, never a silent
 fallback (decision 31).
 
