@@ -9,8 +9,9 @@
 // the module root (rlsbl/rlsbl/targets/go.py: VERSION_FILE = "VERSION", written
 // via write_version at the project dir). The embedding file must therefore live
 // beside VERSION, at the module root. The public strictspec package re-exports
-// this value, keeping the version-pairing constant impossible to drift from the
-// released version (TestVersionMatchesFile is the gate).
+// this value, keeping the released version impossible to drift from the file
+// rlsbl bumps (TestVersionMatchesFile is the gate). Generated code pairs on the
+// generated-code format, not on this string, which it carries as information.
 package strictspecroot
 
 import (

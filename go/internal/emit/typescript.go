@@ -63,7 +63,7 @@ func (g *tsEmitter) header() {
 	fmt.Fprintf(w, "/* eslint-disable */\n")
 	fmt.Fprintf(w, "// biome-ignore-all lint: generated file\n")
 	fmt.Fprintf(w, "// prettier-ignore\n")
-	fmt.Fprintf(w, "import { Kind, compileFromSource, loadValue, requireRuntimeVersion } from \"strictspec\";\n")
+	fmt.Fprintf(w, "import { Kind, compileFromSource, loadValue, requireGeneratedCodeFormat } from \"strictspec\";\n")
 	fmt.Fprintf(w, "import type { Diagnostic, Program, Value } from \"strictspec\";\n\n")
 	// Extract the runtime's exact types without depending on non-exported names.
 	fmt.Fprintf(w, "type FileSet = Record<string, string>;\n")
@@ -73,9 +73,15 @@ func (g *tsEmitter) header() {
 
 func (g *tsEmitter) embeddedFiles() {
 	w := &g.b
-	fmt.Fprintf(w, "// GENERATED_BY is the strictspec release that produced this file. The runtime\n")
-	fmt.Fprintf(w, "// pairing guard hard-errors unless it matches the linked runtime exactly.\n")
+	fmt.Fprintf(w, "// GENERATED_BY is the strictspec release that produced this file. It is\n")
+	fmt.Fprintf(w, "// INFORMATIONAL: pairing is on GENERATED_CODE_FORMAT below, so a later release\n")
+	fmt.Fprintf(w, "// of the runtime reads this file unchanged, and no tool may derive a dependency\n")
+	fmt.Fprintf(w, "// floor from this string.\n")
 	fmt.Fprintf(w, "export const GENERATED_BY = \"%s\";\n", escapeStringLiteral(g.p.GeneratorVersion))
+	fmt.Fprintf(w, "// GENERATED_CODE_FORMAT is the shape of generated code this file was written\n")
+	fmt.Fprintf(w, "// to. The runtime pairing guard hard-errors unless this format is one the\n")
+	fmt.Fprintf(w, "// linked runtime reads; the remedy is regeneration.\n")
+	fmt.Fprintf(w, "export const GENERATED_CODE_FORMAT = %d;\n", GeneratedCodeFormat)
 	fmt.Fprintf(w, "export const SCHEMA_FORMAT_VERSION = %d;\n\n", g.s.FormatVersion)
 
 	names := make([]string, 0, len(g.p.Files))
@@ -95,9 +101,10 @@ func (g *tsEmitter) embeddedFiles() {
 
 func (g *tsEmitter) programInit() {
 	w := &g.b
-	fmt.Fprintf(w, "// Version pairing: generated code and runtime must be the same release. This runs\n")
-	fmt.Fprintf(w, "// at module init, so a skewed runtime throws before any validation is attempted.\n")
-	fmt.Fprintf(w, "requireRuntimeVersion(GENERATED_BY);\n")
+	fmt.Fprintf(w, "// Pairing: this file's generated-code format must be one the runtime reads. This\n")
+	fmt.Fprintf(w, "// runs at module init, so a runtime that cannot read it throws before any\n")
+	fmt.Fprintf(w, "// validation is attempted.\n")
+	fmt.Fprintf(w, "requireGeneratedCodeFormat(GENERATED_CODE_FORMAT, GENERATED_BY);\n")
 	fmt.Fprintf(w, "const program: Program = compileFromSource(EMBEDDED_SCHEMA, EMBEDDED_MAIN_FILE);\n\n")
 }
 

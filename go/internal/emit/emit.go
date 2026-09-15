@@ -6,8 +6,9 @@
 //   - the pinned generated-file header (generator version, schema name +
 //     format_version, regeneration command, generated-by + lint-suppression
 //     markers, MIT/unencumbered notice);
-//   - the version-pairing guard (init hard-errors unless the runtime it links
-//     against is the exact release that generated the code);
+//   - the generated-code format pairing guard (init hard-errors unless the
+//     runtime it links against reads the generated-code format the file was
+//     written to);
 //   - the compiled schema, embedded, driving the SHARED emitter IR — so a
 //     generated validator runs the identical checks as the interpreter (byte
 //     identity is structural, not coincidental);
@@ -34,7 +35,17 @@ import (
 
 	"github.com/smm-h/strictspec/go/internal/doc"
 	"github.com/smm-h/strictspec/go/internal/schema"
+	"github.com/smm-h/strictspec/go/strictspec"
 )
+
+// GeneratedCodeFormat is the generated-code format this generator writes into
+// every file it emits, in every target language. It is the paired runtime's own
+// upper bound: generator and runtimes ship as one release, so what this
+// generator emits is by construction the newest shape the runtimes read. Bumping
+// it is the discipline the conformance suite's emitted-shape pin enforces — any
+// change to what the emitters write requires this number to move, in lockstep
+// with every runtime's accepted range.
+const GeneratedCodeFormat = strictspec.MaxGeneratedCodeFormat
 
 // GoParams configures one Go emission.
 type GoParams struct {
@@ -96,11 +107,17 @@ func (g *goEmitter) header() {
 
 func (g *goEmitter) embeddedFiles() {
 	w := &g.b
-	fmt.Fprintf(w, "// GeneratedBy is the strictspec release that produced this file. The runtime\n")
-	fmt.Fprintf(w, "// pairing guard hard-errors unless it matches the linked runtime exactly.\n")
-	fmt.Fprintf(w, "const GeneratedBy = %q\n\n", g.p.GeneratorVersion)
-	fmt.Fprintf(w, "// SchemaFormatVersion is the document format_version this validator accepts.\n")
-	fmt.Fprintf(w, "const SchemaFormatVersion = %d\n\n", g.s.FormatVersion)
+	fmt.Fprintf(w, "// GENERATED_BY is the strictspec release that produced this file. It is\n")
+	fmt.Fprintf(w, "// INFORMATIONAL: pairing is on GENERATED_CODE_FORMAT below, so a later release\n")
+	fmt.Fprintf(w, "// of the runtime reads this file unchanged, and no tool may derive a dependency\n")
+	fmt.Fprintf(w, "// floor from this string.\n")
+	fmt.Fprintf(w, "const GENERATED_BY = %q\n\n", g.p.GeneratorVersion)
+	fmt.Fprintf(w, "// GENERATED_CODE_FORMAT is the shape of generated code this file was written\n")
+	fmt.Fprintf(w, "// to. The runtime pairing guard hard-errors unless this format is one the\n")
+	fmt.Fprintf(w, "// linked runtime reads; the remedy is regeneration.\n")
+	fmt.Fprintf(w, "const GENERATED_CODE_FORMAT = %d\n\n", GeneratedCodeFormat)
+	fmt.Fprintf(w, "// SCHEMA_FORMAT_VERSION is the document format_version this validator accepts.\n")
+	fmt.Fprintf(w, "const SCHEMA_FORMAT_VERSION = %d\n\n", g.s.FormatVersion)
 
 	// Embed each backing file. Sort keys for deterministic output.
 	names := make([]string, 0, len(g.p.Files))
@@ -122,8 +139,8 @@ func (g *goEmitter) programInit() {
 	w := &g.b
 	fmt.Fprintf(w, "var program *strictspec.Program\n\n")
 	fmt.Fprintf(w, "func init() {\n")
-	fmt.Fprintf(w, "\t// Version pairing: generated code and runtime must be the same release.\n")
-	fmt.Fprintf(w, "\tstrictspec.RequireRuntimeVersion(GeneratedBy)\n")
+	fmt.Fprintf(w, "\t// Pairing: this file's generated-code format must be one the runtime reads.\n")
+	fmt.Fprintf(w, "\tstrictspec.RequireGeneratedCodeFormat(GENERATED_CODE_FORMAT, GENERATED_BY)\n")
 	fmt.Fprintf(w, "\tp, err := strictspec.CompileEmbedded(embeddedSchema, embeddedMainFile)\n")
 	fmt.Fprintf(w, "\tif err != nil {\n\t\tpanic(err)\n\t}\n")
 	fmt.Fprintf(w, "\tprogram = p\n")
