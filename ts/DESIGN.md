@@ -94,8 +94,10 @@ checkpoint wrappers that delegate to the packaged CLI.
   evidence resolvers and checkpoint wrappers live in explicitly Node-scoped entry points).
 - Conformance applicability: TS runs ALL fixtures — JSON, TOML, and JSONL, raw-text and
   tagged-value forms, including lexical-number and datetime cases.
-- Version pairing: exact match per release; dev builds pair only with themselves; the pairing
-  hard error is the intended surfacing of skew under always-latest dependencies.
+- Pairing with generated code: on the generated-code FORMAT (`GENERATED_CODE_FORMAT`, an
+  integer describing the shape of emitted code), never on the release string, which generated
+  code carries as information only. The runtime declares the inclusive range of formats it
+  reads and throws outside it; the remedy is regeneration.
 - Generated files land chmod 444 in consumer repos, carry `/* eslint-disable */` plus the
   generated-by header, and are formatted by the generator's own canonical emitter; `strictspec
   gen` maintains prettier-ignore entries for the generated paths — consumers never
