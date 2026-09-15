@@ -1,7 +1,10 @@
-// Package strictspec is the public Go runtime of strictspec, the schema
-// toolchain that turns one TOML schema into Go, Python and TypeScript validators
-// reporting identical verdicts, error codes, paths and messages for JSON, TOML
-// and JSONL files.
+// Package strictspec: Define a schema once in TOML, and generate the full
+// toolchain in your language: validation, versioning, migrations, etc. --
+// First-class support for Go, Python, and TypeScript.
+//
+// This package is the public Go runtime: the schema toolchain turns one TOML
+// schema into Go, Python and TypeScript validators reporting identical verdicts,
+// error codes, paths and messages for JSON, TOML and JSONL files.
 //
 // This is the PUBLIC surface that generated strictspec validator code imports
 // (go/DESIGN.md, "Runtime subpackage"). It is deliberately minimal and
