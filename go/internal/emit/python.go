@@ -68,9 +68,15 @@ func (g *pyEmitter) header() {
 
 func (g *pyEmitter) embeddedFiles() {
 	w := &g.b
-	fmt.Fprintf(w, "# GENERATED_BY is the strictspec release that produced this file. The runtime\n")
-	fmt.Fprintf(w, "# pairing guard hard-errors unless it matches the linked runtime exactly.\n")
+	fmt.Fprintf(w, "# GENERATED_BY is the strictspec release that produced this file. It is\n")
+	fmt.Fprintf(w, "# INFORMATIONAL: pairing is on GENERATED_CODE_FORMAT below, so a later release\n")
+	fmt.Fprintf(w, "# of the runtime reads this file unchanged, and no tool may derive a dependency\n")
+	fmt.Fprintf(w, "# floor from this string.\n")
 	fmt.Fprintf(w, "GENERATED_BY = %q\n", g.p.GeneratorVersion)
+	fmt.Fprintf(w, "# GENERATED_CODE_FORMAT is the shape of generated code this file was written to.\n")
+	fmt.Fprintf(w, "# The runtime pairing guard hard-errors unless this format is one the linked\n")
+	fmt.Fprintf(w, "# runtime reads; the remedy is regeneration.\n")
+	fmt.Fprintf(w, "GENERATED_CODE_FORMAT = %d\n", GeneratedCodeFormat)
 	fmt.Fprintf(w, "SCHEMA_FORMAT_VERSION = %d\n\n", g.s.FormatVersion)
 
 	names := make([]string, 0, len(g.p.Files))
@@ -90,9 +96,10 @@ func (g *pyEmitter) embeddedFiles() {
 
 func (g *pyEmitter) programInit() {
 	w := &g.b
-	fmt.Fprintf(w, "# Version pairing: generated code and runtime must be the same release. This runs\n")
-	fmt.Fprintf(w, "# at import, so a skewed runtime hard-errors before any validation is attempted.\n")
-	fmt.Fprintf(w, "strictspec.require_runtime_version(GENERATED_BY)\n")
+	fmt.Fprintf(w, "# Pairing: this file's generated-code format must be one the runtime reads. This\n")
+	fmt.Fprintf(w, "# runs at import, so a runtime that cannot read it hard-errors before any\n")
+	fmt.Fprintf(w, "# validation is attempted.\n")
+	fmt.Fprintf(w, "strictspec.require_generated_code_format(GENERATED_CODE_FORMAT, GENERATED_BY)\n")
 	fmt.Fprintf(w, "_program = strictspec.compile_embedded(_EMBEDDED_SCHEMA, _EMBEDDED_MAIN_FILE)\n\n\n")
 }
 

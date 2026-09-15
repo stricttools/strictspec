@@ -47,7 +47,8 @@ absence throughout: no flag reads an empty string as "not supplied".
 - `strictspec check` — drift gate: regenerate from the manifest to temp, byte-compare against
   the toolchain's OWN canonical emitter output. No external formatters exist anywhere — the
   emitters are the formatting authority. Hard error on drift or on a generator-version
-  mismatch it cannot reproduce; hard error on runtime/codegen pairing mismatch. Also prints
+  mismatch it cannot reproduce; hard error when generated code declares a format this runtime
+  does not read. Also prints
   the complete blind-spot inventory: unchecked opaque leaves (path + mandatory reason) and
   consumer-check declarations (path + check name).
 - `strictspec validate` — interpreter-backed; REQUIRES `--structural-only` or
@@ -154,10 +155,12 @@ absence throughout: no flag reads an empty string as "not supplied".
 - The constraint engine (cross-document vocabulary evaluator) and the Go implementations of
   the evidence resolvers.
 
-Version pairing: generated code and runtime from the SAME release — exact match, hard error.
-Dev builds carry a dev version string that pairs only with itself (conformance regenerates
-constantly; released and dev artifacts never cross-pair). Under the ecosystem's always-latest
-dependency rule this hard error is the INTENDED surfacing of skew; remediation is
+Generated-code pairing: generated code declares the generated-code FORMAT it was written to
+(`GENERATED_CODE_FORMAT`, an integer describing the shape of emitted code); the runtime declares
+the inclusive range of formats it reads and hard-errors on anything outside it. A release that
+does not change the emitted shape pairs with code any earlier release generated — `GENERATED_BY`
+is information, never the contract. Under the ecosystem's always-latest
+dependency rule this hard error is the INTENDED surfacing of a real shape change; remediation is
 regeneration, never pinning.
 
 ## Invariants

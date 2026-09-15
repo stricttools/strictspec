@@ -72,9 +72,9 @@ func main() {
 	version := req.Version
 	if version == "" {
 		// Default to THIS toolchain build's version so the generated code's
-		// pairing guard matches the runtime it compiles against (both embed
-		// go/VERSION). A hardcoded "0.0.0" here mismatched the moment the
-		// package was bumped off 0.0.0.
+		// generated file records the release that produced it (both embed
+		// go/VERSION). It is informational — pairing is on the generated-code
+		// format — but the fixtures read it, so it stays honest.
 		version = strictspecroot.Version
 	}
 	built, err := emit.Build(req.Schema, req.CacheDir, req.RuntimeDir, version)

@@ -486,10 +486,10 @@ var catalogue = map[string]Entry{
 	"STRICTSPEC_MANIFEST_PAIRING_MISMATCH": {
 		Code:     "STRICTSPEC_MANIFEST_PAIRING_MISMATCH",
 		Area:     "MANIFEST",
-		Template: "Runtime version {actual} does not match generated-code version {expected}; regenerate against the paired release.",
+		Template: "Generated code at {path} declares generated-code format {got}, which this runtime does not read; regenerate with `strictspec gen`.",
 		Slots: []SlotSpec{
-			{Name: "actual", Type: SlotTypeVersion},
-			{Name: "expected", Type: SlotTypeVersion},
+			{Name: "path", Type: SlotTypePath},
+			{Name: "got", Type: SlotTypeInt},
 		},
 	},
 	"STRICTSPEC_MANIFEST_UNKNOWN_RESOLVER": {
