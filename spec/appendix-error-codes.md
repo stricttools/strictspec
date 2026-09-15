@@ -374,7 +374,7 @@ migrated like any document. General manifest-schema violations reuse `STRICTSPEC
 | `STRICTSPEC_MANIFEST_UNKNOWN_STORE` | `Manifest declares store {name}, whose kind {got} is not a recognized store kind.` | name: identifier, got: string | Store declaration. |
 | `STRICTSPEC_MANIFEST_UNKNOWN_RESOLVER` | `Manifest / schema references evidence resolver {name}, which is not in the resolver vocabulary.` | name: identifier | Closed resolver vocabulary. |
 | `STRICTSPEC_MANIFEST_GENERATED_PATH_DIRTY` | `Generated path {path} has uncommitted local edits; regenerate before proceeding.` | path: path | `check` drift/regeneration guard. |
-| `STRICTSPEC_MANIFEST_PAIRING_MISMATCH` | `Runtime version {actual} does not match generated-code version {expected}; regenerate against the paired release.` | actual: version, expected: version | Exact version pairing (decision 19). |
+| `STRICTSPEC_MANIFEST_PAIRING_MISMATCH` | `Generated code at {path} declares generated-code format {got}, which this runtime does not read; regenerate with `strictspec gen`.` | path: path, got: int | Generated-code format pairing (decision 19). |
 | `STRICTSPEC_MANIFEST_DRIFT` | `Generated output at {path} differs from a fresh generation; run `strictspec gen` and commit.` | path: path | Byte-compare drift gate (decision 18). |
 
 ## 21. Custom-scalar errors (`STRICTSPEC_SCALAR_*`)
