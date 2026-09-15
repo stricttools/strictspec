@@ -1,6 +1,8 @@
 # strictspec (Go)
 
-The strictspec toolchain and Go runtime. Module path
+Define a schema once in TOML, and generate the full toolchain in your language: validation, versioning, migrations, etc. -- First-class support for Go, Python, and TypeScript.
+
+This module is the strictspec toolchain and Go runtime; its module path is
 `github.com/smm-h/strictspec/go`.
 
 This is a placeholder skeleton. The toolchain (generator, interpreter, migration
