@@ -91,7 +91,7 @@ emission order; renderers may not reorder).
   table is part of the TARGET'S RUNTIME, generated ONCE by the toolchain's OWN codegen from the
   catalogue (`appendix-error-codes.md`) when the runtime is built — NOT emitted per consumer
   `gen` run. A consumer's generated validator IMPORTS the renderer table from the runtime it is
-  paired to (version-pairing guard); it does not carry its own copy. "Compiled per-target" above
+  paired to (the generated-code format pairing guard); it does not carry its own copy. "Compiled per-target" above
   means "one renderer table per target language, built into that target's runtime," not "one
   renderer table per generated artifact." This keeps every consumer of a given release byte-
   identical in rendering (the renderer is shared, not re-derived) and is why the whole catalogue
