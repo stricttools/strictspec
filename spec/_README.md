@@ -1,6 +1,6 @@
----
-title: README.md
----
++++
+title = "README.md"
++++
 # strictspec
 
 Define a schema once in TOML, and generate the full toolchain in your language: validation, versioning, migrations, etc. -- First-class support for Go, Python, and TypeScript
