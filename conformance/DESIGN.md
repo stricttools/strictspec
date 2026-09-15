@@ -18,8 +18,9 @@ CI needs Go, uv/Python, and Node — no external formatters exist anywhere in th
 4. the internal interpreter.
 
 All four targets run structural validation AND the ported constraint engine (cross-document
-vocabulary + evidence resolvers). Version pairing note: the suite always runs same-release artifacts; dev
-builds carry a dev version string pairing only with itself.
+vocabulary + evidence resolvers). Pairing note: the suite always runs same-release artifacts, and
+holds the generated-code format contract itself — the accepted range, the refusal text, the emitted
+declaration names and the emitted shape — in lockstep across the three ports.
 
 ## Fixture format
 
@@ -154,7 +155,8 @@ regeneration — appendix-driven regenerations are declared, never silent.
   environments;
   artifact determinism (the emitters' canonical formatting is self-pinning — regenerate twice,
   byte-compare); JSON Schema export stability against the lossiness table; structured-metadata
-  export stability; exact-match pairing.
+  export stability; generated-code format pairing (accepted range, refusal text, emitted
+  declarations, and the emitted-shape pin that forces a format bump).
 - The `strictspec check` gate exercised here (stale code fails; pairing mismatch fails; the
   unchecked inventory renders); `strictspec gen` hard-errors when a TS target is declared for a
   schema lacking `safe_integers = true` (harness meta case); generated-file lint-suppression
