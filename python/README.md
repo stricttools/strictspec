@@ -1,7 +1,9 @@
 # strictspec (Python)
 
-Python runtime library and CLI stub for [strictspec](https://github.com/smm-h/strictspec),
-a strict multi-language schema toolchain for declarative spec files.
+Define a schema once in TOML, and generate the full toolchain in your language: validation, versioning, migrations, etc. -- First-class support for Go, Python, and TypeScript.
+
+This package is the Python runtime library and CLI for
+[strictspec](https://github.com/smm-h/strictspec).
 
 This is a placeholder skeleton. The runtime (document I/O, diagnostics, tagged
 values, constraint engine) and the CLI launcher stub land in a later phase.
