@@ -3,6 +3,8 @@ title: README.md
 ---
 # strictspec
 
+Define a schema once in TOML, and generate the full toolchain in your language: validation, versioning, migrations, etc. -- First-class support for Go, Python, and TypeScript
+
 strictspec is a schema toolchain that turns one TOML schema into Go, Python and
 TypeScript validators reporting identical verdicts, error codes, paths and
 messages for JSON, TOML and JSONL files. It is for projects whose config and
