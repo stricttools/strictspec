@@ -7,8 +7,8 @@ console script that lazy-downloads the exact-version Go binary from the GitHub R
 SHA-256 checksum verification — into a platform cache on FIRST CLI INVOCATION. Library-only
 installs (importing the runtime without ever invoking the CLI) do zero network access. The
 download shim is built on rlsbl's first-party "launcher" artifact mechanism (checksum-verifying
-templates). Runtime package version = strictspec release version, so the lazy download and the
-exact version-pairing rule agree by construction.
+templates). Runtime package version = strictspec release version, so the CLI a consumer runs is
+always the same release as the runtime it installed.
 
 ## Generated-code style
 
@@ -76,6 +76,7 @@ first, with the structured remediation payload.
   delegate to the packaged CLI).
 - No lenient modes; loading and validation inseparable; discovery collects per-file errors and
   fails loudly. No warnings anywhere.
-- Version pairing with generated code: exact match per release; dev builds pair only with
-  themselves. The pairing hard error is the intended surfacing of skew under always-latest
-  dependencies; remediation is regeneration, never pinning.
+- Pairing with generated code: on the generated-code FORMAT (`GENERATED_CODE_FORMAT`, an
+  integer describing the shape of emitted code), never on the release string, which generated
+  code carries as information only. The runtime declares the inclusive range of formats it
+  reads and hard-errors outside it; remediation is regeneration, never pinning.
