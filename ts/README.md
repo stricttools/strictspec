@@ -1,6 +1,8 @@
 # strictspec (TypeScript)
 
-TypeScript runtime library and CLI stub for
+Define a schema once in TOML, and generate the full toolchain in your language: validation, versioning, migrations, etc. -- First-class support for Go, Python, and TypeScript.
+
+This package is the TypeScript runtime library and CLI for
 [strictspec](https://github.com/smm-h/strictspec), published to npm as
 `strictspec`.
 
