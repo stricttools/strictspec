@@ -666,10 +666,10 @@ export const CATALOGUE: Map<string, Entry> = new Map([
 		{
 			code: "STRICTSPEC_MANIFEST_PAIRING_MISMATCH",
 			area: "MANIFEST",
-			template: "Runtime version {actual} does not match generated-code version {expected}; regenerate against the paired release.",
+			template: "Generated code at {path} declares generated-code format {got}, which this runtime does not read; regenerate with `strictspec gen`.",
 			slots: [
-				{ name: "actual", type: SlotType.Version },
-				{ name: "expected", type: SlotType.Version },
+				{ name: "path", type: SlotType.Path },
+				{ name: "got", type: SlotType.Int },
 			],
 		},
 	],
