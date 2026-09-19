@@ -1,6 +1,6 @@
 +++
 title = "strictspec"
-description = "strictspec is a schema toolchain that turns one TOML schema into Go, Python and TypeScript validators reporting identical verdicts and diagnostics."
+description = "strictspec is a schema toolchain that turns one TOML schema into Go, Python and TypeScript validators reporting identical verdicts, codes and messages."
 nav_order = 0
 +++
 
