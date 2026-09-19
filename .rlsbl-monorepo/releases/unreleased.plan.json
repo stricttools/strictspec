@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "base_version": "0.2.5",
+      "bump": "minor",
+      "name": "strictspec",
+      "registry": "pypi",
+      "tag": "strictspec@v0.3.0",
+      "target_version": "0.3.0"
+    }
+  ]
+}
