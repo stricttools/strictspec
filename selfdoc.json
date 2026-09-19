@@ -1,7 +1,7 @@
 {
   "version": "0.1.0",
   "description": "Define a schema once in TOML, and generate the full toolchain in your language: validation, versioning, migrations, etc. -- First-class support for Go, Python, and TypeScript",
-  "repo": "https://github.com/smm-h/strictspec",
+  "repo": "https://github.com/stricttools/strictspec",
   "base_url": "https://smmh.dev/strictspec",
   "search_engine": "pagefind",
   "author": {

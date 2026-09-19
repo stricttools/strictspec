@@ -20,13 +20,13 @@ verdict, the same error code, the same path, and the same rendered message text.
 The Go binary is the toolchain. Install it directly:
 
 ```
-go install github.com/smm-h/strictspec/go/cmd/strictspec@v0
+go install github.com/stricttools/strictspec/go/cmd/strictspec@v0
 ```
 
 `@v0`, not `@latest`: strictspec issues no 1.x tags, so `@latest` cannot resolve
 to a real release. Pin an exact version (`@v0.2.5`) when you need one.
 Cross-compiled archives are attached to each
-[GitHub Release](https://github.com/smm-h/strictspec/releases).
+[GitHub Release](https://github.com/stricttools/strictspec/releases).
 
 The runtime packages carry the same CLI behind a first-run launcher that
 downloads the exact-version binary from the matching GitHub Release, verifies
@@ -39,7 +39,7 @@ npm install strictspec   # TypeScript runtime + `strictspec` bin
 ```
 
 Go consumers import the runtime from the same module:
-`github.com/smm-h/strictspec/go/strictspec`.
+`github.com/stricttools/strictspec/go/strictspec`.
 
 ## Usage
 

@@ -31,7 +31,7 @@ OLD = "spec/"
 NEW = ".stricttools/docs/"
 
 # Neither a word character, a slash, nor a hyphen may precede the mention, so
-# `strictspec/` and `github.com/smm-h/strictspec/go` are left alone.
+# `strictspec/` and `github.com/stricttools/strictspec/go` are left alone.
 PATH_MENTION = re.compile(r"(?<![\w/-])" + re.escape(OLD) + r"(?=[A-Za-z0-9_-]+\.md)")
 CONCEPT_MENTION = re.compile(r"(?<![\w/-])" + re.escape(OLD) + r"(?![A-Za-z0-9_-])")
 
