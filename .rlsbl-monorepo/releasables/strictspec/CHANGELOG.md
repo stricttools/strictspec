@@ -2,6 +2,77 @@
 
 # Changelog
 
+## 0.3.0
+
+Generated code pairs with its runtime by generated-code format rather than by release, the Go module path moves to github.com/stricttools/strictspec/go, and the specification pages move under .stricttools/docs/.
+
+<details>
+<summary>Context</summary>
+
+Until this release a generated validator paired with the exact strictspec
+release that produced it, and refused any other. Under the ecosystem's
+floor-only dependency rule that made every strictspec release an import-time
+outage for every already-published consumer: the consumer's install resolved the
+new runtime, the committed validator demanded the old one, and nothing the
+consumer imported worked until the whole chain regenerated and re-released. It
+was observed on 0.2.5.
+
+Pairing is now on a generated-code FORMAT. Generated code declares an integer
+GENERATED_CODE_FORMAT describing the shape of the emitted code, bumped only when
+that shape changes; every runtime declares the inclusive range of formats it
+reads; and pairing succeeds whenever the declared format is in that range,
+whatever release produced the file. The GENERATED_BY release stamp stays in the
+emitted file as information only, and no tool derives a dependency floor from
+it. Generated code written before the format declaration existed declares no
+format and is refused with the same regeneration remedy -- never read as format
+1 -- so every consumer regenerates exactly once. The bump discipline is
+mechanical rather than a convention: the conformance suite pins the emitted
+shape of all three targets and fails any change to it that does not move the
+format.
+
+Two moves ride along. The repository was transferred to the stricttools
+organisation, so the Go module path is now
+github.com/stricttools/strictspec/go. Everything published under
+github.com/smm-h/strictspec/go stays resolvable through the module proxy, and
+GitHub redirects the transferred repository, but new versions publish under the
+new path alone -- so a Go consumer changes its imports once, and regenerates its
+committed validators, whose own import line names the module too. The emitted Go
+shape therefore moves in this release while the generated-code format does not:
+the runtimes read the same shape, and bumping the format would refuse every
+Python and TypeScript validator already in the wild over a change that never
+reached their emitted code.
+
+The specification pages moved from spec/ to .stricttools/docs/, the layout
+selfdoc now requires, with the generated pages under
+.stricttools/docs-state/pages/ and the tool's own state under
+.stricttools/docs-state/. The published site's addresses are unchanged. Inside
+the repository the three error-code generators and their freshness tests read
+the appendix at its new path, and prose that said spec/ when it meant the
+specification says so in words now.
+
+</details>
+
+### Breaking
+
+- [go-strictspec] **Generated validators now pair on a generated-code format, not on the strictspec release.** Regenerate every committed validator once with `strictspec gen` after upgrading: a validator generated before this release declares no format and panics at init, naming regeneration as the remedy. From then on, upgrading the Go runtime only breaks generated code when the generated-code format itself changes -- an ordinary release no longer forces a regeneration.
+- [py-strictspec] **Generated validators now pair on a generated-code format, not on the strictspec release.** Regenerate every committed validator once with `strictspec gen` after upgrading: a validator generated before this release declares no format and raises `PairingError` at import, naming regeneration as the remedy. From then on, installing a newer strictspec only breaks generated code when the generated-code format itself changes -- so a published package no longer starts failing at import the day strictspec releases.
+- [ts-strictspec] **Generated validators now pair on a generated-code format, not on the strictspec release.** Regenerate every committed validator once with `strictspec gen` after upgrading: a validator generated before this release declares no format and throws `PairingError` at module init, naming regeneration as the remedy. From then on, installing a newer strictspec only breaks generated code when the generated-code format itself changes -- so a published package no longer starts failing on import the day strictspec releases.
+- [go-strictspec] **The Go module path moved.** strictspec's repository was transferred to the `stricttools` organisation, so the Go module is now `github.com/stricttools/strictspec/go`. Versions already published under `github.com/smm-h/strictspec/go` stay resolvable -- the module proxy keeps serving them and GitHub redirects the transferred repository -- but new versions publish under the new path alone, so an import left on the old path stays frozen at the last version released there. Change every import from `github.com/smm-h/strictspec/go/strictspec` to `github.com/stricttools/strictspec/go/strictspec`, run `go get github.com/stricttools/strictspec/go/strictspec@latest`, and regenerate every committed Go validator with `strictspec gen` so its own import line moves too.
+
+### Features
+
+- [go-strictspec] **Documentation joins the unified site at https://smmh.dev/strictspec/, and the project describes itself consistently.** The Go runtime package's doc comment now opens with the same one-line definition the site, the README and the registries carry.
+- [py-strictspec] **Documentation joins the unified site at https://smmh.dev/strictspec/, and the project describes itself consistently.** The PyPI package now states what strictspec does and links its docs, repository, issues and changelog.
+- [ts-strictspec] **Documentation joins the unified site at https://smmh.dev/strictspec/, and the project describes itself consistently.** The npm package now states what strictspec does and declares its homepage, issue tracker and keywords.
+
+### Fixes
+
+- [go-strictspec] **The Go module now says what strictspec does in one line, everywhere it is read.** The package doc comment and the module README open with the same sentence the site and the other packages carry, so `go doc` and pkg.go.dev no longer describe strictspec differently from the docs site.
+- [py-strictspec] **The PyPI package now says what strictspec does in one line.** Its description and README open with the same sentence the docs site and the other packages carry, so the project no longer describes itself differently on each registry.
+- [ts-strictspec] **The npm package now says what strictspec does in one line.** Its description and README open with the same sentence the docs site and the other packages carry, so the project no longer describes itself differently on each registry.
+- [py-strictspec] **The first-run launcher's manual-install instructions now name a command that works.** When the toolchain binary cannot be downloaded, the error's `go install` line spells the full module path (`github.com/stricttools/strictspec/go/cmd/strictspec@v<version>`) instead of a path Go cannot resolve, and the GitHub Release it points at is the transferred repository's.
+- [ts-strictspec] **The package metadata now points at the transferred repository.** The homepage, issue-tracker and repository links, and the first-run launcher's GitHub Release downloads, all name `stricttools/strictspec` instead of the old owner.
+
 ## 0.2.5
 
 Release archives are built again
