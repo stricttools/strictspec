@@ -41,7 +41,7 @@ first, with the structured remediation payload.
 
 ## Contents
 
-- Diagnostics: the spec/ error model (code, path, message, expected/got, suggestion, optional
+- Diagnostics: the specification's error model (code, path, message, expected/got, suggestion, optional
   position — NO severity), terminal + JSON renderers emitting from the spec-pinned message
   templates, did-you-mean per appendix item 7 (cross-target normative — codes, paths, AND
   rendered message text are the conformance surface), the constructor for consumer-prefixed
@@ -58,7 +58,7 @@ first, with the structured remediation payload.
   Validating a TOML-syntax document against a schema in which a nullable union is reachable =
   canonical hard error.
 - The inline version-gate helper (three-message pattern + structured remediation payload).
-- Scalar guards per spec/ (number scalar with unrepresentable-lexeme rejection; datetime
+- Scalar guards per the specification (number scalar with unrepresentable-lexeme rejection; datetime
   kinds; integral-float, bool-not-int, non-finite).
 - The CONSTRAINT ENGINE: the ported cross-document vocabulary evaluator plus the Python
   implementations of the evidence resolvers (filesystem, sibling documents, git where

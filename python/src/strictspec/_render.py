@@ -2,7 +2,7 @@
 
 A faithful port of go/internal/render (render.go + didyoumean.go). It
 substitutes each template slot with the value rendering fixed by
-spec/appendix-rendering.md (Part A value rendering, Part B path grammar, Part C
+.stricttools/docs/appendix-rendering.md (Part A value rendering, Part B path grammar, Part C
 did-you-mean, Part D condition scheme). Templates come from the generated codes
 catalogue; there is no hand-written message string here.
 
