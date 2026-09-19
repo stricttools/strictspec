@@ -88,7 +88,7 @@ with `strictspec gen`, never pin.
 
 ## The language reference
 
-The `.stricttools/docs/` constitution is the language-neutral definition of the schema
+The constitution under `.stricttools/docs/` is the language-neutral definition of the schema
 language, the constraint vocabulary, the migration op set, the error model, and
 the normative appendices. Every backend and the internal interpreter implement
 it, and the conformance suite enforces it across every target.

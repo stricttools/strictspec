@@ -6,7 +6,7 @@
 # exercise: rename_field + wrap_in_array, and a PARTIAL down-migration whose
 # per-document failure is the pinned unwrap-of-a-multi-element-list hard error.
 #
-# MIGRATION SURFACE (spec/appendix-surface-syntax.md §9):
+# MIGRATION SURFACE (.stricttools/docs/appendix-surface-syntax.md §9):
 #   [migration] header: schema / from_format_version / to_format_version / migration_set / description
 #   [[ops]] one per op from the CLOSED 13-op set; each declares `down`:
 #           "total" | "partial" | "irreversible" (reversibility taxonomy, decision 9)

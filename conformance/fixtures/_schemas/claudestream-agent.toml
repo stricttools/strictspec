@@ -1,7 +1,7 @@
 # strictspec schema — claudestream AgentDefinition (paper draft, GREENFIELD)
 #
 # At-rest documents: .claudestream/agents/<name>.agent.json
-# Authored in the pinned surface (spec/appendix-surface-syntax.md): bare header, root-as-named-type
+# Authored in the pinned surface (.stricttools/docs/appendix-surface-syntax.md): bare header, root-as-named-type
 # via `root`, `role`, uniform `[types.<Name>.fields.*]` sites. Opaque leaf:
 #   type = "opaque" + ( unchecked = true + unchecked_reason = "..."  |  consumer_check = "..." )
 # Field set read from claudestream/_agent.py (AgentDefinition) and _options.py

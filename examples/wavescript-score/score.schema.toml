@@ -2,7 +2,7 @@
 # Source of truth: wavescript/internal/score/score.go (format_version gate at
 # ~line 999), internal/registry/registry.go (Spec/Cond/Pin, ValidateValue,
 # ValidateEffective), internal/registry/scorefields.go and topo_subtractive.go
-# (the per-topology parameter registry). Pinned surface (spec/appendix-surface-syntax.md):
+# (the per-topology parameter registry). Pinned surface (.stricttools/docs/appendix-surface-syntax.md):
 # root-as-named-type; discriminated-union arms are subtables; conditions use the closed
 # `when = { field, predicate, value/values }` set (equals / not-equals / in / not-in / present /
 # absent). Phase 3.3: the wavescript Pin becomes the `conditional-value` form, and negative-

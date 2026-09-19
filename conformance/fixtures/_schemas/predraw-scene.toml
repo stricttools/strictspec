@@ -1,6 +1,6 @@
 # strictspec schema — predraw Scene (paper draft)
 #
-# Pinned surface (spec/appendix-surface-syntax.md): bare header + `role`/`root`; kind-typed
+# Pinned surface (.stricttools/docs/appendix-surface-syntax.md): bare header + `role`/`root`; kind-typed
 # `[types.<Name>]`; tuple `elements = ["number", "number"]`; typed map `.value`; array `.item`;
 # discriminated-union / node-kind-union arms are subtables `[types.<U>.arms.<arm>]` (each a type
 # site referencing the arm record, keyed by the discriminator literal or a node-kind arm name).

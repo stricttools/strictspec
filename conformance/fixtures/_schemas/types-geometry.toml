@@ -1,6 +1,6 @@
 # TYPE-DEFINITION FILE (decision 21). Types only — no root, no constraints, no imports.
 # It is itself a document of the meta-schema: it carries meta_version + format_version and
-# is gated/migrated exactly like a schema (spec/DESIGN.md — Construct set; appendix-semantics
+# is gated/migrated exactly like a schema (.stricttools/docs/DESIGN.md — Construct set; appendix-semantics
 # 3.20). `role = "type-definitions"` is the DECLARED discriminator (never inferred from shape;
 # appendix-surface-syntax.md §4): a type file carries `[types.*]` only, no `root`/`targets`.
 

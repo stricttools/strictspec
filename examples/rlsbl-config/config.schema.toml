@@ -3,7 +3,7 @@
 # validate_pipelines_config, validate_pipeline_target_links) and
 # rlsbl/rlsbl/external_checks.py (validate_external_checks).
 # JSON syntax, so nullable unions are available (pipeline.target is string|null).
-# Pinned surface (spec/appendix-surface-syntax.md).
+# Pinned surface (.stricttools/docs/appendix-surface-syntax.md).
 
 name = "rlsbl-config"
 meta_version = 1

@@ -1,5 +1,5 @@
 # strictspec schema — predraw Config (paper draft)
-# Pinned surface (spec/appendix-surface-syntax.md).
+# Pinned surface (.stricttools/docs/appendix-surface-syntax.md).
 # Translated from predraw/predraw/schema/config.schema.json (JSON docs).
 # NOTE: predraw has no format_version today; value 1 is a net-new gate (gap-note.md #2).
 

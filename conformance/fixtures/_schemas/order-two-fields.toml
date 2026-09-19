@@ -1,6 +1,6 @@
 # Minimal ordering schema: a root record declaring two required integer fields
 # in the DECLARATION order alpha, beta. Used by the traversal-order fixtures that
-# pin present-key diagnostic emission to DOCUMENT order (spec/DESIGN.md primitives
+# pin present-key diagnostic emission to DOCUMENT order (.stricttools/docs/DESIGN.md primitives
 # appendix item 6). Deliberately trivial: the only thing under test is emission
 # order when a document reorders present keys relative to declaration.
 name = "order-two-fields"

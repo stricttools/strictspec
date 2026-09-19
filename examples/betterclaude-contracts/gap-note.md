@@ -167,7 +167,7 @@ every host construct. Only finding 1 suggests a possible small vocabulary enhanc
 
 - **F1 (enum-typed map keys / `key_type`)** — REJECTED. Single consumer; the `key_pattern` regex
   expresses it today (and enum sourcing can bake the enum into the key regex). Map keys remain
-  regex-constrained only (`spec/DESIGN.md` — vocabulary rejection rationale;
+  regex-constrained only (`.stricttools/docs/DESIGN.md` — vocabulary rejection rationale;
   `appendix-surface-syntax.md` §11). Revisit on recurrence.
 - **F2 (SessionId reused as generic UUID)** — BOUNDARY-CONFIRMED. Modeling note, not a spec gap.
 - **F3 (session layouts as an enum on the PID-session doc)** — BOUNDARY-CONFIRMED. Correct

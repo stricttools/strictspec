@@ -1,5 +1,5 @@
 # strictspec schema — a private project PartManifest (paper draft)
-# Pinned surface (spec/appendix-surface-syntax.md). Translated from
+# Pinned surface (.stricttools/docs/appendix-surface-syntax.md). Translated from
 # schemas/part-manifest.schema.json (a private project, JSON docs).
 
 name = "PartManifest"

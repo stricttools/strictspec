@@ -1,6 +1,6 @@
 """The pinned diagnostic-code catalogue and message templates.
 
-Transcribed VERBATIM from ``spec/appendix-error-codes.md`` (the normative
+Transcribed VERBATIM from ``.stricttools/docs/appendix-error-codes.md`` (the normative
 catalogue). This module is the single source the harness uses to (a) reject a
 fixture that cites a code outside the catalogue, and (b) render the expected
 message text for a diagnostic from the pinned template plus the fixture's slot

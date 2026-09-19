@@ -1,7 +1,7 @@
 # strictspec migration — rlsbl dev_node naming history, step 2 of 2 (PURE-RENAME chain)
 #
 # Step 2: changelog_exempt -> dev_node. Pure rename, down: TOTAL.
-# Surface: see budget-v1-to-v2.migration.toml header (spec/appendix-surface-syntax.md §9).
+# Surface: see budget-v1-to-v2.migration.toml header (.stricttools/docs/appendix-surface-syntax.md §9).
 
 [migration]
 schema = "WorkspaceProject"

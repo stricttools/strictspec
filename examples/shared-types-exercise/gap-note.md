@@ -130,7 +130,7 @@ CLEAN — RESOLVED (Phase 3.3).
 
 - **Notation observation (schema-vs-type-file discriminator)** — ADOPTED. The meta-schema now pins
   an explicit `role = "schema" | "type-definitions"` header key; the distinction is a declared
-  literal, never inferred from shape (`spec/appendix-surface-syntax.md` §4). A `type-definitions`
+  literal, never inferred from shape (`.stricttools/docs/appendix-surface-syntax.md` §4). A `type-definitions`
   file carries `[types.*]` only — no `root`, no `targets`, no constraints.
 - Everything else (all three shareable kinds, the two rejection cases, the metagate and bump-rule
   interactions) came back CLEAN and is confirmed. Draft normalized to the pinned surface.

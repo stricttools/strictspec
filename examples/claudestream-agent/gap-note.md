@@ -81,11 +81,11 @@ FINDINGS: 4 — RESOLVED (Phase 3.3).
 
 ## RESOLUTION (Phase 3.3)
 
-- **F1 (surface syntax unpinned)** — ADOPTED. Pinned in `spec/appendix-surface-syntax.md`. Draft
+- **F1 (surface syntax unpinned)** — ADOPTED. Pinned in `.stricttools/docs/appendix-surface-syntax.md`. Draft
   and both reject fixtures normalized.
 - **F2 (three version tokens)** — BOUNDARY-CONFIRMED. A naming-clarity win; no gap.
 - **F3 (zero-corpus adjudication path)** — BOUNDARY-CONFIRMED, and VERIFIED. The adjudication file
-  SHAPE is pinned in `spec/appendix-certificates.md` Part B (top-level + per-entry fields;
+  SHAPE is pinned in `.stricttools/docs/appendix-certificates.md` Part B (top-level + per-entry fields;
   validated by its shipped schema, `STRICTSPEC_DIFF_ADJUDICATION_*` police it). It is NOT unpinned
   — this note treats it as the intended path, consistent with the pinned shape. No gap.
 - **F4 (optional-absent vs nullable)** — BOUNDARY-CONFIRMED. Modeling choice, on record.
