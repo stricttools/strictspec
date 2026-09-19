@@ -117,7 +117,7 @@ FINDINGS: 3 — RESOLVED (Phase 3.3).
 
 ## RESOLUTION (Phase 3.3)
 
-All three are REJECTED (recorded in `spec/DESIGN.md` — vocabulary rejection rationale; revisit at
+All three are REJECTED (recorded in `.stricttools/docs/DESIGN.md` — vocabulary rejection rationale; revisit at
 the rlsbl adoption wave). They are consumer-native for now:
 
 - **F1 (reference-target predicate, `wraps`→binary join)** — REJECTED.

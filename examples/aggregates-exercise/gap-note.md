@@ -94,12 +94,12 @@ FINDINGS: 3 — RESOLVED (Phase 3.3).
 
 - **F1 (`documents-in` glob anchor)** — ADOPTED, with a DIFFERENT anchor than this note guessed:
   the glob is anchored at the MANIFEST ROOT (not document-directory-relative), resolved in
-  LEXICOGRAPHIC order (`spec/DESIGN.md` — Cross-document vocabulary; `appendix-semantics.md` 3.25;
+  LEXICOGRAPHIC order (`.stricttools/docs/DESIGN.md` — Cross-document vocabulary; `appendix-semantics.md` 3.25;
   `appendix-surface-syntax.md` §5.1). Manifest-root anchoring keeps a committed fleet portable and
   invocation-independent. Deviation from the note's document-directory guess is deliberate.
 - **F2 (sum-limit over a heterogeneous / `sum_field`-missing selection)** — ADOPTED. Pinned as a
   HARD ERROR, new code `STRICTSPEC_CROSS_SUM_FIELD_MISSING` — never skip-or-zero.
 - **F3 (manifest-hosts-the-aggregate canonical shape)** — ADOPTED (documented as the canonical
-  pattern in `appendix-semantics.md` 3.25 / `spec/DESIGN.md`).
+  pattern in `appendix-semantics.md` 3.25 / `.stricttools/docs/DESIGN.md`).
 
 VERDICT: RESOLVED (Phase 3.3).

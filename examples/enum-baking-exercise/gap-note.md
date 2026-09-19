@@ -99,7 +99,7 @@ FINDINGS: 1 — RESOLVED (Phase 3.3).
 ## RESOLUTION (Phase 3.3)
 
 - **F1 (enum-source selector grammar unpinned)** — ADOPTED. The selector grammar is pinned in
-  `spec/appendix-surface-syntax.md` §7: a restricted projection path of key steps and `[]`
+  `.stricttools/docs/appendix-surface-syntax.md` §7: a restricted projection path of key steps and `[]`
   array-flatten steps (e.g. `sounds[].name`), with NO key wildcards, NO index selection, and NO
   filtering; it must resolve to a flat sequence of string leaves. That grammar IS the accept/reject
   boundary of `STRICTSPEC_ENUMSRC_BAD_SELECTOR` (`appendix-error-codes.md` §7;

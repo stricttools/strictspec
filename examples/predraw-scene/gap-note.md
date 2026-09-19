@@ -33,7 +33,7 @@ Documents are JSON.
 
 ### FINDING 1 — meta-schema surface syntax still unpinned (same as sibling drafts)
 See the PixelWeaver gap note, Finding 1. The concrete TOML spelling of records/maps/unions/
-tuples/aliases/named-types is invented per draft; spec/ pins the language but not the authoring
+tuples/aliases/named-types is invented per draft; the specification pins the language but not the authoring
 surface. Recommend a normative surface-syntax appendix (or "the shipped built-in meta-schema is
 the pinned surface, by example").
 
@@ -112,7 +112,7 @@ FINDINGS: 6 — RESOLVED (Phase 3.3).
 
 ## RESOLUTION (Phase 3.3)
 
-- **F1 (surface syntax unpinned)** — ADOPTED. Pinned in `spec/appendix-surface-syntax.md`. Draft
+- **F1 (surface syntax unpinned)** — ADOPTED. Pinned in `.stricttools/docs/appendix-surface-syntax.md`. Draft
   normalized.
 - **F2 (net-new format_version gate)** — BOUNDARY-CONFIRMED. Bootstrap contract (decision 13/34);
   adoption precondition, not a gap.

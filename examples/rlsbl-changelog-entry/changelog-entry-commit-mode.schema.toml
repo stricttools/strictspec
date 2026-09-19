@@ -1,7 +1,7 @@
 # strictspec paper schema — rlsbl JSONL changelog entry, COMMIT coverage mode.
 # Source of truth: rlsbl/rlsbl/changelog/schema.py (ChangelogEntry,
 # validate_schema with coverage_unit="commit"). One document = one JSONL line.
-# Pinned surface (spec/appendix-surface-syntax.md).
+# Pinned surface (.stricttools/docs/appendix-surface-syntax.md).
 #
 # MODE SPLIT (see gap-note.md): coverage_unit is a PROJECT-CONFIG value
 # (.rlsbl/config.json), NOT a field on the entry line. There is therefore no

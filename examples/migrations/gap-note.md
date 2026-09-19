@@ -32,7 +32,7 @@ field change happened in code long ago; the dev_node renames already shipped in 
 ## Findings
 
 ### FINDING 1 — migration-file surface syntax is unpinned (same class as the schema surface gap)
-Just as spec/ pins the language but not the schema TOML surface (see sibling gap notes), it pins
+Just as the specification pins the language but not the schema TOML surface (see sibling gap notes), it pins
 the 13-op vocabulary and their semantics/collision rules but not the concrete TOML spelling of a
 migration file (`[migration]` header keys, `[[ops]]` shape, how `down`/`partial`/`irreversible`
 and a partial reason are written, how op targets are addressed — this draft uses the read-side
@@ -78,13 +78,13 @@ FINDINGS: 3 — RESOLVED (Phase 3.3).
 ## RESOLUTION (Phase 3.3)
 
 - **F1 (migration-file surface unpinned)** — ADOPTED. The migration-file surface is pinned in
-  `spec/appendix-surface-syntax.md` §9 (`[migration]` header, `[[ops]]`, author-supplied
+  `.stricttools/docs/appendix-surface-syntax.md` §9 (`[migration]` header, `[[ops]]`, author-supplied
   `[[down_ops]]`). Both migration drafts normalized.
 - **F2 (no admission-criterion pressure)** — BOUNDARY-CONFIRMED. The op vocabulary fits with zero
   pressure; no new op.
 - **F3 (down engine-derived vs author-supplied)** — RESOLVED: `down` is AUTHOR-SUPPLIED. The
   migration file carries explicit `[[down_ops]]`; the engine NEVER derives down ops; `diff`'s
-  down-taxonomy verification checks the DECLARATION against the corpus (`spec/DESIGN.md` —
+  down-taxonomy verification checks the DECLARATION against the corpus (`.stricttools/docs/DESIGN.md` —
   Reversibility taxonomy; `appendix-surface-syntax.md` §9). This decides the note's open question
   in the author-supplied direction (not auto-derivation). The reference-comment inverses become
   real `[[down_ops]]` in normalization.

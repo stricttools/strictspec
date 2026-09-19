@@ -150,7 +150,7 @@ express within the current vocabulary.
 - **F2 (value-triggered predicate tension, `retry > 0`)** — ADOPTED (equality-only). The closed
   condition set is literal-equality/membership only; NUMERIC COMPARISON predicates are REJECTED.
   The `retry>0` origin is reworded to `retry != 0` (with a note it relies on `retry >= 0`), so the
-  cited origin is honest (`spec/DESIGN.md` — Condition set + vocabulary table). This draft uses
+  cited origin is honest (`.stricttools/docs/DESIGN.md` — Condition set + vocabulary table). This draft uses
   `retry not-equals-literal 0`.
 - **F3 (computed-name disjointness, variable collisions)** — BOUNDARY-CONFIRMED. Consumer-native
   (values-from-values is banned).

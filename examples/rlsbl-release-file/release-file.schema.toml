@@ -1,6 +1,6 @@
 # strictspec paper schema — rlsbl release file (.rlsbl/releases/unreleased.toml)
 # Source of truth: rlsbl/rlsbl/release_file.py (ReleaseConfig, _validate_release_config).
-# Pinned surface (spec/appendix-surface-syntax.md): bare header + `role`/`root`; the root is a
+# Pinned surface (.stricttools/docs/appendix-surface-syntax.md): bare header + `role`/`root`; the root is a
 # named record; constraints are nesting-scoped `[[types.<Name>.constraints]]`; conditions use the
 # closed `when = { field, predicate, value/values }` set.
 

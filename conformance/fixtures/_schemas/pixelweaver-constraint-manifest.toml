@@ -1,5 +1,5 @@
 # strictspec schema — PixelWeaver ConstraintManifest (paper draft)
-# Authored in the pinned surface (spec/appendix-surface-syntax.md): bare header, root-as-named-type
+# Authored in the pinned surface (.stricttools/docs/appendix-surface-syntax.md): bare header, root-as-named-type
 # via `root`, `role`, kind-typed `[types.<Name>]`, uniform `.fields.*` / `.item` sites, and
 # nesting-scoped `[[types.<Name>.constraints]]`.
 # Translated from schemas/constraint-manifest.schema.json (PixelWeaver, JSON docs).

@@ -3,7 +3,7 @@
 # supplies beta and alpha (reordered, both violating) and OMITS zeta, exercising
 # present-key diagnostics in document order together with a missing-required
 # diagnostic in declaration order. zeta is declared LAST so its missing-required
-# diagnostic is unambiguously trailing (spec/DESIGN.md primitives appendix item 6
+# diagnostic is unambiguously trailing (.stricttools/docs/DESIGN.md primitives appendix item 6
 # and its dated interleaving pin).
 name = "order-mixed-missing"
 meta_version = 1

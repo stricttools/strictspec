@@ -2,7 +2,7 @@ name = "order-mixed-present-and-missing"
 category = "construct-coverage"
 provenance = "hand-authored"
 description = """
-Mixed traversal-order case (spec/DESIGN.md primitives appendix item 6 and its dated interleaving
+Mixed traversal-order case (.stricttools/docs/DESIGN.md primitives appendix item 6 and its dated interleaving
 pin). The schema declares three required integer fields in the order alpha, beta, zeta. The document
 supplies beta then alpha (REORDERED, both carrying float lexemes that violate the integer type) and
 OMITS zeta. The pinned emission order is:

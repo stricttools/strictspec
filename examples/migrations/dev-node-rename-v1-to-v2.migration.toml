@@ -3,7 +3,7 @@
 # Models rlsbl's real workspace flag rename history: internal -> changelog_exempt -> dev_node.
 # Two rename_field migrations, each down: TOTAL (rename is fully reversible; no value is
 # computed, reshaped, or dropped). This file is step 1 (internal -> changelog_exempt).
-# Surface: see budget-v1-to-v2.migration.toml header (spec/appendix-surface-syntax.md §9).
+# Surface: see budget-v1-to-v2.migration.toml header (.stricttools/docs/appendix-surface-syntax.md §9).
 
 [migration]
 schema = "WorkspaceProject"

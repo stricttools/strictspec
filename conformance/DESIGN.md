@@ -162,7 +162,7 @@ regeneration — appendix-driven regenerations are declared, never silent.
   schema lacking `safe_integers = true` (harness meta case); generated-file lint-suppression
   headers and prettier-ignore maintenance asserted on generated output.
 
-FIXTURE-AUTHORING DISCIPLINE: expected fixture outcomes are HAND-AUTHORED from spec/, never
+FIXTURE-AUTHORING DISCIPLINE: expected fixture outcomes are HAND-AUTHORED from the specification, never
 regenerated from any target — guarding against common-mode emitter-IR bugs passing all four
 targets simultaneously. A bug shared by the shared emitter IR would make all four targets agree
 on a wrong answer; only a spec-derived, hand-authored expectation catches it.
