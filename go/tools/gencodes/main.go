@@ -6,7 +6,7 @@
 //
 // Invoke via `go generate ./internal/codes/...` or directly:
 //
-//	go run github.com/smm-h/strictspec/go/tools/gencodes [-spec PATH] [-out PATH]
+//	go run github.com/stricttools/strictspec/go/tools/gencodes [-spec PATH] [-out PATH]
 //
 // With no flags it locates the repo root (the ancestor containing
 // .stricttools/docs/appendix-error-codes.md) and derives both paths.

@@ -82,9 +82,9 @@ func writeModule(modDir, runtimeDir, genSrc string) error {
 
 go 1.26
 
-require github.com/smm-h/strictspec/go v0.0.0
+require github.com/stricttools/strictspec/go v0.0.0
 
-replace github.com/smm-h/strictspec/go => %s
+replace github.com/stricttools/strictspec/go => %s
 `, runtimeDir)
 	if err := os.WriteFile(filepath.Join(modDir, "go.mod"), []byte(goMod), 0o644); err != nil {
 		return err

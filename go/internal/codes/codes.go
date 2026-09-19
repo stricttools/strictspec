@@ -5,7 +5,7 @@
 // is forbidden. A freshness test regenerates and byte-compares (drift = failure).
 package codes
 
-//go:generate go run github.com/smm-h/strictspec/go/tools/gencodes
+//go:generate go run github.com/stricttools/strictspec/go/tools/gencodes
 
 import "sort"
 

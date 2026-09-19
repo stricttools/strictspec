@@ -1,6 +1,6 @@
 # go/ — The Toolchain and the Go Releasable
 
-One Go module (`github.com/smm-h/strictspec/go`, with `go.mod` living in this directory): the
+One Go module (`github.com/stricttools/strictspec/go`, with `go.mod` living in this directory): the
 toolchain binary (`cmd/strictspec`) plus the runtime subpackage generated Go code imports.
 Consumers compile only the runtime. One version, one tag, one release. The MODULE IS THE
 BINARY — Go consumers `go install` it directly; there is no separate binary package for Go.
@@ -178,7 +178,7 @@ regeneration, never pinning.
 
 ## Release notes
 
-Single module rooted at this directory's go.mod, module path `github.com/smm-h/strictspec/go`.
+Single module rooted at this directory's go.mod, module path `github.com/stricttools/strictspec/go`.
 The Go companion-tag question is CLOSED: rlsbl's monorepo release flow emits `{path}/v{version}`
 tags alongside `{name}@v{version}`, proven live in strictcli (both `go-strictcli@v0.25.3` and
 `go/v0.25.3` tag families exist). The batch-regeneration helper (regenerate + commit across
