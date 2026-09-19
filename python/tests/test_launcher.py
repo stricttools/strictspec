@@ -57,7 +57,7 @@ def test_release_base_url_uses_releasable_group_tag():
     # 404s on its very first run.
     url = _launcher.release_base_url("0.2.1")
     assert url == (
-        "https://github.com/smm-h/strictspec/releases/download/strictspec@v0.2.1"
+        "https://github.com/stricttools/strictspec/releases/download/strictspec@v0.2.1"
     )
 
 
@@ -86,6 +86,30 @@ def test_download_failure_remediation_points_at_the_live_release(
     message = str(excinfo.value)
     assert "releases/download/strictspec@v0.2.1" in message
     assert "go-strictspec@" not in message
+
+
+def test_download_failure_remediation_names_a_resolvable_go_module_path(
+    linux_amd64, tmp_path, monkeypatch
+):
+    # The `go install` line the hard error prints is a command a reader runs, so
+    # it must spell the module path the repository actually serves: the host,
+    # then the owner and the repository the launcher already knows.
+    version = "0.2.1"
+    monkeypatch.setattr(_launcher, "_installed_version", lambda: version)
+    monkeypatch.setattr(_launcher, "cache_dir", lambda: tmp_path)
+
+    def _fail(url):
+        raise OSError("HTTP Error 404: Not Found")
+
+    monkeypatch.setattr(_launcher, "_download", _fail)
+
+    with pytest.raises(RuntimeError) as excinfo:
+        _launcher.ensure_binary()
+    message = str(excinfo.value)
+    assert (
+        f"go install github.com/{_launcher.GITHUB_REPO}/go/cmd/strictspec@v{version}"
+        in message
+    )
 
 
 def test_expected_digest_matches_filename():
