@@ -34,7 +34,7 @@ import zipfile
 from pathlib import Path
 
 # The monorepo repo that hosts the GitHub Releases.
-GITHUB_REPO = "smm-h/strictspec"
+GITHUB_REPO = "stricttools/strictspec"
 # goreleaser project_name -> the archive asset name AND the binary name inside
 # the archive (strictspec_<ver>_<os>_<arch>.<ext> containing `strictspec`).
 ASSET_PROJECT = "strictspec"
@@ -185,7 +185,7 @@ def ensure_binary():
         raise RuntimeError(
             f"[{BINARY_NAME}] failed to download the toolchain binary for version "
             f"{version} ({name}): {e}. Manual install: download the matching asset "
-            f"from {base} or `go install {GITHUB_REPO.replace('smm-h/', 'github.com/smm-h/')}/go/cmd/strictspec@v{version}`."
+            f"from {base} or `go install github.com/{GITHUB_REPO}/go/cmd/strictspec@v{version}`."
         )
 
     # Verify BEFORE writing the binary into the cache.
