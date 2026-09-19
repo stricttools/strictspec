@@ -6,7 +6,7 @@
 	"description": "Define a schema once in TOML, and generate the full toolchain in your language: validation, versioning, migrations, etc. -- First-class support for Go, Python, and TypeScript",
 	"homepage": "https://smmh.dev/strictspec/",
 	"bugs": {
-		"url": "https://github.com/smm-h/strictspec/issues"
+		"url": "https://github.com/stricttools/strictspec/issues"
 	},
 	"bin": {
 		"strictspec": "bin/strictspec.cjs"
@@ -16,7 +16,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/smm-h/strictspec.git",
+		"url": "git+https://github.com/stricttools/strictspec.git",
 		"directory": "ts"
 	},
 	"exports": {
