@@ -42,7 +42,7 @@ test("releaseBaseUrl targets the strictspec@ releasable-group tag", () => {
 	// 404s on its very first run.
 	assert.equal(
 		launcher.releaseBaseUrl("0.2.2"),
-		"https://github.com/smm-h/strictspec/releases/download/strictspec@v0.2.2",
+		"https://github.com/stricttools/strictspec/releases/download/strictspec@v0.2.2",
 	);
 });
 

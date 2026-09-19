@@ -28,7 +28,7 @@ const https = require("https");
 const crypto = require("crypto");
 const { execFileSync, spawnSync } = require("child_process");
 
-const GITHUB_REPO = "smm-h/strictspec";
+const GITHUB_REPO = "stricttools/strictspec";
 const ASSET_PROJECT = "strictspec";
 const BINARY_NAME = "strictspec";
 // The releasable GROUP's tag prefix on the shared monorepo GitHub Releases. All

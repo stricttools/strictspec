@@ -3,7 +3,7 @@
 Define a schema once in TOML, and generate the full toolchain in your language: validation, versioning, migrations, etc. -- First-class support for Go, Python, and TypeScript.
 
 This package is the TypeScript runtime library and CLI for
-[strictspec](https://github.com/smm-h/strictspec), published to npm as
+[strictspec](https://github.com/stricttools/strictspec), published to npm as
 `strictspec`.
 
 This is a placeholder skeleton (currently `"private": true` so nothing can
@@ -14,7 +14,7 @@ and the CLI launcher stub land in a later phase; see [ts/DESIGN.md](./DESIGN.md)
 ## Versioning
 
 This package, the `strictspec` PyPI package and the Go module
-`github.com/smm-h/strictspec/go` are one release unit: they always carry the
+`github.com/stricttools/strictspec/go` are one release unit: they always carry the
 same version and are published together, so the runtime always matches the
 toolchain that generated its code — and the first-run launcher can fetch the
 binary that pairs with it. A version therefore moves for all three even when
