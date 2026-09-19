@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Generate the TypeScript strictspec error-code catalogue module.
 //
-// Parses spec/appendix-error-codes.md (the single normative source for the
+// Parses .stricttools/docs/appendix-error-codes.md (the single normative source for the
 // error-code catalogue) and emits src/codes.generated.ts. This mirrors the Go
 // generator (go/tools/gencodes) and the Python generator
 // (python/scripts/gencodes.py): the appendix is the only writer of the
@@ -12,14 +12,14 @@
 //   node scripts/gencodes.mjs [--check]
 //
 // With no flags it auto-locates the repo root (the ancestor containing
-// spec/appendix-error-codes.md) and derives both paths. --check regenerates in
+// .stricttools/docs/appendix-error-codes.md) and derives both paths. --check regenerates in
 // memory and exits non-zero if the on-disk file differs (the freshness gate).
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const SPEC_REL = "spec/appendix-error-codes.md";
+const SPEC_REL = ".stricttools/docs/appendix-error-codes.md";
 const OUT_REL = "ts/src/codes.generated.ts";
 
 const CODE_ROW_RE = /^\| `STRICTSPEC_/;

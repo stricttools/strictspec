@@ -80,7 +80,7 @@ declarations and canonical rules — never from auto-application.
 
 ## Boundary posture (browser)
 
-Per the version-boundary invariant (spec/): browser runtimes NEVER migrate. A browser client
+Per the version-boundary invariant (the specification): browser runtimes NEVER migrate. A browser client
 either receives current-version bytes (the egress side migrated before sending, under the
 negotiation envelope) or refuses cleanly with the structured "update the client" diagnostic
 when it cannot speak the negotiated version. There is no migration engine in this runtime, no
