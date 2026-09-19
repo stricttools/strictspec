@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate the Python strictspec error-code catalogue module.
 
-Parses spec/appendix-error-codes.md (the single normative source for the
+Parses .stricttools/docs/appendix-error-codes.md (the single normative source for the
 error-code catalogue) and emits src/strictspec/_codes.py. This mirrors the Go
 generator go/tools/gencodes: the appendix is the only writer of the catalogue,
 and a freshness test regenerates and byte-compares (drift = test failure).
@@ -10,7 +10,7 @@ Usage:
     python scripts/gencodes.py [--spec PATH] [--out PATH] [--check]
 
 With no flags it auto-locates the repo root (the ancestor containing
-spec/appendix-error-codes.md) and derives both paths. --check regenerates in
+.stricttools/docs/appendix-error-codes.md) and derives both paths. --check regenerates in
 memory and exits non-zero if the on-disk file differs (the freshness gate).
 """
 
@@ -22,7 +22,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-SPEC_REL = "spec/appendix-error-codes.md"
+SPEC_REL = ".stricttools/docs/appendix-error-codes.md"
 OUT_REL = "python/src/strictspec/_codes.py"
 
 _CODE_ROW_RE = re.compile(r"^\| `STRICTSPEC_")

@@ -26,7 +26,7 @@ def test_catalogue_is_fresh():
     content = gen.generate(_REPO_ROOT)
     on_disk = _OUT.read_text(encoding="utf-8")
     assert on_disk == content, (
-        "src/strictspec/_codes.py is STALE relative to spec/appendix-error-codes.md; "
+        "src/strictspec/_codes.py is STALE relative to .stricttools/docs/appendix-error-codes.md; "
         "regenerate with scripts/gencodes.py"
     )
 
