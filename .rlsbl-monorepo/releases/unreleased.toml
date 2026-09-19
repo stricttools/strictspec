@@ -1,10 +1,31 @@
 [releasables.strictspec]
 # Version bump type: patch, minor, major, infra, or prerelease
-bump = ""
+bump = "minor"
 # Short description of this release (required)
-description = ""
+description = "Generated code pairs with its runtime by generated-code format, not by release."
 # Optional context explaining why these changes were made
-context = ""
+context = """
+Until this release a generated validator paired with the exact strictspec
+release that produced it, and refused any other. Under the ecosystem's
+floor-only dependency rule that made every strictspec release an import-time
+outage for every already-published consumer: the consumer's install resolved the
+new runtime, the committed validator demanded the old one, and nothing the
+consumer imported worked until the whole chain regenerated and re-released. It
+was observed on 0.2.5.
+
+Pairing is now on a generated-code FORMAT. Generated code declares an integer
+GENERATED_CODE_FORMAT describing the shape of the emitted code, bumped only when
+that shape changes; every runtime declares the inclusive range of formats it
+reads; and pairing succeeds whenever the declared format is in that range,
+whatever release produced the file. The GENERATED_BY release stamp stays in the
+emitted file as information only, and no tool derives a dependency floor from
+it. Generated code written before the format declaration existed declares no
+format and is refused with the same regeneration remedy -- never read as format
+1 -- so every consumer regenerates exactly once. The bump discipline is
+mechanical rather than a convention: the conformance suite pins the emitted
+shape of all three targets and fails any change to it that does not move the
+format.
+"""
 # Pre-release channel: alpha, beta, rc, or stable (ordered;
 # demotion is an error). Per package, so one workspace release
 # can ship some packages stable and others as alphas. See
