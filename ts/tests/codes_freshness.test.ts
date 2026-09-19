@@ -18,6 +18,6 @@ test("catalogue is fresh", () => {
 	assert.equal(
 		res.status,
 		0,
-		`src/codes.generated.ts is STALE relative to spec/appendix-error-codes.md; regenerate with scripts/gencodes.mjs\n${res.stderr}`,
+		`src/codes.generated.ts is STALE relative to .stricttools/docs/appendix-error-codes.md; regenerate with scripts/gencodes.mjs\n${res.stderr}`,
 	);
 });
