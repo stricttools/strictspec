@@ -102,7 +102,7 @@ func (g *goEmitter) header() {
 	fmt.Fprintf(w, "// Released under the MIT license (unencumbered). This file is machine-generated;\n")
 	fmt.Fprintf(w, "// edit the schema and regenerate, never this file.\n")
 	fmt.Fprintf(w, "package %s\n\n", g.p.Package)
-	fmt.Fprintf(w, "import \"github.com/smm-h/strictspec/go/strictspec\"\n\n")
+	fmt.Fprintf(w, "import \"github.com/stricttools/strictspec/go/strictspec\"\n\n")
 }
 
 func (g *goEmitter) embeddedFiles() {
