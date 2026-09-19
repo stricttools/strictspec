@@ -9,12 +9,12 @@
   "pages": [
     {
       "path": "DESIGN.md",
-      "title": "spec/ \u2014 The strictspec Schema Language",
+      "title": ".stricttools/docs/ \u2014 The strictspec Schema Language",
       "type": "doc",
       "headings": [
         {
           "level": 1,
-          "text": "spec/ \u2014 The strictspec Schema Language",
+          "text": ".stricttools/docs/ \u2014 The strictspec Schema Language",
           "anchor": "spec-the-strictspec-schema-language"
         },
         {
