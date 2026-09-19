@@ -1,5 +1,5 @@
 // Package ir is the strictspec SHARED EMITTER IR and its executor
-// (spec/appendix-emitter-ir.md). It is the single intermediate representation
+// (.stricttools/docs/appendix-emitter-ir.md). It is the single intermediate representation
 // from which every target's validator is driven: the reference interpreter
 // (internal/interp) and the generated Go validators (via the public runtime,
 // go/strictspec) both compile a schema into an ir.Program and run the SAME
@@ -47,7 +47,7 @@ import (
 	"github.com/smm-h/strictspec/go/internal/schema"
 )
 
-// MaxValidationDepth is the pinned recursion-depth cap (spec/DESIGN.md, Construct
+// MaxValidationDepth is the pinned recursion-depth cap (.stricttools/docs/DESIGN.md, Construct
 // set: a pinned max validation depth with its own canonical diagnostic, fired
 // before stack exhaustion). Every nesting level costs multiple frames per target;
 // 128 is far below any runtime's stack limit yet far above realistic nesting.

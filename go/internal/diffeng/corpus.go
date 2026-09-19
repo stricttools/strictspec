@@ -9,7 +9,7 @@ import (
 )
 
 // ResolveGlob resolves a corpus glob ANCHORED AT root (the manifest root, per
-// spec/DESIGN.md — aggregate selection determinism) and returns the matched
+// .stricttools/docs/DESIGN.md — aggregate selection determinism) and returns the matched
 // files in LEXICOGRAPHIC order. A CWD-relative anchor would make verdicts depend
 // on the invocation directory (banned), so the anchor is explicit.
 func ResolveGlob(root, glob string) ([]string, error) {

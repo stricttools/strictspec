@@ -1,4 +1,4 @@
-// Package docdiff is the strictspec `doc-diff` engine (spec/DESIGN.md — Accepted-set
+// Package docdiff is the strictspec `doc-diff` engine (.stricttools/docs/DESIGN.md — Accepted-set
 // semantics, diff, and doc-diff; output shape in appendix-certificates.md Part C).
 // It takes ONE schema and TWO documents of it (same schema, same format_version)
 // and emits a structured per-path delta: added / removed / changed / moved, in

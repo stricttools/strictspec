@@ -1,4 +1,4 @@
-// Package migrate is the strictspec MIGRATION ENGINE (spec/DESIGN.md —
+// Package migrate is the strictspec MIGRATION ENGINE (.stricttools/docs/DESIGN.md —
 // Versioning, migrations, and the version-boundary invariant). It parses
 // migration files in the pinned surface (appendix-surface-syntax.md §9),
 // implements the CLOSED 13-op set with the constitution's per-op semantics and
@@ -7,7 +7,7 @@
 // produces an invalid document is a hard error with the validation diagnostics
 // attached).
 //
-// Admission criterion (stated once, spec/DESIGN.md): ops may move, rename,
+// Admission criterion (stated once, .stricttools/docs/DESIGN.md): ops may move, rename,
 // reshape, delete, and inject literal values; NO op computes a new value from an
 // existing value; predicates test field equality and presence/absence only.
 // Values are never computed from values — every value at N+1 is a verbatim
@@ -16,7 +16,7 @@ package migrate
 
 import "github.com/smm-h/strictspec/go/internal/doc"
 
-// The closed 13-op set (spec/DESIGN.md; appendix-error-codes.md §17).
+// The closed 13-op set (.stricttools/docs/DESIGN.md; appendix-error-codes.md §17).
 const (
 	OpAddField        = "add_field"
 	OpRemoveField     = "remove_field"
@@ -43,7 +43,7 @@ var KnownOps = map[string]bool{
 	OpUnwrapSingleton: true,
 }
 
-// Reversibility taxonomy values (spec/DESIGN.md — Reversibility taxonomy).
+// Reversibility taxonomy values (.stricttools/docs/DESIGN.md — Reversibility taxonomy).
 const (
 	DownTotal        = "total"
 	DownPartial      = "partial"

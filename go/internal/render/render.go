@@ -1,6 +1,6 @@
 // Package render turns a structured diag.Diagnostic into its pinned message
 // text: it substitutes each template slot with the value rendering fixed by
-// spec/appendix-rendering.md (Part A value rendering, Part B path grammar,
+// .stricttools/docs/appendix-rendering.md (Part A value rendering, Part B path grammar,
 // Part C did-you-mean, Part D condition scheme). Templates come from the
 // generated codes catalogue; there is no hand-written message string here.
 //

@@ -160,7 +160,7 @@ func (p *parser) parseValue(depth int) (doc.Node, *doc.ParseError) {
 }
 
 // parseObject parses a JSON object into an ordered Record. DUPLICATE KEYS ARE A
-// HARD ERROR: per spec/DESIGN.md ("JSON duplicate keys are a canonical hard
+// HARD ERROR: per .stricttools/docs/DESIGN.md ("JSON duplicate keys are a canonical hard
 // error in every backend ... silent last-wins is the typo'd-field failure mode
 // in disguise"), the second occurrence of a decoded key aborts the parse with a
 // position at that key. Keys are compared by decoded code points (no

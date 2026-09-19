@@ -1,4 +1,4 @@
-// Package diffeng is the strictspec `diff` EMPIRICAL ENGINE (spec/DESIGN.md —
+// Package diffeng is the strictspec `diff` EMPIRICAL ENGINE (.stricttools/docs/DESIGN.md —
 // Accepted-set semantics, diff, and doc-diff; certificate shape in
 // appendix-certificates.md Part A). Given a schema at two format versions, the
 // migration M between them, and a REQUIRED corpus of real documents, it runs:

@@ -1,5 +1,5 @@
 // Package dpath parses and navigates the read-side path grammar
-// (spec/appendix-rendering.md Part B) as used by migration op targets
+// (.stricttools/docs/appendix-rendering.md Part B) as used by migration op targets
 // (appendix-surface-syntax.md §9 and §10) and by doc-diff. It is the write-side
 // counterpart to the diag package's path RENDERER: diag renders a structured
 // path to text; dpath parses path text and navigates a document tree to the

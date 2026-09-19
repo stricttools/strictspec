@@ -1,6 +1,6 @@
 // Package codes is the generated strictspec error-code catalogue: every
 // STRICTSPEC_* code with its area, message template, and declared slots, parsed
-// from spec/appendix-error-codes.md (the single normative source). The table
+// from .stricttools/docs/appendix-error-codes.md (the single normative source). The table
 // lives in catalogue_gen.go and is produced by tools/gencodes; hand-transcription
 // is forbidden. A freshness test regenerates and byte-compares (drift = failure).
 package codes

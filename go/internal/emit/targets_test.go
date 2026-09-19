@@ -420,7 +420,7 @@ func TestPairingGuardFailure(t *testing.T) {
 
 // TestGeneratedHeaderHygiene asserts the pinned generated-file header and the
 // target ecosystem's lint-suppression/formatter markers are present in the
-// emitted source (spec/DESIGN.md — Generated-file hygiene).
+// emitted source (.stricttools/docs/DESIGN.md — Generated-file hygiene).
 func TestGeneratedHeaderHygiene(t *testing.T) {
 	_, fixturesRoot := dirs(t)
 	schemaPath := filepath.Join(fixturesRoot, "_schemas", "shared-canvas.toml")

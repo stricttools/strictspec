@@ -92,7 +92,7 @@ lang = "go"
 	}
 }
 
-// Stores and channels drive boundary-checkpoint code generation (spec/DESIGN.md,
+// Stores and channels drive boundary-checkpoint code generation (.stricttools/docs/DESIGN.md,
 // version-boundary invariant) that this toolchain build does not yet emit.
 // Declaring them and getting no generated code is silent degradation, so their
 // presence must be a HARD ERROR — never ignored.

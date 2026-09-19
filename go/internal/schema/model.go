@@ -1,6 +1,6 @@
 // Package schema is the strictspec meta-schema reader: it parses a schema file
 // (or a type-definition file) authored in the pinned TOML surface
-// (spec/appendix-surface-syntax.md) into a typed Schema model, and emits the
+// (.stricttools/docs/appendix-surface-syntax.md) into a typed Schema model, and emits the
 // catalogued STRICTSPEC_SCHEMA_*/STRICTSPEC_IMPORT_* authoring diagnostics that
 // meta-schema validation requires. The reference interpreter (internal/interp)
 // consumes the typed Schema to validate documents.

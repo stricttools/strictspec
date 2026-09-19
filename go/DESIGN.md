@@ -20,7 +20,7 @@ integrated — strictspec does not hand-roll a CLI layer.
 Generation is FILE-DRIVEN. Each consumer commits a `strictspec.toml` declaring: schema files,
 targets per schema (python/go/ts + output paths + package/module names), migration locations,
 and — where the consumer has them — STORES and CHANNELS for boundary-checkpoint generation
-(see spec/, the version-boundary invariant). `gen` and `check` take the manifest as their
+(see the specification, the version-boundary invariant). `gen` and `check` take the manifest as their
 single input. The manifest is itself a document of a toolchain-shipped built-in schema — it
 carries a `format_version`, is gated exactly like any document, and is migrated by
 `strictspec migrate` when the manifest format evolves. The manifest also mandates
@@ -73,7 +73,7 @@ absence throughout: no flag reads an empty string as "not supplied".
   selfdoc rendering. strictspec generates no docs pages (decision 27); selfdoc owns rendering.
 - `strictspec init` — write a commented `strictspec.toml` skeleton plus the mandated
   `.gitattributes` LF rules; hard error if a manifest already exists.
-- `strictspec diff` — the EMPIRICAL accepted-set engine (spec/, "Accepted-set semantics"; the
+- `strictspec diff` — the EMPIRICAL accepted-set engine (the specification, "Accepted-set semantics"; the
   proof-carrying analyzer is unbundled into a separate future project, decision 25). Requires
   a schema at two format versions, the migration between them, and `--corpus <glob>`:
   flip-scan (every corpus flip reported with the document and its killing diagnostics),
@@ -113,14 +113,14 @@ absence throughout: no flag reads an empty string as "not supplied".
 - Internal interpreter: full language; validates schemas against the meta-schema; powers
   `strictspec validate`; FOURTH CONFORMANCE TARGET.
 - Constraint engine: the reference implementation of the cross-document constraint vocabulary
-  evaluator and the evidence-resolver vocabulary (spec/, "Domain checks"; the decision
+  evaluator and the evidence-resolver vocabulary (the specification, "Domain checks"; the decision
   language is removed — the bespoke tail is consumer-native code, decision 23). Resolvers
   return data, never verdicts; resolver parity and constraint-verdict identity are conformance
   categories. The Python, TS, and generated-Go runtimes carry ports of the evaluator;
   resolvers are implemented per environment and hard-error where unavailable.
 - Migration engine: migrable's code absorbed (migrable is retired), minus CEL, extended to the
   full document model. 13-op closed set with the admission criterion, per-op collision
-  semantics, and the down/partial/irreversible taxonomy per spec/. Migration output
+  semantics, and the down/partial/irreversible taxonomy per the specification. Migration output
   revalidates by construction (lexeme-preserving writes). Also powers the generated boundary
   checkpoints: ingest write-doors and egress wrappers call into this engine (in-process for
   Go consumers; via the packaged CLI for Python/TS server environments; never in browsers).
