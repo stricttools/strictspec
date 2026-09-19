@@ -42,4 +42,4 @@ The toolchain is one CLI: `gen`, `check`, `validate`, `migrate`, `export`,
 `strictspec.toml` manifest; validation takes a schema and one or more documents
 and requires an explicit choice of which check phases run. Installation and a
 quick start are in the
-[README](https://github.com/smm-h/strictspec#readme).
+[README](https://github.com/stricttools/strictspec#readme).

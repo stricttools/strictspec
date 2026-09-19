@@ -104,7 +104,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/smm-h/strictspec/go/strictspec"
+	"github.com/stricttools/strictspec/go/strictspec"
 )
 
 func main() {
@@ -124,9 +124,9 @@ _GO_PROBE_MOD = """module ssprobe
 
 go 1.26
 
-require github.com/smm-h/strictspec/go v0.0.0
+require github.com/stricttools/strictspec/go v0.0.0
 
-replace github.com/smm-h/strictspec/go => {go_dir}
+replace github.com/stricttools/strictspec/go => {go_dir}
 """
 
 
