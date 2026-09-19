@@ -1,4 +1,4 @@
-// Command gencodes parses spec/appendix-error-codes.md (the single normative
+// Command gencodes parses .stricttools/docs/appendix-error-codes.md (the single normative
 // source for the error-code catalogue) and emits the generated Go catalogue
 // table internal/codes/catalogue_gen.go. Hand-transcription of the catalogue is
 // forbidden: this generator is the only writer of that file, and a freshness
@@ -9,7 +9,7 @@
 //	go run github.com/smm-h/strictspec/go/tools/gencodes [-spec PATH] [-out PATH]
 //
 // With no flags it locates the repo root (the ancestor containing
-// spec/appendix-error-codes.md) and derives both paths.
+// .stricttools/docs/appendix-error-codes.md) and derives both paths.
 package main
 
 import (
@@ -24,7 +24,7 @@ import (
 	"strings"
 )
 
-const specRel = "spec/appendix-error-codes.md"
+const specRel = ".stricttools/docs/appendix-error-codes.md"
 const outRel = "go/internal/codes/catalogue_gen.go"
 
 func main() {
@@ -71,7 +71,7 @@ func fatal(err error) {
 }
 
 // findRepoRoot walks up from the working directory to the first ancestor that
-// contains spec/appendix-error-codes.md.
+// contains .stricttools/docs/appendix-error-codes.md.
 func findRepoRoot() (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {

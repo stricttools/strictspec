@@ -1,6 +1,6 @@
 // Package write is the strictspec CANONICAL SERIALIZATION path (write side)
-// pinned in spec/DESIGN.md (Canonical serialization appendix) and
-// spec/appendix-rendering.md A.6. It has three jobs:
+// pinned in .stricttools/docs/DESIGN.md (Canonical serialization appendix) and
+// .stricttools/docs/appendix-rendering.md A.6. It has three jobs:
 //
 //  1. RenderConstructed — render a CONSTRUCTED or type-coerced value (produced by
 //     a migration op injecting a literal) into a target-format lexeme per the A.6

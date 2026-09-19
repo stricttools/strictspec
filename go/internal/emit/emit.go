@@ -1,7 +1,7 @@
 // Package emit is the Go EMITTER: given a resolved schema (and the in-memory
 // file set backing it — the schema, any imported type-definition files, and the
 // scalar manifest), it produces the generated Go validator source per the
-// Generated API Contract (spec/DESIGN.md):
+// Generated API Contract (.stricttools/docs/DESIGN.md):
 //
 //   - the pinned generated-file header (generator version, schema name +
 //     format_version, regeneration command, generated-by + lint-suppression

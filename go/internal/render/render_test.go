@@ -17,7 +17,7 @@ func slots(kv ...any) map[string]diag.Slot {
 }
 
 // goldenCases are hand-authored expected strings derived directly from
-// spec/appendix-error-codes.md (templates) and spec/appendix-rendering.md
+// .stricttools/docs/appendix-error-codes.md (templates) and .stricttools/docs/appendix-rendering.md
 // (rendering rules) — never generated from any target. They are the spec-derived
 // oracle for byte-identical message text.
 func TestRenderGolden(t *testing.T) {

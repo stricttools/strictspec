@@ -6,7 +6,7 @@ import "fmt"
 // LEXICAL: it records how the value was written (integer vs float lexeme class,
 // which datetime flavor), never a schema-level interpretation.
 //
-// Per the constitution (spec/DESIGN.md, primitives appendix item 4): the NUMBER
+// Per the constitution (.stricttools/docs/DESIGN.md, primitives appendix item 4): the NUMBER
 // scalar is a SCHEMA-level concept layered over the Integer and Float lexeme
 // classes. The document model records the lexeme class and nothing more — there
 // is no Number kind. A schema decides, later, whether a field typed `number`

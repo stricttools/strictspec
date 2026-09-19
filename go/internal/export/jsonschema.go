@@ -1,5 +1,5 @@
 // Package export implements `strictspec export`: JSON Schema (Draft 2020-12) for
-// editor tooling. Per the constitution (spec/DESIGN.md — Export), JSON Schema is
+// editor tooling. Per the constitution (.stricttools/docs/DESIGN.md — Export), JSON Schema is
 // an ADVISORY export target with a normative LOSSINESS TABLE: the structural core
 // (records, maps, arrays, tuples, unions, scalars, enums, literals, nullable,
 // custom scalars) maps to JSON Schema; the cross-field and cross-document

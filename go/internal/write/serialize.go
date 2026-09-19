@@ -8,7 +8,7 @@ import (
 )
 
 // Serialize implements the PRODUCER-CURRENT-ONLY leg of the version-boundary
-// invariant (spec/DESIGN.md canonical serialization appendix; A.6). Given a
+// invariant (.stricttools/docs/DESIGN.md canonical serialization appendix; A.6). Given a
 // document's root node, its current source bytes, and the schema's current
 // format_version, it returns the bytes to write — but HARD-ERRORS
 // (STRICTSPEC_SERIALIZE_NONCURRENT) when the document's format_version is not the

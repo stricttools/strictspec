@@ -109,7 +109,7 @@ func revalidate(prog *ir.Program, format doc.Format, src []byte) []diag.Diagnost
 }
 
 // MigrateJSONL migrates a JSONL stream PER LINE (each line is an independent
-// JSON document; spec/DESIGN.md — JSONL: per-line migration). Every line is
+// JSON document; .stricttools/docs/DESIGN.md — JSONL: per-line migration). Every line is
 // migrated through the chain and revalidated independently; the result rejoins
 // lines with LF, preserving a trailing newline when the input had one. Any line
 // failing anywhere makes the whole run fail (atomicity is the caller's rename

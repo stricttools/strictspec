@@ -2,7 +2,7 @@
 // file-driven input to `strictspec gen` and `strictspec check`. The manifest
 // declares the consumer's schema files and, per schema, the generation targets
 // (language + output path + package/module name). It carries a format_version
-// and is itself a document of a toolchain-shipped built-in schema (spec/DESIGN.md
+// and is itself a document of a toolchain-shipped built-in schema (.stricttools/docs/DESIGN.md
 // — Meta-schema); this reader parses the pinned surface into typed structs.
 package manifest
 
@@ -18,7 +18,7 @@ import (
 )
 
 // diagErr renders a catalogued diagnostic as a manifest hard error. The manifest
-// is a document of a toolchain-shipped built-in schema (spec/DESIGN.md — Manifest;
+// is a document of a toolchain-shipped built-in schema (.stricttools/docs/DESIGN.md — Manifest;
 // appendix-error-codes.md §20: general manifest-schema violations reuse the
 // STRICTSPEC_TYPE_* / STRICTSPEC_SCHEMA_* codes), so structural violations surface
 // as catalogued diagnostics rather than ad-hoc prose. Malformed entries are never
@@ -74,7 +74,7 @@ func Load(path string) (*Manifest, error) {
 	}
 
 	// Boundary-checkpoint constructs (stores / channels) drive GENERATED ingest
-	// write-doors and channel wrappers (spec/DESIGN.md — version-boundary
+	// write-doors and channel wrappers (.stricttools/docs/DESIGN.md — version-boundary
 	// invariant); they are NOT declarative-only. This toolchain build does not
 	// emit that code yet, so declaring one and silently getting nothing is
 	// degradation. Their presence is a hard error naming the construct — never

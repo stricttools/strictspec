@@ -81,7 +81,7 @@ func (v *exec) walkRecord(t *schema.Type, n doc.Node, path diag.Path) {
 	matched := map[string]bool{}
 
 	// Document key positions: present-key diagnostics emit in DOCUMENT order
-	// (spec/DESIGN.md primitives appendix item 6), so a record whose keys are
+	// (.stricttools/docs/DESIGN.md primitives appendix item 6), so a record whose keys are
 	// reordered relative to the schema declaration emits its diagnostics in the
 	// order the keys appear in the document, not in declaration order.
 	docIndex := map[string]int{}
