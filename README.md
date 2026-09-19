@@ -69,11 +69,21 @@ over a corpus and emits a certificate.
 
 The Go module, the `strictspec` PyPI package and the `strictspec` npm package
 are one release unit: they always carry the same version and are published
-together, so a runtime always matches the toolchain that generated its code —
-and the first-run launcher can fetch the binary that pairs with it. A version
-therefore moves for all three even when only one of them changed. Generated code
-is paired to its runtime exactly; the remedy for a mismatch is regeneration,
-never pinning.
+together, so the first-run launcher can fetch the binary that pairs with the
+runtime shipped beside it. A version therefore moves for all three even when
+only one of them changed.
+
+Generated code is paired to its runtime by GENERATED-CODE FORMAT, not by
+release. A generated validator declares an integer `GENERATED_CODE_FORMAT` — the
+shape of the emitted code, bumped only when that shape changes — and every
+runtime declares the inclusive range of formats it reads. Pairing succeeds
+whenever the declared format is in that range, whatever release produced the
+file, so an ordinary strictspec release does not stop a runtime from reading
+validators an earlier release generated. The `GENERATED_BY` release stamp a
+generated file carries is informational, and no tool derives a dependency floor
+from it. A format outside the range is refused with a message naming the
+declared format, the accepted range, both releases, and the remedy: regenerate
+with `strictspec gen`, never pin.
 
 ## The language reference
 
