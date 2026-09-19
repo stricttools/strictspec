@@ -1,7 +1,7 @@
 +++
 description = "The strictspec constitution: the language-neutral definition of the schema language, constraint vocabulary, op set, error model, versioning and migration rules, and the normative appendices."
 +++
-# spec/ — The strictspec Schema Language
+# .stricttools/docs/ — The strictspec Schema Language
 
 The constitution: the language-neutral definition of strictspec schemas, the constraint
 vocabulary, the error model, the read-side primitives appendix, the write-side
@@ -205,7 +205,7 @@ What every emitter emits, uniformly:
 
 STATUS — STABLE BUT GROWING in the GROWTH PHASE (decision 3, as reframed 2026-07-28), settled as
 of Phase 3.3 (2026-07-27). The construct-set stability GATE is MET: all fifteen examples/ drafts
-came back clean (or with findings absorbed into spec/), and every gap note carries a resolved
+came back clean (or with findings absorbed into .stricttools/docs/), and every gap note carries a resolved
 RESOLUTION (Phase 3.3) block. The construct set absorbed, over its two amendment rounds: the pinned
 concrete TOML surface syntax (appendix-surface-syntax.md); the aggregate forms
 count-limit/sum-limit; the intra-document forms conditional-value and collections-disjoint; the
