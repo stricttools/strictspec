@@ -2,7 +2,7 @@
 # Version bump type: patch, minor, major, infra, or prerelease
 bump = "minor"
 # Short description of this release (required)
-description = "Generated code pairs with its runtime by generated-code format, not by release."
+description = "Generated code pairs with its runtime by generated-code format rather than by release, the Go module path moves to github.com/stricttools/strictspec/go, and the specification pages move under .stricttools/docs/."
 # Optional context explaining why these changes were made
 context = """
 Until this release a generated validator paired with the exact strictspec
@@ -25,6 +25,26 @@ format and is refused with the same regeneration remedy -- never read as format
 mechanical rather than a convention: the conformance suite pins the emitted
 shape of all three targets and fails any change to it that does not move the
 format.
+
+Two moves ride along. The repository was transferred to the stricttools
+organisation, so the Go module path is now
+github.com/stricttools/strictspec/go. Everything published under
+github.com/smm-h/strictspec/go stays resolvable through the module proxy, and
+GitHub redirects the transferred repository, but new versions publish under the
+new path alone -- so a Go consumer changes its imports once, and regenerates its
+committed validators, whose own import line names the module too. The emitted Go
+shape therefore moves in this release while the generated-code format does not:
+the runtimes read the same shape, and bumping the format would refuse every
+Python and TypeScript validator already in the wild over a change that never
+reached their emitted code.
+
+The specification pages moved from spec/ to .stricttools/docs/, the layout
+selfdoc now requires, with the generated pages under
+.stricttools/docs-state/pages/ and the tool's own state under
+.stricttools/docs-state/. The published site's addresses are unchanged. Inside
+the repository the three error-code generators and their freshness tests read
+the appendix at its new path, and prose that said spec/ when it meant the
+specification says so in words now.
 """
 # Pre-release channel: alpha, beta, rc, or stable (ordered;
 # demotion is an error). Per package, so one workspace release
