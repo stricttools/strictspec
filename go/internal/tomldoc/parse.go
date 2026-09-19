@@ -10,7 +10,7 @@ import (
 	"errors"
 
 	tomledit "github.com/smm-h/go-toml-edit"
-	"github.com/smm-h/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/doc"
 )
 
 // Parse parses TOML source into a doc.Document. On a syntax or TOML-semantic

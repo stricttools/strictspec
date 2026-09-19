@@ -3,8 +3,8 @@ package dpath
 import (
 	"testing"
 
-	"github.com/smm-h/strictspec/go/internal/doc"
-	"github.com/smm-h/strictspec/go/internal/write"
+	"github.com/stricttools/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/write"
 )
 
 func parseNode(t *testing.T, format doc.Format, src string) doc.Node {

@@ -3,9 +3,9 @@ package ir
 import (
 	"sort"
 
-	"github.com/smm-h/strictspec/go/internal/diag"
-	"github.com/smm-h/strictspec/go/internal/doc"
-	"github.com/smm-h/strictspec/go/internal/schema"
+	"github.com/stricttools/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/schema"
 )
 
 // walk realizes the depth-guard and type-dispatch nodes: it validates node n

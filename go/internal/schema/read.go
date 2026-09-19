@@ -1,9 +1,9 @@
 package schema
 
 import (
-	"github.com/smm-h/strictspec/go/internal/diag"
-	"github.com/smm-h/strictspec/go/internal/doc"
-	"github.com/smm-h/strictspec/go/internal/strdecode"
+	"github.com/stricttools/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/strdecode"
 )
 
 // complexKinds maps the `type` spelling of a complex kind to its Kind.

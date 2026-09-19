@@ -13,7 +13,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/smm-h/strictspec/go/internal/schema"
+	"github.com/stricttools/strictspec/go/internal/schema"
 )
 
 // DroppedSemantics names what JSON Schema export cannot carry (the lossiness

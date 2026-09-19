@@ -3,10 +3,10 @@ package migrate
 import (
 	"bytes"
 
-	"github.com/smm-h/strictspec/go/internal/diag"
-	"github.com/smm-h/strictspec/go/internal/doc"
-	"github.com/smm-h/strictspec/go/internal/ir"
-	"github.com/smm-h/strictspec/go/internal/write"
+	"github.com/stricttools/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/ir"
+	"github.com/stricttools/strictspec/go/internal/write"
 )
 
 // ApplyUp applies m's forward ops to a single-document source (JSON or TOML) and

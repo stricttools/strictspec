@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/smm-h/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/diag"
 )
 
 // TestHarnessParity cross-checks the Go renderer against the conformance

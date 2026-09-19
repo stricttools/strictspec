@@ -10,7 +10,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/smm-h/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/diag"
 )
 
 // BuiltValidator is a compiled generated validator for one schema.

@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/smm-h/strictspec/go/internal/tomldoc"
+	"github.com/stricttools/strictspec/go/internal/tomldoc"
 )
 
 func loadRoot(t *testing.T, rel string) (*Schema, []diagCode) {

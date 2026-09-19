@@ -3,7 +3,7 @@ package render
 import (
 	"sort"
 
-	"github.com/smm-h/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/diag"
 )
 
 // renderSuggestion computes the did-you-mean clause per appendix-rendering.md

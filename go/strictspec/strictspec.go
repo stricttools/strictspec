@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"strconv"
 
-	ssroot "github.com/smm-h/strictspec/go"
+	ssroot "github.com/stricttools/strictspec/go"
 )
 
 // Version is the strictspec release this runtime was built at. It is embedded

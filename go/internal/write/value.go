@@ -27,9 +27,9 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/smm-h/strictspec/go/internal/diag"
-	"github.com/smm-h/strictspec/go/internal/doc"
-	"github.com/smm-h/strictspec/go/internal/strdecode"
+	"github.com/stricttools/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/strdecode"
 )
 
 // RenderConstructed renders a constructed value node into a target-format lexeme

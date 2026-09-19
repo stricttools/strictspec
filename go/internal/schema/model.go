@@ -14,8 +14,8 @@
 package schema
 
 import (
-	"github.com/smm-h/strictspec/go/internal/diag"
-	"github.com/smm-h/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/doc"
 )
 
 // Kind is the category of a type site (appendix-surface-syntax.md §3).

@@ -10,11 +10,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/smm-h/strictspec/go/internal/diag"
-	"github.com/smm-h/strictspec/go/internal/doc"
-	"github.com/smm-h/strictspec/go/internal/render"
-	"github.com/smm-h/strictspec/go/internal/strdecode"
-	"github.com/smm-h/strictspec/go/internal/tomldoc"
+	"github.com/stricttools/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/render"
+	"github.com/stricttools/strictspec/go/internal/strdecode"
+	"github.com/stricttools/strictspec/go/internal/tomldoc"
 )
 
 // diagErr renders a catalogued diagnostic as a manifest hard error. The manifest

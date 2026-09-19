@@ -4,11 +4,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/smm-h/strictspec/go/internal/doc"
-	"github.com/smm-h/strictspec/go/internal/ir"
-	"github.com/smm-h/strictspec/go/internal/schema"
-	"github.com/smm-h/strictspec/go/internal/tomldoc"
-	"github.com/smm-h/strictspec/go/internal/write"
+	"github.com/stricttools/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/ir"
+	"github.com/stricttools/strictspec/go/internal/schema"
+	"github.com/stricttools/strictspec/go/internal/tomldoc"
+	"github.com/stricttools/strictspec/go/internal/write"
 )
 
 func loadSchema(t *testing.T, src string) *schema.Schema {

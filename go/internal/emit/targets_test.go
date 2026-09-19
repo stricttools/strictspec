@@ -10,7 +10,7 @@ import (
 	"sync"
 	"testing"
 
-	strictspecroot "github.com/smm-h/strictspec/go"
+	strictspecroot "github.com/stricttools/strictspec/go"
 )
 
 // runtimeVersion is the strictspec release version embedded from go/VERSION

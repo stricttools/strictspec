@@ -16,7 +16,7 @@ package main
 
 import (
 	"github.com/smm-h/strictcli/go/strictcli"
-	"github.com/smm-h/strictspec/go/strictspec"
+	"github.com/stricttools/strictspec/go/strictspec"
 )
 
 func main() {

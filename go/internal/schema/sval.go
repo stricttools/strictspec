@@ -3,8 +3,8 @@ package schema
 import (
 	"strconv"
 
-	"github.com/smm-h/strictspec/go/internal/doc"
-	"github.com/smm-h/strictspec/go/internal/strdecode"
+	"github.com/stricttools/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/strdecode"
 )
 
 // SVal is a schema-authored literal value (an enum member, a `literal` value, a

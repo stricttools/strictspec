@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/smm-h/strictspec/go/internal/diag"
-	"github.com/smm-h/strictspec/go/internal/doc"
-	"github.com/smm-h/strictspec/go/internal/write"
+	"github.com/stricttools/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/write"
 )
 
 // litNode builds a TOML-parsed literal value node (as a migration file supplies).

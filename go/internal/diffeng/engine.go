@@ -5,12 +5,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/smm-h/strictspec/go/internal/diag"
-	"github.com/smm-h/strictspec/go/internal/doc"
-	"github.com/smm-h/strictspec/go/internal/ir"
-	"github.com/smm-h/strictspec/go/internal/migrate"
-	"github.com/smm-h/strictspec/go/internal/render"
-	"github.com/smm-h/strictspec/go/internal/write"
+	"github.com/stricttools/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/ir"
+	"github.com/stricttools/strictspec/go/internal/migrate"
+	"github.com/stricttools/strictspec/go/internal/render"
+	"github.com/stricttools/strictspec/go/internal/write"
 )
 
 // Inputs bundles a diff run's ambient inputs. The corpus files are already
