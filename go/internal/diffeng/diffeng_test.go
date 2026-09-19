@@ -5,11 +5,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/smm-h/strictspec/go/internal/diag"
-	"github.com/smm-h/strictspec/go/internal/ir"
-	"github.com/smm-h/strictspec/go/internal/migrate"
-	"github.com/smm-h/strictspec/go/internal/schema"
-	"github.com/smm-h/strictspec/go/internal/tomldoc"
+	"github.com/stricttools/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/ir"
+	"github.com/stricttools/strictspec/go/internal/migrate"
+	"github.com/stricttools/strictspec/go/internal/schema"
+	"github.com/stricttools/strictspec/go/internal/tomldoc"
 )
 
 func compile(t *testing.T, src string) *ir.Program {

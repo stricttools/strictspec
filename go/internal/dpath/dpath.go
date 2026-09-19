@@ -16,8 +16,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/smm-h/strictspec/go/internal/doc"
-	"github.com/smm-h/strictspec/go/internal/strdecode"
+	"github.com/stricttools/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/strdecode"
 )
 
 // Step is one navigation step. The closed set is Key (a record field or quoted

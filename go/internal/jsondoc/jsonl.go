@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"io"
 
-	"github.com/smm-h/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/doc"
 )
 
 // JSONL framing rules, pinned by .stricttools/docs/DESIGN.md ("Document model" bullet on

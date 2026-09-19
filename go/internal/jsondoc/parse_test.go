@@ -4,7 +4,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/smm-h/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/doc"
 )
 
 // mustParse parses src as JSON and fails the test on any parse error.

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/smm-h/strictspec/go/internal/render"
+	"github.com/stricttools/strictspec/go/internal/render"
 )
 
 const adapterMiniSchema = `

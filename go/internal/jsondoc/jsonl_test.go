@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/smm-h/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/doc"
 )
 
 // TestJSONLMultiLineValid: several documents, one per line, parse into an ordered

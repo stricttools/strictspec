@@ -1,4 +1,4 @@
-module github.com/smm-h/strictspec/go
+module github.com/stricttools/strictspec/go
 
 go 1.26.3
 

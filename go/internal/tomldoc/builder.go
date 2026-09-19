@@ -1,6 +1,6 @@
 package tomldoc
 
-import "github.com/smm-h/strictspec/go/internal/doc"
+import "github.com/stricttools/strictspec/go/internal/doc"
 
 // builder is the mutable intermediate record used while folding TOML's flat AST
 // (root key/values, table headers, array-of-tables headers, dotted keys) into a

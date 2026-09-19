@@ -15,7 +15,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/smm-h/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/doc"
 )
 
 // maxDepth bounds nesting to keep parsing safe on adversarial input. The parser

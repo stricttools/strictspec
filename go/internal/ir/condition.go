@@ -3,9 +3,9 @@ package ir
 import (
 	"strings"
 
-	"github.com/smm-h/strictspec/go/internal/diag"
-	"github.com/smm-h/strictspec/go/internal/doc"
-	"github.com/smm-h/strictspec/go/internal/schema"
+	"github.com/stricttools/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/schema"
 )
 
 // evalCondition evaluates a gate condition (closed six-kind set) against a record.

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/smm-h/strictspec/go/internal/doc"
-	"github.com/smm-h/strictspec/go/internal/jsondoc"
-	"github.com/smm-h/strictspec/go/internal/tomldoc"
+	"github.com/stricttools/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/jsondoc"
+	"github.com/stricttools/strictspec/go/internal/tomldoc"
 )
 
 // Doc is a byte-splicing editor over one source document (a single JSON or TOML

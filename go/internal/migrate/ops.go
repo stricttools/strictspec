@@ -3,11 +3,11 @@ package migrate
 import (
 	"strconv"
 
-	"github.com/smm-h/strictspec/go/internal/diag"
-	"github.com/smm-h/strictspec/go/internal/doc"
-	"github.com/smm-h/strictspec/go/internal/dpath"
-	"github.com/smm-h/strictspec/go/internal/strdecode"
-	"github.com/smm-h/strictspec/go/internal/write"
+	"github.com/stricttools/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/dpath"
+	"github.com/stricttools/strictspec/go/internal/strdecode"
+	"github.com/stricttools/strictspec/go/internal/write"
 )
 
 // applyOp applies one op to wd (mutating its bytes in place) and returns any

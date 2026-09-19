@@ -14,7 +14,7 @@
 // carry-over, an injected literal, or absent.
 package migrate
 
-import "github.com/smm-h/strictspec/go/internal/doc"
+import "github.com/stricttools/strictspec/go/internal/doc"
 
 // The closed 13-op set (.stricttools/docs/DESIGN.md; appendix-error-codes.md §17).
 const (

@@ -15,13 +15,13 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/smm-h/strictspec/go/internal/diag"
-	"github.com/smm-h/strictspec/go/internal/doc"
-	"github.com/smm-h/strictspec/go/internal/interp"
-	"github.com/smm-h/strictspec/go/internal/jsondoc"
-	"github.com/smm-h/strictspec/go/internal/render"
-	"github.com/smm-h/strictspec/go/internal/schema"
-	"github.com/smm-h/strictspec/go/internal/tomldoc"
+	"github.com/stricttools/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/interp"
+	"github.com/stricttools/strictspec/go/internal/jsondoc"
+	"github.com/stricttools/strictspec/go/internal/render"
+	"github.com/stricttools/strictspec/go/internal/schema"
+	"github.com/stricttools/strictspec/go/internal/tomldoc"
 )
 
 type request struct {

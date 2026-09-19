@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/smm-h/strictspec/go/internal/render"
+	"github.com/stricttools/strictspec/go/internal/render"
 )
 
 // TestMetaValidateMalformedTOMLRenders is the regression guard for the

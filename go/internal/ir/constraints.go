@@ -3,9 +3,9 @@ package ir
 import (
 	"strings"
 
-	"github.com/smm-h/strictspec/go/internal/diag"
-	"github.com/smm-h/strictspec/go/internal/doc"
-	"github.com/smm-h/strictspec/go/internal/schema"
+	"github.com/stricttools/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/schema"
 )
 
 // runConstraints evaluates a record's phase-2 constraint vocabulary in

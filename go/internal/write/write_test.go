@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/smm-h/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/doc"
 )
 
 // TestFixpoint: reading then writing an untouched document is byte-identical

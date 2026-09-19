@@ -6,8 +6,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/smm-h/strictspec/go/internal/diag"
-	"github.com/smm-h/strictspec/go/internal/tomldoc"
+	"github.com/stricttools/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/tomldoc"
 )
 
 // repoRoot locates the repository root relative to this test file.

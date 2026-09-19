@@ -1,13 +1,13 @@
 package strictspec
 
 import (
-	"github.com/smm-h/strictspec/go/internal/diag"
-	"github.com/smm-h/strictspec/go/internal/doc"
-	"github.com/smm-h/strictspec/go/internal/ir"
-	"github.com/smm-h/strictspec/go/internal/jsondoc"
-	"github.com/smm-h/strictspec/go/internal/render"
-	"github.com/smm-h/strictspec/go/internal/schema"
-	"github.com/smm-h/strictspec/go/internal/tomldoc"
+	"github.com/stricttools/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/ir"
+	"github.com/stricttools/strictspec/go/internal/jsondoc"
+	"github.com/stricttools/strictspec/go/internal/render"
+	"github.com/stricttools/strictspec/go/internal/schema"
+	"github.com/stricttools/strictspec/go/internal/tomldoc"
 )
 
 // Diagnostic is one validation error: a stable STRICTSPEC_* code, the rendered

@@ -19,8 +19,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/smm-h/strictspec/go/internal/codes"
-	"github.com/smm-h/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/codes"
+	"github.com/stricttools/strictspec/go/internal/diag"
 )
 
 var placeholderRe = regexp.MustCompile(`\{(\w+)\}`)

@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/smm-h/strictspec/go/internal/doc"
-	"github.com/smm-h/strictspec/go/internal/schema"
+	"github.com/stricttools/strictspec/go/internal/doc"
+	"github.com/stricttools/strictspec/go/internal/schema"
 )
 
 // TSParams configures one TypeScript emission.

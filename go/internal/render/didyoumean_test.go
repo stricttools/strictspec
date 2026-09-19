@@ -3,7 +3,7 @@ package render
 import (
 	"testing"
 
-	"github.com/smm-h/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/diag"
 )
 
 func TestLevenshtein(t *testing.T) {
