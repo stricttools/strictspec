@@ -1,0 +1,17 @@
+# Archived by rlsbl at release time. This release had no unreleased.toml
+# (a batch member takes its metadata from the batch release file); the
+# archive is written so later changelog regenerations keep the
+# description and context.
+# strictspec document version gate (do not remove)
+format_version = 1
+bump = "minor"
+include = ["pypi", "go", "npm"]
+exclude = []
+description = "Generated code pairs with its runtime by generated-code format rather than by release, the Go module path moves to github.com/stricttools/strictspec/go, and the specification pages move under .stricttools/docs/."
+context = "Until this release a generated validator paired with the exact strictspec\nrelease that produced it, and refused any other. Under the ecosystem's\nfloor-only dependency rule that made every strictspec release an import-time\noutage for every already-published consumer: the consumer's install resolved the\nnew runtime, the committed validator demanded the old one, and nothing the\nconsumer imported worked until the whole chain regenerated and re-released. It\nwas observed on 0.2.5.\n\nPairing is now on a generated-code FORMAT. Generated code declares an integer\nGENERATED_CODE_FORMAT describing the shape of the emitted code, bumped only when\nthat shape changes; every runtime declares the inclusive range of formats it\nreads; and pairing succeeds whenever the declared format is in that range,\nwhatever release produced the file. The GENERATED_BY release stamp stays in the\nemitted file as information only, and no tool derives a dependency floor from\nit. Generated code written before the format declaration existed declares no\nformat and is refused with the same regeneration remedy -- never read as format\n1 -- so every consumer regenerates exactly once. The bump discipline is\nmechanical rather than a convention: the conformance suite pins the emitted\nshape of all three targets and fails any change to it that does not move the\nformat.\n\nTwo moves ride along. The repository was transferred to the stricttools\norganisation, so the Go module path is now\ngithub.com/stricttools/strictspec/go. Everything published under\ngithub.com/smm-h/strictspec/go stays resolvable through the module proxy, and\nGitHub redirects the transferred repository, but new versions publish under the\nnew path alone -- so a Go consumer changes its imports once, and regenerates its\ncommitted validators, whose own import line names the module too. The emitted Go\nshape therefore moves in this release while the generated-code format does not:\nthe runtimes read the same shape, and bumping the format would refuse every\nPython and TypeScript validator already in the wild over a change that never\nreached their emitted code.\n\nThe specification pages moved from spec/ to .stricttools/docs/, the layout\nselfdoc now requires, with the generated pages under\n.stricttools/docs-state/pages/ and the tool's own state under\n.stricttools/docs-state/. The published site's addresses are unchanged. Inside\nthe repository the three error-code generators and their freshness tests read\nthe appendix at its new path, and prose that said spec/ when it meant the\nspecification says so in words now."
+candidate_sha = "62f5a2292dec583877ea87addb9f04ca445ff0fa"
+
+[tree_hashes]
+go = "35c3c154d6c076bfc67324bea58e8142c5a6699b"
+python = "92ee6c13b83d4180d656edea65d1b42a87125d78"
+ts = "c684bbedb322930e84bb888bdbf09360d636bce9"
