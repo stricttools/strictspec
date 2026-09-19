@@ -9,13 +9,13 @@
   "pages": [
     {
       "path": "DESIGN.md",
-      "title": ".stricttools/docs/ \u2014 The strictspec Schema Language",
+      "title": "The strictspec Schema Language",
       "type": "doc",
       "headings": [
         {
           "level": 1,
-          "text": ".stricttools/docs/ \u2014 The strictspec Schema Language",
-          "anchor": "spec-the-strictspec-schema-language"
+          "text": "The strictspec Schema Language",
+          "anchor": "the-strictspec-schema-language"
         },
         {
           "level": 2,
@@ -1051,6 +1051,6 @@
     }
   ],
   "posts": [],
-  "last_gen": "2026-09-15T20:55:37.782969+00:00",
+  "last_gen": "2026-09-19T22:36:05.984604+00:00",
   "theme": "minimal"
 }
