@@ -121,8 +121,8 @@ func (g *pyEmitter) entryPoints() {
 	fmt.Fprintf(w, "    return validate_bytes_with_evidence(input, syntax, None)\n\n\n")
 
 	fmt.Fprintf(w, "def validate_bytes_with_evidence(input: bytes, syntax: str, evidence: dict | None) -> tuple[%s | None, tuple[Diagnostic, ...]]:\n", ret)
-	fmt.Fprintf(w, "    \"\"\"validate_bytes plus cross-document resolver evidence for the phase-2\n")
-	fmt.Fprintf(w, "    constraint vocabulary.\n")
+	fmt.Fprintf(w, "    \"\"\"validate_bytes plus cross-document resolver evidence for the constraint\n")
+	fmt.Fprintf(w, "    vocabulary.\n")
 	fmt.Fprintf(w, "    \"\"\"\n")
 	fmt.Fprintf(w, "    result = _program.validate_with_evidence(input, syntax, evidence)\n")
 	fmt.Fprintf(w, "    if not result.valid:\n")

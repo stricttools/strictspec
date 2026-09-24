@@ -45,7 +45,7 @@ export class PairingError extends Error {
 // VERSION stays INFORMATIONAL for generated code: no tool may derive a
 // dependency floor from the GENERATED_BY constant a generated file carries.
 export const MIN_GENERATED_CODE_FORMAT = 1;
-export const MAX_GENERATED_CODE_FORMAT = 1;
+export const MAX_GENERATED_CODE_FORMAT = 2;
 
 // The one refusal text, shared by every entry point below and held
 // byte-identical with the Go and Python runtimes by the conformance suite.

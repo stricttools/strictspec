@@ -185,7 +185,7 @@ func (g *goEmitter) entryPoints() {
 	fmt.Fprintf(w, "}\n\n")
 
 	fmt.Fprintf(w, "// ValidateBytesWithEvidence is ValidateBytes plus cross-document resolver\n")
-	fmt.Fprintf(w, "// evidence for the phase-2 constraint vocabulary.\n")
+	fmt.Fprintf(w, "// evidence for the constraint vocabulary.\n")
 	fmt.Fprintf(w, "func ValidateBytesWithEvidence(input []byte, syntax string, evidence map[string][]map[string]any) (%s, []strictspec.Diagnostic) {\n", ret)
 	fmt.Fprintf(w, "\tres := program.ValidateWithEvidence(input, syntax, evidence)\n")
 	fmt.Fprintf(w, "\tif !res.Valid {\n\t\treturn nil, res.Diagnostics\n\t}\n")
