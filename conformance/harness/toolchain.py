@@ -1,7 +1,7 @@
 """Toolchain-level (CLI-only) conformance fixtures.
 
 The four-target validation harness (``runner.py``) asserts VERDICT + CODE + PATH
-+ MESSAGE identity across Python, Go, TS, and the interpreter. The Phase-6
++ MESSAGE identity across Python, Go, TS, and the interpreter. The toolchain
 analyses -- migration, the write path, ``diff`` certificates, and ``doc-diff``
 deltas -- are TOOLCHAIN-ONLY by the constitution (migration is CLI-only;
 ``diff``/``doc-diff`` are golden-output determinism, not multi-target execution).

@@ -1,4 +1,4 @@
-"""Toolchain-level (CLI-only) conformance fixtures — Phase 6.
+"""Toolchain-level (CLI-only) conformance fixtures.
 
 Migration, the write path, ``diff`` certificates, and ``doc-diff`` deltas are
 TOOLCHAIN-ONLY per the constitution: migration is CLI-only; ``diff``/``doc-diff``

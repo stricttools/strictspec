@@ -2,7 +2,7 @@
 //
 // Parses TOML text with toml-eslint-parser (the sanctioned TS-runtime TOML
 // dependency) and folds the result into the format-neutral doc model, using the
-// AST-ranges + text-splicing technique proven by the phase-0 spike
+// AST-ranges + text-splicing technique proven by the spike
 // (conformance/spikes/toml-eslint-parser): every TOML value node maps to a
 // tagged, lexeme-retaining Node whose exact lexeme is the raw source between the
 // node's range, dotted keys / [table] / [[array-table]] headers resolve into the

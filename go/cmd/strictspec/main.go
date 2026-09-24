@@ -1,9 +1,9 @@
 // Command strictspec is the toolchain CLI, built on strictcli (Go): flag
 // conventions are enforced at registration, and `--dump-schema` is auto-injected.
-// Phase 5.5 subcommands: gen (file-driven codegen from strictspec.toml),
-// validate (interpreter-backed document validation), check (schema-authoring +
-// generated-code freshness), init (scaffold a manifest), and export (JSON Schema).
-// migrate/diff/doc-diff are Phase 6.
+// Subcommands: gen (file-driven codegen from strictspec.toml), validate
+// (interpreter-backed document validation), check (schema-authoring +
+// generated-code freshness), init (scaffold a manifest), export (JSON Schema),
+// and the migrate/diff/doc-diff analyses.
 //
 // Every command declares its effect classification. The four writing commands
 // (gen, init, export, migrate) route every disk mutation through
@@ -125,7 +125,7 @@ func newApp() *strictcli.App {
 		),
 	)
 
-	// --- Phase 6: migrate / diff / doc-diff ---------------------------------
+	// --- migrate / diff / doc-diff ------------------------------------------
 
 	app.Command("migrate", "Migrate document(s) up to the schema's current format_version",
 		migrateHandler,
