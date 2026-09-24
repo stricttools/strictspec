@@ -42,7 +42,7 @@ Version = __version__
 # release. Generated code declares the format it was written to; this runtime
 # accepts it when the format is in this range, whatever release produced it.
 MIN_GENERATED_CODE_FORMAT = 1
-MAX_GENERATED_CODE_FORMAT = 1
+MAX_GENERATED_CODE_FORMAT = 2
 
 __all__ = [
     "Version",

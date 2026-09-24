@@ -1,9 +1,9 @@
 {
-  "generated_code_format": 1,
+  "generated_code_format": 2,
   "schema": "shared-canvas.toml",
   "shapes": {
-    "go": "393fdffd2a8a1836da039cb5223fd39cbf7de582ce424270ac8c0960ae2b1580",
-    "python": "4f0a89299169a43cbd7c933c85f6df85d8bc49f2f9c01f84be3b1de346a955f0",
-    "ts": "9bd46df2b00525e6e2a5913e19f7010a716560dd1c1997ce5ea6b69258fe25a7"
+    "go": "3b67cf224f86e57a868d723ca9bcd0d4b93bd70d1ce3f9e2f2945884bb499f27",
+    "python": "123152777a9bb2de4cf22acdf92d30096d4ae7ef3600bab85ddf32f3154b2906",
+    "ts": "e1cece69e008480d59e046c917616243dff58ce4b9d56263cbc06cbfa2879116"
   }
 }

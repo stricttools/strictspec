@@ -126,7 +126,7 @@ func (g *tsEmitter) entryPoints() {
 	fmt.Fprintf(w, "}\n\n")
 
 	fmt.Fprintf(w, "// validateBytesWithEvidence is validateBytes plus cross-document resolver\n")
-	fmt.Fprintf(w, "// evidence for the phase-2 constraint vocabulary.\n")
+	fmt.Fprintf(w, "// evidence for the constraint vocabulary.\n")
 	fmt.Fprintf(w, "export function validateBytesWithEvidence(rawText: string, syntax: Syntax, evidence: Evidence): [%s | null, readonly Diagnostic[]] {\n", ret)
 	fmt.Fprintf(w, "\tconst result = program.validateWithEvidence(rawText, syntax, evidence);\n")
 	fmt.Fprintf(w, "\tif (!result.valid) {\n\t\treturn [null, result.diagnostics];\n\t}\n")

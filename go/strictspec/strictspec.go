@@ -44,7 +44,7 @@ var Version = ssroot.Version
 // this range, whatever release produced it.
 const (
 	MinGeneratedCodeFormat = 1
-	MaxGeneratedCodeFormat = 1
+	MaxGeneratedCodeFormat = 2
 )
 
 // pairingMessage renders the one refusal text, shared by every entry point below
