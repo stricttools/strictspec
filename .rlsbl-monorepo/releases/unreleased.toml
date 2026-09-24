@@ -1,10 +1,28 @@
 [releasables.strictspec]
 # Version bump type: patch, minor, major, infra, or prerelease
-bump = ""
+bump = "minor"
 # Short description of this release (required)
-description = ""
+description = "Generated validators describe the constraint vocabulary without plan numbering, and the generated-code format moves to 2: regenerate committed validators with `strictspec gen` and raise the strictspec floor to this release."
 # Optional context explaining why these changes were made
-context = ""
+context = """
+Generated validators carried the comment "evidence for the phase-2 constraint
+vocabulary" on their evidence entry point, in all three targets. "Phase 2" was a
+plan's numbering, not a name the code defines: strictspec's own validator calls
+its two passes the structural pass and the constraint pass. The emitters now
+write "evidence for the constraint vocabulary".
+
+That comment is part of the emitted shape, and the conformance suite pins the
+emitted shape against change unless the generated-code format moves. The format
+moves to 2: the emitters write format 2, and every runtime reads formats 1
+through 2. Format 1 stays readable because the change is a comment and nothing a
+format-1 validator does differs. A consumer upgrading sees its committed
+validators reported stale by `strictspec check`; regenerating them with
+`strictspec gen` produces format-2 files, which need this release or later at
+runtime, so the consumer raises its strictspec floor in the same change.
+
+The validate command's help text also names its two modes by what they check
+rather than by phase number.
+"""
 # Pre-release channel: alpha, beta, rc, or stable (ordered;
 # demotion is an error). Per package, so one workspace release
 # can ship some packages stable and others as alphas. See
