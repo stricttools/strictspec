@@ -3,7 +3,7 @@
 # express: "pypi" appears in BOTH lists (a real bug rlsbl catches, strictspec
 # would MISS with the mis-chosen mutual-exclusion form — see gap note FINDING 1).
 #
-# Expected ordered diagnostics (structural phase-1 clean; phase-2 forms):
+# Expected ordered diagnostics (structural pass clean; constraint forms):
 #   1. STRICTSPEC_INTRA_FORBIDDEN_WHEN
 #      path: $.preid
 #      slots: key="preid", path="$", condition="bump == \"infra\""

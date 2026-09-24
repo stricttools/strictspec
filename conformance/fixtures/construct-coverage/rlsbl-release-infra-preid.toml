@@ -4,10 +4,10 @@ provenance = "derived-from(examples/rlsbl-release-file/invalid-01-infra-preid.to
 description = """
 An infra release that also sets `preid` -- forbidden-when fires:
 STRICTSPEC_INTRA_FORBIDDEN_WHEN. The document ALSO double-lists "pypi" in include and exclude; the
-schema now declares the Phase-3.3 `collections-disjoint` form (element-level set disjointness), so
+schema now declares the `collections-disjoint` form (element-level set disjointness), so
 that overlap IS caught (STRICTSPEC_INTRA_COLLECTIONS_DISJOINT) -- superseding the draft's FINDING 1,
 which described the OLD field-level mutual-exclusion form that missed element overlaps. The two
-phase-2 diagnostics fire in constraint-declaration order: forbidden-when (#2) before
+constraint diagnostics fire in constraint-declaration order: forbidden-when (#2) before
 collections-disjoint (#4).
 
 Path convention: the forbidden-when diagnostic attaches at the offending field `$.preid`;

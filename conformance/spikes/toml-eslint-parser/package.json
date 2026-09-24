@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Phase 0 spike: validate toml-eslint-parser against strictspec's lossless TOML write-side requirements (decision 5).",
+  "description": "Spike: validate toml-eslint-parser against strictspec's lossless TOML write-side requirements (decision 5).",
   "scripts": {
     "test": "node --test"
   },

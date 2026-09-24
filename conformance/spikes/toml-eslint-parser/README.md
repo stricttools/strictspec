@@ -1,6 +1,6 @@
 # Spike: `toml-eslint-parser` for strictspec's lossless TOML write path
 
-Phase 0 spike validating decision 5 (TS full format parity: lossless,
+Spike validating decision 5 (TS full format parity: lossless,
 lexeme-retaining TOML). It confirms that `toml-eslint-parser` — the same library
 strictcli's TypeScript config splicer uses (`strictcli/typescript/src/toml.ts`)
 — covers strictspec's broader lossless requirements: parse preserving every

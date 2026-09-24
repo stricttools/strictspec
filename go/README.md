@@ -5,9 +5,9 @@ Define a schema once in TOML, and generate the full toolchain in your language: 
 This module is the strictspec toolchain and Go runtime; its module path is
 `github.com/stricttools/strictspec/go`.
 
-This is a placeholder skeleton. The toolchain (generator, interpreter, migration
-engine, constraint engine, diff engine, `cmd/strictspec` CLI) and the Go runtime
-land in later phases; see [go/DESIGN.md](./DESIGN.md).
+It holds the toolchain (generator, interpreter, migration engine, constraint
+engine, diff engine, `cmd/strictspec` CLI) and the Go runtime; see
+[go/DESIGN.md](./DESIGN.md) for the design.
 
 ## Versioning
 

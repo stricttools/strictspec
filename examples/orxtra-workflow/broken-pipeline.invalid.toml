@@ -1,4 +1,4 @@
-# Invalid workflow. Phase-1 types are all correct so phase-2 constraints fire. Contains four
+# Invalid workflow. The structural pass is clean so the constraint pass fires. Contains four
 # strictspec-catchable violations PLUS a dependency cycle that strictspec CANNOT catch (see gap
 # note finding 4 — the expected consumer-native tail).
 [workflow]

@@ -378,7 +378,7 @@ func (g *goEmitter) bindExpr(t *schema.Type, valueVar string) string {
 // --- helpers ----------------------------------------------------------------
 
 func coerce1(valueVar, method string) string {
-	// The generated binder runs only after phase-1 validation established the
+	// The generated binder runs only after structural validation established the
 	// kind, so the coercer's ok is true; we take the value and drop ok.
 	return fmt.Sprintf("func() %s { r, _ := %s.%s(); return r }()", coercerReturnType(method), valueVar, method)
 }

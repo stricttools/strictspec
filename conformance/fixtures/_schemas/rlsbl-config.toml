@@ -58,7 +58,7 @@ collection = "external_checks"
 field = "name"
 normalization = "none"
 
-# REJECTED / consumer-native (Phase 3.3 vocabulary rejection rationale):
+# REJECTED / consumer-native (why the vocabulary does not carry it):
 #  - launcher forbidden when publish_mode == "none": a CROSS-SCOPE EXISTENTIAL forbidden-when
 #    (∃ pipeline with artifact == "launcher") over a nested map, gated on a root field. No
 #    vocabulary form; consumer-native. Revisit at rlsbl adoption.
@@ -182,7 +182,7 @@ resolves_into = "targets"
 resolves_by = "node-kind-union-key"
 description = "target names a configured release target (resolves against the scalar arm or the record arm's name). See gap note (node-kind resolution target)."
 
-# REJECTED / consumer-native (Phase 3.3 vocabulary rejection rationale):
+# REJECTED / consumer-native (why the vocabulary does not carry it):
 #  - wraps -> sibling.artifact == "binary": a REFERENCE-TARGET PREDICATE (resolve AND the resolved
 #    pipeline's artifact == "binary"). intra-document-references resolves existence only; the JOIN
 #    predicate on the resolved target is not a vocabulary form. Consumer-native; revisit at rlsbl

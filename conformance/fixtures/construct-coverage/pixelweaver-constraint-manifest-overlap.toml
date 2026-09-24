@@ -2,7 +2,7 @@ name = "pixelweaver-constraint-manifest-overlap"
 category = "construct-coverage"
 provenance = "derived-from(examples/pixelweaver/samples/constraint-manifest.invalid-overlap.json, verified against spec)"
 description = """
-Three phase-2 violations, emitted in check-declaration order (all attach at the root record):
+Three constraint-pass violations, emitted in check-declaration order (all attach at the root record):
 pairwise-distinct on the palette (case-fold), unique-by id on classes (none normalization), and
 ranges-disjoint on the [start, start+len) half-open class ranges. Verified against the pinned
 templates and appendix-rendering value forms (strings double-quoted; half-open ranges as `[a, b)`)."""

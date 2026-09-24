@@ -36,9 +36,9 @@ func main() {
 // ignored. Under the scope it is a parse error naming both sides.
 var (
 	ModeStructuralOnly = strictcli.MemberChoice(
-		strictcli.BoolFlag("structural-only", "Run phase-1 structural checks only",
+		strictcli.BoolFlag("structural-only", "Run the structural checks only",
 			strictcli.Required()),
-		"Run phase-1 structural checks only",
+		"Run the structural checks only",
 	)
 
 	// Cross-document evidence: each --collection glob hosts the in-process
@@ -49,9 +49,9 @@ var (
 	// a collection-shaped cross-document form is a hard error (a resolver that
 	// cannot be satisfied is never a skip).
 	ModeWithDomainChecks = strictcli.MemberChoice(
-		strictcli.BoolFlag("with-domain-checks", "Also run the phase-2 constraint vocabulary",
+		strictcli.BoolFlag("with-domain-checks", "Also run the constraint vocabulary checks",
 			strictcli.Required()),
-		"Also run the phase-2 constraint vocabulary",
+		"Also run the constraint vocabulary checks",
 		strictcli.StringFlag("collection",
 			"Glob hosting an in-process documents-in(...) evidence collection (repeatable)",
 			strictcli.Repeatable(), strictcli.Unique(false), strictcli.Optional()),

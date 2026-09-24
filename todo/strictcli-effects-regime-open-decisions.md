@@ -51,5 +51,5 @@ so the engine exists — what is undecided is the output shape `migrate --dry-ru
 ## Affected files
 
 - `go/cmd/strictspec/main.go` (the `check` registration; a `WithConsequential` on `migrate`)
-- `go/cmd/strictspec/phase6.go` (`migrateHandler`'s preview rendering)
+- `go/cmd/strictspec/migrate_diff.go` (`migrateHandler`'s preview rendering)
 - the charter and CLI reference, if the `check` rename is adopted

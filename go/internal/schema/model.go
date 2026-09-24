@@ -118,7 +118,7 @@ type Arm struct {
 	Type *Type
 }
 
-// Constraint is one phase-2 vocabulary form attached at a record/type scope.
+// Constraint is one constraint-vocabulary form attached at a record/type scope.
 type Constraint struct {
 	Form string
 

@@ -56,7 +56,7 @@ source = "copied-from(examples/pixelweaver/samples/character-preview.invalid-uni
 nature = "invalid"
 stamped = false
 mutation = 'functions[0].type = "wobble" (unknown discriminator); functions[1] onMs 200.0 >= periodMs 100.0'
-note = "Phase-1 union-discriminator-unknown then phase-2 ordered-pair; the multi-error / path-subset case."
+note = "Structural union-discriminator-unknown then constraint ordered-pair; the multi-error / path-subset case."
 
 [["mut-unknown-key-root"]]
 source = "derived-from(real-valid)"

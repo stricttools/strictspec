@@ -2,7 +2,7 @@ name = "pixelweaver-character-preview-union-and-order"
 category = "unions"
 provenance = "derived-from(examples/pixelweaver/samples/character-preview.invalid-union-and-order.json, verified against spec)"
 description = """
-Phase 1 before phase 2. functions[0] has discriminator type="wobble" -- not a known arm, so no arm
+Structural pass before constraint pass. functions[0] has discriminator type="wobble" -- not a known arm, so no arm
 is validated (STRICTSPEC_UNION_DISCRIMINATOR_UNKNOWN; "wobble" is edit-distance > 2 from both
 `sine` and `blink`, so `suggestion` is empty). functions[1] is a valid `blink` whose body violates
 the ordered-pair rule onMs < periodMs (200.0 vs 100.0).

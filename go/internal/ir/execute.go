@@ -24,15 +24,15 @@ type exec struct {
 	line      int
 	lineStart int
 
-	diags  diag.Diagnostics
-	phase2 []p2task
-	clean  map[doc.Node]bool
-	depth  int
+	diags           diag.Diagnostics
+	constraintQueue []constraintTask
+	clean           map[doc.Node]bool
+	depth           int
 }
 
-// p2task is a deferred phase-2 constraint run for one record (the
-// constraint-eval node, deferred until phase 1 completes).
-type p2task struct {
+// constraintTask is a deferred constraint-vocabulary run for one record (the
+// constraint-eval node, deferred until the structural pass completes).
+type constraintTask struct {
 	typ  *schema.Type
 	rec  doc.Node
 	path diag.Path

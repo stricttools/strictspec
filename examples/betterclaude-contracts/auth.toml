@@ -47,7 +47,7 @@ required = true
 
 # tier -> display table (authored fresh into the auth schema; §3 / decision 17). A typed map
 # keyed by tier NAME (see gap note: keys are regex-constrained, not enum-constrained — key_type
-# rejected, cluster 2d).
+# rejected).
 [types.Credentials.fields.tier_display]
 type = "map"
 required = true

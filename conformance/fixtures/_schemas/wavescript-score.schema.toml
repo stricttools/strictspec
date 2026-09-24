@@ -5,7 +5,7 @@
 # (the per-topology parameter registry). Pinned surface (.stricttools/docs/appendix-surface-syntax.md):
 # root-as-named-type; discriminated-union arms are subtables; conditions use the closed
 # `when = { field, predicate, value/values }` set (equals / not-equals / in / not-in / present /
-# absent). Phase 3.3: the wavescript Pin becomes the `conditional-value` form, and negative-
+# absent). The wavescript Pin becomes the `conditional-value` form, and negative-
 # polarity `unless` gates become `not-equals` conditions (no complement enumeration).
 #
 # This is the strongest conditional-required stress test in the corpus. See gap-note.md for what
@@ -164,7 +164,7 @@ type = "float"
 required = false
 min = 0.0
 max = 1.0
-description = "onlyWhen source==sine. Negative-polarity: forbidden-when source != sine (no complement enumeration — cluster 2c)."
+description = "onlyWhen source==sine. Negative-polarity: forbidden-when source != sine (no complement enumeration)."
 
 [types.SubtractiveParams.fields.pulse_width]
 type = "float"
@@ -185,7 +185,7 @@ type = "integer"
 required = false
 min = 1
 max = 7
-description = "Detuned unison voices. PINNED to 1 when source in {noise,pink,brown} (registry Pin) — the `conditional-value` form (cluster 2a)."
+description = "Detuned unison voices. PINNED to 1 when source in {noise,pink,brown} (registry Pin) — the `conditional-value` form."
 
 [types.SubtractiveParams.fields.filter_type]
 type = "enum"
@@ -294,7 +294,7 @@ form = "forbidden-when"
 field = "cutoff"
 when = { field = "filter_type", predicate = "equals", value = "none" }
 
-# NEGATIVE-POLARITY (cluster 2c) — onlyWhen X expressed as forbidden-when field != X. No complement
+# NEGATIVE-POLARITY — onlyWhen X expressed as forbidden-when field != X. No complement
 # enumeration; adding a `source`/`filter_type` arm no longer silently breaks these.
 [[types.SubtractiveParams.constraints]]
 form = "forbidden-when"

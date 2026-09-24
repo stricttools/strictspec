@@ -80,7 +80,7 @@ collection = "classes"
 field = "id"
 normalization = "none"
 
-# x-range-nonoverlap on classes (half-open; well-formed-first; no in-bounds leg, cluster 3c)
+# x-range-nonoverlap on classes (half-open; well-formed-first; no in-bounds leg)
 [[types.PartManifest.constraints]]
 form = "ranges-disjoint"
 collection = "classes"

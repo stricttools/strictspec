@@ -166,7 +166,7 @@ func (v Value) Items() []Value {
 // binding half of the Generated API contract: `number` -> float64, datetimes ->
 // their pinned string form (offset preserved verbatim), integer/float distinct.
 // They report ok=false on a kind mismatch (a generated binder only calls a
-// coercer after phase-1 validation has established the kind, so ok is true in
+// coercer after structural validation has established the kind, so ok is true in
 // generated code; the boolean lets standalone consumers guard).
 
 // AsString returns the decoded (code-point) value of a string scalar. (Named
@@ -206,7 +206,7 @@ func (v Value) Float() (float64, bool) {
 }
 
 // Number returns the float64 value of a `number`-scalar site (accepts either
-// lexeme class; the schema's phase-1 check has already rejected lexemes float64
+// lexeme class; the schema's structural check has already rejected lexemes float64
 // cannot represent exactly).
 func (v Value) Number() (float64, bool) {
 	if v.node == nil {

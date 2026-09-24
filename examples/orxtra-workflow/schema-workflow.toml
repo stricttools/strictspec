@@ -175,7 +175,7 @@ required = false
 type = "Execution"
 required = false
 
-# ---- Task constraints (intra-document, phase 2) ----
+# ---- Task constraints (intra-document, constraint pass) ----
 
 # Execution-mode selection decomposes cleanly:
 #   co-presence(agent, task_prompt) + exactly-one-of(agent, callable, subtasks, wait_for, decision_point)
@@ -199,7 +199,7 @@ when = { field = "agent", predicate = "present" }
 
 # retry > 0 ⇒ retry_resume, retry_inject_failure required. Modeled as retry != 0, which is EXACT
 # only because retry's domain is non-negative (min = 0). Numeric comparison predicates are rejected
-# (cluster 2c); the honest origin is `retry != 0`. See gap note finding 2.
+# (no such vocabulary form); the honest origin is `retry != 0`. See gap note finding 2.
 [[types.Task.constraints]]
 form = "conditional-required"
 field = "retry_resume"
