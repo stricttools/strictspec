@@ -2,7 +2,7 @@ name = "orxtra-broken-pipeline"
 category = "construct-coverage"
 provenance = "derived-from(examples/orxtra-workflow/broken-pipeline.invalid.toml, re-verified against spec)"
 description = """
-Four phase-2 violations in traversal order: tasks[0] has two execution modes (exactly-one-of);
+Four constraint-pass violations in traversal order: tasks[0] has two execution modes (exactly-one-of);
 tasks[1] sets retry != 0 without the two conditionally-required resume/inject fields; tasks[2]
 depends_on an undefined task "ghost" (intra-document reference). The dependency cycle in tasks[3-4]
 is NOT catchable declaratively (no acyclicity form) -- the expected consumer-native tail.

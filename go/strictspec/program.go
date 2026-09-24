@@ -67,7 +67,7 @@ func (p *Program) Validate(input []byte, syntax string) Result {
 }
 
 // ValidateWithEvidence is Validate plus cross-document resolver evidence for the
-// phase-2 constraint vocabulary (count-limit / sum-limit and the other
+// constraint vocabulary (count-limit / sum-limit and the other
 // cross-document forms). An empty evidence map runs structural checks only.
 func (p *Program) ValidateWithEvidence(input []byte, syntax string, evidence map[string][]map[string]any) Result {
 	var diags []diag.Diagnostic

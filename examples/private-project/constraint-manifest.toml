@@ -59,7 +59,7 @@ normalization = "none"
 
 # x-range-nonoverlap: {start,len}  ->  ranges-disjoint (half-open). Each range is first well-formed
 # per ordered-pair (start < start+len), then half-open disjointness is evaluated. The in-bounds
-# leg (start+len <= len(palette)) is consumer-native (not part of ranges-disjoint; cluster 3c).
+# leg (start+len <= len(palette)) is consumer-native (not part of ranges-disjoint).
 [[types.ConstraintManifest.constraints]]
 form = "ranges-disjoint"
 collection = "classes"

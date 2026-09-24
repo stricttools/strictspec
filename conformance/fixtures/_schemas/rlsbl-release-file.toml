@@ -71,7 +71,7 @@ description = "Whether to generate a blog post for this release."
 # --- Constraints (attached at the root record that owns the fields) ---
 
 # preid == "stable" requires bump == "prerelease" — a conditional VALUE-equality (the
-# `conditional-value` form added in Phase 3.3; formerly an approximated conditional-required).
+# `conditional-value` form; formerly an approximated conditional-required).
 [[types.ReleaseConfig.constraints]]
 form = "conditional-value"
 field = "bump"
@@ -94,8 +94,8 @@ resolves_into = "include"
 resolves_by = "map-key"
 description = "A [targets.<name>] section is only valid when <name> is in `include`."
 
-# include and exclude must be element-disjoint — the `collections-disjoint` form added in
-# Phase 3.3 (element-level set disjointness; this rule is the form's origin, replacing the former
+# include and exclude must be element-disjoint — the `collections-disjoint` form
+# (element-level set disjointness; this rule is the form's origin, replacing the former
 # mis-citation as `mutual exclusion`).
 [[types.ReleaseConfig.constraints]]
 form = "collections-disjoint"

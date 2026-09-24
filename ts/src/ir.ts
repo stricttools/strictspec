@@ -9,8 +9,8 @@
 //
 // Ordering is a property of the IR, not of any target: the executor fixes the
 // traversal and emission order once (gate first and terminal; document-order
-// present keys with anchored missing-required interleaving; phase-2 constraints
-// over records whose phase 1 passed), so every target accumulates diagnostics in
+// present keys with anchored missing-required interleaving; constraint-vocabulary
+// checks over records whose structural pass was clean), so every target accumulates diagnostics in
 // the identical order.
 
 import type { Diagnostic, Path, Slot, Value } from "./diag.js";
@@ -59,7 +59,7 @@ export interface ExecOptions {
 	lineStart?: number;
 }
 
-interface P2Task {
+interface ConstraintTask {
 	typ: schema.Type;
 	rec: Node;
 	path: Path;
@@ -112,7 +112,7 @@ class Exec {
 	line: number;
 	lineStart: number;
 	diags = new diag.Diagnostics();
-	phase2: P2Task[] = [];
+	constraintQueue: ConstraintTask[] = [];
 	clean = new Map<Node, boolean>();
 	depth = 0;
 
@@ -264,7 +264,7 @@ class Exec {
 		const isRoot = path.steps.length === 1;
 
 		if (t.constraints.length > 0) {
-			this.phase2.push({ typ: t, rec: n, path });
+			this.constraintQueue.push({ typ: t, rec: n, path });
 		}
 
 		const fieldNames = t.fields.map((f) => f.name);
@@ -1038,9 +1038,9 @@ class Exec {
 		return false;
 	}
 
-	// --- phase 2 constraints -------------------------------------------------
+	// --- constraint pass -----------------------------------------------------
 
-	runConstraints(task: P2Task): void {
+	runConstraints(task: ConstraintTask): void {
 		const rec = task.rec;
 		const path = task.path;
 		for (const c of task.typ.constraints) {
@@ -1462,7 +1462,7 @@ export function execute(
 	}
 	v.walk(rt, root, diag.newPath());
 	if (!(opts.structuralOnly ?? false)) {
-		for (const task of v.phase2) {
+		for (const task of v.constraintQueue) {
 			if (v.clean.get(task.rec)) {
 				v.runConstraints(task);
 			}

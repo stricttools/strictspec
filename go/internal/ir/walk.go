@@ -10,7 +10,7 @@ import (
 
 // walk realizes the depth-guard and type-dispatch nodes: it validates node n
 // against type t at path, returning whether n's SUBTREE was clean (zero
-// diagnostics) — the partial-subtree-binding signal that gates phase 2.
+// diagnostics) — the partial-subtree-binding signal that gates the constraint pass.
 func (v *exec) walk(t *schema.Type, n doc.Node, path diag.Path) bool {
 	v.depth++
 	defer func() { v.depth-- }()
@@ -23,8 +23,8 @@ func (v *exec) walk(t *schema.Type, n doc.Node, path diag.Path) bool {
 	v.walkInner(t, n, path)
 	clean := v.diags.Len() == before
 	if n != nil {
-		// Record the subtree-clean flag so phase 2 runs only for records whose
-		// phase 1 passed (partial-subtree binding).
+		// Record the subtree-clean flag so the constraint pass runs only for records
+		// whose structural pass was clean (partial-subtree binding).
 		v.clean[n] = clean
 	}
 	return clean
@@ -69,9 +69,9 @@ func (v *exec) walkRecord(t *schema.Type, n doc.Node, path diag.Path) {
 	}
 	isRoot := len(path.Steps) == 1 // just the Root step
 
-	// Enqueue phase-2 constraints in PRE-ORDER (containing-record traversal order).
+	// Enqueue constraint-vocabulary runs in PRE-ORDER (containing-record traversal order).
 	if len(t.Constraints) > 0 {
-		v.phase2 = append(v.phase2, p2task{typ: t, rec: n, path: path})
+		v.constraintQueue = append(v.constraintQueue, constraintTask{typ: t, rec: n, path: path})
 	}
 
 	fieldNames := make([]string, 0, len(t.Fields))

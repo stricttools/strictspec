@@ -18,7 +18,7 @@ from = "$.internal"
 to = "$.changelog_exempt"
 down = "total"
 
-# AUTHOR-SUPPLIED inverse (down) op sequence — the engine never derives it (cluster 3d).
+# AUTHOR-SUPPLIED inverse (down) op sequence — the engine never derives it.
 [[down_ops]]
 op = "rename_field"
 from = "$.changelog_exempt"

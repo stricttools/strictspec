@@ -164,7 +164,7 @@ fields = ["a", "b"]
 `);
 	const r = p.validate('{"format_version":1,"a":1,"b":2}', "json");
 	assert.deepEqual(codes(r), ["STRICTSPEC_INTRA_EXACTLY_ONE_OF"]);
-	// Phase 2 skipped when phase 1 dirty.
+	// Constraint pass skipped when the structural pass is dirty.
 	const r2 = p.validate('{"format_version":1,"a":"x","b":2}', "json");
 	assert.ok(!codes(r2).includes("STRICTSPEC_INTRA_EXACTLY_ONE_OF"));
 });

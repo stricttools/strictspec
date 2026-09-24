@@ -1,5 +1,5 @@
-# strictspec schema — datetime coverage exercise (Phase 3.3, cluster 5b).
-# Closes the datetime-scalar coverage gap batch 2 flagged (rlsbl release-file carries no
+# strictspec schema — datetime coverage exercise.
+# Closes the datetime-scalar coverage gap (the rlsbl release-file example carries no
 # date/time/datetime field). Exercises all three datetime scalar KINDS — `date`, `time`,
 # `datetime` (offset) and `datetime` (local) — plus a same-kind datetime range. Authored in the
 # pinned surface (appendix-surface-syntax.md): bare header, root-as-named-type via `root`,

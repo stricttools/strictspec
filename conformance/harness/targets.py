@@ -70,8 +70,8 @@ class Outcome:
 def _unimplemented_invoke(fixture: Fixture) -> Outcome:
     """Stub invocation for a target that does not exist yet."""
     raise NotImplementedError(
-        "this target is a declared stub (implemented=false); its implementation "
-        "lands in a later phase"
+        "this target is a declared stub (implemented=false) and is not "
+        "implemented yet"
     )
 
 

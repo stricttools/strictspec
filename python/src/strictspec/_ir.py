@@ -8,8 +8,8 @@ the mechanism behind the four-target verdict+code+path+message identity.
 
 Ordering is a property of the IR, not of any target: the executor fixes the
 traversal and emission order once (gate first and terminal; document-order
-present keys with anchored missing-required interleaving; phase-2 constraints
-over records whose phase 1 passed), so every target accumulates diagnostics in
+present keys with anchored missing-required interleaving; constraint-vocabulary
+checks over records whose structural pass was clean), so every target accumulates diagnostics in
 the identical order.
 """
 
@@ -59,7 +59,7 @@ class ExecOptions:
 
 
 @dataclass
-class _P2Task:
+class _ConstraintTask:
     typ: schema.Type
     rec: doc.Node
     path: diag.Path
@@ -92,7 +92,7 @@ class _Exec:
         self.line = opts.line
         self.line_start = opts.line_start
         self.diags = diag.Diagnostics()
-        self.phase2: list[_P2Task] = []
+        self.constraint_queue: list[_ConstraintTask] = []
         self.clean: dict[int, bool] = {}
         self.depth = 0
 
@@ -202,7 +202,7 @@ class _Exec:
         is_root = len(path.steps) == 1
 
         if len(t.constraints) > 0:
-            self.phase2.append(_P2Task(typ=t, rec=n, path=path))
+            self.constraint_queue.append(_ConstraintTask(typ=t, rec=n, path=path))
 
         field_names = [f.name for f in t.fields]
         matched: set[str] = set()
@@ -954,9 +954,9 @@ class _Exec:
             return not any(self.same_scalar(val, fn) for val in c.values)
         return False
 
-    # --- phase 2 constraints -------------------------------------------------
+    # --- constraint pass -----------------------------------------------------
 
-    def run_constraints(self, task: _P2Task) -> None:
+    def run_constraints(self, task: _ConstraintTask) -> None:
         rec, path = task.rec, task.path
         for c in task.typ.constraints:
             form = c.form
@@ -1309,8 +1309,8 @@ class _Exec:
 def execute(p: Program, root: doc.Node | None, opts: ExecOptions) -> list[diag.Diagnostic]:
     """Validate one document (root node) against the compiled Program and return
     the ordered diagnostics: gate first (terminal on failure), then one-pass
-    structural accumulation in traversal order, then phase-2 constraints over
-    records whose phase 1 passed.
+    structural accumulation in traversal order, then the constraint vocabulary over
+    records whose structural pass was clean.
     """
     v = _Exec(p, root, opts)
     if not v.gate(root):
@@ -1320,7 +1320,7 @@ def execute(p: Program, root: doc.Node | None, opts: ExecOptions) -> list[diag.D
         return v.diags.all()
     v.walk(rt, root, diag.new_path())
     if not opts.structural_only:
-        for task in v.phase2:
+        for task in v.constraint_queue:
             if v.clean.get(id(task.rec)):
                 v.run_constraints(task)
     return v.diags.all()

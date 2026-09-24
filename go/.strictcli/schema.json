@@ -82,7 +82,7 @@
   },
   "project_id": "github.com/stricttools/strictspec/go",
   "name": "strictspec",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "help": "strictspec: strict, byte-identical schema validation and code generation",
   "commands": {
     "gen": {
@@ -112,11 +112,11 @@
           "choices": [
             {
               "name": "structural-only",
-              "help": "Run phase-1 structural checks only"
+              "help": "Run the structural checks only"
             },
             {
               "name": "with-domain-checks",
-              "help": "Also run the phase-2 constraint vocabulary",
+              "help": "Also run the constraint vocabulary checks",
               "flags": [
                 {
                   "name": "collection",

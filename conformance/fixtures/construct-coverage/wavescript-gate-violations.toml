@@ -2,10 +2,10 @@ name = "wavescript-gate-violations"
 category = "construct-coverage"
 provenance = "derived-from(examples/wavescript-score/invalid-01-gate-violations.json, re-verified against score.schema.toml)"
 description = """
-Phase 1 (structural) is clean; phase-2 constraint forms fire in containing-record traversal order
+The structural pass is clean; constraint forms fire in containing-record traversal order
 (bad_filter before noise_unison) then constraint-declaration order within each params record.
 
-RE-VERIFICATION CORRECTION vs the draft gap note: the gap note (authored before the Phase 3.3
+RE-VERIFICATION CORRECTION vs the draft gap note: the gap note (authored before the
 `conditional-value` form was added to the schema) marked noise_unison's `unison = 4` as a MISSED
 violation and listed only 3 diagnostics. The current schema DOES declare
 `conditional-value field=unison equals_literal=1 when source in [noise, pink, brown]`, so the

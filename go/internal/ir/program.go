@@ -94,9 +94,9 @@ type ExecOptions struct {
 	Format   doc.Format
 	Evidence map[string][]map[string]any
 
-	// StructuralOnly runs phase 1 (structural) only, skipping the phase-2
-	// constraint vocabulary. It backs `strictspec validate --structural-only`.
-	// The generated API and the conformance targets always run both phases.
+	// StructuralOnly runs the structural pass only, skipping the constraint
+	// pass. It backs `strictspec validate --structural-only`.
+	// The generated API and the conformance targets always run both passes.
 	StructuralOnly bool
 
 	// JSONL per-line anchor context.
@@ -108,8 +108,8 @@ type ExecOptions struct {
 // Execute validates one document (root node) against the compiled Program and
 // returns the ordered diagnostics the constitution pins: the version gate first
 // (terminal on failure), then one-pass structural accumulation in the pinned
-// traversal order, then the phase-2 constraint vocabulary over records whose
-// phase 1 passed. For JSONL it is called once per line with the line's anchor
+// traversal order, then the constraint vocabulary over records whose
+// structural pass was clean. For JSONL it is called once per line with the line's anchor
 // context in opts.
 func Execute(p *Program, root doc.Node, opts ExecOptions) []diag.Diagnostic {
 	v := &exec{
@@ -133,12 +133,12 @@ func Execute(p *Program, root doc.Node, opts ExecOptions) []diag.Diagnostic {
 	if !ok {
 		return v.diags.All()
 	}
-	// Phase 1: structural, one-pass, pinned traversal order.
+	// Structural pass: one-pass, pinned traversal order.
 	v.walk(rt, root, diag.NewPath())
-	// Phase 2: constraint vocabulary over records whose phase 1 passed (skipped
+	// Constraint pass: constraint vocabulary over records whose structural pass was clean (skipped
 	// under structural-only).
 	if !opts.StructuralOnly {
-		for _, task := range v.phase2 {
+		for _, task := range v.constraintQueue {
 			if v.clean[task.rec] {
 				v.runConstraints(task)
 			}

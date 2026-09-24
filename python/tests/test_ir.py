@@ -168,7 +168,7 @@ fields = ["a", "b"]
 """)
     r = p.validate(b'{"format_version":1,"a":1,"b":2}', "json")
     assert codes(r) == ["STRICTSPEC_INTRA_EXACTLY_ONE_OF"]
-    # Phase 2 skipped when phase 1 dirty.
+    # Constraint pass skipped when the structural pass is dirty.
     r2 = p.validate(b'{"format_version":1,"a":"x","b":2}', "json")
     assert "STRICTSPEC_INTRA_EXACTLY_ONE_OF" not in codes(r2)
 

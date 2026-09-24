@@ -8,9 +8,9 @@ import (
 	"github.com/stricttools/strictspec/go/internal/schema"
 )
 
-// runConstraints evaluates a record's phase-2 constraint vocabulary in
+// runConstraints evaluates a record's constraint vocabulary in
 // declaration order, emitting diagnostics at the pinned paths.
-func (v *exec) runConstraints(task p2task) {
+func (v *exec) runConstraints(task constraintTask) {
 	rec, path := task.rec, task.path
 	for _, c := range task.typ.Constraints {
 		switch c.Form {
