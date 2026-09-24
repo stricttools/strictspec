@@ -1,0 +1,17 @@
+# Archived by rlsbl at release time. This release had no unreleased.toml
+# (a batch member takes its metadata from the batch release file); the
+# archive is written so later changelog regenerations keep the
+# description and context.
+# strictspec document version gate (do not remove)
+format_version = 1
+bump = "minor"
+include = ["pypi", "go", "npm"]
+exclude = []
+description = "Generated validators describe the constraint vocabulary without plan numbering, and the generated-code format moves to 2: regenerate committed validators with `strictspec gen` and raise the strictspec floor to this release."
+context = "Generated validators carried the comment \"evidence for the phase-2 constraint\nvocabulary\" on their evidence entry point, in all three targets. \"Phase 2\" was a\nplan's numbering, not a name the code defines: strictspec's own validator calls\nits two passes the structural pass and the constraint pass. The emitters now\nwrite \"evidence for the constraint vocabulary\".\n\nThat comment is part of the emitted shape, and the conformance suite pins the\nemitted shape against change unless the generated-code format moves. The format\nmoves to 2: the emitters write format 2, and every runtime reads formats 1\nthrough 2. Format 1 stays readable because the change is a comment and nothing a\nformat-1 validator does differs. A consumer upgrading sees its committed\nvalidators reported stale by `strictspec check`; regenerating them with\n`strictspec gen` produces format-2 files, which need this release or later at\nruntime, so the consumer raises its strictspec floor in the same change.\n\nThe validate command's help text also names its two modes by what they check\nrather than by phase number."
+candidate_sha = "23a134b1b2c05fceddebdfad4dd8171fc079fa8f"
+
+[tree_hashes]
+go = "ec47e2b85f62705877e25db780b46ac51c21baf1"
+python = "422fd920e108ed0364cf72a88ca3c2624b25803e"
+ts = "8e6601a7bf23a37afb788a9a2eb788ccc7fc0a92"
