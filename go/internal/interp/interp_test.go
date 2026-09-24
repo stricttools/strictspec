@@ -161,7 +161,7 @@ func TestUnionsAndConstraints(t *testing.T) {
 	})
 }
 
-func TestOrderedPairPhaseTwo(t *testing.T) {
+func TestOrderedPairInConstraintPass(t *testing.T) {
 	got := runFixture(t, "_schemas/pixelweaver-character-preview.toml", "_inputs/pixelweaver/character-preview.invalid-union-and-order.json", "json", nil)
 	assertDiags(t, got, []want{
 		{"STRICTSPEC_UNION_DISCRIMINATOR_UNKNOWN", "$.oscillators.functions[0]"},
