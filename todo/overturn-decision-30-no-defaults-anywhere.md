@@ -85,7 +85,7 @@ both cases and the checker refuses a switch that skips one.
 
 ## Consequences
 
-- Records meaning "exactly one of several keys" can no longer use optional
+- Records meaning "one and only one of several keys" can no longer use optional
   fields; they become key-selected unions (decided separately, being designed).
 - A migration that adds a field must carry an explicit value for existing
   documents, which the migration ops already require.
