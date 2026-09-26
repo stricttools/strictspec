@@ -1,1 +1,61 @@
 format_version = 1
+
+[[accepted]]
+word = "betterclaude"
+meaning = "A consumer project whose contract schemas were translated into strictspec (examples/betterclaude-contracts) as survey evidence."
+
+[[accepted]]
+word = "claudestream"
+meaning = "A consumer project whose agent configuration schema was translated into strictspec (examples/claudestream-agent) as survey evidence."
+
+[[accepted]]
+word = "incantino"
+meaning = "A consumer project whose schema format (header plus per-field type, required, values, description) strictspec's surface syntax was adapted from."
+
+[[accepted]]
+word = "metagate"
+meaning = "The meta_version gate: the check that a schema's meta_version is supported, whose failures are the STRICTSPEC_METAGATE_* errors."
+
+[[accepted]]
+word = "migrable"
+meaning = "The retired migration engine whose operations strictspec's migration engine absorbed and mirrors."
+
+[[accepted]]
+word = "migset"
+meaning = "A message-template placeholder naming the migration set, as in 'migration set {migset}'."
+
+[[accepted]]
+word = "orxtra"
+meaning = "A consumer project whose workflow schema was translated into strictspec (examples/orxtra-workflow) as survey evidence."
+
+[[accepted]]
+word = "pgdesign"
+meaning = "A consumer project (a PostgreSQL schema tool), the first consumer of custom scalars, whose scalars are registered in examples/pgdesign-scalars."
+
+[[accepted]]
+word = "pgtype"
+meaning = "A custom scalar from the pgdesign example: a PostgreSQL type name, refining string with an anchored regex."
+
+[[accepted]]
+word = "pixelweaver"
+meaning = "A consumer project whose character-preview, part, and constraint manifests were translated into strictspec (examples/pixelweaver)."
+
+[[accepted]]
+word = "predraw"
+meaning = "A consumer project whose scene schema was translated into strictspec (examples/predraw-scene) as survey evidence."
+
+[[accepted]]
+word = "rlsbl"
+meaning = "The release tool, a consumer whose config, release-file, and changelog-entry schemas are strictspec examples, and which runs strictspec's certificate check."
+
+[[accepted]]
+word = "strictspec"
+meaning = "This project: define a schema once in TOML and generate validation, versioning, and migrations for Go, Python, and TypeScript."
+
+[[accepted]]
+word = "tunebox"
+meaning = "A consumer project cited as constraint evidence: drums forbid params, and track names are unique."
+
+[[accepted]]
+word = "wavescript"
+meaning = "A consumer project whose score schema was translated into strictspec (examples/wavescript-score) as survey evidence."
