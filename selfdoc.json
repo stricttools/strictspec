@@ -17,10 +17,10 @@
       "language": "go"
     }
   ],
-  "docs": ".stricttools/docs/",
-  "output": ".stricttools/docs-cache/build/",
+  "docs": "stricttools/docs/",
+  "output": "stricttools/.docs-cache/build/",
   "root_files": [
-    ".stricttools/docs/_README.md"
+    "stricttools/docs/_README.md"
   ],
   "versions": [
     {
