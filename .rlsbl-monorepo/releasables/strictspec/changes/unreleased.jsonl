@@ -1,1 +1,2 @@
 {"format_version":1,"id":"18d852bcc4ed51ea17eb03b86efe4c808b7c65eda5fe05f2","commits":["a3400fc26461fe42e7ce09176f9f8e541ee9c2f9"],"user_facing":false,"packages":["go-strictspec"]}
+{"format_version":1,"id":"18d8f87e8ef92689d604a82eab8b4e03b685f4c3f99ae32a","commits":["f4c219712235557dd54740e5a9ead421461f862d"],"user_facing":false,"packages":["go-strictspec","py-strictspec","ts-strictspec"]}
