@@ -7,7 +7,7 @@ source.
 
 STATUS (Phase 3.3, 2026-07-27): all fifteen drafts came back clean with their gap notes resolved;
 every draft has been NORMALIZED to the single pinned concrete TOML surface
-(.stricttools/docs/appendix-surface-syntax.md) — the notation each draft had to invent is superseded. Sample
+(stricttools/docs/appendix-surface-syntax.md) — the notation each draft had to invent is superseded. Sample
 documents are unchanged (the pinned surface governs schemas/type files/migration files, not the
 documents they validate). A 16th construct-only exercise, `datetime-exercise/`, was added to close
 the datetime-scalar coverage gap. The construct set is STABLE BUT GROWING (decision 3, growth
@@ -56,7 +56,7 @@ so every draft doubles as a message-identity fixture).
 Each draft: the schema in strictspec TOML, two or three real documents from the source project
 (one valid, one or two invalid with expected ordered code+path diagnostics — including at
 least one write-side case where applicable: a migration output or canonicalized alias), and a
-gap note — anything the spec could not express, fed back into .stricttools/docs/DESIGN.md either as a
+gap note — anything the spec could not express, fed back into stricttools/docs/DESIGN.md either as a
 change or as an explicit exclusion. The construct set is considered settled only after every draft
 comes back clean or the spec has absorbed its findings; thereafter additions go through this same
 gap-note process (growth phase, decision 3), and released-surface compatibility is governed by

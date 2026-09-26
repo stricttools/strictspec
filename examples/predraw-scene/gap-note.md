@@ -112,7 +112,7 @@ FINDINGS: 6 — RESOLVED (Phase 3.3).
 
 ## RESOLUTION (Phase 3.3)
 
-- **F1 (surface syntax unpinned)** — ADOPTED. Pinned in `.stricttools/docs/appendix-surface-syntax.md`. Draft
+- **F1 (surface syntax unpinned)** — ADOPTED. Pinned in `stricttools/docs/appendix-surface-syntax.md`. Draft
   normalized.
 - **F2 (net-new format_version gate)** — BOUNDARY-CONFIRMED. Bootstrap contract (decision 13/34);
   adoption precondition, not a gap.

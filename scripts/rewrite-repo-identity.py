@@ -27,7 +27,7 @@ OLD = "smm-h/strictspec"
 NEW = "stricttools/strictspec"
 
 SKIP_PREFIXES = ("todo/",)
-# Generated from `.stricttools/docs/_README.md` by `selfdoc gen`.
+# Generated from `stricttools/docs/_README.md` by `selfdoc gen`.
 SKIP_FILES = {"README.md"}
 
 
