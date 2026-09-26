@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Rewrite the retired `spec/` path across the repository after the docs move.
 
-The specification pages moved from `spec/` to `.stricttools/docs/` when this
+The specification pages moved from `spec/` to `stricttools/docs/` when this
 repository adopted selfdoc's `.stricttools/` layout. Two kinds of mention are
 left behind, and only one of them is mechanical:
 
   * A PATH mention names a file -- `spec/appendix-error-codes.md`. It is
-    rewritten to `.stricttools/docs/appendix-error-codes.md`. That is what this
+    rewritten to `stricttools/docs/appendix-error-codes.md`. That is what this
     script does.
   * A CONCEPT mention is the bare `spec/`, meaning the specification itself.
     Rewriting it to a directory name reads as a path that no longer means what
@@ -28,7 +28,7 @@ import sys
 from pathlib import Path
 
 OLD = "spec/"
-NEW = ".stricttools/docs/"
+NEW = "stricttools/docs/"
 
 # Neither a word character, a slash, nor a hyphen may precede the mention, so
 # `strictspec/` and `github.com/stricttools/strictspec/go` are left alone.
@@ -43,7 +43,7 @@ SKIP_FILES = {
     "go/internal/codes/catalogue_gen.go",
     "ts/src/codes.generated.ts",
     "python/src/strictspec/_codes.py",
-    ".stricttools/docs-state/manifest.json",
+    "stricttools/.docs-state/manifest.json",
 }
 
 

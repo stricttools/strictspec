@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Reword the bare `spec/` mentions that mean the specification, not a path.
 
-The specification pages moved to `.stricttools/docs/`, so a sentence spelling
+The specification pages moved to `stricttools/docs/`, so a sentence spelling
 `spec/` now spells a directory that does not exist. Where the mention means the
 specification itself, the cure is the word rather than a new directory name.
 Every replacement below is an exact string with an asserted occurrence count, so
@@ -19,7 +19,7 @@ from pathlib import Path
 
 AMENDMENT = (
     " AMENDED 2026-09-20: the specification pages moved out of `spec/` into "
-    "`.stricttools/docs/` when the repository adopted selfdoc's `.stricttools/` "
+    "`stricttools/docs/` when the repository adopted selfdoc's `.stricttools/` "
     "layout, so the directory that holds them has a new name; the constitution, "
     "its home inside this repository, and the published site are unchanged."
 )
@@ -40,7 +40,7 @@ EDITS: list[tuple[str, str, str, int]] = [
     # The directory map.
     ("DESIGN.md",
      "- `spec/` — the constitution: schema language",
-     "- `.stricttools/docs/` — the specification pages, the constitution: schema language", 1),
+     "- `stricttools/docs/` — the specification pages, the constitution: schema language", 1),
     # The donor inventory.
     ("DESIGN.md", "| go/ runtime; spec/ |", "| go/ runtime; the specification |", 1),
     ("DESIGN.md", "| spec/, examples/, conformance/ |",
@@ -82,19 +82,19 @@ EDITS: list[tuple[str, str, str, int]] = [
 
     # The moved pages, where the move script's mechanical rewrite put a
     # directory name where the specification itself was meant.
-    (".stricttools/docs/DESIGN.md",
-     "# .stricttools/docs/ — The strictspec Schema Language",
+    ("stricttools/docs/DESIGN.md",
+     "# stricttools/docs/ — The strictspec Schema Language",
      "# The strictspec Schema Language", 1),
-    (".stricttools/docs/DESIGN.md",
-     "findings absorbed into .stricttools/docs/)",
+    ("stricttools/docs/DESIGN.md",
+     "findings absorbed into stricttools/docs/)",
      "findings absorbed into the specification)", 1),
-    (".stricttools/docs/DESIGN.md",
+    ("stricttools/docs/DESIGN.md",
      'description = "The strictspec constitution: the language-neutral definition',
-     'description = "The strictspec constitution, the pages under .stricttools/docs/: '
+     'description = "The strictspec constitution, the pages under stricttools/docs/: '
      'the language-neutral definition', 1),
-    (".stricttools/docs/_README.md",
-     "The `.stricttools/docs/` constitution is the language-neutral definition",
-     "The constitution under `.stricttools/docs/` is the language-neutral definition", 1),
+    ("stricttools/docs/_README.md",
+     "The `stricttools/docs/` constitution is the language-neutral definition",
+     "The constitution under `stricttools/docs/` is the language-neutral definition", 1),
 ]
 
 
