@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "name": "strictspec",
   "slug": "strictspec",
   "version": "0.1.0",
@@ -1052,5 +1052,9 @@
   ],
   "posts": [],
   "last_gen": "2026-09-19T22:36:05.984604+00:00",
-  "theme": "minimal"
+  "theme": "minimal",
+  "vocabulary": {
+    "accepted": [],
+    "rejected": []
+  }
 }
