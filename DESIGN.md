@@ -159,9 +159,10 @@ No escape hatches, no lenient modes, no warnings, no implicit defaults.
 Adoption ticket for every pre-versioning consumer: a one-time conversion script (per the
 bootstrap contract) stamping `format_version` into existing files before strictspec reads them.
 
-Consumer corpus (AMENDED 2026-07-27): claudestream, predraw, PixelWeaver, rlsbl, pgdesign,
+Consumer corpus (AMENDED 2026-07-27): claudestream, PixelWeaver, rlsbl, pgdesign,
 orxtra, wavescript, plus selfdoc directives (late slot). REMOVED from the corpus, with reasons:
-wakethemup and howmuchleft (no declarability relevance); tunebox (dead — superseded by
+predraw (retired 2026-09-26; its scene schema stays in examples/ and conformance/ as a test
+input, not as a consumer); wakethemup and howmuchleft (no declarability relevance); tunebox (dead — superseded by
 wavescript); toolstream (owner decision — stays code-first); incantino, demobl, F, and step
 (dead/archived). BetterClaude and imagine are corpus-DRAFT sources (paper schemas that stress
 the construct set; not yet consumers). mage is independent — evaluate later.
@@ -171,6 +172,7 @@ ADOPTION WAVE 1:
 1. DONE — PixelWeaver — deleted its 811-line dual-target generator
    (`scripts/generate-manifest-types.py`); the acceptance-test source.
 2. DONE — predraw — schema translation; aliases declared; `format_version` added net-new.
+   predraw has since been retired (2026-09-26); its scene schema stays as a test input only.
 3. DONE — claudestream — greenfield `.agent.json` schema + gate; ZERO at-rest corpus, so the deploy
    gate discharged via the FIRST REAL adjudication file; the budget-rename "flagship migration"
    is a conformance FIXTURE, not a live migration.
@@ -234,11 +236,13 @@ onward is governed by semver at release boundaries, not by a freeze.
   reference target).
 - The acceptance test is GREEN with the 3-entry LOCKED waiver list (the three recorded,
   intentionally-waived divergences; no additions permitted without an explicit owner decision).
-- Adopted consumers (roadmap items closed): predraw; claudestream (deploy gate discharged via its
+- Adopted consumers (roadmap items closed): claudestream (deploy gate discharged via its
   FIRST REAL adjudication file); PixelWeaver (dual-target generator DELETED); orxtra; rlsbl
   (release-file gate + certificate deploy gate + changelog engine, with the fleet-wide per-line
   `format_version` backfill COMPLETE); pgdesign (gate-not-swap + three custom scalars); and
   selfdoc directives.
+- predraw, adopted in wave 1, is retired (2026-09-26) and is no longer a consumer; its scene
+  schema stays in examples/ and conformance/ as a test input.
 - wavescript adoption is BLOCKED on three recorded design walls awaiting owner decisions:
   map-iteration migration op absence, the validation-seam refactor, and bank scope (see roadmap
   item 4).
