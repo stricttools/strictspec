@@ -32,6 +32,9 @@ same answer.
   representation every backend's validator is driven by.
 - **[Certificates](appendix-certificates/)** — the diff certificate and
   `doc-diff` output shapes.
+- **[Options](appendix-options/)** — how a repository declares its deviations
+  from a family tool's defaults, the option registry each tool ships, and the
+  ranking and validation rules.
 - **[API reference](gen-index/)** — the public runtime surface generated
   validators import.
 
