@@ -1,0 +1,780 @@
+{
+ "ranking": [
+  {
+   "name": "three-levels",
+   "input": "on > deferred > off",
+   "levels": [
+    [
+     "on"
+    ],
+    [
+     "deferred"
+    ],
+    [
+     "off"
+    ]
+   ]
+  },
+  {
+   "name": "equal-ranks",
+   "input": "npm = pypi = jsr > none",
+   "levels": [
+    [
+     "npm",
+     "pypi",
+     "jsr"
+    ],
+    [
+     "none"
+    ]
+   ]
+  },
+  {
+   "name": "single-value",
+   "input": "on",
+   "levels": [
+    [
+     "on"
+    ]
+   ]
+  },
+  {
+   "name": "digits-and-hyphens",
+   "input": "v2-strict > v1",
+   "levels": [
+    [
+     "v2-strict"
+    ],
+    [
+     "v1"
+    ]
+   ]
+  },
+  {
+   "name": "empty",
+   "input": "",
+   "refusals": [
+    {
+     "rule": "ranking-malformed",
+     "file": "",
+     "index": 0,
+     "value": "",
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "trailing-operator",
+   "input": "on >",
+   "refusals": [
+    {
+     "rule": "ranking-malformed",
+     "file": "",
+     "index": 0,
+     "value": "on >",
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "leading-operator",
+   "input": "> on",
+   "refusals": [
+    {
+     "rule": "ranking-malformed",
+     "file": "",
+     "index": 0,
+     "value": "> on",
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "double-space",
+   "input": "on  > off",
+   "refusals": [
+    {
+     "rule": "ranking-malformed",
+     "file": "",
+     "index": 0,
+     "value": "on  > off",
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "missing-operator",
+   "input": "on off",
+   "refusals": [
+    {
+     "rule": "ranking-malformed",
+     "file": "",
+     "index": 0,
+     "value": "on off",
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "unknown-operator",
+   "input": "on < off",
+   "refusals": [
+    {
+     "rule": "ranking-malformed",
+     "file": "",
+     "index": 0,
+     "value": "on < off",
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "comma-operator",
+   "input": "on , off",
+   "refusals": [
+    {
+     "rule": "ranking-malformed",
+     "file": "",
+     "index": 0,
+     "value": "on , off",
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "adjacent-operators",
+   "input": "on > = off",
+   "refusals": [
+    {
+     "rule": "ranking-malformed",
+     "file": "",
+     "index": 0,
+     "value": "on > = off",
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "leading-space",
+   "input": " on",
+   "refusals": [
+    {
+     "rule": "ranking-malformed",
+     "file": "",
+     "index": 0,
+     "value": " on",
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "uppercase-name",
+   "input": "On > off",
+   "refusals": [
+    {
+     "rule": "ranking-invalid-value-name",
+     "file": "",
+     "index": 0,
+     "value": "On",
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "underscore-name",
+   "input": "on > not_now",
+   "refusals": [
+    {
+     "rule": "ranking-invalid-value-name",
+     "file": "",
+     "index": 0,
+     "value": "not_now",
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "unspaced-operator",
+   "input": "on>off",
+   "refusals": [
+    {
+     "rule": "ranking-invalid-value-name",
+     "file": "",
+     "index": 0,
+     "value": "on>off",
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "reserved",
+   "input": "on > non-existent",
+   "refusals": [
+    {
+     "rule": "ranking-reserved-value",
+     "file": "",
+     "index": 0,
+     "value": "non-existent",
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "duplicate",
+   "input": "on > off = on",
+   "refusals": [
+    {
+     "rule": "ranking-duplicate-value",
+     "file": "",
+     "index": 0,
+     "value": "on",
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "every-name-problem",
+   "input": "a > B = a > non-existent",
+   "refusals": [
+    {
+     "rule": "ranking-invalid-value-name",
+     "file": "",
+     "index": 0,
+     "value": "B",
+     "detail": ""
+    },
+    {
+     "rule": "ranking-duplicate-value",
+     "file": "",
+     "index": 0,
+     "value": "a",
+     "detail": ""
+    },
+    {
+     "rule": "ranking-reserved-value",
+     "file": "",
+     "index": 0,
+     "value": "non-existent",
+     "detail": ""
+    }
+   ]
+  }
+ ],
+ "registry": [
+  {
+   "name": "valid",
+   "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n[[option]]\nname = \"b\"\nsubject = \"release\"\nvalues = \"npm = pypi > none\"\ndefault = \"none\"\nscope = \"path\"\ndescription = \"d\"\n",
+   "refusals": []
+  },
+  {
+   "name": "default-undeclared",
+   "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n[[option]]\nname = \"b\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"maybe\"\nscope = \"none\"\ndescription = \"d\"\n",
+   "refusals": [
+    {
+     "rule": "registry-default-undeclared",
+     "file": "",
+     "index": 1,
+     "value": "maybe",
+     "detail": "on > deferred > off"
+    }
+   ]
+  },
+  {
+   "name": "default-non-existent",
+   "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"non-existent\"\nscope = \"none\"\ndescription = \"d\"\n",
+   "refusals": [
+    {
+     "rule": "registry-default-undeclared",
+     "file": "",
+     "index": 0,
+     "value": "non-existent",
+     "detail": "on > deferred > off"
+    }
+   ]
+  },
+  {
+   "name": "values-malformed",
+   "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"changelog\"\nvalues = \"on >\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n",
+   "refusals": [
+    {
+     "rule": "ranking-malformed",
+     "file": "",
+     "index": 0,
+     "value": "on >",
+     "detail": "on >"
+    }
+   ]
+  },
+  {
+   "name": "values-duplicate",
+   "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"changelog\"\nvalues = \"on > off > on\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n",
+   "refusals": [
+    {
+     "rule": "ranking-duplicate-value",
+     "file": "",
+     "index": 0,
+     "value": "on",
+     "detail": "on > off > on"
+    }
+   ]
+  },
+  {
+   "name": "values-reserved",
+   "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"changelog\"\nvalues = \"on > non-existent\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n",
+   "refusals": [
+    {
+     "rule": "ranking-reserved-value",
+     "file": "",
+     "index": 0,
+     "value": "non-existent",
+     "detail": "on > non-existent"
+    }
+   ]
+  },
+  {
+   "name": "subject-with-extension",
+   "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"changelog.toml\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n",
+   "refusals": [
+    {
+     "rule": "registry-subject-invalid",
+     "file": "",
+     "index": 0,
+     "value": "changelog.toml",
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "subject-path",
+   "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"docs/api\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n",
+   "refusals": [
+    {
+     "rule": "registry-subject-invalid",
+     "file": "",
+     "index": 0,
+     "value": "docs/api",
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "subject-empty",
+   "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n",
+   "refusals": [
+    {
+     "rule": "registry-subject-invalid",
+     "file": "",
+     "index": 0,
+     "value": "",
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "subject-uppercase",
+   "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"Changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n",
+   "refusals": [
+    {
+     "rule": "registry-subject-invalid",
+     "file": "",
+     "index": 0,
+     "value": "Changelog",
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "subject-manifest",
+   "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"manifest\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n",
+   "refusals": [
+    {
+     "rule": "registry-subject-invalid",
+     "file": "",
+     "index": 0,
+     "value": "manifest",
+     "detail": ""
+    }
+   ]
+  },
+  {
+   "name": "every-option-reported",
+   "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"x.y\"\nvalues = \"on > deferred > off\"\ndefault = \"z\"\nscope = \"none\"\ndescription = \"d\"\n[[option]]\nname = \"b\"\nsubject = \"changelog\"\nvalues = \"on >\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n",
+   "refusals": [
+    {
+     "rule": "registry-default-undeclared",
+     "file": "",
+     "index": 0,
+     "value": "z",
+     "detail": "on > deferred > off"
+    },
+    {
+     "rule": "registry-subject-invalid",
+     "file": "",
+     "index": 0,
+     "value": "x.y",
+     "detail": ""
+    },
+    {
+     "rule": "ranking-malformed",
+     "file": "",
+     "index": 1,
+     "value": "on >",
+     "detail": "on >"
+    }
+   ]
+  }
+ ],
+ "namespace": {
+  "tool": "rlsbl",
+  "registry": "format_version = 1\n[[option]]\nname = \"changelog-coverage\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n[[option]]\nname = \"publish\"\nsubject = \"release\"\nvalues = \"npm = pypi = jsr > none\"\ndefault = \"npm\"\nscope = \"path\"\ndescription = \"d\"\n",
+  "cases": [
+   {
+    "name": "debt",
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"off\"\nideal = \"on\"\nreason = \"r\"\n"
+    },
+    "classified": [
+     {
+      "file": "changelog.toml",
+      "index": 0,
+      "class": "debt"
+     }
+    ],
+    "refusals": []
+   },
+   {
+    "name": "debt-to-non-default",
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"off\"\nideal = \"deferred\"\nreason = \"r\"\n"
+    },
+    "classified": [
+     {
+      "file": "changelog.toml",
+      "index": 0,
+      "class": "debt"
+     }
+    ],
+    "refusals": []
+   },
+   {
+    "name": "settled-same-value",
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"off\"\nideal = \"off\"\nreason = \"r\"\n"
+    },
+    "classified": [
+     {
+      "file": "changelog.toml",
+      "index": 0,
+      "class": "settled"
+     }
+    ],
+    "refusals": []
+   },
+   {
+    "name": "settled-equal-rank",
+    "files": {
+     "release.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:publish\"\ncurrent = \"pypi\"\nideal = \"jsr\"\nreason = \"r\"\n"
+    },
+    "classified": [
+     {
+      "file": "release.toml",
+      "index": 0,
+      "class": "settled"
+     }
+    ],
+    "refusals": []
+   },
+   {
+    "name": "waiting-on-tool",
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"on\"\nideal = \"non-existent\"\nreason = \"r\"\n"
+    },
+    "classified": [
+     {
+      "file": "changelog.toml",
+      "index": 0,
+      "class": "waiting-on-tool"
+     }
+    ],
+    "refusals": []
+   },
+   {
+    "name": "waiting-on-tool-from-weaker",
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"off\"\nideal = \"non-existent\"\nreason = \"r\"\n"
+    },
+    "classified": [
+     {
+      "file": "changelog.toml",
+      "index": 0,
+      "class": "waiting-on-tool"
+     }
+    ],
+    "refusals": []
+   },
+   {
+    "name": "other-namespaces-not-judged",
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"selfdoc:whatever\"\ncurrent = \"x\"\nideal = \"y\"\nreason = \"r\"\n[[entry]]\nid = \"rlsbl-extra:changelog-coverage\"\ncurrent = \"q\"\nideal = \"q\"\nreason = \"r\"\n"
+    },
+    "classified": [],
+    "refusals": []
+   },
+   {
+    "name": "unknown-option",
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-covrage\"\ncurrent = \"off\"\nideal = \"on\"\nreason = \"r\"\n"
+    },
+    "classified": [],
+    "refusals": [
+     {
+      "rule": "entry-unknown-option",
+      "file": "changelog.toml",
+      "index": 0,
+      "value": "rlsbl:changelog-covrage",
+      "detail": ""
+     }
+    ]
+   },
+   {
+    "name": "undeclared-current",
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"partial\"\nideal = \"on\"\nreason = \"r\"\n"
+    },
+    "classified": [],
+    "refusals": [
+     {
+      "rule": "entry-undeclared-current",
+      "file": "changelog.toml",
+      "index": 0,
+      "value": "partial",
+      "detail": "on > deferred > off"
+     }
+    ]
+   },
+   {
+    "name": "current-non-existent",
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"non-existent\"\nideal = \"on\"\nreason = \"r\"\n"
+    },
+    "classified": [],
+    "refusals": [
+     {
+      "rule": "entry-undeclared-current",
+      "file": "changelog.toml",
+      "index": 0,
+      "value": "non-existent",
+      "detail": "on > deferred > off"
+     }
+    ]
+   },
+   {
+    "name": "undeclared-ideal",
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"off\"\nideal = \"full\"\nreason = \"r\"\n"
+    },
+    "classified": [],
+    "refusals": [
+     {
+      "rule": "entry-undeclared-ideal",
+      "file": "changelog.toml",
+      "index": 0,
+      "value": "full",
+      "detail": "on > deferred > off"
+     }
+    ]
+   },
+   {
+    "name": "wrong-subject",
+    "files": {
+     "docs.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"off\"\nideal = \"on\"\nreason = \"r\"\n"
+    },
+    "classified": [],
+    "refusals": [
+     {
+      "rule": "entry-wrong-subject",
+      "file": "docs.toml",
+      "index": 0,
+      "value": "docs.toml",
+      "detail": "changelog.toml"
+     }
+    ]
+   },
+   {
+    "name": "scope-not-accepted",
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\nscope = \"docs\"\ncurrent = \"off\"\nideal = \"on\"\nreason = \"r\"\n"
+    },
+    "classified": [],
+    "refusals": [
+     {
+      "rule": "entry-scope-not-accepted",
+      "file": "changelog.toml",
+      "index": 0,
+      "value": "docs",
+      "detail": ""
+     }
+    ]
+   },
+   {
+    "name": "scope-accepted",
+    "files": {
+     "release.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:publish\"\nscope = \"packages/a\"\ncurrent = \"none\"\nideal = \"npm\"\nreason = \"r\"\n"
+    },
+    "classified": [
+     {
+      "file": "release.toml",
+      "index": 0,
+      "class": "debt"
+     }
+    ],
+    "refusals": []
+   },
+   {
+    "name": "redundant",
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"on\"\nideal = \"on\"\nreason = \"r\"\n"
+    },
+    "classified": [],
+    "refusals": [
+     {
+      "rule": "entry-redundant",
+      "file": "changelog.toml",
+      "index": 0,
+      "value": "on",
+      "detail": ""
+     }
+    ]
+   },
+   {
+    "name": "equal-rank-to-default-is-not-redundant",
+    "files": {
+     "release.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:publish\"\ncurrent = \"pypi\"\nideal = \"npm\"\nreason = \"r\"\n"
+    },
+    "classified": [
+     {
+      "file": "release.toml",
+      "index": 0,
+      "class": "settled"
+     }
+    ],
+    "refusals": []
+   },
+   {
+    "name": "current-above-ideal",
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"on\"\nideal = \"off\"\nreason = \"r\"\n"
+    },
+    "classified": [],
+    "refusals": [
+     {
+      "rule": "entry-current-above-ideal",
+      "file": "changelog.toml",
+      "index": 0,
+      "value": "on",
+      "detail": "off"
+     }
+    ]
+   },
+   {
+    "name": "duplicate-across-files",
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"off\"\nideal = \"on\"\nreason = \"r\"\n",
+     "docs.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"deferred\"\nideal = \"on\"\nreason = \"r\"\n"
+    },
+    "classified": [
+     {
+      "file": "changelog.toml",
+      "index": 0,
+      "class": "debt"
+     }
+    ],
+    "refusals": [
+     {
+      "rule": "entry-duplicate",
+      "file": "docs.toml",
+      "index": 0,
+      "value": "rlsbl:changelog-coverage",
+      "detail": "changelog.toml entry 0"
+     },
+     {
+      "rule": "entry-wrong-subject",
+      "file": "docs.toml",
+      "index": 0,
+      "value": "docs.toml",
+      "detail": "changelog.toml"
+     }
+    ]
+   },
+   {
+    "name": "duplicate-same-scope",
+    "files": {
+     "release.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:publish\"\nscope = \"a\"\ncurrent = \"none\"\nideal = \"npm\"\nreason = \"r\"\n[[entry]]\nid = \"rlsbl:publish\"\nscope = \"a\"\ncurrent = \"none\"\nideal = \"pypi\"\nreason = \"r\"\n[[entry]]\nid = \"rlsbl:publish\"\nscope = \"b\"\ncurrent = \"none\"\nideal = \"npm\"\nreason = \"r\"\n[[entry]]\nid = \"rlsbl:publish\"\ncurrent = \"none\"\nideal = \"npm\"\nreason = \"r\"\n"
+    },
+    "classified": [
+     {
+      "file": "release.toml",
+      "index": 0,
+      "class": "debt"
+     },
+     {
+      "file": "release.toml",
+      "index": 2,
+      "class": "debt"
+     },
+     {
+      "file": "release.toml",
+      "index": 3,
+      "class": "debt"
+     }
+    ],
+    "refusals": [
+     {
+      "rule": "entry-duplicate",
+      "file": "release.toml",
+      "index": 1,
+      "value": "rlsbl:publish",
+      "detail": "release.toml entry 0"
+     }
+    ]
+   },
+   {
+    "name": "every-problem-of-one-entry",
+    "files": {
+     "docs.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\nscope = \"x\"\ncurrent = \"sometimes\"\nideal = \"always\"\nreason = \"r\"\n"
+    },
+    "classified": [],
+    "refusals": [
+     {
+      "rule": "entry-wrong-subject",
+      "file": "docs.toml",
+      "index": 0,
+      "value": "docs.toml",
+      "detail": "changelog.toml"
+     },
+     {
+      "rule": "entry-scope-not-accepted",
+      "file": "docs.toml",
+      "index": 0,
+      "value": "x",
+      "detail": ""
+     },
+     {
+      "rule": "entry-undeclared-current",
+      "file": "docs.toml",
+      "index": 0,
+      "value": "sometimes",
+      "detail": "on > deferred > off"
+     },
+     {
+      "rule": "entry-undeclared-ideal",
+      "file": "docs.toml",
+      "index": 0,
+      "value": "always",
+      "detail": "on > deferred > off"
+     }
+    ]
+   }
+  ]
+ }
+}

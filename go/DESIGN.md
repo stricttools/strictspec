@@ -154,6 +154,12 @@ absence throughout: no flag reads an empty string as "not supplied".
 - The inline version-gate helper (three-message pattern + structured remediation payload).
 - The constraint engine (cross-document vocabulary evaluator) and the Go implementations of
   the evidence resolvers.
+- The options built-in schemas (`options-entries`, `options-registry`, `upstream`;
+  stricttools/docs/appendix-options.md), embedded from `strictspec/builtin/`, with readers that
+  validate a document's shape against them and bind it (`ReadOptionsRegistry`,
+  `LoadOptionsRegistry`, `ReadOptionsEntries`, `LoadOptionsEntries`, `ReadUpstream`,
+  `LoadUpstream`). The ranking parser, registry rules, per-namespace entry validator, and
+  classification are unexported until their refusals have catalogued error codes.
 
 Generated-code pairing: generated code declares the generated-code FORMAT it was written to
 (`GENERATED_CODE_FORMAT`, an integer describing the shape of emitted code); the runtime declares
