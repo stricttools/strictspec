@@ -427,6 +427,11 @@
         },
         {
           "level": 2,
+          "text": "21a. Options errors (`STRICTSPEC_OPTIONS_*`)",
+          "anchor": "21a-options-errors-strictspec_options_"
+        },
+        {
+          "level": 2,
           "text": "22. Cross-references",
           "anchor": "22-cross-references"
         }
@@ -434,13 +439,13 @@
     },
     {
       "path": "appendix-options.md",
-      "title": "Appendix: Options",
+      "title": "Appendix: Options (normative)",
       "type": "doc",
       "headings": [
         {
           "level": 1,
-          "text": "Appendix: Options",
-          "anchor": "appendix-options"
+          "text": "Appendix: Options (normative)",
+          "anchor": "appendix-options-normative"
         },
         {
           "level": 2,
@@ -889,6 +894,26 @@
         },
         {
           "level": 3,
+          "text": "`OptionsNonExistent`",
+          "anchor": "optionsnonexistent"
+        },
+        {
+          "level": 3,
+          "text": "`OptionsSettled`",
+          "anchor": "optionssettled"
+        },
+        {
+          "level": 3,
+          "text": "`OptionsDebt`",
+          "anchor": "optionsdebt"
+        },
+        {
+          "level": 3,
+          "text": "`OptionsWaitingOnTool`",
+          "anchor": "optionswaitingontool"
+        },
+        {
+          "level": 3,
           "text": "`MinGeneratedCodeFormat`",
           "anchor": "mingeneratedcodeformat"
         },
@@ -999,6 +1024,31 @@
         },
         {
           "level": 3,
+          "text": "`OptionsRanking`",
+          "anchor": "optionsranking"
+        },
+        {
+          "level": 3,
+          "text": "`CheckedOption`",
+          "anchor": "checkedoption"
+        },
+        {
+          "level": 3,
+          "text": "`CheckedOptionsRegistry`",
+          "anchor": "checkedoptionsregistry"
+        },
+        {
+          "level": 3,
+          "text": "`OptionsClass`",
+          "anchor": "optionsclass"
+        },
+        {
+          "level": 3,
+          "text": "`ClassifiedOptionsEntry`",
+          "anchor": "classifiedoptionsentry"
+        },
+        {
+          "level": 3,
           "text": "`Diagnostic`",
           "anchor": "diagnostic"
         },
@@ -1074,6 +1124,21 @@
         },
         {
           "level": 3,
+          "text": "`ParseOptionsRanking`",
+          "anchor": "parseoptionsranking"
+        },
+        {
+          "level": 3,
+          "text": "`ValidateOptionsRegistry`",
+          "anchor": "validateoptionsregistry"
+        },
+        {
+          "level": 3,
+          "text": "`ValidateOptionsNamespace`",
+          "anchor": "validateoptionsnamespace"
+        },
+        {
+          "level": 3,
           "text": "`CompileEmbedded`",
           "anchor": "compileembedded"
         },
@@ -1106,6 +1171,21 @@
           "level": 3,
           "text": "`LoadValues`",
           "anchor": "loadvalues"
+        },
+        {
+          "level": 3,
+          "text": "`OptionsRanking.Declares`",
+          "anchor": "optionsrankingdeclares"
+        },
+        {
+          "level": 3,
+          "text": "`CheckedOptionsRegistry.Option`",
+          "anchor": "checkedoptionsregistryoption"
+        },
+        {
+          "level": 3,
+          "text": "`CheckedOptionsRegistry.Names`",
+          "anchor": "checkedoptionsregistrynames"
         },
         {
           "level": 3,
@@ -1208,7 +1288,7 @@
     }
   ],
   "posts": [],
-  "last_gen": "2026-09-27T22:32:57.902436+00:00",
+  "last_gen": "2026-09-27T22:58:35.952867+00:00",
   "theme": "minimal",
   "vocabulary": {
     "accepted": [
@@ -1258,6 +1338,10 @@
       },
       {
         "word": "rlsbl",
+        "aliases": []
+      },
+      {
+        "word": "strictcode",
         "aliases": []
       },
       {
