@@ -9,11 +9,11 @@ from the shared executor, identical across the Go, Python, and TypeScript
 runtimes.
 
 The rules beyond shape (the ranking parser, the registry rules, the
-per-namespace entry validator, and the classification) are the private
-functions at the end of this module. They stay private because every refusal
-they report needs a catalogued STRICTSPEC_* code with a pinned message
-template, and appendix-error-codes.md has no area for them yet. The same rules,
-over the same shared test cases, exist in the Go and TypeScript runtimes.
+per-namespace entry validator, and the classification) follow the readers.
+Every refusal is a catalogued STRICTSPEC_OPTIONS_* diagnostic
+(appendix-error-codes.md, section 21a) rendered from its pinned template. The
+same rules, over the same shared test cases, exist in the Go and TypeScript
+runtimes.
 
 This module is imported by the package __init__ after the names it uses are
 defined there.
@@ -28,7 +28,9 @@ from pathlib import Path
 
 from . import Diagnostic, Program, Value, compile_embedded
 from . import _builtins
+from . import _diag
 from . import _doc
+from . import _render
 from . import _tomldoc
 
 OPTIONS_ENTRIES_SCHEMA = _builtins.OPTIONS_ENTRIES_SCHEMA
@@ -269,66 +271,47 @@ def load_upstream(repo_root: str | os.PathLike) -> tuple[Upstream | None, bool, 
     return u, True, diags
 
 
-# --- the rules beyond shape (private; see the module docstring) --------------
+# --- the rules beyond shape ---------------------------------------------------
 
-_NON_EXISTENT = "non-existent"
+# The reserved ideal value meaning "the right value is one the tool does not
+# offer yet". A ranking never declares it.
+OPTIONS_NON_EXISTENT = "non-existent"
 _SCOPE_NONE = "none"
 _VALUE_NAME = re.compile(r"[a-z0-9-]+")
 
-RULE_RANKING_MALFORMED = "ranking-malformed"
-RULE_RANKING_INVALID_VALUE_NAME = "ranking-invalid-value-name"
-RULE_RANKING_RESERVED_VALUE = "ranking-reserved-value"
-RULE_RANKING_DUPLICATE_VALUE = "ranking-duplicate-value"
-RULE_REGISTRY_DEFAULT_UNDECLARED = "registry-default-undeclared"
-RULE_REGISTRY_SUBJECT_INVALID = "registry-subject-invalid"
-RULE_ENTRY_UNKNOWN_OPTION = "entry-unknown-option"
-RULE_ENTRY_WRONG_SUBJECT = "entry-wrong-subject"
-RULE_ENTRY_SCOPE_NOT_ACCEPTED = "entry-scope-not-accepted"
-RULE_ENTRY_UNDECLARED_CURRENT = "entry-undeclared-current"
-RULE_ENTRY_UNDECLARED_IDEAL = "entry-undeclared-ideal"
-RULE_ENTRY_REDUNDANT = "entry-redundant"
-RULE_ENTRY_CURRENT_ABOVE_IDEAL = "entry-current-above-ideal"
-RULE_ENTRY_DUPLICATE = "entry-duplicate"
-
-CLASS_SETTLED = "settled"
-CLASS_DEBT = "debt"
-CLASS_WAITING_ON_TOOL = "waiting-on-tool"
+# The ranking classification of an accepted entry: current and ideal have equal
+# rank (settled), current ranks below ideal (debt), or ideal is non-existent, a
+# value the tool does not offer yet (waiting on the tool).
+OPTIONS_SETTLED = "settled"
+OPTIONS_DEBT = "debt"
+OPTIONS_WAITING_ON_TOOL = "waiting-on-tool"
 
 
 @dataclass(frozen=True)
-class _Refusal:
-    """One refusal. For registry refusals file is "" and index is the [[option]]
-    position; for entry refusals file and index locate the entry. value is the
-    offending token or value; detail carries what the fix needs (the right
-    subject file, the first occurrence of a duplicate, the ranking string).
-    """
-
-    rule: str
-    file: str = ""
-    index: int = 0
-    value: str = ""
-    detail: str = ""
-
-
-@dataclass(frozen=True)
-class _Ranking:
-    """A parsed ranking string. Level 0 is the strongest; values of equal rank
-    share a level.
+class OptionsRanking:
+    """A parsed ranking string. values lists the declared values in the order
+    written; level maps each to its rank, 0 being the strongest, with values of
+    equal rank sharing a level.
     """
 
     values: tuple[str, ...]
     level: dict[str, int]
 
+    def declares(self, v: str) -> bool:
+        return v in self.level
 
-def _parse_ranking(s: str) -> tuple[_Ranking | None, list[_Refusal]]:
-    """Parse a ranking string: value names separated by single spaces around
-    `>` (stronger than) or `=` (equal rank), for example
-    "npm = pypi = jsr > none". A string that is not that alternation is one
-    ranking-malformed refusal; otherwise every value name outside the grammar,
-    every use of the reserved non-existent, and every repeated value is refused.
-    """
+
+def _public(ds: list[_diag.Diagnostic]) -> tuple[Diagnostic, ...]:
+    return tuple(Diagnostic(code=d.code, path=d.path.render(), message=_render.render(d)) for d in ds)
+
+
+def _str_val(s: str) -> _diag.Slot:
+    return _diag.SlotValue(_diag.StringVal(s))
+
+
+def _parse_ranking(s: str, at: _diag.Path) -> tuple[OptionsRanking | None, list[_diag.Diagnostic]]:
     toks = s.split(" ")
-    malformed = [_Refusal(rule=RULE_RANKING_MALFORMED, value=s)]
+    malformed = [_diag.Diagnostic("STRICTSPEC_OPTIONS_RANKING_MALFORMED", at, {"ranking": _str_val(s)})]
     if len(toks) % 2 == 0:
         return None, malformed
     for i, t in enumerate(toks):
@@ -337,30 +320,72 @@ def _parse_ranking(s: str) -> tuple[_Ranking | None, list[_Refusal]]:
             return None, malformed
     values: list[str] = []
     level: dict[str, int] = {}
-    refusals: list[_Refusal] = []
+    ds: list[_diag.Diagnostic] = []
+
+    def refuse(code: str, v: str) -> None:
+        ds.append(_diag.Diagnostic(code, at, {"value": _str_val(v)}))
+
     lv = 0
     for i in range(0, len(toks), 2):
         if i > 0 and toks[i - 1] == ">":
             lv += 1
         v = toks[i]
         if not _VALUE_NAME.fullmatch(v):
-            refusals.append(_Refusal(rule=RULE_RANKING_INVALID_VALUE_NAME, value=v))
-        elif v == _NON_EXISTENT:
-            refusals.append(_Refusal(rule=RULE_RANKING_RESERVED_VALUE, value=v))
+            refuse("STRICTSPEC_OPTIONS_RANKING_VALUE_NAME", v)
+        elif v == OPTIONS_NON_EXISTENT:
+            refuse("STRICTSPEC_OPTIONS_RANKING_RESERVED", v)
         elif v in level:
-            refusals.append(_Refusal(rule=RULE_RANKING_DUPLICATE_VALUE, value=v))
+            refuse("STRICTSPEC_OPTIONS_RANKING_DUPLICATE", v)
         else:
             values.append(v)
             level[v] = lv
-    if refusals:
-        return None, refusals
-    return _Ranking(values=tuple(values), level=level), []
+    if ds:
+        return None, ds
+    return OptionsRanking(values=tuple(values), level=level), []
+
+
+def parse_options_ranking(s: str) -> tuple[OptionsRanking | None, tuple[Diagnostic, ...]]:
+    """Parse a ranking string: value names separated by single spaces around
+    `>` (stronger than) or `=` (equal rank), for example
+    "npm = pypi = jsr > none". A string that is not that alternation is one
+    STRICTSPEC_OPTIONS_RANKING_MALFORMED diagnostic; otherwise every value name
+    outside the grammar, every use of the reserved non-existent, and every
+    repeated value is refused. The diagnostics' path is "$". Non-empty
+    diagnostics mean None.
+    """
+    rk, ds = _parse_ranking(s, _diag.new_path())
+    return rk, _public(ds)
 
 
 @dataclass(frozen=True)
-class _CheckedOption:
-    decl: OptionDeclaration
-    ranking: _Ranking | None
+class CheckedOption:
+    """A registry option that passed every registry rule, with its parsed
+    ranking.
+    """
+
+    declaration: OptionDeclaration
+    ranking: OptionsRanking
+
+
+class CheckedOptionsRegistry:
+    """A registry that passed every registry rule. Only
+    validate_options_registry makes one.
+    """
+
+    __slots__ = ("_options",)
+
+    def __init__(self, options: dict[str, CheckedOption]) -> None:
+        self._options = options
+
+    def option(self, name: str) -> CheckedOption | None:
+        """The checked option named name (the tool's own name for it, without
+        the tool prefix), or None.
+        """
+        return self._options.get(name)
+
+    def names(self) -> tuple[str, ...]:
+        """The registry's option names in declaration order."""
+        return tuple(self._options)
 
 
 def _valid_subject(s: str) -> bool:
@@ -370,85 +395,168 @@ def _valid_subject(s: str) -> bool:
     return bool(_VALUE_NAME.fullmatch(s)) and s + ".toml" != _OPTIONS_MANIFEST_FILE
 
 
-def _check_registry(reg: OptionsRegistry) -> tuple[dict[str, _CheckedOption] | None, list[_Refusal]]:
-    """Apply the registry rules to a shape-valid registry: each option's values
-    parse as a ranking, its default is a declared value, and its subject is a
-    valid subject file stem. (Option names are unique by the built-in schema's
-    unique-by constraint.) Any refusal means None.
+def validate_options_registry(
+    reg: OptionsRegistry,
+) -> tuple[CheckedOptionsRegistry | None, tuple[Diagnostic, ...]]:
+    """Apply the registry rules to a registry: each option's values parse as a
+    ranking, its default is a declared value, and its subject is a valid
+    subject file stem. Option names are unique by the built-in schema; a
+    registry handed over directly with a repeated name draws the same
+    STRICTSPEC_INTRA_UNIQUE_BY diagnostic the shape reader reports. Paths
+    locate the refused field in the registry document. Non-empty diagnostics
+    mean None.
     """
-    out: dict[str, _CheckedOption] = {}
-    refusals: list[_Refusal] = []
+    out: dict[str, CheckedOption] = {}
+    ds: list[_diag.Diagnostic] = []
     for i, o in enumerate(reg.options):
-        rk, rr = _parse_ranking(o.values)
-        for r in rr:
-            refusals.append(_Refusal(rule=r.rule, index=i, value=r.value, detail=o.values))
-        if rk is not None and o.default not in rk.level:
-            refusals.append(
-                _Refusal(rule=RULE_REGISTRY_DEFAULT_UNDECLARED, index=i, value=o.default, detail=o.values)
+        at = _diag.new_path(_diag.Key("option"), _diag.Index(i))
+        if o.name in out:
+            ds.append(
+                _diag.Diagnostic(
+                    "STRICTSPEC_INTRA_UNIQUE_BY",
+                    _diag.new_path(_diag.Key("option")),
+                    {
+                        "value": _str_val(o.name),
+                        "field": _diag.SlotString("name"),
+                        "normalization": _diag.SlotString("none"),
+                    },
+                )
+            )
+        rk, rds = _parse_ranking(o.values, _diag.append_key(at, "values"))
+        ds.extend(rds)
+        if rk is not None and not rk.declares(o.default):
+            ds.append(
+                _diag.Diagnostic(
+                    "STRICTSPEC_OPTIONS_DEFAULT_UNDECLARED",
+                    _diag.append_key(at, "default"),
+                    {"value": _str_val(o.default), "ranking": _str_val(o.values)},
+                )
             )
         if not _valid_subject(o.subject):
-            refusals.append(_Refusal(rule=RULE_REGISTRY_SUBJECT_INVALID, index=i, value=o.subject))
-        out[o.name] = _CheckedOption(decl=o, ranking=rk)
-    if refusals:
-        return None, refusals
-    return out, []
+            ds.append(
+                _diag.Diagnostic(
+                    "STRICTSPEC_OPTIONS_SUBJECT_INVALID",
+                    _diag.append_key(at, "subject"),
+                    {"value": _str_val(o.subject)},
+                )
+            )
+        if o.name not in out:
+            out[o.name] = CheckedOption(declaration=o, ranking=rk)
+    if ds:
+        return None, _public(ds)
+    return CheckedOptionsRegistry(out), ()
 
 
-def _validate_namespace(
-    tool: str, reg: dict[str, _CheckedOption], entries: tuple[OptionsEntry, ...] | list[OptionsEntry]
-) -> tuple[list[tuple[OptionsEntry, str]], list[_Refusal]]:
+@dataclass(frozen=True)
+class ClassifiedOptionsEntry:
+    """An accepted entry of the validated namespace with its classification:
+    OPTIONS_SETTLED, OPTIONS_DEBT, or OPTIONS_WAITING_ON_TOOL.
+    """
+
+    entry: OptionsEntry
+    class_: str
+
+
+def _options_file(name: str) -> str:
+    """The repository-relative path of a subject document."""
+    return OPTIONS_DIR + "/" + name
+
+
+def _entry_path(e: OptionsEntry) -> _diag.Path:
+    return _diag.new_path(_diag.Key("entry"), _diag.Index(e.index))
+
+
+def validate_options_namespace(
+    tool: str,
+    reg: CheckedOptionsRegistry,
+    entries: tuple[OptionsEntry, ...] | list[OptionsEntry],
+) -> tuple[tuple[ClassifiedOptionsEntry, ...], tuple[Diagnostic, ...]]:
     """Judge the entries of one tool's namespace (`<tool>:*`) against that
-    tool's checked registry, in the order given. Entries of other namespaces
-    are not judged. Returns the accepted entries with their classification, and
-    every refusal; an entry with any refusal is not classified.
+    tool's checked registry, in the order given; tool is the tool's name.
+    Entries of other namespaces are not judged. Returns the accepted entries,
+    classified, and a diagnostic for every refusal; an entry with any refusal is
+    not classified. Each diagnostic's path locates the entry within its subject
+    document, and its message names that document.
     """
     prefix = tool + ":"
+    candidates = tuple(prefix + n for n in reg.names())
     first: dict[tuple[str, str | None], OptionsEntry] = {}
-    accepted: list[tuple[OptionsEntry, str]] = []
-    refusals: list[_Refusal] = []
+    accepted: list[ClassifiedOptionsEntry] = []
+    ds: list[_diag.Diagnostic] = []
     for e in entries:
         if not e.id.startswith(prefix):
             continue
-        before = len(refusals)
+        before = len(ds)
+        at = _entry_path(e)
 
-        def refuse(rule: str, value: str, detail: str = "") -> None:
-            refusals.append(_Refusal(rule=rule, file=e.file, index=e.index, value=value, detail=detail))
+        def refuse(code: str, path: _diag.Path, slots: dict[str, _diag.Slot]) -> None:
+            slots["file"] = _diag.SlotString(_options_file(e.file))
+            if code != "STRICTSPEC_OPTIONS_UNKNOWN_OPTION":
+                slots["id"] = _str_val(e.id)
+            ds.append(_diag.Diagnostic(code, path, slots))
 
         k = (e.id, e.scope)
         if k in first:
             f = first[k]
-            refuse(RULE_ENTRY_DUPLICATE, e.id, f"{f.file} entry {f.index}")
+            refuse(
+                "STRICTSPEC_OPTIONS_DUPLICATE_ENTRY",
+                at,
+                {"first": _diag.SlotPath(_entry_path(f)), "first_file": _diag.SlotString(_options_file(f.file))},
+            )
         else:
             first[k] = e
-        opt = reg.get(e.id[len(prefix):])
+        opt = reg.option(e.id[len(prefix) :])
         if opt is None:
-            refuse(RULE_ENTRY_UNKNOWN_OPTION, e.id)
-            continue
-        want = opt.decl.subject + ".toml"
-        if e.file != want:
-            refuse(RULE_ENTRY_WRONG_SUBJECT, e.file, want)
-        if e.scope is not None and opt.decl.scope == _SCOPE_NONE:
-            refuse(RULE_ENTRY_SCOPE_NOT_ACCEPTED, e.scope)
-        level = opt.ranking.level
-        current_ok = e.current in level
-        if not current_ok:
-            refuse(RULE_ENTRY_UNDECLARED_CURRENT, e.current, opt.decl.values)
-        waiting = e.ideal == _NON_EXISTENT
-        ideal_ok = waiting or e.ideal in level
-        if not ideal_ok:
-            refuse(RULE_ENTRY_UNDECLARED_IDEAL, e.ideal, opt.decl.values)
-        if current_ok and ideal_ok:
-            if e.current == opt.decl.default and e.ideal == opt.decl.default:
-                refuse(RULE_ENTRY_REDUNDANT, e.current)
-            elif not waiting and level[e.current] < level[e.ideal]:
-                refuse(RULE_ENTRY_CURRENT_ABOVE_IDEAL, e.current, e.ideal)
-        if len(refusals) > before:
-            continue
-        if waiting:
-            cls = CLASS_WAITING_ON_TOOL
-        elif level[e.current] == level[e.ideal]:
-            cls = CLASS_SETTLED
+            refuse(
+                "STRICTSPEC_OPTIONS_UNKNOWN_OPTION",
+                _diag.append_key(at, "id"),
+                {
+                    "id": _str_val(e.id),
+                    "tool": _diag.SlotString(tool),
+                    "suggestion": _diag.SlotSuggestion(e.id, candidates),
+                },
+            )
         else:
-            cls = CLASS_DEBT
-        accepted.append((e, cls))
-    return accepted, refusals
+            decl, rk = opt.declaration, opt.ranking
+            want = decl.subject + ".toml"
+            if e.file != want:
+                refuse("STRICTSPEC_OPTIONS_WRONG_SUBJECT", at, {"subject": _diag.SlotString(_options_file(want))})
+            if e.scope is not None and decl.scope == _SCOPE_NONE:
+                refuse("STRICTSPEC_OPTIONS_SCOPE_NOT_ACCEPTED", _diag.append_key(at, "scope"), {"value": _str_val(e.scope)})
+            current_ok = rk.declares(e.current)
+            if not current_ok:
+                refuse(
+                    "STRICTSPEC_OPTIONS_UNDECLARED_CURRENT",
+                    _diag.append_key(at, "current"),
+                    {"value": _str_val(e.current), "ranking": _str_val(decl.values)},
+                )
+            waiting = e.ideal == OPTIONS_NON_EXISTENT
+            ideal_ok = waiting or rk.declares(e.ideal)
+            if not ideal_ok:
+                refuse(
+                    "STRICTSPEC_OPTIONS_UNDECLARED_IDEAL",
+                    _diag.append_key(at, "ideal"),
+                    {"value": _str_val(e.ideal), "ranking": _str_val(decl.values)},
+                )
+            if current_ok and ideal_ok:
+                if e.current == decl.default and e.ideal == decl.default:
+                    refuse("STRICTSPEC_OPTIONS_REDUNDANT", at, {"value": _str_val(e.current)})
+                elif not waiting and rk.level[e.current] < rk.level[e.ideal]:
+                    refuse(
+                        "STRICTSPEC_OPTIONS_CURRENT_ABOVE_IDEAL",
+                        at,
+                        {"current": _str_val(e.current), "ideal": _str_val(e.ideal), "ranking": _str_val(decl.values)},
+                    )
+        if e.reason == "":
+            refuse("STRICTSPEC_OPTIONS_EMPTY_REASON", _diag.append_key(at, "reason"), {})
+        if len(ds) > before:
+            continue
+        level = opt.ranking.level
+        if e.ideal == OPTIONS_NON_EXISTENT:
+            cls = OPTIONS_WAITING_ON_TOOL
+        elif level[e.current] == level[e.ideal]:
+            cls = OPTIONS_SETTLED
+        else:
+            cls = OPTIONS_DEBT
+        accepted.append(ClassifiedOptionsEntry(entry=e, class_=cls))
+    return tuple(accepted), _public(ds)

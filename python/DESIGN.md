@@ -73,9 +73,12 @@ first, with the structured remediation payload.
   stricttools/docs/appendix-options.md), generated into `_builtins.py` from
   `go/strictspec/builtin/` by `scripts/genbuiltins.py`, with readers that validate a
   document's shape against them and bind it (`read_options_registry`, `load_options_registry`,
-  `read_options_entries`, `load_options_entries`, `read_upstream`, `load_upstream`). The
-  ranking parser, registry rules, per-namespace entry validator, and classification are
-  private until their refusals have catalogued error codes.
+  `read_options_entries`, `load_options_entries`, `read_upstream`, `load_upstream`), and
+  the options rules: the ranking parser (`parse_options_ranking`), the registry validator
+  (`validate_options_registry`), and the per-namespace entry validator that classifies
+  accepted entries as settled, debt, or waiting on the tool (`validate_options_namespace`,
+  given the tool's name). Every refusal is a catalogued `STRICTSPEC_OPTIONS_*` diagnostic
+  whose path locates the refused field and whose message names the subject file.
 
 ## Invariants
 

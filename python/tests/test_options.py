@@ -2,7 +2,7 @@
 
 The shape and rules cases live in go/strictspec/testdata/options/ and are
 shared with the Go and TypeScript runtimes' tests, so every runtime asserts the
-identical bound values, diagnostics, refusals, and classifications.
+identical bound values, diagnostics, and classifications.
 """
 
 import json
@@ -11,7 +11,6 @@ from pathlib import Path
 import pytest
 
 import strictspec as ss
-from strictspec import _options
 
 _CASES = Path(__file__).resolve().parents[2] / "go" / "strictspec" / "testdata" / "options"
 _SHAPE = json.loads((_CASES / "shape-cases.json").read_text(encoding="utf-8"))
@@ -147,10 +146,6 @@ def test_load_upstream(tmp_path):
 # --- the rules beyond shape ---------------------------------------------------
 
 
-def _refusals(rs):
-    return [{"rule": r.rule, "file": r.file, "index": r.index, "value": r.value, "detail": r.detail} for r in rs]
-
-
 def _levels(rk):
     if rk is None:
         return None
@@ -165,36 +160,83 @@ def _levels(rk):
 
 @pytest.mark.parametrize("case", _RULES["ranking"], ids=[c["name"] for c in _RULES["ranking"]])
 def test_ranking(case):
-    rk, refusals = _options._parse_ranking(case["input"])
-    assert _refusals(refusals) == case.get("refusals", [])
+    rk, diags = ss.parse_options_ranking(case["input"])
+    assert _diags(diags) == case["diagnostics"]
     assert _levels(rk) == case.get("levels")
+    assert (rk is None) == bool(diags)
 
 
-def _registry(src: str) -> ss.OptionsRegistry:
+def _registry_text(src: str) -> ss.OptionsRegistry:
     reg, diags = ss.read_options_registry(src.encode("utf-8"))
     assert diags == (), diags
     return reg
 
 
+def _registry(inp) -> ss.OptionsRegistry:
+    """A registry case's input: a registry document read through the shape
+    reader, or options handed to the validator directly.
+    """
+    if "options" in inp:
+        return ss.OptionsRegistry(options=tuple(ss.OptionDeclaration(**o) for o in inp["options"]))
+    return _registry_text(inp["registry"])
+
+
 @pytest.mark.parametrize("case", _RULES["registry"], ids=[c["name"] for c in _RULES["registry"]])
 def test_registry_rules(case):
-    checked, refusals = _options._check_registry(_registry(case["registry"]))
-    assert _refusals(refusals) == case["refusals"]
-    assert (checked is None) == bool(case["refusals"])
+    checked, diags = ss.validate_options_registry(_registry(case))
+    assert _diags(diags) == case["diagnostics"]
+    assert (checked is None) == bool(case["diagnostics"])
 
 
 _NS = _RULES["namespace"]
 
 
-@pytest.mark.parametrize("case", _NS["cases"], ids=[c["name"] for c in _NS["cases"]])
-def test_namespace_rules(case):
-    reg, refusals = _options._check_registry(_registry(_NS["registry"]))
-    assert refusals == []
+def _namespace_registry() -> ss.CheckedOptionsRegistry:
+    reg, diags = ss.validate_options_registry(_registry_text(_NS["registry"]))
+    assert diags == ()
+    return reg
+
+
+def _entries(inp) -> list[ss.OptionsEntry]:
+    """A namespace case's input: subject documents read through the shape
+    reader, or entries handed to the validator directly, bypassing the shape
+    reader.
+    """
+    if "entries" in inp:
+        return [ss.OptionsEntry(**{"scope": None, **e}) for e in inp["entries"]]
     entries = []
-    for name in sorted(case["files"]):
-        es, diags = ss.read_options_entries(name, case["files"][name].encode("utf-8"))
+    for name in sorted(inp["files"]):
+        es, diags = ss.read_options_entries(name, inp["files"][name].encode("utf-8"))
         assert diags == (), diags
         entries.extend(es)
-    accepted, refusals = _options._validate_namespace(_NS["tool"], reg, entries)
-    assert _refusals(refusals) == case["refusals"]
-    assert [{"file": e.file, "index": e.index, "class": c} for e, c in accepted] == case["classified"]
+    return entries
+
+
+@pytest.mark.parametrize("case", _NS["cases"], ids=[c["name"] for c in _NS["cases"]])
+def test_namespace_rules(case):
+    accepted, diags = ss.validate_options_namespace(_NS["tool"], _namespace_registry(), _entries(case))
+    assert _diags(diags) == case["diagnostics"]
+    assert [{"file": a.entry.file, "index": a.entry.index, "class": a.class_} for a in accepted] == case[
+        "classified"
+    ]
+
+
+def _run_fix_kind(kind, inp):
+    if kind == "ranking":
+        return ss.parse_options_ranking(inp["input"])[1]
+    if kind == "registry":
+        return ss.validate_options_registry(_registry(inp))[1]
+    if kind == "namespace":
+        return ss.validate_options_namespace(_NS["tool"], _namespace_registry(), _entries(inp))[1]
+    raise AssertionError(f"unknown fix kind {kind!r}")
+
+
+@pytest.mark.parametrize("case", _RULES["fixes"], ids=[c["name"] for c in _RULES["fixes"]])
+def test_fix_instructions(case):
+    """Every fix a message names: the "before" input draws a diagnostic with
+    the case's code whose message names the fix, and the "after" input, which
+    applies that fix and nothing else, draws no diagnostic at all.
+    """
+    before = _run_fix_kind(case["kind"], case["before"])
+    assert any(d.code == case["code"] and case["fix"] in d.message for d in before), _diags(before)
+    assert _run_fix_kind(case["kind"], case["after"]) == ()

@@ -8,7 +8,9 @@ shared emitter IR, so a generated Python validator runs the identical checks as
 the reference interpreter and the Go runtime). It also ships the options
 built-in schemas (options-entries, options-registry, and upstream; see
 stricttools/docs/appendix-options.md) with readers that validate and bind those
-documents.
+documents, and the options rules: the ranking parser, the registry validator,
+and the per-namespace entry validator that classifies accepted entries, each
+refusing with catalogued STRICTSPEC_OPTIONS_* diagnostics.
 
 Invariants: no lenient modes; loading and validation are inseparable; unknown
 keys are always a hard error; there is no severity -- every diagnostic is an
@@ -88,6 +90,17 @@ __all__ = [
     "load_options_entries",
     "read_upstream",
     "load_upstream",
+    "OPTIONS_NON_EXISTENT",
+    "OPTIONS_SETTLED",
+    "OPTIONS_DEBT",
+    "OPTIONS_WAITING_ON_TOOL",
+    "OptionsRanking",
+    "CheckedOption",
+    "CheckedOptionsRegistry",
+    "ClassifiedOptionsEntry",
+    "parse_options_ranking",
+    "validate_options_registry",
+    "validate_options_namespace",
 ]
 
 
@@ -502,15 +515,23 @@ def _embedded_schema_error(diags: list) -> str:
 
 # The options built-ins import the names defined above, so they come last.
 from ._options import (  # noqa: E402
+    OPTIONS_DEBT,
     OPTIONS_DIR,
     OPTIONS_ENTRIES_SCHEMA,
+    OPTIONS_NON_EXISTENT,
     OPTIONS_REGISTRY_SCHEMA,
+    OPTIONS_SETTLED,
+    OPTIONS_WAITING_ON_TOOL,
     UPSTREAM_FILE,
     UPSTREAM_SCHEMA,
+    CheckedOption,
+    CheckedOptionsRegistry,
+    ClassifiedOptionsEntry,
     FileDiagnostics,
     OptionDeclaration,
     OptionsEntriesLoad,
     OptionsEntry,
+    OptionsRanking,
     OptionsRegistry,
     Upstream,
     load_options_entries,
@@ -518,8 +539,11 @@ from ._options import (  # noqa: E402
     load_upstream,
     options_entries_program,
     options_registry_program,
+    parse_options_ranking,
     read_options_entries,
     read_options_registry,
     read_upstream,
     upstream_program,
+    validate_options_namespace,
+    validate_options_registry,
 )
