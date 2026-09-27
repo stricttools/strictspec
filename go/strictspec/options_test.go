@@ -19,13 +19,14 @@ type shapeCase struct {
 	Schema string          `json:"schema"`
 	File   string          `json:"file,omitempty"`
 	Input  string          `json:"input"`
+	Note   string          `json:"note,omitempty"`
 	Expect json.RawMessage `json:"expect"`
 }
 
 type jsonDiag struct {
 	Code    string `json:"code"`
 	Path    string `json:"path"`
-	Message string `json:"message"`
+	Message string `json:"message,omitempty"`
 }
 
 type jsonEntry struct {
@@ -128,6 +129,13 @@ func TestOptionsShapeCases(t *testing.T) {
 				t.Fatalf("case expect: %v", err)
 			}
 			got := runShapeCase(c)
+			// An expected diagnostic without a message compares code and path
+			// only (parse-error detail comes from each runtime's own parser).
+			for i := range want.Diagnostics {
+				if want.Diagnostics[i].Message == "" && i < len(got.Diagnostics) {
+					got.Diagnostics[i].Message = ""
+				}
+			}
 			if !reflect.DeepEqual(got, want) {
 				gj, _ := json.MarshalIndent(got, "", " ")
 				wj, _ := json.MarshalIndent(want, "", " ")
