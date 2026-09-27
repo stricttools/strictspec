@@ -43,7 +43,8 @@
   },
   "en/go-strictspec.md": {
     "content": "773f8dcb2934b9b525ee54d892715963857c07b1f69e8640df59789314ea1036",
-    "description": "241706e1013c23a839a693df47bfbd30243485402efb797476cb82f9963239dd"
+    "description": "241706e1013c23a839a693df47bfbd30243485402efb797476cb82f9963239dd",
+    "source_docstring": "da8d0245f6bed7bfbfccb046bc48058bb57d8807d017763772958a5553a1f581"
   },
   "en/index.md": {
     "content": "74adbb22300ecb217d8b7dbd81568eb3938da12738d54d151186ffec581ae871",
