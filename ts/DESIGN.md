@@ -83,9 +83,12 @@ declarations and canonical rules — never from auto-application.
   document's text against them and bind it (`readOptionsRegistry`, `readOptionsEntries`,
   `readUpstream`). The readers take text, not paths: reading the options directory and the
   upstream file needs Node's filesystem, which belongs in a Node-scoped entry point this
-  package does not have. The ranking parser, registry rules, per-namespace entry validator,
-  and classification live in `src/options.ts` but are not re-exported from the package entry
-  point until their refusals have catalogued error codes.
+  package does not have. The options rules are exported too: the ranking parser
+  (`parseOptionsRanking`), the registry validator (`validateOptionsRegistry`), and the
+  per-namespace entry validator that classifies accepted entries as settled, debt, or waiting
+  on the tool (`validateOptionsNamespace`, given the tool's name). Every refusal is a
+  catalogued `STRICTSPEC_OPTIONS_*` diagnostic whose path locates the refused field and whose
+  message names the subject file.
 
 ## Boundary posture (browser)
 

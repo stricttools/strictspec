@@ -10,10 +10,9 @@
 // Node-specific API (ts/DESIGN.md), so reading the files is the caller's job.
 //
 // The rules beyond shape (the ranking parser, the registry rules, the
-// per-namespace entry validator, and the classification) are exported from this
-// module for its tests but not re-exported from the package entry point:
-// every refusal they report needs a catalogued STRICTSPEC_* code with a pinned
-// message template, and appendix-error-codes.md has no area for them yet. The
+// per-namespace entry validator, and the classification) follow the readers.
+// Every refusal is a catalogued STRICTSPEC_OPTIONS_* diagnostic
+// (appendix-error-codes.md, section 21a) rendered from its pinned template. The
 // same rules, over the same shared test cases, exist in the Go and Python
 // runtimes.
 
@@ -22,6 +21,7 @@ import {
 	OPTIONS_REGISTRY_SCHEMA,
 	UPSTREAM_SCHEMA,
 } from "./builtins.generated.js";
+import * as diag from "./diag.js";
 import {
 	compileFromSource,
 	type Diagnostic,
@@ -29,6 +29,7 @@ import {
 	type Program,
 	type Value,
 } from "./index.js";
+import { render } from "./render.js";
 
 export { OPTIONS_ENTRIES_SCHEMA, OPTIONS_REGISTRY_SCHEMA, UPSTREAM_SCHEMA };
 
@@ -192,55 +193,44 @@ export function readUpstream(text: string): [Upstream | null, Diagnostic[]] {
 	];
 }
 
-// --- the rules beyond shape (not re-exported; see the header) ----------------
+// --- the rules beyond shape ------------------------------------------------
 
-const NON_EXISTENT = "non-existent";
+// The reserved ideal value meaning "the right value is one the tool does not
+// offer yet". A ranking never declares it.
+export const OPTIONS_NON_EXISTENT = "non-existent";
 const SCOPE_NONE = "none";
 const VALUE_NAME = /^[a-z0-9-]+$/;
 
-// One refusal. For registry refusals file is "" and index is the [[option]]
-// position; for entry refusals file and index locate the entry. value is the
-// offending token or value; detail carries what the fix needs (the right
-// subject file, the first occurrence of a duplicate, the ranking string).
-export interface OptionsRefusal {
-	readonly rule: string;
-	readonly file: string;
-	readonly index: number;
-	readonly value: string;
-	readonly detail: string;
-}
-
-function refusal(
-	rule: string,
-	value: string,
-	fields: Partial<OptionsRefusal> = {},
-): OptionsRefusal {
-	return {
-		rule,
-		file: fields.file ?? "",
-		index: fields.index ?? 0,
-		value,
-		detail: fields.detail ?? "",
-	};
-}
-
-// A parsed ranking string. Level 0 is the strongest; values of equal rank
-// share a level.
+// A parsed ranking string. values lists the declared values in the order
+// written; level maps each to its rank, 0 being the strongest, with values of
+// equal rank sharing a level.
 export interface OptionsRanking {
 	readonly values: readonly string[];
 	readonly level: ReadonlyMap<string, number>;
 }
 
-// Parse a ranking string: value names separated by single spaces around `>`
-// (stronger than) or `=` (equal rank), for example "npm = pypi = jsr > none". A
-// string that is not that alternation is one ranking-malformed refusal;
-// otherwise every value name outside the grammar, every use of the reserved
-// non-existent, and every repeated value is refused.
-export function parseOptionsRanking(
+function publicDiagnostics(ds: readonly diag.Diagnostic[]): Diagnostic[] {
+	return ds.map((d) => ({
+		code: d.code,
+		path: d.path.render(),
+		message: render(d),
+	}));
+}
+
+function strVal(s: string): diag.Slot {
+	return diag.slotValue(diag.stringVal(s));
+}
+
+function parseRanking(
 	s: string,
-): [OptionsRanking | null, OptionsRefusal[]] {
+	at: diag.Path,
+): [OptionsRanking | null, diag.Diagnostic[]] {
 	const toks = s.split(" ");
-	const malformed = [refusal("ranking-malformed", s)];
+	const malformed = [
+		diag.newDiagnostic("STRICTSPEC_OPTIONS_RANKING_MALFORMED", at, {
+			ranking: strVal(s),
+		}),
+	];
 	if (toks.length % 2 === 0) {
 		return [null, malformed];
 	}
@@ -253,7 +243,10 @@ export function parseOptionsRanking(
 	}
 	const values: string[] = [];
 	const level = new Map<string, number>();
-	const refusals: OptionsRefusal[] = [];
+	const ds: diag.Diagnostic[] = [];
+	const refuse = (code: string, v: string): void => {
+		ds.push(diag.newDiagnostic(code, at, { value: strVal(v) }));
+	};
 	let lv = 0;
 	for (let i = 0; i < toks.length; i += 2) {
 		if (i > 0 && toks[i - 1] === ">") {
@@ -261,27 +254,71 @@ export function parseOptionsRanking(
 		}
 		const v = toks[i] as string;
 		if (!VALUE_NAME.test(v)) {
-			refusals.push(refusal("ranking-invalid-value-name", v));
-		} else if (v === NON_EXISTENT) {
-			refusals.push(refusal("ranking-reserved-value", v));
+			refuse("STRICTSPEC_OPTIONS_RANKING_VALUE_NAME", v);
+		} else if (v === OPTIONS_NON_EXISTENT) {
+			refuse("STRICTSPEC_OPTIONS_RANKING_RESERVED", v);
 		} else if (level.has(v)) {
-			refusals.push(refusal("ranking-duplicate-value", v));
+			refuse("STRICTSPEC_OPTIONS_RANKING_DUPLICATE", v);
 		} else {
 			values.push(v);
 			level.set(v, lv);
 		}
 	}
-	if (refusals.length > 0) {
-		return [null, refusals];
+	if (ds.length > 0) {
+		return [null, ds];
 	}
 	return [{ values, level }, []];
 }
 
-// A registry option whose ranking parsed and whose default and subject are
-// valid.
+// Parse a ranking string: value names separated by single spaces around `>`
+// (stronger than) or `=` (equal rank), for example "npm = pypi = jsr > none". A
+// string that is not that alternation is one
+// STRICTSPEC_OPTIONS_RANKING_MALFORMED diagnostic; otherwise every value name
+// outside the grammar, every use of the reserved non-existent, and every
+// repeated value is refused. The diagnostics' path is "$". Non-empty
+// diagnostics mean a null ranking.
+export function parseOptionsRanking(
+	s: string,
+): [OptionsRanking | null, Diagnostic[]] {
+	const [rk, ds] = parseRanking(s, diag.newPath());
+	return [rk, publicDiagnostics(ds)];
+}
+
+// A registry option that passed every registry rule, with its parsed ranking.
 export interface CheckedOption {
-	readonly decl: OptionDeclaration;
+	readonly declaration: OptionDeclaration;
 	readonly ranking: OptionsRanking;
+}
+
+// Set by CheckedOptionsRegistry's static block, so validateOptionsRegistry can
+// call the private constructor and nothing outside this module can.
+let makeCheckedRegistry: (
+	options: ReadonlyMap<string, CheckedOption>,
+) => CheckedOptionsRegistry;
+
+// A registry that passed every registry rule. Only validateOptionsRegistry
+// makes one.
+export class CheckedOptionsRegistry {
+	readonly #options: ReadonlyMap<string, CheckedOption>;
+
+	private constructor(options: ReadonlyMap<string, CheckedOption>) {
+		this.#options = options;
+	}
+
+	static {
+		makeCheckedRegistry = (options) => new CheckedOptionsRegistry(options);
+	}
+
+	// The checked option named name (the tool's own name for it, without the
+	// tool prefix), or undefined.
+	option(name: string): CheckedOption | undefined {
+		return this.#options.get(name);
+	}
+
+	// The registry's option names in declaration order.
+	names(): string[] {
+		return [...this.#options.keys()];
+	}
 }
 
 // A registry subject names a subject file the entry loader reads: a
@@ -290,120 +327,200 @@ function validSubject(s: string): boolean {
 	return VALUE_NAME.test(s) && `${s}.toml` !== OPTIONS_MANIFEST_FILE;
 }
 
-// Apply the registry rules to a shape-valid registry: each option's values
-// parse as a ranking, its default is a declared value, and its subject is a
-// valid subject file stem. (Option names are unique by the built-in schema's
-// unique-by constraint.) Any refusal means a null registry.
-export function checkOptionsRegistry(
+// Apply the registry rules to a registry: each option's values parse as a
+// ranking, its default is a declared value, and its subject is a valid subject
+// file stem. Option names are unique by the built-in schema; a registry handed
+// over directly with a repeated name draws the same STRICTSPEC_INTRA_UNIQUE_BY
+// diagnostic the shape reader reports. Paths locate the refused field in the
+// registry document. Non-empty diagnostics mean a null registry.
+export function validateOptionsRegistry(
 	reg: OptionsRegistry,
-): [Map<string, CheckedOption> | null, OptionsRefusal[]] {
+): [CheckedOptionsRegistry | null, Diagnostic[]] {
 	const out = new Map<string, CheckedOption>();
-	const refusals: OptionsRefusal[] = [];
+	const ds: diag.Diagnostic[] = [];
 	reg.options.forEach((o, index) => {
-		const [rk, rr] = parseOptionsRanking(o.values);
-		for (const r of rr) {
-			refusals.push(refusal(r.rule, r.value, { index, detail: o.values }));
+		const at = diag.newPath(diag.stepKey("option"), diag.stepIndex(index));
+		if (out.has(o.name)) {
+			ds.push(
+				diag.newDiagnostic(
+					"STRICTSPEC_INTRA_UNIQUE_BY",
+					diag.newPath(diag.stepKey("option")),
+					{
+						value: strVal(o.name),
+						field: diag.slotString("name"),
+						normalization: diag.slotString("none"),
+					},
+				),
+			);
 		}
+		const [rk, rds] = parseRanking(o.values, diag.appendKey(at, "values"));
+		ds.push(...rds);
 		if (rk !== null && !rk.level.has(o.default)) {
-			refusals.push(
-				refusal("registry-default-undeclared", o.default, {
-					index,
-					detail: o.values,
-				}),
+			ds.push(
+				diag.newDiagnostic(
+					"STRICTSPEC_OPTIONS_DEFAULT_UNDECLARED",
+					diag.appendKey(at, "default"),
+					{ value: strVal(o.default), ranking: strVal(o.values) },
+				),
 			);
 		}
 		if (!validSubject(o.subject)) {
-			refusals.push(refusal("registry-subject-invalid", o.subject, { index }));
+			ds.push(
+				diag.newDiagnostic(
+					"STRICTSPEC_OPTIONS_SUBJECT_INVALID",
+					diag.appendKey(at, "subject"),
+					{ value: strVal(o.subject) },
+				),
+			);
 		}
-		if (rk !== null) {
-			out.set(o.name, { decl: o, ranking: rk });
+		if (rk !== null && !out.has(o.name)) {
+			out.set(o.name, { declaration: o, ranking: rk });
 		}
 	});
-	if (refusals.length > 0) {
-		return [null, refusals];
+	if (ds.length > 0) {
+		return [null, publicDiagnostics(ds)];
 	}
-	return [out, []];
+	return [makeCheckedRegistry(out), []];
 }
 
-// An accepted entry of the validated namespace with its classification:
-// "settled", "debt", or "waiting-on-tool".
-export interface ClassifiedEntry {
+// The ranking classification of an accepted entry: current and ideal have
+// equal rank ("settled"), current ranks below ideal ("debt"), or ideal is
+// non-existent, a value the tool does not offer yet ("waiting-on-tool").
+export type OptionsClass = "settled" | "debt" | "waiting-on-tool";
+
+// An accepted entry of the validated namespace with its classification.
+export interface ClassifiedOptionsEntry {
 	readonly entry: OptionsEntry;
-	readonly class: string;
+	readonly class: OptionsClass;
+}
+
+// The repository-relative path of a subject document.
+function optionsFile(name: string): string {
+	return `${OPTIONS_DIR}/${name}`;
+}
+
+function entryPath(e: OptionsEntry): diag.Path {
+	return diag.newPath(diag.stepKey("entry"), diag.stepIndex(e.index));
 }
 
 // Judge the entries of one tool's namespace (`<tool>:*`) against that tool's
-// checked registry, in the order given. Entries of other namespaces are not
-// judged. Returns the accepted entries, classified, and every refusal; an entry
-// with any refusal is not classified.
+// checked registry, in the order given; tool is the tool's name. Entries of
+// other namespaces are not judged. Returns the accepted entries, classified,
+// and a diagnostic for every refusal; an entry with any refusal is not
+// classified. Each diagnostic's path locates the entry within its subject
+// document, and its message names that document.
 export function validateOptionsNamespace(
 	tool: string,
-	reg: Map<string, CheckedOption>,
+	reg: CheckedOptionsRegistry,
 	entries: readonly OptionsEntry[],
-): [ClassifiedEntry[], OptionsRefusal[]] {
+): [ClassifiedOptionsEntry[], Diagnostic[]] {
 	const prefix = `${tool}:`;
+	const candidates = reg.names().map((n) => prefix + n);
 	const first = new Map<string, OptionsEntry>();
-	const accepted: ClassifiedEntry[] = [];
-	const refusals: OptionsRefusal[] = [];
+	const accepted: ClassifiedOptionsEntry[] = [];
+	const ds: diag.Diagnostic[] = [];
 	for (const e of entries) {
 		if (!e.id.startsWith(prefix)) {
 			continue;
 		}
-		const before = refusals.length;
-		const refuse = (rule: string, value: string, detail = ""): void => {
-			refusals.push(
-				refusal(rule, value, { file: e.file, index: e.index, detail }),
-			);
+		const before = ds.length;
+		const at = entryPath(e);
+		const refuse = (
+			code: string,
+			path: diag.Path,
+			slots: Record<string, diag.Slot>,
+		): void => {
+			slots.file = diag.slotString(optionsFile(e.file));
+			if (code !== "STRICTSPEC_OPTIONS_UNKNOWN_OPTION") {
+				slots.id = strVal(e.id);
+			}
+			ds.push(diag.newDiagnostic(code, path, slots));
 		};
 		const key = JSON.stringify([e.id, e.scope]);
 		const f = first.get(key);
 		if (f !== undefined) {
-			refuse("entry-duplicate", e.id, `${f.file} entry ${f.index}`);
+			refuse("STRICTSPEC_OPTIONS_DUPLICATE_ENTRY", at, {
+				first: diag.slotPath(entryPath(f)),
+				first_file: diag.slotString(optionsFile(f.file)),
+			});
 		} else {
 			first.set(key, e);
 		}
-		const opt = reg.get(e.id.slice(prefix.length));
+		const opt = reg.option(e.id.slice(prefix.length));
 		if (opt === undefined) {
-			refuse("entry-unknown-option", e.id);
-			continue;
-		}
-		const want = `${opt.decl.subject}.toml`;
-		if (e.file !== want) {
-			refuse("entry-wrong-subject", e.file, want);
-		}
-		if (e.scope !== null && opt.decl.scope === SCOPE_NONE) {
-			refuse("entry-scope-not-accepted", e.scope);
-		}
-		const level = opt.ranking.level;
-		const currentOk = level.has(e.current);
-		if (!currentOk) {
-			refuse("entry-undeclared-current", e.current, opt.decl.values);
-		}
-		const waiting = e.ideal === NON_EXISTENT;
-		const idealOk = waiting || level.has(e.ideal);
-		if (!idealOk) {
-			refuse("entry-undeclared-ideal", e.ideal, opt.decl.values);
-		}
-		if (currentOk && idealOk) {
-			if (e.current === opt.decl.default && e.ideal === opt.decl.default) {
-				refuse("entry-redundant", e.current);
-			} else if (
-				!waiting &&
-				(level.get(e.current) as number) < (level.get(e.ideal) as number)
-			) {
-				refuse("entry-current-above-ideal", e.current, e.ideal);
+			refuse("STRICTSPEC_OPTIONS_UNKNOWN_OPTION", diag.appendKey(at, "id"), {
+				id: strVal(e.id),
+				tool: diag.slotString(tool),
+				suggestion: diag.slotSuggestion(e.id, candidates),
+			});
+		} else {
+			const decl = opt.declaration;
+			const level = opt.ranking.level;
+			const want = `${decl.subject}.toml`;
+			if (e.file !== want) {
+				refuse("STRICTSPEC_OPTIONS_WRONG_SUBJECT", at, {
+					subject: diag.slotString(optionsFile(want)),
+				});
+			}
+			if (e.scope !== null && decl.scope === SCOPE_NONE) {
+				refuse(
+					"STRICTSPEC_OPTIONS_SCOPE_NOT_ACCEPTED",
+					diag.appendKey(at, "scope"),
+					{ value: strVal(e.scope) },
+				);
+			}
+			const currentOk = level.has(e.current);
+			if (!currentOk) {
+				refuse(
+					"STRICTSPEC_OPTIONS_UNDECLARED_CURRENT",
+					diag.appendKey(at, "current"),
+					{ value: strVal(e.current), ranking: strVal(decl.values) },
+				);
+			}
+			const waiting = e.ideal === OPTIONS_NON_EXISTENT;
+			const idealOk = waiting || level.has(e.ideal);
+			if (!idealOk) {
+				refuse(
+					"STRICTSPEC_OPTIONS_UNDECLARED_IDEAL",
+					diag.appendKey(at, "ideal"),
+					{ value: strVal(e.ideal), ranking: strVal(decl.values) },
+				);
+			}
+			if (currentOk && idealOk) {
+				if (e.current === decl.default && e.ideal === decl.default) {
+					refuse("STRICTSPEC_OPTIONS_REDUNDANT", at, {
+						value: strVal(e.current),
+					});
+				} else if (
+					!waiting &&
+					(level.get(e.current) as number) < (level.get(e.ideal) as number)
+				) {
+					refuse("STRICTSPEC_OPTIONS_CURRENT_ABOVE_IDEAL", at, {
+						current: strVal(e.current),
+						ideal: strVal(e.ideal),
+						ranking: strVal(decl.values),
+					});
+				}
 			}
 		}
-		if (refusals.length > before) {
+		if (e.reason === "") {
+			refuse(
+				"STRICTSPEC_OPTIONS_EMPTY_REASON",
+				diag.appendKey(at, "reason"),
+				{},
+			);
+		}
+		if (ds.length > before || opt === undefined) {
 			continue;
 		}
-		let cls = "debt";
-		if (waiting) {
+		const level = opt.ranking.level;
+		let cls: OptionsClass = "debt";
+		if (e.ideal === OPTIONS_NON_EXISTENT) {
 			cls = "waiting-on-tool";
 		} else if (level.get(e.current) === level.get(e.ideal)) {
 			cls = "settled";
 		}
 		accepted.push({ entry: e, class: cls });
 	}
-	return [accepted, refusals];
+	return [accepted, publicDiagnostics(ds)];
 }
