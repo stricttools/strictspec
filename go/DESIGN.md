@@ -158,8 +158,12 @@ absence throughout: no flag reads an empty string as "not supplied".
   stricttools/docs/appendix-options.md), embedded from `strictspec/builtin/`, with readers that
   validate a document's shape against them and bind it (`ReadOptionsRegistry`,
   `LoadOptionsRegistry`, `ReadOptionsEntries`, `LoadOptionsEntries`, `ReadUpstream`,
-  `LoadUpstream`). The ranking parser, registry rules, per-namespace entry validator, and
-  classification are unexported until their refusals have catalogued error codes.
+  `LoadUpstream`), and the options rules: the ranking parser (`ParseOptionsRanking`), the
+  registry validator (`ValidateOptionsRegistry`), and the per-namespace entry validator that
+  classifies accepted entries as settled, debt, or waiting on the tool
+  (`ValidateOptionsNamespace`, given the tool's name). Every refusal is a catalogued
+  `STRICTSPEC_OPTIONS_*` diagnostic whose path locates the refused field and whose message
+  names the subject file.
 
 Generated-code pairing: generated code declares the generated-code FORMAT it was written to
 (`GENERATED_CODE_FORMAT`, an integer describing the shape of emitted code); the runtime declares
