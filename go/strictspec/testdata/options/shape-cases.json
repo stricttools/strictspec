@@ -181,11 +181,11 @@
    "diagnostics": [
     {
      "code": "STRICTSPEC_PARSE_TOML_SYNTAX",
-     "path": "$",
-     "message": "TOML parse error at $: expected ']]', got ']'."
+     "path": "$"
     }
    ]
-  }
+  },
+  "note": "Parse-error detail text comes from each runtime's TOML engine and differs across runtimes, so only the code and path are compared."
  },
  {
   "name": "registry-valid",
