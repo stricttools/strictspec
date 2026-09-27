@@ -1,7 +1,7 @@
 {
   "_hash_version": 3,
   "en/DESIGN.md": {
-    "content": "fbc27b43eb65c42fc4ffbb11d3509f99cdcb366846b9951621a85c9371f98b99",
+    "content": "053da45c420f39bbf6fba65f261eab566d04ccaee7acc10fa3eaf7de8940a616",
     "description": "0deeba2a66878630e59ce18349dc03e480df29184712b6c3d66937d49b0cfb3c"
   },
   "en/appendix-certificates.md": {
@@ -17,11 +17,11 @@
     "description": "998c7b46092151502dcbecd12cda50f3535689a99215e74b763c35765c071d8f"
   },
   "en/appendix-error-codes.md": {
-    "content": "d5cf8f481fdf2fbbeb8e235adf0d95cd4f9fbefa086e702b72a80af4c4daaaa1",
+    "content": "af4b69107b3538364ce133859d9f2d602b99d725a2dc994c9e6217e9625b1b6c",
     "description": "bc2de6b267ea0bd57f48a8d7099e5a0fc6221597be0b174cae719f482c183e2a"
   },
   "en/appendix-options.md": {
-    "content": "5b7fe5c834fb88ebf232eac100cfeddad59d284877f311951574642680e6f165",
+    "content": "a206f544bc938784cf16e16b570ce5ead1e7c1a1afb2e91af91fa1a43f395678",
     "description": "a332d1abdd60a1455a5dce77399ea0e767e8b705df098cf2a57898113434fbcf"
   },
   "en/appendix-rendering.md": {
