@@ -13,7 +13,8 @@
     [
      "off"
     ]
-   ]
+   ],
+   "diagnostics": []
   },
   {
    "name": "equal-ranks",
@@ -27,7 +28,8 @@
     [
      "none"
     ]
-   ]
+   ],
+   "diagnostics": []
   },
   {
    "name": "single-value",
@@ -36,7 +38,8 @@
     [
      "on"
     ]
-   ]
+   ],
+   "diagnostics": []
   },
   {
    "name": "digits-and-hyphens",
@@ -48,214 +51,181 @@
     [
      "v1"
     ]
-   ]
+   ],
+   "diagnostics": []
   },
   {
    "name": "empty",
    "input": "",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "ranking-malformed",
-     "file": "",
-     "index": 0,
-     "value": "",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_RANKING_MALFORMED",
+     "path": "$",
+     "message": "Ranking \"\" at $ is malformed: a ranking is value names joined by > (stronger than) or = (equal rank), with one space on either side of each operator."
     }
    ]
   },
   {
    "name": "trailing-operator",
    "input": "on >",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "ranking-malformed",
-     "file": "",
-     "index": 0,
-     "value": "on >",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_RANKING_MALFORMED",
+     "path": "$",
+     "message": "Ranking \"on >\" at $ is malformed: a ranking is value names joined by > (stronger than) or = (equal rank), with one space on either side of each operator."
     }
    ]
   },
   {
    "name": "leading-operator",
    "input": "> on",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "ranking-malformed",
-     "file": "",
-     "index": 0,
-     "value": "> on",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_RANKING_MALFORMED",
+     "path": "$",
+     "message": "Ranking \"> on\" at $ is malformed: a ranking is value names joined by > (stronger than) or = (equal rank), with one space on either side of each operator."
     }
    ]
   },
   {
    "name": "double-space",
    "input": "on  > off",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "ranking-malformed",
-     "file": "",
-     "index": 0,
-     "value": "on  > off",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_RANKING_MALFORMED",
+     "path": "$",
+     "message": "Ranking \"on  > off\" at $ is malformed: a ranking is value names joined by > (stronger than) or = (equal rank), with one space on either side of each operator."
     }
    ]
   },
   {
    "name": "missing-operator",
    "input": "on off",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "ranking-malformed",
-     "file": "",
-     "index": 0,
-     "value": "on off",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_RANKING_MALFORMED",
+     "path": "$",
+     "message": "Ranking \"on off\" at $ is malformed: a ranking is value names joined by > (stronger than) or = (equal rank), with one space on either side of each operator."
     }
    ]
   },
   {
    "name": "unknown-operator",
    "input": "on < off",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "ranking-malformed",
-     "file": "",
-     "index": 0,
-     "value": "on < off",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_RANKING_MALFORMED",
+     "path": "$",
+     "message": "Ranking \"on < off\" at $ is malformed: a ranking is value names joined by > (stronger than) or = (equal rank), with one space on either side of each operator."
     }
    ]
   },
   {
    "name": "comma-operator",
    "input": "on , off",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "ranking-malformed",
-     "file": "",
-     "index": 0,
-     "value": "on , off",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_RANKING_MALFORMED",
+     "path": "$",
+     "message": "Ranking \"on , off\" at $ is malformed: a ranking is value names joined by > (stronger than) or = (equal rank), with one space on either side of each operator."
     }
    ]
   },
   {
    "name": "adjacent-operators",
    "input": "on > = off",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "ranking-malformed",
-     "file": "",
-     "index": 0,
-     "value": "on > = off",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_RANKING_MALFORMED",
+     "path": "$",
+     "message": "Ranking \"on > = off\" at $ is malformed: a ranking is value names joined by > (stronger than) or = (equal rank), with one space on either side of each operator."
     }
    ]
   },
   {
    "name": "leading-space",
    "input": " on",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "ranking-malformed",
-     "file": "",
-     "index": 0,
-     "value": " on",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_RANKING_MALFORMED",
+     "path": "$",
+     "message": "Ranking \" on\" at $ is malformed: a ranking is value names joined by > (stronger than) or = (equal rank), with one space on either side of each operator."
     }
    ]
   },
   {
    "name": "uppercase-name",
    "input": "On > off",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "ranking-invalid-value-name",
-     "file": "",
-     "index": 0,
-     "value": "On",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_RANKING_VALUE_NAME",
+     "path": "$",
+     "message": "Value name \"On\" in the ranking at $ is invalid: a value name is lowercase letters, digits, and hyphens."
     }
    ]
   },
   {
    "name": "underscore-name",
    "input": "on > not_now",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "ranking-invalid-value-name",
-     "file": "",
-     "index": 0,
-     "value": "not_now",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_RANKING_VALUE_NAME",
+     "path": "$",
+     "message": "Value name \"not_now\" in the ranking at $ is invalid: a value name is lowercase letters, digits, and hyphens."
     }
    ]
   },
   {
    "name": "unspaced-operator",
    "input": "on>off",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "ranking-invalid-value-name",
-     "file": "",
-     "index": 0,
-     "value": "on>off",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_RANKING_VALUE_NAME",
+     "path": "$",
+     "message": "Value name \"on>off\" in the ranking at $ is invalid: a value name is lowercase letters, digits, and hyphens."
     }
    ]
   },
   {
    "name": "reserved",
    "input": "on > non-existent",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "ranking-reserved-value",
-     "file": "",
-     "index": 0,
-     "value": "non-existent",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_RANKING_RESERVED",
+     "path": "$",
+     "message": "The ranking at $ declares \"non-existent\", which is reserved and never declared; remove it from the ranking."
     }
    ]
   },
   {
    "name": "duplicate",
    "input": "on > off = on",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "ranking-duplicate-value",
-     "file": "",
-     "index": 0,
-     "value": "on",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_RANKING_DUPLICATE",
+     "path": "$",
+     "message": "The ranking at $ declares \"on\" more than once; declare each value once."
     }
    ]
   },
   {
    "name": "every-name-problem",
    "input": "a > B = a > non-existent",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "ranking-invalid-value-name",
-     "file": "",
-     "index": 0,
-     "value": "B",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_RANKING_VALUE_NAME",
+     "path": "$",
+     "message": "Value name \"B\" in the ranking at $ is invalid: a value name is lowercase letters, digits, and hyphens."
     },
     {
-     "rule": "ranking-duplicate-value",
-     "file": "",
-     "index": 0,
-     "value": "a",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_RANKING_DUPLICATE",
+     "path": "$",
+     "message": "The ranking at $ declares \"a\" more than once; declare each value once."
     },
     {
-     "rule": "ranking-reserved-value",
-     "file": "",
-     "index": 0,
-     "value": "non-existent",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_RANKING_RESERVED",
+     "path": "$",
+     "message": "The ranking at $ declares \"non-existent\", which is reserved and never declared; remove it from the ranking."
     }
    ]
   }
@@ -264,162 +234,172 @@
   {
    "name": "valid",
    "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n[[option]]\nname = \"b\"\nsubject = \"release\"\nvalues = \"npm = pypi > none\"\ndefault = \"none\"\nscope = \"path\"\ndescription = \"d\"\n",
-   "refusals": []
+   "diagnostics": []
   },
   {
    "name": "default-undeclared",
    "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n[[option]]\nname = \"b\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"maybe\"\nscope = \"none\"\ndescription = \"d\"\n",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "registry-default-undeclared",
-     "file": "",
-     "index": 1,
-     "value": "maybe",
-     "detail": "on > deferred > off"
+     "code": "STRICTSPEC_OPTIONS_DEFAULT_UNDECLARED",
+     "path": "$.option[1].default",
+     "message": "Default \"maybe\" at $.option[1].default is not a value of the ranking \"on > deferred > off\"."
     }
    ]
   },
   {
    "name": "default-non-existent",
    "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"non-existent\"\nscope = \"none\"\ndescription = \"d\"\n",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "registry-default-undeclared",
-     "file": "",
-     "index": 0,
-     "value": "non-existent",
-     "detail": "on > deferred > off"
+     "code": "STRICTSPEC_OPTIONS_DEFAULT_UNDECLARED",
+     "path": "$.option[0].default",
+     "message": "Default \"non-existent\" at $.option[0].default is not a value of the ranking \"on > deferred > off\"."
     }
    ]
   },
   {
    "name": "values-malformed",
    "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"changelog\"\nvalues = \"on >\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "ranking-malformed",
-     "file": "",
-     "index": 0,
-     "value": "on >",
-     "detail": "on >"
+     "code": "STRICTSPEC_OPTIONS_RANKING_MALFORMED",
+     "path": "$.option[0].values",
+     "message": "Ranking \"on >\" at $.option[0].values is malformed: a ranking is value names joined by > (stronger than) or = (equal rank), with one space on either side of each operator."
     }
    ]
   },
   {
    "name": "values-duplicate",
    "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"changelog\"\nvalues = \"on > off > on\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "ranking-duplicate-value",
-     "file": "",
-     "index": 0,
-     "value": "on",
-     "detail": "on > off > on"
+     "code": "STRICTSPEC_OPTIONS_RANKING_DUPLICATE",
+     "path": "$.option[0].values",
+     "message": "The ranking at $.option[0].values declares \"on\" more than once; declare each value once."
     }
    ]
   },
   {
    "name": "values-reserved",
    "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"changelog\"\nvalues = \"on > non-existent\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "ranking-reserved-value",
-     "file": "",
-     "index": 0,
-     "value": "non-existent",
-     "detail": "on > non-existent"
+     "code": "STRICTSPEC_OPTIONS_RANKING_RESERVED",
+     "path": "$.option[0].values",
+     "message": "The ranking at $.option[0].values declares \"non-existent\", which is reserved and never declared; remove it from the ranking."
     }
    ]
   },
   {
    "name": "subject-with-extension",
    "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"changelog.toml\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "registry-subject-invalid",
-     "file": "",
-     "index": 0,
-     "value": "changelog.toml",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_SUBJECT_INVALID",
+     "path": "$.option[0].subject",
+     "message": "Subject \"changelog.toml\" at $.option[0].subject does not name a subject file: a subject is lowercase letters, digits, and hyphens, without .toml, and is never manifest."
     }
    ]
   },
   {
    "name": "subject-path",
    "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"docs/api\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "registry-subject-invalid",
-     "file": "",
-     "index": 0,
-     "value": "docs/api",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_SUBJECT_INVALID",
+     "path": "$.option[0].subject",
+     "message": "Subject \"docs/api\" at $.option[0].subject does not name a subject file: a subject is lowercase letters, digits, and hyphens, without .toml, and is never manifest."
     }
    ]
   },
   {
    "name": "subject-empty",
    "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "registry-subject-invalid",
-     "file": "",
-     "index": 0,
-     "value": "",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_SUBJECT_INVALID",
+     "path": "$.option[0].subject",
+     "message": "Subject \"\" at $.option[0].subject does not name a subject file: a subject is lowercase letters, digits, and hyphens, without .toml, and is never manifest."
     }
    ]
   },
   {
    "name": "subject-uppercase",
    "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"Changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "registry-subject-invalid",
-     "file": "",
-     "index": 0,
-     "value": "Changelog",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_SUBJECT_INVALID",
+     "path": "$.option[0].subject",
+     "message": "Subject \"Changelog\" at $.option[0].subject does not name a subject file: a subject is lowercase letters, digits, and hyphens, without .toml, and is never manifest."
     }
    ]
   },
   {
    "name": "subject-manifest",
    "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"manifest\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "registry-subject-invalid",
-     "file": "",
-     "index": 0,
-     "value": "manifest",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_SUBJECT_INVALID",
+     "path": "$.option[0].subject",
+     "message": "Subject \"manifest\" at $.option[0].subject does not name a subject file: a subject is lowercase letters, digits, and hyphens, without .toml, and is never manifest."
     }
    ]
   },
   {
    "name": "every-option-reported",
    "registry": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"x.y\"\nvalues = \"on > deferred > off\"\ndefault = \"z\"\nscope = \"none\"\ndescription = \"d\"\n[[option]]\nname = \"b\"\nsubject = \"changelog\"\nvalues = \"on >\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n",
-   "refusals": [
+   "diagnostics": [
     {
-     "rule": "registry-default-undeclared",
-     "file": "",
-     "index": 0,
-     "value": "z",
-     "detail": "on > deferred > off"
+     "code": "STRICTSPEC_OPTIONS_DEFAULT_UNDECLARED",
+     "path": "$.option[0].default",
+     "message": "Default \"z\" at $.option[0].default is not a value of the ranking \"on > deferred > off\"."
     },
     {
-     "rule": "registry-subject-invalid",
-     "file": "",
-     "index": 0,
-     "value": "x.y",
-     "detail": ""
+     "code": "STRICTSPEC_OPTIONS_SUBJECT_INVALID",
+     "path": "$.option[0].subject",
+     "message": "Subject \"x.y\" at $.option[0].subject does not name a subject file: a subject is lowercase letters, digits, and hyphens, without .toml, and is never manifest."
     },
     {
-     "rule": "ranking-malformed",
-     "file": "",
-     "index": 1,
-     "value": "on >",
-     "detail": "on >"
+     "code": "STRICTSPEC_OPTIONS_RANKING_MALFORMED",
+     "path": "$.option[1].values",
+     "message": "Ranking \"on >\" at $.option[1].values is malformed: a ranking is value names joined by > (stronger than) or = (equal rank), with one space on either side of each operator."
+    }
+   ]
+  },
+  {
+   "name": "duplicate-name-handed-directly",
+   "options": [
+    {
+     "name": "x",
+     "subject": "changelog",
+     "values": "on > deferred > off",
+     "default": "on",
+     "scope": "none",
+     "description": "d"
+    },
+    {
+     "name": "y",
+     "subject": "changelog",
+     "values": "on > deferred > off",
+     "default": "on",
+     "scope": "none",
+     "description": "d"
+    },
+    {
+     "name": "x",
+     "subject": "changelog",
+     "values": "on > deferred > off",
+     "default": "on",
+     "scope": "none",
+     "description": "d"
+    }
+   ],
+   "diagnostics": [
+    {
+     "code": "STRICTSPEC_INTRA_UNIQUE_BY",
+     "path": "$.option",
+     "message": "Duplicate value \"x\" for unique-by name at $.option (normalization: none)."
     }
    ]
   }
@@ -440,7 +420,7 @@
       "class": "debt"
      }
     ],
-    "refusals": []
+    "diagnostics": []
    },
    {
     "name": "debt-to-non-default",
@@ -454,7 +434,7 @@
       "class": "debt"
      }
     ],
-    "refusals": []
+    "diagnostics": []
    },
    {
     "name": "settled-same-value",
@@ -468,7 +448,7 @@
       "class": "settled"
      }
     ],
-    "refusals": []
+    "diagnostics": []
    },
    {
     "name": "settled-equal-rank",
@@ -482,7 +462,7 @@
       "class": "settled"
      }
     ],
-    "refusals": []
+    "diagnostics": []
    },
    {
     "name": "waiting-on-tool",
@@ -496,7 +476,7 @@
       "class": "waiting-on-tool"
      }
     ],
-    "refusals": []
+    "diagnostics": []
    },
    {
     "name": "waiting-on-tool-from-weaker",
@@ -510,7 +490,7 @@
       "class": "waiting-on-tool"
      }
     ],
-    "refusals": []
+    "diagnostics": []
    },
    {
     "name": "other-namespaces-not-judged",
@@ -518,7 +498,7 @@
      "changelog.toml": "format_version = 1\n[[entry]]\nid = \"selfdoc:whatever\"\ncurrent = \"x\"\nideal = \"y\"\nreason = \"r\"\n[[entry]]\nid = \"rlsbl-extra:changelog-coverage\"\ncurrent = \"q\"\nideal = \"q\"\nreason = \"r\"\n"
     },
     "classified": [],
-    "refusals": []
+    "diagnostics": []
    },
    {
     "name": "unknown-option",
@@ -526,13 +506,11 @@
      "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-covrage\"\ncurrent = \"off\"\nideal = \"on\"\nreason = \"r\"\n"
     },
     "classified": [],
-    "refusals": [
+    "diagnostics": [
      {
-      "rule": "entry-unknown-option",
-      "file": "changelog.toml",
-      "index": 0,
-      "value": "rlsbl:changelog-covrage",
-      "detail": ""
+      "code": "STRICTSPEC_OPTIONS_UNKNOWN_OPTION",
+      "path": "$.entry[0].id",
+      "message": "Entry at $.entry[0].id in .strictmetadata/options/changelog.toml names \"rlsbl:changelog-covrage\", which is not an option rlsbl declares. Did you mean \"rlsbl:changelog-coverage\"?"
      }
     ]
    },
@@ -542,13 +520,11 @@
      "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"partial\"\nideal = \"on\"\nreason = \"r\"\n"
     },
     "classified": [],
-    "refusals": [
+    "diagnostics": [
      {
-      "rule": "entry-undeclared-current",
-      "file": "changelog.toml",
-      "index": 0,
-      "value": "partial",
-      "detail": "on > deferred > off"
+      "code": "STRICTSPEC_OPTIONS_UNDECLARED_CURRENT",
+      "path": "$.entry[0].current",
+      "message": "Current value \"partial\" of entry \"rlsbl:changelog-coverage\" at $.entry[0].current in .strictmetadata/options/changelog.toml is not a value of the option's ranking \"on > deferred > off\"."
      }
     ]
    },
@@ -558,13 +534,11 @@
      "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"non-existent\"\nideal = \"on\"\nreason = \"r\"\n"
     },
     "classified": [],
-    "refusals": [
+    "diagnostics": [
      {
-      "rule": "entry-undeclared-current",
-      "file": "changelog.toml",
-      "index": 0,
-      "value": "non-existent",
-      "detail": "on > deferred > off"
+      "code": "STRICTSPEC_OPTIONS_UNDECLARED_CURRENT",
+      "path": "$.entry[0].current",
+      "message": "Current value \"non-existent\" of entry \"rlsbl:changelog-coverage\" at $.entry[0].current in .strictmetadata/options/changelog.toml is not a value of the option's ranking \"on > deferred > off\"."
      }
     ]
    },
@@ -574,13 +548,11 @@
      "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"off\"\nideal = \"full\"\nreason = \"r\"\n"
     },
     "classified": [],
-    "refusals": [
+    "diagnostics": [
      {
-      "rule": "entry-undeclared-ideal",
-      "file": "changelog.toml",
-      "index": 0,
-      "value": "full",
-      "detail": "on > deferred > off"
+      "code": "STRICTSPEC_OPTIONS_UNDECLARED_IDEAL",
+      "path": "$.entry[0].ideal",
+      "message": "Ideal value \"full\" of entry \"rlsbl:changelog-coverage\" at $.entry[0].ideal in .strictmetadata/options/changelog.toml is neither a value of the option's ranking \"on > deferred > off\" nor non-existent."
      }
     ]
    },
@@ -590,13 +562,11 @@
      "docs.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"off\"\nideal = \"on\"\nreason = \"r\"\n"
     },
     "classified": [],
-    "refusals": [
+    "diagnostics": [
      {
-      "rule": "entry-wrong-subject",
-      "file": "docs.toml",
-      "index": 0,
-      "value": "docs.toml",
-      "detail": "changelog.toml"
+      "code": "STRICTSPEC_OPTIONS_WRONG_SUBJECT",
+      "path": "$.entry[0]",
+      "message": "Entry \"rlsbl:changelog-coverage\" at $.entry[0] in .strictmetadata/options/docs.toml belongs in .strictmetadata/options/changelog.toml; move it there."
      }
     ]
    },
@@ -606,13 +576,11 @@
      "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\nscope = \"docs\"\ncurrent = \"off\"\nideal = \"on\"\nreason = \"r\"\n"
     },
     "classified": [],
-    "refusals": [
+    "diagnostics": [
      {
-      "rule": "entry-scope-not-accepted",
-      "file": "changelog.toml",
-      "index": 0,
-      "value": "docs",
-      "detail": ""
+      "code": "STRICTSPEC_OPTIONS_SCOPE_NOT_ACCEPTED",
+      "path": "$.entry[0].scope",
+      "message": "Entry \"rlsbl:changelog-coverage\" at $.entry[0].scope in .strictmetadata/options/changelog.toml has scope \"docs\", but the option takes no scope; remove the scope."
      }
     ]
    },
@@ -628,7 +596,7 @@
       "class": "debt"
      }
     ],
-    "refusals": []
+    "diagnostics": []
    },
    {
     "name": "redundant",
@@ -636,13 +604,11 @@
      "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"on\"\nideal = \"on\"\nreason = \"r\"\n"
     },
     "classified": [],
-    "refusals": [
+    "diagnostics": [
      {
-      "rule": "entry-redundant",
-      "file": "changelog.toml",
-      "index": 0,
-      "value": "on",
-      "detail": ""
+      "code": "STRICTSPEC_OPTIONS_REDUNDANT",
+      "path": "$.entry[0]",
+      "message": "Entry \"rlsbl:changelog-coverage\" at $.entry[0] in .strictmetadata/options/changelog.toml sets both current and ideal to the default \"on\", so it deviates from nothing; remove the entry."
      }
     ]
    },
@@ -658,7 +624,7 @@
       "class": "settled"
      }
     ],
-    "refusals": []
+    "diagnostics": []
    },
    {
     "name": "current-above-ideal",
@@ -666,13 +632,11 @@
      "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"on\"\nideal = \"off\"\nreason = \"r\"\n"
     },
     "classified": [],
-    "refusals": [
+    "diagnostics": [
      {
-      "rule": "entry-current-above-ideal",
-      "file": "changelog.toml",
-      "index": 0,
-      "value": "on",
-      "detail": "off"
+      "code": "STRICTSPEC_OPTIONS_CURRENT_ABOVE_IDEAL",
+      "path": "$.entry[0]",
+      "message": "Entry \"rlsbl:changelog-coverage\" at $.entry[0] in .strictmetadata/options/changelog.toml has current \"on\" ranked above its ideal \"off\" in \"on > deferred > off\"; current never ranks above ideal."
      }
     ]
    },
@@ -689,20 +653,16 @@
       "class": "debt"
      }
     ],
-    "refusals": [
+    "diagnostics": [
      {
-      "rule": "entry-duplicate",
-      "file": "docs.toml",
-      "index": 0,
-      "value": "rlsbl:changelog-coverage",
-      "detail": "changelog.toml entry 0"
+      "code": "STRICTSPEC_OPTIONS_DUPLICATE_ENTRY",
+      "path": "$.entry[0]",
+      "message": "Entry \"rlsbl:changelog-coverage\" at $.entry[0] in .strictmetadata/options/docs.toml repeats the entry at $.entry[0] in .strictmetadata/options/changelog.toml, which has the same id and scope; remove one of them."
      },
      {
-      "rule": "entry-wrong-subject",
-      "file": "docs.toml",
-      "index": 0,
-      "value": "docs.toml",
-      "detail": "changelog.toml"
+      "code": "STRICTSPEC_OPTIONS_WRONG_SUBJECT",
+      "path": "$.entry[0]",
+      "message": "Entry \"rlsbl:changelog-coverage\" at $.entry[0] in .strictmetadata/options/docs.toml belongs in .strictmetadata/options/changelog.toml; move it there."
      }
     ]
    },
@@ -728,13 +688,11 @@
       "class": "debt"
      }
     ],
-    "refusals": [
+    "diagnostics": [
      {
-      "rule": "entry-duplicate",
-      "file": "release.toml",
-      "index": 1,
-      "value": "rlsbl:publish",
-      "detail": "release.toml entry 0"
+      "code": "STRICTSPEC_OPTIONS_DUPLICATE_ENTRY",
+      "path": "$.entry[1]",
+      "message": "Entry \"rlsbl:publish\" at $.entry[1] in .strictmetadata/options/release.toml repeats the entry at $.entry[0] in .strictmetadata/options/release.toml, which has the same id and scope; remove one of them."
      }
     ]
    },
@@ -744,37 +702,339 @@
      "docs.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\nscope = \"x\"\ncurrent = \"sometimes\"\nideal = \"always\"\nreason = \"r\"\n"
     },
     "classified": [],
-    "refusals": [
+    "diagnostics": [
      {
-      "rule": "entry-wrong-subject",
-      "file": "docs.toml",
-      "index": 0,
-      "value": "docs.toml",
-      "detail": "changelog.toml"
+      "code": "STRICTSPEC_OPTIONS_WRONG_SUBJECT",
+      "path": "$.entry[0]",
+      "message": "Entry \"rlsbl:changelog-coverage\" at $.entry[0] in .strictmetadata/options/docs.toml belongs in .strictmetadata/options/changelog.toml; move it there."
      },
      {
-      "rule": "entry-scope-not-accepted",
-      "file": "docs.toml",
-      "index": 0,
-      "value": "x",
-      "detail": ""
+      "code": "STRICTSPEC_OPTIONS_SCOPE_NOT_ACCEPTED",
+      "path": "$.entry[0].scope",
+      "message": "Entry \"rlsbl:changelog-coverage\" at $.entry[0].scope in .strictmetadata/options/docs.toml has scope \"x\", but the option takes no scope; remove the scope."
      },
      {
-      "rule": "entry-undeclared-current",
-      "file": "docs.toml",
-      "index": 0,
-      "value": "sometimes",
-      "detail": "on > deferred > off"
+      "code": "STRICTSPEC_OPTIONS_UNDECLARED_CURRENT",
+      "path": "$.entry[0].current",
+      "message": "Current value \"sometimes\" of entry \"rlsbl:changelog-coverage\" at $.entry[0].current in .strictmetadata/options/docs.toml is not a value of the option's ranking \"on > deferred > off\"."
      },
      {
-      "rule": "entry-undeclared-ideal",
-      "file": "docs.toml",
+      "code": "STRICTSPEC_OPTIONS_UNDECLARED_IDEAL",
+      "path": "$.entry[0].ideal",
+      "message": "Ideal value \"always\" of entry \"rlsbl:changelog-coverage\" at $.entry[0].ideal in .strictmetadata/options/docs.toml is neither a value of the option's ranking \"on > deferred > off\" nor non-existent."
+     }
+    ]
+   },
+   {
+    "name": "unknown-option-no-suggestion",
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:unrelated\"\ncurrent = \"off\"\nideal = \"on\"\nreason = \"r\"\n"
+    },
+    "classified": [],
+    "diagnostics": [
+     {
+      "code": "STRICTSPEC_OPTIONS_UNKNOWN_OPTION",
+      "path": "$.entry[0].id",
+      "message": "Entry at $.entry[0].id in .strictmetadata/options/changelog.toml names \"rlsbl:unrelated\", which is not an option rlsbl declares."
+     }
+    ]
+   },
+   {
+    "name": "empty-reason-handed-directly",
+    "entries": [
+     {
+      "file": "changelog.toml",
       "index": 0,
-      "value": "always",
-      "detail": "on > deferred > off"
+      "id": "rlsbl:changelog-coverage",
+      "current": "off",
+      "ideal": "on",
+      "reason": ""
+     }
+    ],
+    "classified": [],
+    "diagnostics": [
+     {
+      "code": "STRICTSPEC_OPTIONS_EMPTY_REASON",
+      "path": "$.entry[0].reason",
+      "message": "Entry \"rlsbl:changelog-coverage\" at $.entry[0].reason in .strictmetadata/options/changelog.toml has an empty reason; state why the repository deviates from the option's default."
+     }
+    ]
+   },
+   {
+    "name": "empty-reason-of-unknown-option",
+    "entries": [
+     {
+      "file": "changelog.toml",
+      "index": 0,
+      "id": "rlsbl:unrelated",
+      "current": "off",
+      "ideal": "on",
+      "reason": ""
+     }
+    ],
+    "classified": [],
+    "diagnostics": [
+     {
+      "code": "STRICTSPEC_OPTIONS_UNKNOWN_OPTION",
+      "path": "$.entry[0].id",
+      "message": "Entry at $.entry[0].id in .strictmetadata/options/changelog.toml names \"rlsbl:unrelated\", which is not an option rlsbl declares."
+     },
+     {
+      "code": "STRICTSPEC_OPTIONS_EMPTY_REASON",
+      "path": "$.entry[0].reason",
+      "message": "Entry \"rlsbl:unrelated\" at $.entry[0].reason in .strictmetadata/options/changelog.toml has an empty reason; state why the repository deviates from the option's default."
      }
     ]
    }
   ]
- }
+ },
+ "fixes": [
+  {
+   "name": "ranking-reserved-remove-it",
+   "kind": "ranking",
+   "code": "STRICTSPEC_OPTIONS_RANKING_RESERVED",
+   "fix": "remove it from the ranking",
+   "before": {
+    "input": "on > non-existent"
+   },
+   "after": {
+    "input": "on"
+   }
+  },
+  {
+   "name": "ranking-duplicate-declare-once",
+   "kind": "ranking",
+   "code": "STRICTSPEC_OPTIONS_RANKING_DUPLICATE",
+   "fix": "declare each value once",
+   "before": {
+    "input": "on > off = on"
+   },
+   "after": {
+    "input": "on > off"
+   }
+  },
+  {
+   "name": "ranking-malformed-one-space",
+   "kind": "ranking",
+   "code": "STRICTSPEC_OPTIONS_RANKING_MALFORMED",
+   "fix": "with one space on either side of each operator",
+   "before": {
+    "input": "on  > off"
+   },
+   "after": {
+    "input": "on > off"
+   }
+  },
+  {
+   "name": "ranking-value-name-lowercase",
+   "kind": "ranking",
+   "code": "STRICTSPEC_OPTIONS_RANKING_VALUE_NAME",
+   "fix": "a value name is lowercase letters, digits, and hyphens",
+   "before": {
+    "input": "On > off"
+   },
+   "after": {
+    "input": "on > off"
+   }
+  },
+  {
+   "name": "default-a-ranking-value",
+   "kind": "registry",
+   "code": "STRICTSPEC_OPTIONS_DEFAULT_UNDECLARED",
+   "fix": "is not a value of the ranking",
+   "before": {
+    "registry": "format_version = 1\n[[option]]\nname = \"changelog-coverage\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"maybe\"\nscope = \"none\"\ndescription = \"d\"\n"
+   },
+   "after": {
+    "registry": "format_version = 1\n[[option]]\nname = \"changelog-coverage\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"deferred\"\nscope = \"none\"\ndescription = \"d\"\n"
+   }
+  },
+  {
+   "name": "subject-without-toml",
+   "kind": "registry",
+   "code": "STRICTSPEC_OPTIONS_SUBJECT_INVALID",
+   "fix": "without .toml",
+   "before": {
+    "registry": "format_version = 1\n[[option]]\nname = \"changelog-coverage\"\nsubject = \"changelog.toml\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n"
+   },
+   "after": {
+    "registry": "format_version = 1\n[[option]]\nname = \"changelog-coverage\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n"
+   }
+  },
+  {
+   "name": "unknown-option-did-you-mean",
+   "kind": "namespace",
+   "code": "STRICTSPEC_OPTIONS_UNKNOWN_OPTION",
+   "fix": "Did you mean \"rlsbl:changelog-coverage\"?",
+   "before": {
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-covrage\"\ncurrent = \"off\"\nideal = \"on\"\nreason = \"r\"\n"
+    }
+   },
+   "after": {
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"off\"\nideal = \"on\"\nreason = \"r\"\n"
+    }
+   }
+  },
+  {
+   "name": "wrong-subject-move-it",
+   "kind": "namespace",
+   "code": "STRICTSPEC_OPTIONS_WRONG_SUBJECT",
+   "fix": "belongs in .strictmetadata/options/changelog.toml; move it there",
+   "before": {
+    "files": {
+     "docs.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"off\"\nideal = \"on\"\nreason = \"r\"\n"
+    }
+   },
+   "after": {
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"off\"\nideal = \"on\"\nreason = \"r\"\n"
+    }
+   }
+  },
+  {
+   "name": "scope-remove-it",
+   "kind": "namespace",
+   "code": "STRICTSPEC_OPTIONS_SCOPE_NOT_ACCEPTED",
+   "fix": "remove the scope",
+   "before": {
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\nscope = \"docs\"\ncurrent = \"off\"\nideal = \"on\"\nreason = \"r\"\n"
+    }
+   },
+   "after": {
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"off\"\nideal = \"on\"\nreason = \"r\"\n"
+    }
+   }
+  },
+  {
+   "name": "undeclared-current-a-ranking-value",
+   "kind": "namespace",
+   "code": "STRICTSPEC_OPTIONS_UNDECLARED_CURRENT",
+   "fix": "is not a value of the option's ranking",
+   "before": {
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"partial\"\nideal = \"on\"\nreason = \"r\"\n"
+    }
+   },
+   "after": {
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"deferred\"\nideal = \"on\"\nreason = \"r\"\n"
+    }
+   }
+  },
+  {
+   "name": "undeclared-ideal-non-existent",
+   "kind": "namespace",
+   "code": "STRICTSPEC_OPTIONS_UNDECLARED_IDEAL",
+   "fix": "nor non-existent",
+   "before": {
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"off\"\nideal = \"full\"\nreason = \"r\"\n"
+    }
+   },
+   "after": {
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"off\"\nideal = \"non-existent\"\nreason = \"r\"\n"
+    }
+   }
+  },
+  {
+   "name": "redundant-remove-the-entry",
+   "kind": "namespace",
+   "code": "STRICTSPEC_OPTIONS_REDUNDANT",
+   "fix": "remove the entry",
+   "before": {
+    "files": {
+     "release.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:publish\"\ncurrent = \"none\"\nideal = \"npm\"\nreason = \"r\"\n",
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"on\"\nideal = \"on\"\nreason = \"r\"\n"
+    }
+   },
+   "after": {
+    "files": {
+     "release.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:publish\"\ncurrent = \"none\"\nideal = \"npm\"\nreason = \"r\"\n"
+    }
+   }
+  },
+  {
+   "name": "current-above-ideal-never",
+   "kind": "namespace",
+   "code": "STRICTSPEC_OPTIONS_CURRENT_ABOVE_IDEAL",
+   "fix": "current never ranks above ideal",
+   "before": {
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"on\"\nideal = \"off\"\nreason = \"r\"\n"
+    }
+   },
+   "after": {
+    "files": {
+     "changelog.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"off\"\nideal = \"on\"\nreason = \"r\"\n"
+    }
+   }
+  },
+  {
+   "name": "duplicate-remove-the-repeat",
+   "kind": "namespace",
+   "code": "STRICTSPEC_OPTIONS_DUPLICATE_ENTRY",
+   "fix": "remove one of them",
+   "before": {
+    "files": {
+     "release.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:publish\"\nscope = \"a\"\ncurrent = \"none\"\nideal = \"npm\"\nreason = \"r\"\n[[entry]]\nid = \"rlsbl:publish\"\nscope = \"a\"\ncurrent = \"none\"\nideal = \"pypi\"\nreason = \"r\"\n"
+    }
+   },
+   "after": {
+    "files": {
+     "release.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:publish\"\nscope = \"a\"\ncurrent = \"none\"\nideal = \"npm\"\nreason = \"r\"\n"
+    }
+   }
+  },
+  {
+   "name": "duplicate-remove-the-first",
+   "kind": "namespace",
+   "code": "STRICTSPEC_OPTIONS_DUPLICATE_ENTRY",
+   "fix": "remove one of them",
+   "before": {
+    "files": {
+     "release.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:publish\"\nscope = \"a\"\ncurrent = \"none\"\nideal = \"npm\"\nreason = \"r\"\n[[entry]]\nid = \"rlsbl:publish\"\nscope = \"a\"\ncurrent = \"none\"\nideal = \"pypi\"\nreason = \"r\"\n"
+    }
+   },
+   "after": {
+    "files": {
+     "release.toml": "format_version = 1\n[[entry]]\nid = \"rlsbl:publish\"\nscope = \"a\"\ncurrent = \"none\"\nideal = \"pypi\"\nreason = \"r\"\n"
+    }
+   }
+  },
+  {
+   "name": "empty-reason-state-why",
+   "kind": "namespace",
+   "code": "STRICTSPEC_OPTIONS_EMPTY_REASON",
+   "fix": "state why the repository deviates from the option's default",
+   "before": {
+    "entries": [
+     {
+      "file": "changelog.toml",
+      "index": 0,
+      "id": "rlsbl:changelog-coverage",
+      "current": "off",
+      "ideal": "on",
+      "reason": ""
+     }
+    ]
+   },
+   "after": {
+    "entries": [
+     {
+      "file": "changelog.toml",
+      "index": 0,
+      "id": "rlsbl:changelog-coverage",
+      "current": "off",
+      "ideal": "on",
+      "reason": "fork: upstream's history is not ours to describe"
+     }
+    ]
+   }
+  }
+ ]
 }

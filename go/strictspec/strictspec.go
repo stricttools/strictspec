@@ -15,7 +15,9 @@
 // the identical checks as the reference interpreter). It also ships the options
 // built-in schemas (options-entries, options-registry, and upstream; see
 // stricttools/docs/appendix-options.md) with readers that validate and bind
-// those documents.
+// those documents, and the options rules: the ranking parser, the registry
+// validator, and the per-namespace entry validator that classifies accepted
+// entries, each refusing with catalogued STRICTSPEC_OPTIONS_* diagnostics.
 //
 // Invariants (go/DESIGN.md): no lenient modes; loading and validation are
 // inseparable; unknown keys are always a hard error; there is no severity — every
