@@ -19,8 +19,10 @@ tool-written commit).
 
 A repository's options live in `.strictmetadata/options/`, one TOML document
 per subject (for example `changelog.toml`, `docs.toml`). The directory's
-`manifest.toml` names `strictspec` as its owner. A repository with no entries
-has no files; a missing directory means every option is at its default.
+`manifest.toml` names `strictspec` as its owner and is not a subject document;
+every other `*.toml` file in the directory is one, read in file-name order.
+A repository with no entries has no files; a missing directory means every
+option is at its default.
 
 ## The entry document
 
@@ -37,7 +39,8 @@ ideal = "on"
 reason = "fork: upstream's history is not ours to describe; waiting for rlsbl to limit coverage to our own commits"
 ```
 
-- `id` is `<tool>:<name>`, using the tool's own name for the option.
+- `id` is `<tool>:<name>`, using the tool's own name for the option; the
+  tool is the text before the first colon.
 - `scope` narrows the entry to part of the repository. Only options whose
   declaration names a scope kind accept it; its meaning belongs to the tool.
 - `current` is the value the repository runs today; `ideal` is the value it
@@ -45,8 +48,9 @@ reason = "fork: upstream's history is not ours to describe; waiting for rlsbl to
   be `non-existent`: the right value is one the tool does not offer yet.
 - `reason` is mandatory and non-empty.
 - An entry exists only when `current` or `ideal` differs from the option's
-  default. An entry whose `current` and `ideal` both equal the default is
-  refused as redundant.
+  default. An entry whose `current` and `ideal` are both the default value
+  itself is refused as redundant (a value merely ranked equal to the default
+  is a real deviation).
 - One entry per `(id, scope)` across all of the repository's subject files.
 
 ## The option registry
@@ -67,11 +71,14 @@ description = "..."
 ```
 
 - `values` ranks the allowed values strongest first, using only `>` (stronger
-  than) and `=` (equal rank), for example `npm = pypi = jsr > none`. Value
-  names are lowercase letters, digits, and hyphens; `non-existent` is reserved
-  and never declared.
+  than) and `=` (equal rank), each with one space on either side, for example
+  `npm = pypi = jsr > none`. Value names are lowercase letters, digits, and
+  hyphens; `non-existent` is reserved and never declared.
+- The registry does not name its tool: a reader passes the tool's name when it
+  validates its namespace. Every registry field is required.
 - `default` is one of the declared values.
-- `subject` names the one subject file every entry for this option lives in.
+- `subject` names the one subject file every entry for this option lives in;
+  it follows the value-name grammar and is never `manifest`.
 
 ## Ranking rules
 
@@ -92,8 +99,10 @@ description = "..."
   judges another tool's entries, so a tool a repository does not use cannot
   block it.
 - The ranking parser, the entry loader, and the per-namespace validator live
-  in strictspec's runtime (Python and Go), so every tool applies identical
-  rules.
+  in strictspec's runtime, identically in Go, Python, and TypeScript, so every
+  tool applies the same rules. Each refusal is a catalogued error in the
+  `OPTIONS` area of the error-code appendix. The TypeScript runtime parses
+  document text; loading files from disk is offered in Go and Python.
 
 ## Writing entries
 
@@ -114,7 +123,8 @@ rewrites its `id` in every entry.
 ## The upstream document
 
 A fork declares its upstream in `.strictmetadata/upstream/upstream.toml`,
-validated by the built-in schema `upstream`:
+validated by the built-in schema `upstream` (every field required; a
+repository that is not a fork has no such file):
 
 ```toml
 format_version = 1
