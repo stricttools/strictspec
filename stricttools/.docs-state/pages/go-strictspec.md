@@ -1,6 +1,6 @@
 +++
 title = "go/strictspec"
-description = "Public Go runtime API for strictspec — the semver-bound surface generated validators import: the diagnostics model, lossless document loading for JSON, TOML, and JSONL, the version-pairing guard, and the tagged-value validation entry points with their coercers."
+description = "Public Go runtime API for strictspec — the semver-bound surface generated validators import: the diagnostics model, lossless document loading for JSON, TOML, and JSONL, the version-pairing guard, the tagged-value validation entry points with their coercers, and the options built-in schemas with their readers."
 generated = true
 nav_group = "API Reference"
 nav_order = 1
