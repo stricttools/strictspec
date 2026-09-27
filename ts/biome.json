@@ -6,7 +6,8 @@
 			"tests/**",
 			"scripts/**",
 			"*.json",
-			"!src/codes.generated.ts"
+			"!src/codes.generated.ts",
+			"!src/builtins.generated.ts"
 		]
 	},
 	"formatter": {
