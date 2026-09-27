@@ -19,6 +19,7 @@ var Areas = []string{
 	"METAGATE",
 	"MIGRATE",
 	"NUM",
+	"OPTIONS",
 	"PARSE",
 	"SCALAR",
 	"SCHEMA",
@@ -663,6 +664,165 @@ var catalogue = map[string]Entry{
 		Slots: []SlotSpec{
 			{Name: "actual", Type: SlotTypeValue},
 			{Name: "path", Type: SlotTypePath},
+		},
+	},
+	"STRICTSPEC_OPTIONS_CURRENT_ABOVE_IDEAL": {
+		Code:     "STRICTSPEC_OPTIONS_CURRENT_ABOVE_IDEAL",
+		Area:     "OPTIONS",
+		Template: "Entry {id} at {path} in {file} has current {current} ranked above its ideal {ideal} in {ranking}; current never ranks above ideal.",
+		Slots: []SlotSpec{
+			{Name: "id", Type: SlotTypeValue},
+			{Name: "path", Type: SlotTypePath},
+			{Name: "file", Type: SlotTypeString},
+			{Name: "current", Type: SlotTypeValue},
+			{Name: "ideal", Type: SlotTypeValue},
+			{Name: "ranking", Type: SlotTypeValue},
+		},
+	},
+	"STRICTSPEC_OPTIONS_DEFAULT_UNDECLARED": {
+		Code:     "STRICTSPEC_OPTIONS_DEFAULT_UNDECLARED",
+		Area:     "OPTIONS",
+		Template: "Default {value} at {path} is not a value of the ranking {ranking}.",
+		Slots: []SlotSpec{
+			{Name: "value", Type: SlotTypeValue},
+			{Name: "path", Type: SlotTypePath},
+			{Name: "ranking", Type: SlotTypeValue},
+		},
+	},
+	"STRICTSPEC_OPTIONS_DUPLICATE_ENTRY": {
+		Code:     "STRICTSPEC_OPTIONS_DUPLICATE_ENTRY",
+		Area:     "OPTIONS",
+		Template: "Entry {id} at {path} in {file} repeats the entry at {first} in {first_file}, which has the same id and scope; remove one of them.",
+		Slots: []SlotSpec{
+			{Name: "id", Type: SlotTypeValue},
+			{Name: "path", Type: SlotTypePath},
+			{Name: "file", Type: SlotTypeString},
+			{Name: "first", Type: SlotTypePath},
+			{Name: "first_file", Type: SlotTypeString},
+		},
+	},
+	"STRICTSPEC_OPTIONS_EMPTY_REASON": {
+		Code:     "STRICTSPEC_OPTIONS_EMPTY_REASON",
+		Area:     "OPTIONS",
+		Template: "Entry {id} at {path} in {file} has an empty reason; state why the repository deviates from the option's default.",
+		Slots: []SlotSpec{
+			{Name: "id", Type: SlotTypeValue},
+			{Name: "path", Type: SlotTypePath},
+			{Name: "file", Type: SlotTypeString},
+		},
+	},
+	"STRICTSPEC_OPTIONS_RANKING_DUPLICATE": {
+		Code:     "STRICTSPEC_OPTIONS_RANKING_DUPLICATE",
+		Area:     "OPTIONS",
+		Template: "The ranking at {path} declares {value} more than once; declare each value once.",
+		Slots: []SlotSpec{
+			{Name: "path", Type: SlotTypePath},
+			{Name: "value", Type: SlotTypeValue},
+		},
+	},
+	"STRICTSPEC_OPTIONS_RANKING_MALFORMED": {
+		Code:     "STRICTSPEC_OPTIONS_RANKING_MALFORMED",
+		Area:     "OPTIONS",
+		Template: "Ranking {ranking} at {path} is malformed: a ranking is value names joined by > (stronger than) or = (equal rank), with one space on either side of each operator.",
+		Slots: []SlotSpec{
+			{Name: "ranking", Type: SlotTypeValue},
+			{Name: "path", Type: SlotTypePath},
+		},
+	},
+	"STRICTSPEC_OPTIONS_RANKING_RESERVED": {
+		Code:     "STRICTSPEC_OPTIONS_RANKING_RESERVED",
+		Area:     "OPTIONS",
+		Template: "The ranking at {path} declares {value}, which is reserved and never declared; remove it from the ranking.",
+		Slots: []SlotSpec{
+			{Name: "path", Type: SlotTypePath},
+			{Name: "value", Type: SlotTypeValue},
+		},
+	},
+	"STRICTSPEC_OPTIONS_RANKING_VALUE_NAME": {
+		Code:     "STRICTSPEC_OPTIONS_RANKING_VALUE_NAME",
+		Area:     "OPTIONS",
+		Template: "Value name {value} in the ranking at {path} is invalid: a value name is lowercase letters, digits, and hyphens.",
+		Slots: []SlotSpec{
+			{Name: "value", Type: SlotTypeValue},
+			{Name: "path", Type: SlotTypePath},
+		},
+	},
+	"STRICTSPEC_OPTIONS_REDUNDANT": {
+		Code:     "STRICTSPEC_OPTIONS_REDUNDANT",
+		Area:     "OPTIONS",
+		Template: "Entry {id} at {path} in {file} sets both current and ideal to the default {value}, so it deviates from nothing; remove the entry.",
+		Slots: []SlotSpec{
+			{Name: "id", Type: SlotTypeValue},
+			{Name: "path", Type: SlotTypePath},
+			{Name: "file", Type: SlotTypeString},
+			{Name: "value", Type: SlotTypeValue},
+		},
+	},
+	"STRICTSPEC_OPTIONS_SCOPE_NOT_ACCEPTED": {
+		Code:     "STRICTSPEC_OPTIONS_SCOPE_NOT_ACCEPTED",
+		Area:     "OPTIONS",
+		Template: "Entry {id} at {path} in {file} has scope {value}, but the option takes no scope; remove the scope.",
+		Slots: []SlotSpec{
+			{Name: "id", Type: SlotTypeValue},
+			{Name: "path", Type: SlotTypePath},
+			{Name: "file", Type: SlotTypeString},
+			{Name: "value", Type: SlotTypeValue},
+		},
+	},
+	"STRICTSPEC_OPTIONS_SUBJECT_INVALID": {
+		Code:     "STRICTSPEC_OPTIONS_SUBJECT_INVALID",
+		Area:     "OPTIONS",
+		Template: "Subject {value} at {path} does not name a subject file: a subject is lowercase letters, digits, and hyphens, without .toml, and is never manifest.",
+		Slots: []SlotSpec{
+			{Name: "value", Type: SlotTypeValue},
+			{Name: "path", Type: SlotTypePath},
+		},
+	},
+	"STRICTSPEC_OPTIONS_UNDECLARED_CURRENT": {
+		Code:     "STRICTSPEC_OPTIONS_UNDECLARED_CURRENT",
+		Area:     "OPTIONS",
+		Template: "Current value {value} of entry {id} at {path} in {file} is not a value of the option's ranking {ranking}.",
+		Slots: []SlotSpec{
+			{Name: "value", Type: SlotTypeValue},
+			{Name: "id", Type: SlotTypeValue},
+			{Name: "path", Type: SlotTypePath},
+			{Name: "file", Type: SlotTypeString},
+			{Name: "ranking", Type: SlotTypeValue},
+		},
+	},
+	"STRICTSPEC_OPTIONS_UNDECLARED_IDEAL": {
+		Code:     "STRICTSPEC_OPTIONS_UNDECLARED_IDEAL",
+		Area:     "OPTIONS",
+		Template: "Ideal value {value} of entry {id} at {path} in {file} is neither a value of the option's ranking {ranking} nor non-existent.",
+		Slots: []SlotSpec{
+			{Name: "value", Type: SlotTypeValue},
+			{Name: "id", Type: SlotTypeValue},
+			{Name: "path", Type: SlotTypePath},
+			{Name: "file", Type: SlotTypeString},
+			{Name: "ranking", Type: SlotTypeValue},
+		},
+	},
+	"STRICTSPEC_OPTIONS_UNKNOWN_OPTION": {
+		Code:     "STRICTSPEC_OPTIONS_UNKNOWN_OPTION",
+		Area:     "OPTIONS",
+		Template: "Entry at {path} in {file} names {id}, which is not an option {tool} declares.{suggestion}",
+		Slots: []SlotSpec{
+			{Name: "path", Type: SlotTypePath},
+			{Name: "file", Type: SlotTypeString},
+			{Name: "id", Type: SlotTypeValue},
+			{Name: "tool", Type: SlotTypeString},
+			{Name: "suggestion", Type: SlotTypeString},
+		},
+	},
+	"STRICTSPEC_OPTIONS_WRONG_SUBJECT": {
+		Code:     "STRICTSPEC_OPTIONS_WRONG_SUBJECT",
+		Area:     "OPTIONS",
+		Template: "Entry {id} at {path} in {file} belongs in {subject}; move it there.",
+		Slots: []SlotSpec{
+			{Name: "id", Type: SlotTypeValue},
+			{Name: "path", Type: SlotTypePath},
+			{Name: "file", Type: SlotTypeString},
+			{Name: "subject", Type: SlotTypeString},
 		},
 	},
 	"STRICTSPEC_PARSE_JSONL_BLANK_LINE": {

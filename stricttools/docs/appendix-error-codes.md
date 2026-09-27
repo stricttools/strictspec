@@ -94,6 +94,11 @@ did-you-mean pin in that appendix.
 | `DOCDIFF` | `doc-diff` errors |
 | `MANIFEST` | `strictspec.toml` / CLI errors |
 | `SCALAR` | Custom-scalar lexeme and registration violations |
+| `OPTIONS` | Repository options, option registries, and ranking refusals (`appendix-options.md`) |
+
+AREA-SET AMENDMENT (2026-09-28): the area set above is closed; by owner ruling it was opened
+once, to add `OPTIONS` for the options runtime's refusals (`appendix-options.md`). Adding any
+further area requires another such ruling.
 
 ## 4. Parse errors (`STRICTSPEC_PARSE_*`)
 
@@ -390,6 +395,36 @@ schema.
 | `STRICTSPEC_SCALAR_NO_BINDING` | `Custom scalar {name} declares no binding for target {got}; every declared target requires a binding.` | name: identifier, got: string | Per-target binding obligation. |
 | `STRICTSPEC_SCALAR_LENGTH` | `Value at {path} violates the {name} scalar's length bound ({actual}, limit {limit}).` | path: path, name: identifier, actual: int, limit: int | For length/non-empty refinements on opaque scalars (e.g. sql-expression). |
 
+## 21a. Options errors (`STRICTSPEC_OPTIONS_*`)
+
+The refusals of the options runtime (`appendix-options.md`) beyond the built-in schemas'
+shape: the ranking parser, the registry rules, and the per-namespace entry validator. Shape
+violations of an options document are ordinary diagnostics of the built-in schemas (for
+example a repeated option name is `STRICTSPEC_INTRA_UNIQUE_BY`, which the registry validator
+also reports, identically, for a registry handed to it directly). `{path}` is the location
+within the refused document: `$.option[<n>]...` in a registry, `$.entry[<n>]...` in a
+subject document, and `$` for a ranking parsed on its own. `{file}` names the subject
+document the entry was read from, and `{subject}` and `{first_file}` the subject documents the
+fix involves, each as a repository-relative path under `.strictmetadata/options/`.
+
+| Code | Template | Slots | Notes |
+|---|---|---|---|
+| `STRICTSPEC_OPTIONS_RANKING_MALFORMED` | `Ranking {ranking} at {path} is malformed: a ranking is value names joined by > (stronger than) or = (equal rank), with one space on either side of each operator.` | ranking: value | The string is not an alternation of names and operators; no value is checked. |
+| `STRICTSPEC_OPTIONS_RANKING_VALUE_NAME` | `Value name {value} in the ranking at {path} is invalid: a value name is lowercase letters, digits, and hyphens.` | value: value | One per offending name. |
+| `STRICTSPEC_OPTIONS_RANKING_RESERVED` | `The ranking at {path} declares {value}, which is reserved and never declared; remove it from the ranking.` | value: value | `non-existent`. |
+| `STRICTSPEC_OPTIONS_RANKING_DUPLICATE` | `The ranking at {path} declares {value} more than once; declare each value once.` | value: value | One per repetition. |
+| `STRICTSPEC_OPTIONS_DEFAULT_UNDECLARED` | `Default {value} at {path} is not a value of the ranking {ranking}.` | value: value, ranking: value | Checked only when the ranking parses. |
+| `STRICTSPEC_OPTIONS_SUBJECT_INVALID` | `Subject {value} at {path} does not name a subject file: a subject is lowercase letters, digits, and hyphens, without .toml, and is never manifest.` | value: value | |
+| `STRICTSPEC_OPTIONS_UNKNOWN_OPTION` | `Entry at {path} in {file} names {id}, which is not an option {tool} declares.{suggestion}` | file: string, id: value, tool: string, suggestion: string | `{tool}` is the namespace's tool name; the suggestion is computed over the tool's option ids. |
+| `STRICTSPEC_OPTIONS_WRONG_SUBJECT` | `Entry {id} at {path} in {file} belongs in {subject}; move it there.` | id: value, file: string, subject: string | `{subject}` is the option's subject document. |
+| `STRICTSPEC_OPTIONS_SCOPE_NOT_ACCEPTED` | `Entry {id} at {path} in {file} has scope {value}, but the option takes no scope; remove the scope.` | id: value, file: string, value: value | The option declares `scope = "none"`. |
+| `STRICTSPEC_OPTIONS_UNDECLARED_CURRENT` | `Current value {value} of entry {id} at {path} in {file} is not a value of the option's ranking {ranking}.` | value: value, id: value, file: string, ranking: value | |
+| `STRICTSPEC_OPTIONS_UNDECLARED_IDEAL` | `Ideal value {value} of entry {id} at {path} in {file} is neither a value of the option's ranking {ranking} nor non-existent.` | value: value, id: value, file: string, ranking: value | |
+| `STRICTSPEC_OPTIONS_REDUNDANT` | `Entry {id} at {path} in {file} sets both current and ideal to the default {value}, so it deviates from nothing; remove the entry.` | id: value, file: string, value: value | A value merely ranked equal to the default is not redundant. |
+| `STRICTSPEC_OPTIONS_CURRENT_ABOVE_IDEAL` | `Entry {id} at {path} in {file} has current {current} ranked above its ideal {ideal} in {ranking}; current never ranks above ideal.` | id: value, file: string, current: value, ideal: value, ranking: value | |
+| `STRICTSPEC_OPTIONS_DUPLICATE_ENTRY` | `Entry {id} at {path} in {file} repeats the entry at {first} in {first_file}, which has the same id and scope; remove one of them.` | id: value, file: string, first: path, first_file: string | Across all of the repository's subject documents; names the first occurrence. |
+| `STRICTSPEC_OPTIONS_EMPTY_REASON` | `Entry {id} at {path} in {file} has an empty reason; state why the repository deviates from the option's default.` | id: value, file: string | An entry read through the built-in schema is refused first by `STRICTSPEC_VALUE_STRING_EMPTY`; this code covers entries handed to the validator directly. |
+
 ## 22. Cross-references
 
 - Slot rendering, path grammar, truncation, and did-you-mean: `appendix-rendering.md`.
@@ -398,6 +433,7 @@ schema.
 - Per-construct accepted-set semantics behind every `TYPE`/`VALUE`/`INTRA`/`CROSS` code:
   `appendix-semantics.md`.
 - Custom-scalar registration behind `STRICTSPEC_SCALAR_*`: `appendix-custom-scalars.md`.
+- The options model behind `STRICTSPEC_OPTIONS_*`: `appendix-options.md`.
 - How templates become per-target renderers: `appendix-emitter-ir.md`.
 - The concrete surface that produces these conditions (enum selector, migration ops, constraint
   bodies): `appendix-surface-syntax.md`.
