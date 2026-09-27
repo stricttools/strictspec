@@ -1,7 +1,7 @@
 {
   "_hash_version": 3,
   "en/DESIGN.md": {
-    "content": "5fc7c9aec36333fccd574e92953cf1deb111efa6206a99a3d80d76d9840f1aa9",
+    "content": "fbc27b43eb65c42fc4ffbb11d3509f99cdcb366846b9951621a85c9371f98b99",
     "description": "0deeba2a66878630e59ce18349dc03e480df29184712b6c3d66937d49b0cfb3c"
   },
   "en/appendix-certificates.md": {
@@ -47,7 +47,7 @@
     "source_docstring": "10a5ceb39f1f120c76e256870d7e0b42017986ea7b665cc0210e7bfbd57f4461"
   },
   "en/index.md": {
-    "content": "a3348377f6e6881f728e036e232db08e582ebe2502907cc808dffc14ec343b6b",
+    "content": "74adbb22300ecb217d8b7dbd81568eb3938da12738d54d151186ffec581ae871",
     "description": "928c80014caad10ad5981269091ed237731944e9ffde9b0e79f88361607b5ed5"
   }
 }
