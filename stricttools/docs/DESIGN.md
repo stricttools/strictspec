@@ -13,8 +13,9 @@ alongside this document and are versioned with it: the concrete TOML surface syn
 (appendix-error-codes.md); value rendering, path grammar, and did-you-mean
 (appendix-rendering.md); the diff certificate and doc-diff output shapes
 (appendix-certificates.md); the per-construct formal semantics and undecidability catalogue
-(appendix-semantics.md); custom scalar registration (appendix-custom-scalars.md); and the
-shared emitter IR (appendix-emitter-ir.md). Every backend and the internal interpreter
+(appendix-semantics.md); custom scalar registration (appendix-custom-scalars.md); the
+shared emitter IR (appendix-emitter-ir.md); and the options model, its built-in schemas, and
+its ranking and validation rules (appendix-options.md). Every backend and the internal interpreter
 implement this document and its appendices; the conformance suite enforces it across all four
 targets: verdict, error-code, path, and message-text identity (ordered; messages render from
 the spec-pinned templates). This document, rendered by selfdoc, is also strictspec's published
@@ -660,8 +661,9 @@ multi-target execution.
   appendix-error-codes.md, value rendering + path grammar + did-you-mean in appendix-rendering.md,
   the certificate + doc-diff shapes in appendix-certificates.md, the per-construct formal
   semantics and undecidability catalogue in appendix-semantics.md, custom scalar registration in
-  appendix-custom-scalars.md, the concrete TOML surface syntax in appendix-surface-syntax.md, and
-  the shared emitter IR in appendix-emitter-ir.md) are VERSIONED.
+  appendix-custom-scalars.md, the concrete TOML surface syntax in appendix-surface-syntax.md,
+  the shared emitter IR in appendix-emitter-ir.md, and the options model, its built-in schemas,
+  and its ranking and validation rules in appendix-options.md) are VERSIONED.
   ANY change is a breaking-class, changelog-covered entry in the strictspec release that ships
   it and triggers full conformance-fixture regeneration. Appendix-driven behavior changes are
   always declared, never silent. The proof-object format and model-search order are NOT current
