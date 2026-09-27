@@ -5,7 +5,10 @@
 // generated-code pairing guard, the tagged document value (the second entry point) with
 // its coercers, and the constraint-engine entry (validation is driven by the
 // shared emitter IR, so a generated TS validator runs the identical checks as the
-// reference interpreter and the Go/Python runtimes).
+// reference interpreter and the Go/Python runtimes). It also ships the options
+// built-in schemas (options-entries, options-registry, and upstream; see
+// stricttools/docs/appendix-options.md) with readers that validate and bind
+// those documents.
 //
 // Per ts/DESIGN.md the raw-text entry point takes RAW TEXT (never JSON.parse):
 // the lossless parsers classify lexemes and produce tagged document values. There
@@ -563,3 +566,25 @@ function embeddedSchemaError(diags: diagMod.Diagnostic[]): string {
 	}
 	return parts.join("");
 }
+
+// --- options built-ins (stricttools/docs/appendix-options.md) ---------------
+
+export type {
+	OptionDeclaration,
+	OptionsEntry,
+	OptionsRegistry,
+	Upstream,
+} from "./options.js";
+export {
+	OPTIONS_DIR,
+	OPTIONS_ENTRIES_SCHEMA,
+	OPTIONS_REGISTRY_SCHEMA,
+	optionsEntriesProgram,
+	optionsRegistryProgram,
+	readOptionsEntries,
+	readOptionsRegistry,
+	readUpstream,
+	UPSTREAM_FILE,
+	UPSTREAM_SCHEMA,
+	upstreamProgram,
+} from "./options.js";
