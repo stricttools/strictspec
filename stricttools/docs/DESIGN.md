@@ -705,6 +705,11 @@ spelled in the single pinned surface (appendix-surface-syntax.md).
 The consumer manifest (strictspec.toml) is a document of a toolchain-shipped built-in schema —
 same gating, same migrations, meta-fixtures in conformance; it additionally declares stores
 and channels for boundary-checkpoint generation.
+The options documents are documents of three further toolchain-shipped built-in schemas,
+`options-entries` (a subject document under `.strictmetadata/options/`), `options-registry` (a
+family tool's registry of the options it offers), and `upstream`
+(`.strictmetadata/upstream/upstream.toml`); appendix-options.md defines them and the rules every
+reader applies beyond their shape.
 
 Bootstrap order (entered by hand exactly once): document model -> hand-written meta-schema
 check -> interpreter (full language) -> generator -> thereafter the meta-schema is validated by
