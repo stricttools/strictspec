@@ -1,7 +1,15 @@
 +++
 description = "The options model: how a repository declares every deviation from a family tool's defaults in .strictmetadata/options/, how each tool declares the options it offers, and the ranking, validation, and debt rules every reader applies through strictspec's built-in schemas and runtime."
 +++
-# Appendix: Options
+# Appendix: Options (normative)
+
+> NORMATIVE STATUS: Part of the strictspec constitution (see `DESIGN.md`). VERSIONED: any change
+> to the options model, the built-in schemas it defines, or its ranking and validation rules is a
+> breaking-class, changelog-covered release event.
+>
+> META NOTE: strictspec is in its GROWTH PHASE — this appendix is STABLE BUT GROWING; refinements
+> are normal and expected, recorded per-release through the existing discipline, with
+> released-surface compatibility governed by semver at release boundaries.
 
 An option is a setting a family tool governs for a repository: a choice from a
 closed set of values the tool declares. Options are the only sanctioned way to
