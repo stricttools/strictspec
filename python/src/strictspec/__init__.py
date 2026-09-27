@@ -5,7 +5,10 @@ re-exports the diagnostics model, document loading for the three syntaxes, the
 generated-code pairing guard, the tagged document value (the second entry point) with
 its coercers, and the constraint-engine entry (validation is driven by the
 shared emitter IR, so a generated Python validator runs the identical checks as
-the reference interpreter and the Go runtime).
+the reference interpreter and the Go runtime). It also ships the options
+built-in schemas (options-entries, options-registry, and upstream; see
+stricttools/docs/appendix-options.md) with readers that validate and bind those
+documents.
 
 Invariants: no lenient modes; loading and validation are inseparable; unknown
 keys are always a hard error; there is no severity -- every diagnostic is an
@@ -65,6 +68,26 @@ __all__ = [
     "PairingError",
     "version_gate",
     "GateResult",
+    "OPTIONS_ENTRIES_SCHEMA",
+    "OPTIONS_REGISTRY_SCHEMA",
+    "UPSTREAM_SCHEMA",
+    "OPTIONS_DIR",
+    "UPSTREAM_FILE",
+    "options_entries_program",
+    "options_registry_program",
+    "upstream_program",
+    "OptionDeclaration",
+    "OptionsRegistry",
+    "OptionsEntry",
+    "Upstream",
+    "FileDiagnostics",
+    "OptionsEntriesLoad",
+    "read_options_registry",
+    "load_options_registry",
+    "read_options_entries",
+    "load_options_entries",
+    "read_upstream",
+    "load_upstream",
 ]
 
 
@@ -475,3 +498,28 @@ def _embedded_schema_error(diags: list) -> str:
     for d in diags:
         parts.append("\n  " + d.code + " at " + d.path.render())
     return "".join(parts)
+
+
+# The options built-ins import the names defined above, so they come last.
+from ._options import (  # noqa: E402
+    OPTIONS_DIR,
+    OPTIONS_ENTRIES_SCHEMA,
+    OPTIONS_REGISTRY_SCHEMA,
+    UPSTREAM_FILE,
+    UPSTREAM_SCHEMA,
+    FileDiagnostics,
+    OptionDeclaration,
+    OptionsEntriesLoad,
+    OptionsEntry,
+    OptionsRegistry,
+    Upstream,
+    load_options_entries,
+    load_options_registry,
+    load_upstream,
+    options_entries_program,
+    options_registry_program,
+    read_options_entries,
+    read_options_registry,
+    read_upstream,
+    upstream_program,
+)
