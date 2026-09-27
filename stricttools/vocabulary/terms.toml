@@ -49,6 +49,10 @@ word = "rlsbl"
 meaning = "The release tool, a consumer whose config, release-file, and changelog-entry schemas are strictspec examples, and which runs strictspec's certificate check."
 
 [[accepted]]
+word = "strictcode"
+meaning = "A StrictTools family tool that, per the options appendix, reports every options entry in debt and every entry waiting on a tool, across all tools' namespaces."
+
+[[accepted]]
 word = "strictspec"
 meaning = "This project: define a schema once in TOML and generate validation, versioning, and migrations for Go, Python, and TypeScript."
 
