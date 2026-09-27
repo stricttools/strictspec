@@ -2,29 +2,28 @@
 //
 // The shape and rules cases live in go/strictspec/testdata/options/ and are
 // shared with the Go and Python runtimes' tests, so every runtime asserts the
-// identical bound values, diagnostics, refusals, and classifications.
+// identical bound values, diagnostics, and classifications.
 
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
+	type CheckedOptionsRegistry,
 	type Diagnostic,
 	type OptionsEntry,
+	type OptionsRanking,
+	type OptionsRegistry,
 	optionsEntriesProgram,
 	optionsRegistryProgram,
+	parseOptionsRanking,
 	readOptionsEntries,
 	readOptionsRegistry,
 	readUpstream,
 	upstreamProgram,
-} from "../dist/index.js";
-import {
-	checkOptionsRegistry,
-	type OptionsRanking,
-	type OptionsRefusal,
-	parseOptionsRanking,
 	validateOptionsNamespace,
-} from "../dist/options.js";
+	validateOptionsRegistry,
+} from "../dist/index.js";
 
 const casesDir = fileURLToPath(
 	new URL("../../go/strictspec/testdata/options/", import.meta.url),
@@ -104,10 +103,6 @@ for (const [name, program] of [
 
 // --- the rules beyond shape ---------------------------------------------------
 
-function refusals(rs: readonly OptionsRefusal[]): Json[] {
-	return rs.map((r) => ({ ...r }));
-}
-
 function levels(rk: OptionsRanking | null): string[][] | undefined {
 	if (rk === null) {
 		return undefined;
@@ -125,41 +120,69 @@ function levels(rk: OptionsRanking | null): string[][] | undefined {
 
 for (const c of rulesCases.ranking) {
 	test(`ranking: ${c.name}`, () => {
-		const [rk, rs] = parseOptionsRanking(c.input);
-		assert.deepEqual(refusals(rs), c.refusals ?? []);
+		const [rk, ds] = parseOptionsRanking(c.input);
+		assert.deepEqual(diags(ds), c.diagnostics);
 		assert.deepEqual(levels(rk), c.levels);
+		assert.equal(rk === null, ds.length > 0);
 	});
 }
 
-function registry(src: string) {
+function registryText(src: string): OptionsRegistry {
 	const [reg, ds] = readOptionsRegistry(src);
 	assert.deepEqual(ds, []);
 	assert.ok(reg !== null);
 	return reg;
 }
 
+// A registry case's input: a registry document read through the shape reader,
+// or options handed to the validator directly.
+function registry(inp: Json): OptionsRegistry {
+	if (inp.options !== undefined) {
+		return { options: inp.options };
+	}
+	return registryText(inp.registry);
+}
+
 for (const c of rulesCases.registry) {
 	test(`registry: ${c.name}`, () => {
-		const [checked, rs] = checkOptionsRegistry(registry(c.registry));
-		assert.deepEqual(refusals(rs), c.refusals);
-		assert.equal(checked === null, c.refusals.length > 0);
+		const [checked, ds] = validateOptionsRegistry(registry(c));
+		assert.deepEqual(diags(ds), c.diagnostics);
+		assert.equal(checked === null, c.diagnostics.length > 0);
 	});
 }
 
 const ns = rulesCases.namespace;
+
+function namespaceRegistry(): CheckedOptionsRegistry {
+	const [reg, ds] = validateOptionsRegistry(registryText(ns.registry));
+	assert.deepEqual(ds, []);
+	assert.ok(reg !== null);
+	return reg;
+}
+
+// A namespace case's input: subject documents read through the shape reader,
+// or entries handed to the validator directly, bypassing the shape reader.
+function entries(inp: Json): OptionsEntry[] {
+	if (inp.entries !== undefined) {
+		return inp.entries.map((e: Json) => ({ scope: null, ...e }));
+	}
+	const out: OptionsEntry[] = [];
+	for (const name of Object.keys(inp.files).sort()) {
+		const [es, ds] = readOptionsEntries(name, inp.files[name]);
+		assert.deepEqual(ds, []);
+		out.push(...es);
+	}
+	return out;
+}
+
 for (const c of ns.cases) {
 	test(`namespace: ${c.name}`, () => {
-		const [reg, rr] = checkOptionsRegistry(registry(ns.registry));
-		assert.deepEqual(rr, []);
-		assert.ok(reg !== null);
-		const entries: OptionsEntry[] = [];
-		for (const name of Object.keys(c.files).sort()) {
-			const [es, ds] = readOptionsEntries(name, c.files[name]);
-			assert.deepEqual(ds, []);
-			entries.push(...es);
-		}
-		const [accepted, rs] = validateOptionsNamespace(ns.tool, reg, entries);
-		assert.deepEqual(refusals(rs), c.refusals);
+		const [accepted, ds] = validateOptionsNamespace(
+			ns.tool,
+			namespaceRegistry(),
+			entries(c),
+		);
+		assert.deepEqual(diags(ds), c.diagnostics);
 		assert.deepEqual(
 			accepted.map((a) => ({
 				file: a.entry.file,
@@ -168,5 +191,35 @@ for (const c of ns.cases) {
 			})),
 			c.classified,
 		);
+	});
+}
+
+function runFixKind(kind: string, inp: Json): readonly Diagnostic[] {
+	switch (kind) {
+		case "ranking":
+			return parseOptionsRanking(inp.input)[1];
+		case "registry":
+			return validateOptionsRegistry(registry(inp))[1];
+		case "namespace":
+			return validateOptionsNamespace(
+				ns.tool,
+				namespaceRegistry(),
+				entries(inp),
+			)[1];
+	}
+	throw new Error(`unknown fix kind ${kind}`);
+}
+
+// Every fix a message names: the "before" input draws a diagnostic with the
+// case's code whose message names the fix, and the "after" input, which
+// applies that fix and nothing else, draws no diagnostic at all.
+for (const c of rulesCases.fixes) {
+	test(`fix instruction: ${c.name}`, () => {
+		const before = runFixKind(c.kind, c.before);
+		assert.ok(
+			before.some((d) => d.code === c.code && d.message.includes(c.fix)),
+			JSON.stringify(diags(before)),
+		);
+		assert.deepEqual(diags(runFixKind(c.kind, c.after)), []);
 	});
 }

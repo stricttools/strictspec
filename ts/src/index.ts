@@ -8,7 +8,9 @@
 // reference interpreter and the Go/Python runtimes). It also ships the options
 // built-in schemas (options-entries, options-registry, and upstream; see
 // stricttools/docs/appendix-options.md) with readers that validate and bind
-// those documents.
+// those documents, and the options rules: the ranking parser, the registry
+// validator, and the per-namespace entry validator that classifies accepted
+// entries, each refusing with catalogued STRICTSPEC_OPTIONS_* diagnostics.
 //
 // Per ts/DESIGN.md the raw-text entry point takes RAW TEXT (never JSON.parse):
 // the lossless parsers classify lexemes and produce tagged document values. There
@@ -570,21 +572,30 @@ function embeddedSchemaError(diags: diagMod.Diagnostic[]): string {
 // --- options built-ins (stricttools/docs/appendix-options.md) ---------------
 
 export type {
+	CheckedOption,
+	ClassifiedOptionsEntry,
 	OptionDeclaration,
+	OptionsClass,
 	OptionsEntry,
+	OptionsRanking,
 	OptionsRegistry,
 	Upstream,
 } from "./options.js";
 export {
+	CheckedOptionsRegistry,
 	OPTIONS_DIR,
 	OPTIONS_ENTRIES_SCHEMA,
+	OPTIONS_NON_EXISTENT,
 	OPTIONS_REGISTRY_SCHEMA,
 	optionsEntriesProgram,
 	optionsRegistryProgram,
+	parseOptionsRanking,
 	readOptionsEntries,
 	readOptionsRegistry,
 	readUpstream,
 	UPSTREAM_FILE,
 	UPSTREAM_SCHEMA,
 	upstreamProgram,
+	validateOptionsNamespace,
+	validateOptionsRegistry,
 } from "./options.js";
