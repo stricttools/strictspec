@@ -433,6 +433,63 @@
       ]
     },
     {
+      "path": "appendix-options.md",
+      "title": "Appendix: Options",
+      "type": "doc",
+      "headings": [
+        {
+          "level": 1,
+          "text": "Appendix: Options",
+          "anchor": "appendix-options"
+        },
+        {
+          "level": 2,
+          "text": "Where options live",
+          "anchor": "where-options-live"
+        },
+        {
+          "level": 2,
+          "text": "The entry document",
+          "anchor": "the-entry-document"
+        },
+        {
+          "level": 2,
+          "text": "The option registry",
+          "anchor": "the-option-registry"
+        },
+        {
+          "level": 2,
+          "text": "Ranking rules",
+          "anchor": "ranking-rules"
+        },
+        {
+          "level": 2,
+          "text": "Validation",
+          "anchor": "validation"
+        },
+        {
+          "level": 2,
+          "text": "Writing entries",
+          "anchor": "writing-entries"
+        },
+        {
+          "level": 2,
+          "text": "Reporting",
+          "anchor": "reporting"
+        },
+        {
+          "level": 2,
+          "text": "Renaming an option",
+          "anchor": "renaming-an-option"
+        },
+        {
+          "level": 2,
+          "text": "The upstream document",
+          "anchor": "the-upstream-document"
+        }
+      ]
+    },
+    {
       "path": "appendix-rendering.md",
       "title": "Appendix: Value Rendering, Path Grammar, and Did-You-Mean (normative)",
       "type": "doc",
@@ -822,6 +879,16 @@
         },
         {
           "level": 3,
+          "text": "`OptionsDir`",
+          "anchor": "optionsdir"
+        },
+        {
+          "level": 3,
+          "text": "`UpstreamFile`",
+          "anchor": "upstreamfile"
+        },
+        {
+          "level": 3,
           "text": "`MinGeneratedCodeFormat`",
           "anchor": "mingeneratedcodeformat"
         },
@@ -882,8 +949,53 @@
         },
         {
           "level": 3,
+          "text": "`OptionsEntriesSchema`",
+          "anchor": "optionsentriesschema"
+        },
+        {
+          "level": 3,
+          "text": "`OptionsRegistrySchema`",
+          "anchor": "optionsregistryschema"
+        },
+        {
+          "level": 3,
+          "text": "`UpstreamSchema`",
+          "anchor": "upstreamschema"
+        },
+        {
+          "level": 3,
           "text": "`Version`",
           "anchor": "version"
+        },
+        {
+          "level": 3,
+          "text": "`OptionDeclaration`",
+          "anchor": "optiondeclaration"
+        },
+        {
+          "level": 3,
+          "text": "`OptionsRegistry`",
+          "anchor": "optionsregistry"
+        },
+        {
+          "level": 3,
+          "text": "`OptionsEntry`",
+          "anchor": "optionsentry"
+        },
+        {
+          "level": 3,
+          "text": "`Upstream`",
+          "anchor": "upstream"
+        },
+        {
+          "level": 3,
+          "text": "`FileDiagnostics`",
+          "anchor": "filediagnostics"
+        },
+        {
+          "level": 3,
+          "text": "`OptionsEntriesLoad`",
+          "anchor": "optionsentriesload"
         },
         {
           "level": 3,
@@ -914,6 +1026,51 @@
           "level": 3,
           "text": "`KV`",
           "anchor": "kv"
+        },
+        {
+          "level": 3,
+          "text": "`OptionsEntriesProgram`",
+          "anchor": "optionsentriesprogram"
+        },
+        {
+          "level": 3,
+          "text": "`OptionsRegistryProgram`",
+          "anchor": "optionsregistryprogram"
+        },
+        {
+          "level": 3,
+          "text": "`UpstreamProgram`",
+          "anchor": "upstreamprogram"
+        },
+        {
+          "level": 3,
+          "text": "`ReadOptionsRegistry`",
+          "anchor": "readoptionsregistry"
+        },
+        {
+          "level": 3,
+          "text": "`LoadOptionsRegistry`",
+          "anchor": "loadoptionsregistry"
+        },
+        {
+          "level": 3,
+          "text": "`ReadOptionsEntries`",
+          "anchor": "readoptionsentries"
+        },
+        {
+          "level": 3,
+          "text": "`LoadOptionsEntries`",
+          "anchor": "loadoptionsentries"
+        },
+        {
+          "level": 3,
+          "text": "`ReadUpstream`",
+          "anchor": "readupstream"
+        },
+        {
+          "level": 3,
+          "text": "`LoadUpstream`",
+          "anchor": "loadupstream"
         },
         {
           "level": 3,
@@ -1051,10 +1208,71 @@
     }
   ],
   "posts": [],
-  "last_gen": "2026-09-19T22:36:05.984604+00:00",
+  "last_gen": "2026-09-27T22:32:57.902436+00:00",
   "theme": "minimal",
   "vocabulary": {
-    "accepted": [],
+    "accepted": [
+      {
+        "word": "betterclaude",
+        "aliases": []
+      },
+      {
+        "word": "claudestream",
+        "aliases": []
+      },
+      {
+        "word": "incantino",
+        "aliases": []
+      },
+      {
+        "word": "metagate",
+        "aliases": []
+      },
+      {
+        "word": "migrable",
+        "aliases": []
+      },
+      {
+        "word": "migset",
+        "aliases": []
+      },
+      {
+        "word": "orxtra",
+        "aliases": []
+      },
+      {
+        "word": "pgdesign",
+        "aliases": []
+      },
+      {
+        "word": "pgtype",
+        "aliases": []
+      },
+      {
+        "word": "private-project",
+        "aliases": []
+      },
+      {
+        "word": "predraw",
+        "aliases": []
+      },
+      {
+        "word": "rlsbl",
+        "aliases": []
+      },
+      {
+        "word": "strictspec",
+        "aliases": []
+      },
+      {
+        "word": "tunebox",
+        "aliases": []
+      },
+      {
+        "word": "wavescript",
+        "aliases": []
+      }
+    ],
     "rejected": []
   }
 }
