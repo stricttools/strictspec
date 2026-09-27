@@ -1,0 +1,36 @@
+# Toolchain-shipped built-in schema: a fork's upstream declaration,
+# .strictmetadata/upstream/upstream.toml (stricttools/docs/appendix-options.md,
+# "The upstream document").
+# This file is the single source of the schema: python/scripts/genbuiltins.py
+# and ts/scripts/genbuiltins.mjs generate the Python and TypeScript runtimes'
+# copies from it.
+name = "upstream"
+meta_version = 1
+format_version = 1
+document_syntax = "toml"
+role = "schema"
+root = "Upstream"
+description = "The upstream repository a fork tracks."
+
+[types.Upstream]
+type = "record"
+
+[types.Upstream.fields.host]
+type = "string"
+required = true
+description = "The upstream's host, for example github.com."
+
+[types.Upstream.fields.owner]
+type = "string"
+required = true
+description = "The upstream repository's owner."
+
+[types.Upstream.fields.repo]
+type = "string"
+required = true
+description = "The upstream repository's name."
+
+[types.Upstream.fields.branch]
+type = "string"
+required = true
+description = "The upstream branch the fork tracks."

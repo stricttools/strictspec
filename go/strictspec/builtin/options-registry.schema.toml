@@ -1,0 +1,63 @@
+# Toolchain-shipped built-in schema: a family tool's options registry, declaring
+# every option the tool offers (stricttools/docs/appendix-options.md, "The option
+# registry").
+# This file is the single source of the schema: python/scripts/genbuiltins.py
+# and ts/scripts/genbuiltins.mjs generate the Python and TypeScript runtimes'
+# copies from it.
+name = "options-registry"
+meta_version = 1
+format_version = 1
+document_syntax = "toml"
+role = "schema"
+root = "OptionsRegistry"
+description = "A family tool's registry of the options it offers: each option's name, subject file, ranked values, default, and scope kind."
+
+[types.OptionsRegistry]
+type = "record"
+
+[types.OptionsRegistry.fields.option]
+type = "array"
+required = true
+description = "Every option the tool offers."
+[types.OptionsRegistry.fields.option.item]
+type = "OptionDeclaration"
+
+[[types.OptionsRegistry.constraints]]
+form = "unique-by"
+collection = "option"
+field = "name"
+normalization = "none"
+description = "Option names are unique within a registry."
+
+[types.OptionDeclaration]
+type = "record"
+
+[types.OptionDeclaration.fields.name]
+type = "string"
+required = true
+description = "The tool's own name for the option; entries name it as <tool>:<name>."
+
+[types.OptionDeclaration.fields.subject]
+type = "string"
+required = true
+description = "The one subject file (without .toml) every entry for this option lives in."
+
+[types.OptionDeclaration.fields.values]
+type = "string"
+required = true
+description = "The allowed values ranked strongest first, using only > (stronger than) and = (equal rank)."
+
+[types.OptionDeclaration.fields.default]
+type = "string"
+required = true
+description = "The value a repository runs when it has no entry for the option; one of the declared values."
+
+[types.OptionDeclaration.fields.scope]
+type = "string"
+required = true
+description = "none, or the scope kind (defined by the tool) an entry's scope names."
+
+[types.OptionDeclaration.fields.description]
+type = "string"
+required = true
+description = "What the option governs."

@@ -1,0 +1,356 @@
+[
+ {
+  "name": "entries-valid",
+  "schema": "entries",
+  "file": "changelog.toml",
+  "input": "format_version = 1\n\n[[entry]]\nid = \"rlsbl:changelog-coverage\"\ncurrent = \"off\"\nideal = \"on\"\nreason = \"fork\"\n\n[[entry]]\nid = \"selfdoc:docs-coverage\"\nscope = \"docs/api\"\ncurrent = \"off\"\nideal = \"non-existent\"\nreason = \"waiting\"\n",
+  "expect": {
+   "entries": [
+    {
+     "file": "changelog.toml",
+     "index": 0,
+     "id": "rlsbl:changelog-coverage",
+     "scope": null,
+     "current": "off",
+     "ideal": "on",
+     "reason": "fork"
+    },
+    {
+     "file": "changelog.toml",
+     "index": 1,
+     "id": "selfdoc:docs-coverage",
+     "scope": "docs/api",
+     "current": "off",
+     "ideal": "non-existent",
+     "reason": "waiting"
+    }
+   ]
+  }
+ },
+ {
+  "name": "entries-gate-absent",
+  "schema": "entries",
+  "file": "a.toml",
+  "input": "[[entry]]\nid = \"a:b\"\ncurrent = \"x\"\nideal = \"y\"\nreason = \"r\"\n",
+  "expect": {
+   "diagnostics": [
+    {
+     "code": "STRICTSPEC_GATE_ABSENT",
+     "path": "$",
+     "message": "Document is missing `format_version`. Schema options-entries expects 1. Run: strictspec migrate --schema options-entries --to 1 <paths>"
+    }
+   ]
+  }
+ },
+ {
+  "name": "entries-gate-unsupported",
+  "schema": "entries",
+  "file": "a.toml",
+  "input": "format_version = 2\n",
+  "expect": {
+   "diagnostics": [
+    {
+     "code": "STRICTSPEC_GATE_UNSUPPORTED",
+     "path": "$",
+     "message": "Document `format_version` is 2, but schema options-entries accepts exactly 1 (migration set options-entries). Run: strictspec migrate --schema options-entries --to 1 <paths>"
+    }
+   ]
+  }
+ },
+ {
+  "name": "entries-missing-entry",
+  "schema": "entries",
+  "file": "a.toml",
+  "input": "format_version = 1\n",
+  "expect": {
+   "diagnostics": [
+    {
+     "code": "STRICTSPEC_TYPE_MISSING_REQUIRED",
+     "path": "$",
+     "message": "Missing required field entry at $."
+    }
+   ]
+  }
+ },
+ {
+  "name": "entries-missing-fields",
+  "schema": "entries",
+  "file": "a.toml",
+  "input": "format_version = 1\n[[entry]]\nscope = \"x\"\n",
+  "expect": {
+   "diagnostics": [
+    {
+     "code": "STRICTSPEC_TYPE_MISSING_REQUIRED",
+     "path": "$.entry[0]",
+     "message": "Missing required field id at $.entry[0]."
+    },
+    {
+     "code": "STRICTSPEC_TYPE_MISSING_REQUIRED",
+     "path": "$.entry[0]",
+     "message": "Missing required field current at $.entry[0]."
+    },
+    {
+     "code": "STRICTSPEC_TYPE_MISSING_REQUIRED",
+     "path": "$.entry[0]",
+     "message": "Missing required field ideal at $.entry[0]."
+    },
+    {
+     "code": "STRICTSPEC_TYPE_MISSING_REQUIRED",
+     "path": "$.entry[0]",
+     "message": "Missing required field reason at $.entry[0]."
+    }
+   ]
+  }
+ },
+ {
+  "name": "entries-empty-reason",
+  "schema": "entries",
+  "file": "a.toml",
+  "input": "format_version = 1\n[[entry]]\nid = \"a:b\"\ncurrent = \"x\"\nideal = \"y\"\nreason = \"\"\n",
+  "expect": {
+   "diagnostics": [
+    {
+     "code": "STRICTSPEC_VALUE_STRING_EMPTY",
+     "path": "$.entry[0].reason",
+     "message": "String at $.entry[0].reason is empty; a non-empty value is required."
+    }
+   ]
+  }
+ },
+ {
+  "name": "entries-id-malformed",
+  "schema": "entries",
+  "file": "a.toml",
+  "input": "format_version = 1\n[[entry]]\nid = \"rlsbl\"\ncurrent = \"x\"\nideal = \"y\"\nreason = \"r\"\n[[entry]]\nid = \":b\"\ncurrent = \"x\"\nideal = \"y\"\nreason = \"r\"\n[[entry]]\nid = \"rlsbl:\"\ncurrent = \"x\"\nideal = \"y\"\nreason = \"r\"\n",
+  "expect": {
+   "diagnostics": [
+    {
+     "code": "STRICTSPEC_VALUE_STRING_REGEX",
+     "path": "$.entry[0].id",
+     "message": "String \"rlsbl\" at $.entry[0].id does not match the required pattern \"^[^:]+:.+$\"."
+    },
+    {
+     "code": "STRICTSPEC_VALUE_STRING_REGEX",
+     "path": "$.entry[1].id",
+     "message": "String \":b\" at $.entry[1].id does not match the required pattern \"^[^:]+:.+$\"."
+    },
+    {
+     "code": "STRICTSPEC_VALUE_STRING_REGEX",
+     "path": "$.entry[2].id",
+     "message": "String \"rlsbl:\" at $.entry[2].id does not match the required pattern \"^[^:]+:.+$\"."
+    }
+   ]
+  }
+ },
+ {
+  "name": "entries-unknown-key",
+  "schema": "entries",
+  "file": "a.toml",
+  "input": "format_version = 1\n[[entry]]\nid = \"a:b\"\ncurrent = \"x\"\nideal = \"y\"\nreason = \"r\"\nreasn = \"r\"\n",
+  "expect": {
+   "diagnostics": [
+    {
+     "code": "STRICTSPEC_KEY_UNKNOWN",
+     "path": "$.entry[0]",
+     "message": "Unknown key reasn at $.entry[0]. Did you mean reason?"
+    }
+   ]
+  }
+ },
+ {
+  "name": "entries-wrong-type",
+  "schema": "entries",
+  "file": "a.toml",
+  "input": "format_version = 1\n[[entry]]\nid = \"a:b\"\nscope = 1\ncurrent = \"x\"\nideal = \"y\"\nreason = \"r\"\n",
+  "expect": {
+   "diagnostics": [
+    {
+     "code": "STRICTSPEC_TYPE_NOT_STRING",
+     "path": "$.entry[0].scope",
+     "message": "Expected a string at $.entry[0].scope, got integer."
+    }
+   ]
+  }
+ },
+ {
+  "name": "entries-parse-error",
+  "schema": "entries",
+  "file": "a.toml",
+  "input": "format_version = 1\n[[entry]\n",
+  "expect": {
+   "diagnostics": [
+    {
+     "code": "STRICTSPEC_PARSE_TOML_SYNTAX",
+     "path": "$",
+     "message": "TOML parse error at $: expected ']]', got ']'."
+    }
+   ]
+  }
+ },
+ {
+  "name": "registry-valid",
+  "schema": "registry",
+  "input": "format_version = 1\n\n[[option]]\nname = \"changelog-coverage\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n\n[[option]]\nname = \"publish\"\nsubject = \"release\"\nvalues = \"npm = pypi = jsr > none\"\ndefault = \"none\"\nscope = \"path\"\ndescription = \"where\"\n",
+  "expect": {
+   "options": [
+    {
+     "name": "changelog-coverage",
+     "subject": "changelog",
+     "values": "on > deferred > off",
+     "default": "on",
+     "scope": "none",
+     "description": "d"
+    },
+    {
+     "name": "publish",
+     "subject": "release",
+     "values": "npm = pypi = jsr > none",
+     "default": "none",
+     "scope": "path",
+     "description": "where"
+    }
+   ]
+  }
+ },
+ {
+  "name": "registry-duplicate-name",
+  "schema": "registry",
+  "input": "format_version = 1\n[[option]]\nname = \"x\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n[[option]]\nname = \"x\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n",
+  "expect": {
+   "diagnostics": [
+    {
+     "code": "STRICTSPEC_INTRA_UNIQUE_BY",
+     "path": "$.option",
+     "message": "Duplicate value \"x\" for unique-by name at $.option (normalization: none)."
+    }
+   ]
+  }
+ },
+ {
+  "name": "registry-missing-fields",
+  "schema": "registry",
+  "input": "format_version = 1\n[[option]]\nname = \"x\"\n",
+  "expect": {
+   "diagnostics": [
+    {
+     "code": "STRICTSPEC_TYPE_MISSING_REQUIRED",
+     "path": "$.option[0]",
+     "message": "Missing required field subject at $.option[0]."
+    },
+    {
+     "code": "STRICTSPEC_TYPE_MISSING_REQUIRED",
+     "path": "$.option[0]",
+     "message": "Missing required field values at $.option[0]."
+    },
+    {
+     "code": "STRICTSPEC_TYPE_MISSING_REQUIRED",
+     "path": "$.option[0]",
+     "message": "Missing required field default at $.option[0]."
+    },
+    {
+     "code": "STRICTSPEC_TYPE_MISSING_REQUIRED",
+     "path": "$.option[0]",
+     "message": "Missing required field scope at $.option[0]."
+    },
+    {
+     "code": "STRICTSPEC_TYPE_MISSING_REQUIRED",
+     "path": "$.option[0]",
+     "message": "Missing required field description at $.option[0]."
+    }
+   ]
+  }
+ },
+ {
+  "name": "registry-missing-option",
+  "schema": "registry",
+  "input": "format_version = 1\n",
+  "expect": {
+   "diagnostics": [
+    {
+     "code": "STRICTSPEC_TYPE_MISSING_REQUIRED",
+     "path": "$",
+     "message": "Missing required field option at $."
+    }
+   ]
+  }
+ },
+ {
+  "name": "registry-unknown-key",
+  "schema": "registry",
+  "input": "format_version = 1\n[[option]]\nname = \"x\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\ntool = \"rlsbl\"\n",
+  "expect": {
+   "diagnostics": [
+    {
+     "code": "STRICTSPEC_KEY_UNKNOWN",
+     "path": "$.option[0]",
+     "message": "Unknown key tool at $.option[0]."
+    }
+   ]
+  }
+ },
+ {
+  "name": "upstream-valid",
+  "schema": "upstream",
+  "input": "format_version = 1\nhost = \"github.com\"\nowner = \"ncruces\"\nrepo = \"wasm2go\"\nbranch = \"main\"\n",
+  "expect": {
+   "upstream": {
+    "host": "github.com",
+    "owner": "ncruces",
+    "repo": "wasm2go",
+    "branch": "main"
+   }
+  }
+ },
+ {
+  "name": "upstream-missing-fields",
+  "schema": "upstream",
+  "input": "format_version = 1\nhost = \"github.com\"\n",
+  "expect": {
+   "diagnostics": [
+    {
+     "code": "STRICTSPEC_TYPE_MISSING_REQUIRED",
+     "path": "$",
+     "message": "Missing required field owner at $."
+    },
+    {
+     "code": "STRICTSPEC_TYPE_MISSING_REQUIRED",
+     "path": "$",
+     "message": "Missing required field repo at $."
+    },
+    {
+     "code": "STRICTSPEC_TYPE_MISSING_REQUIRED",
+     "path": "$",
+     "message": "Missing required field branch at $."
+    }
+   ]
+  }
+ },
+ {
+  "name": "upstream-empty",
+  "schema": "upstream",
+  "input": "",
+  "expect": {
+   "diagnostics": [
+    {
+     "code": "STRICTSPEC_GATE_ABSENT",
+     "path": "$",
+     "message": "Document is missing `format_version`. Schema upstream expects 1. Run: strictspec migrate --schema upstream --to 1 <paths>"
+    }
+   ]
+  }
+ },
+ {
+  "name": "upstream-unknown-key",
+  "schema": "upstream",
+  "input": "format_version = 1\nhost = \"github.com\"\nowner = \"o\"\nrepo = \"r\"\nbranch = \"main\"\nurl = \"x\"\n",
+  "expect": {
+   "diagnostics": [
+    {
+     "code": "STRICTSPEC_KEY_UNKNOWN",
+     "path": "$",
+     "message": "Unknown key url at $."
+    }
+   ]
+  }
+ }
+]

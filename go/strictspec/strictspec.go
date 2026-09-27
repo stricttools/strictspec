@@ -12,7 +12,10 @@
 // syntaxes, the generated-code pairing guard, the tagged document value (the second
 // entry point) with its coercers, and the constraint-engine entry (validation is
 // driven by the shared emitter IR, internal/ir, so a generated Go validator runs
-// the identical checks as the reference interpreter).
+// the identical checks as the reference interpreter). It also ships the options
+// built-in schemas (options-entries, options-registry, and upstream; see
+// stricttools/docs/appendix-options.md) with readers that validate and bind
+// those documents.
 //
 // Invariants (go/DESIGN.md): no lenient modes; loading and validation are
 // inseparable; unknown keys are always a hard error; there is no severity — every

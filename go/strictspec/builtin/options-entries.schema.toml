@@ -1,0 +1,53 @@
+# Toolchain-shipped built-in schema: a subject document under
+# .strictmetadata/options/ (stricttools/docs/appendix-options.md, "The entry
+# document").
+# This file is the single source of the schema: python/scripts/genbuiltins.py
+# and ts/scripts/genbuiltins.mjs generate the Python and TypeScript runtimes'
+# copies from it.
+name = "options-entries"
+meta_version = 1
+format_version = 1
+document_syntax = "toml"
+role = "schema"
+root = "OptionsEntries"
+description = "One subject document of a repository's options: every entry deviating from a family tool's default for an option filed under this subject."
+
+[types.OptionsEntries]
+type = "record"
+
+[types.OptionsEntries.fields.entry]
+type = "array"
+required = true
+description = "The entries filed under this subject."
+[types.OptionsEntries.fields.entry.item]
+type = "OptionsEntry"
+
+[types.OptionsEntry]
+type = "record"
+
+[types.OptionsEntry.fields.id]
+type = "string"
+required = true
+regex = "^[^:]+:.+$"
+description = "The option, as <tool>:<name>, using the tool's own name for the option."
+
+[types.OptionsEntry.fields.scope]
+type = "string"
+required = false
+description = "Narrows the entry to part of the repository; accepted only by an option whose declaration names a scope kind."
+
+[types.OptionsEntry.fields.current]
+type = "string"
+required = true
+description = "The value the repository runs today; a value the option declares."
+
+[types.OptionsEntry.fields.ideal]
+type = "string"
+required = true
+description = "The value the repository should run; a value the option declares, or non-existent when the right value is one the tool does not offer yet."
+
+[types.OptionsEntry.fields.reason]
+type = "string"
+required = true
+non_empty = true
+description = "Why the repository deviates from the option's default."
