@@ -91,6 +91,7 @@ AREAS = (
     'METAGATE',
     'MIGRATE',
     'NUM',
+    'OPTIONS',
     'PARSE',
     'SCALAR',
     'SCHEMA',
@@ -735,6 +736,165 @@ CATALOGUE: dict[str, Entry] = {
         slots=(
             SlotSpec('actual', SlotType.VALUE),
             SlotSpec('path', SlotType.PATH),
+        ),
+    ),
+    'STRICTSPEC_OPTIONS_CURRENT_ABOVE_IDEAL': Entry(
+        code='STRICTSPEC_OPTIONS_CURRENT_ABOVE_IDEAL',
+        area='OPTIONS',
+        template='Entry {id} at {path} in {file} has current {current} ranked above its ideal {ideal} in {ranking}; current never ranks above ideal.',
+        slots=(
+            SlotSpec('id', SlotType.VALUE),
+            SlotSpec('path', SlotType.PATH),
+            SlotSpec('file', SlotType.STRING),
+            SlotSpec('current', SlotType.VALUE),
+            SlotSpec('ideal', SlotType.VALUE),
+            SlotSpec('ranking', SlotType.VALUE),
+        ),
+    ),
+    'STRICTSPEC_OPTIONS_DEFAULT_UNDECLARED': Entry(
+        code='STRICTSPEC_OPTIONS_DEFAULT_UNDECLARED',
+        area='OPTIONS',
+        template='Default {value} at {path} is not a value of the ranking {ranking}.',
+        slots=(
+            SlotSpec('value', SlotType.VALUE),
+            SlotSpec('path', SlotType.PATH),
+            SlotSpec('ranking', SlotType.VALUE),
+        ),
+    ),
+    'STRICTSPEC_OPTIONS_DUPLICATE_ENTRY': Entry(
+        code='STRICTSPEC_OPTIONS_DUPLICATE_ENTRY',
+        area='OPTIONS',
+        template='Entry {id} at {path} in {file} repeats the entry at {first} in {first_file}, which has the same id and scope; remove one of them.',
+        slots=(
+            SlotSpec('id', SlotType.VALUE),
+            SlotSpec('path', SlotType.PATH),
+            SlotSpec('file', SlotType.STRING),
+            SlotSpec('first', SlotType.PATH),
+            SlotSpec('first_file', SlotType.STRING),
+        ),
+    ),
+    'STRICTSPEC_OPTIONS_EMPTY_REASON': Entry(
+        code='STRICTSPEC_OPTIONS_EMPTY_REASON',
+        area='OPTIONS',
+        template="Entry {id} at {path} in {file} has an empty reason; state why the repository deviates from the option's default.",
+        slots=(
+            SlotSpec('id', SlotType.VALUE),
+            SlotSpec('path', SlotType.PATH),
+            SlotSpec('file', SlotType.STRING),
+        ),
+    ),
+    'STRICTSPEC_OPTIONS_RANKING_DUPLICATE': Entry(
+        code='STRICTSPEC_OPTIONS_RANKING_DUPLICATE',
+        area='OPTIONS',
+        template='The ranking at {path} declares {value} more than once; declare each value once.',
+        slots=(
+            SlotSpec('path', SlotType.PATH),
+            SlotSpec('value', SlotType.VALUE),
+        ),
+    ),
+    'STRICTSPEC_OPTIONS_RANKING_MALFORMED': Entry(
+        code='STRICTSPEC_OPTIONS_RANKING_MALFORMED',
+        area='OPTIONS',
+        template='Ranking {ranking} at {path} is malformed: a ranking is value names joined by > (stronger than) or = (equal rank), with one space on either side of each operator.',
+        slots=(
+            SlotSpec('ranking', SlotType.VALUE),
+            SlotSpec('path', SlotType.PATH),
+        ),
+    ),
+    'STRICTSPEC_OPTIONS_RANKING_RESERVED': Entry(
+        code='STRICTSPEC_OPTIONS_RANKING_RESERVED',
+        area='OPTIONS',
+        template='The ranking at {path} declares {value}, which is reserved and never declared; remove it from the ranking.',
+        slots=(
+            SlotSpec('path', SlotType.PATH),
+            SlotSpec('value', SlotType.VALUE),
+        ),
+    ),
+    'STRICTSPEC_OPTIONS_RANKING_VALUE_NAME': Entry(
+        code='STRICTSPEC_OPTIONS_RANKING_VALUE_NAME',
+        area='OPTIONS',
+        template='Value name {value} in the ranking at {path} is invalid: a value name is lowercase letters, digits, and hyphens.',
+        slots=(
+            SlotSpec('value', SlotType.VALUE),
+            SlotSpec('path', SlotType.PATH),
+        ),
+    ),
+    'STRICTSPEC_OPTIONS_REDUNDANT': Entry(
+        code='STRICTSPEC_OPTIONS_REDUNDANT',
+        area='OPTIONS',
+        template='Entry {id} at {path} in {file} sets both current and ideal to the default {value}, so it deviates from nothing; remove the entry.',
+        slots=(
+            SlotSpec('id', SlotType.VALUE),
+            SlotSpec('path', SlotType.PATH),
+            SlotSpec('file', SlotType.STRING),
+            SlotSpec('value', SlotType.VALUE),
+        ),
+    ),
+    'STRICTSPEC_OPTIONS_SCOPE_NOT_ACCEPTED': Entry(
+        code='STRICTSPEC_OPTIONS_SCOPE_NOT_ACCEPTED',
+        area='OPTIONS',
+        template='Entry {id} at {path} in {file} has scope {value}, but the option takes no scope; remove the scope.',
+        slots=(
+            SlotSpec('id', SlotType.VALUE),
+            SlotSpec('path', SlotType.PATH),
+            SlotSpec('file', SlotType.STRING),
+            SlotSpec('value', SlotType.VALUE),
+        ),
+    ),
+    'STRICTSPEC_OPTIONS_SUBJECT_INVALID': Entry(
+        code='STRICTSPEC_OPTIONS_SUBJECT_INVALID',
+        area='OPTIONS',
+        template='Subject {value} at {path} does not name a subject file: a subject is lowercase letters, digits, and hyphens, without .toml, and is never manifest.',
+        slots=(
+            SlotSpec('value', SlotType.VALUE),
+            SlotSpec('path', SlotType.PATH),
+        ),
+    ),
+    'STRICTSPEC_OPTIONS_UNDECLARED_CURRENT': Entry(
+        code='STRICTSPEC_OPTIONS_UNDECLARED_CURRENT',
+        area='OPTIONS',
+        template="Current value {value} of entry {id} at {path} in {file} is not a value of the option's ranking {ranking}.",
+        slots=(
+            SlotSpec('value', SlotType.VALUE),
+            SlotSpec('id', SlotType.VALUE),
+            SlotSpec('path', SlotType.PATH),
+            SlotSpec('file', SlotType.STRING),
+            SlotSpec('ranking', SlotType.VALUE),
+        ),
+    ),
+    'STRICTSPEC_OPTIONS_UNDECLARED_IDEAL': Entry(
+        code='STRICTSPEC_OPTIONS_UNDECLARED_IDEAL',
+        area='OPTIONS',
+        template="Ideal value {value} of entry {id} at {path} in {file} is neither a value of the option's ranking {ranking} nor non-existent.",
+        slots=(
+            SlotSpec('value', SlotType.VALUE),
+            SlotSpec('id', SlotType.VALUE),
+            SlotSpec('path', SlotType.PATH),
+            SlotSpec('file', SlotType.STRING),
+            SlotSpec('ranking', SlotType.VALUE),
+        ),
+    ),
+    'STRICTSPEC_OPTIONS_UNKNOWN_OPTION': Entry(
+        code='STRICTSPEC_OPTIONS_UNKNOWN_OPTION',
+        area='OPTIONS',
+        template='Entry at {path} in {file} names {id}, which is not an option {tool} declares.{suggestion}',
+        slots=(
+            SlotSpec('path', SlotType.PATH),
+            SlotSpec('file', SlotType.STRING),
+            SlotSpec('id', SlotType.VALUE),
+            SlotSpec('tool', SlotType.STRING),
+            SlotSpec('suggestion', SlotType.STRING),
+        ),
+    ),
+    'STRICTSPEC_OPTIONS_WRONG_SUBJECT': Entry(
+        code='STRICTSPEC_OPTIONS_WRONG_SUBJECT',
+        area='OPTIONS',
+        template='Entry {id} at {path} in {file} belongs in {subject}; move it there.',
+        slots=(
+            SlotSpec('id', SlotType.VALUE),
+            SlotSpec('path', SlotType.PATH),
+            SlotSpec('file', SlotType.STRING),
+            SlotSpec('subject', SlotType.STRING),
         ),
     ),
     'STRICTSPEC_PARSE_JSONL_BLANK_LINE': Entry(

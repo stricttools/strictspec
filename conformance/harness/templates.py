@@ -179,6 +179,22 @@ CATALOGUE: dict[str, str] = {
     "STRICTSPEC_SCALAR_UNKNOWN": "Field {path} uses custom scalar {name}, which is not registered in the manifest.",
     "STRICTSPEC_SCALAR_NO_BINDING": "Custom scalar {name} declares no binding for target {got}; every declared target requires a binding.",
     "STRICTSPEC_SCALAR_LENGTH": "Value at {path} violates the {name} scalar's length bound ({actual}, limit {limit}).",
+    # 21a. Options errors
+    "STRICTSPEC_OPTIONS_RANKING_MALFORMED": "Ranking {ranking} at {path} is malformed: a ranking is value names joined by > (stronger than) or = (equal rank), with one space on either side of each operator.",
+    "STRICTSPEC_OPTIONS_RANKING_VALUE_NAME": "Value name {value} in the ranking at {path} is invalid: a value name is lowercase letters, digits, and hyphens.",
+    "STRICTSPEC_OPTIONS_RANKING_RESERVED": "The ranking at {path} declares {value}, which is reserved and never declared; remove it from the ranking.",
+    "STRICTSPEC_OPTIONS_RANKING_DUPLICATE": "The ranking at {path} declares {value} more than once; declare each value once.",
+    "STRICTSPEC_OPTIONS_DEFAULT_UNDECLARED": "Default {value} at {path} is not a value of the ranking {ranking}.",
+    "STRICTSPEC_OPTIONS_SUBJECT_INVALID": "Subject {value} at {path} does not name a subject file: a subject is lowercase letters, digits, and hyphens, without .toml, and is never manifest.",
+    "STRICTSPEC_OPTIONS_UNKNOWN_OPTION": "Entry at {path} in {file} names {id}, which is not an option {tool} declares.{suggestion}",
+    "STRICTSPEC_OPTIONS_WRONG_SUBJECT": "Entry {id} at {path} in {file} belongs in {subject}; move it there.",
+    "STRICTSPEC_OPTIONS_SCOPE_NOT_ACCEPTED": "Entry {id} at {path} in {file} has scope {value}, but the option takes no scope; remove the scope.",
+    "STRICTSPEC_OPTIONS_UNDECLARED_CURRENT": "Current value {value} of entry {id} at {path} in {file} is not a value of the option's ranking {ranking}.",
+    "STRICTSPEC_OPTIONS_UNDECLARED_IDEAL": "Ideal value {value} of entry {id} at {path} in {file} is neither a value of the option's ranking {ranking} nor non-existent.",
+    "STRICTSPEC_OPTIONS_REDUNDANT": "Entry {id} at {path} in {file} sets both current and ideal to the default {value}, so it deviates from nothing; remove the entry.",
+    "STRICTSPEC_OPTIONS_CURRENT_ABOVE_IDEAL": "Entry {id} at {path} in {file} has current {current} ranked above its ideal {ideal} in {ranking}; current never ranks above ideal.",
+    "STRICTSPEC_OPTIONS_DUPLICATE_ENTRY": "Entry {id} at {path} in {file} repeats the entry at {first} in {first_file}, which has the same id and scope; remove one of them.",
+    "STRICTSPEC_OPTIONS_EMPTY_REASON": "Entry {id} at {path} in {file} has an empty reason; state why the repository deviates from the option's default.",
 }
 
 _SLOT_RE = re.compile(r"\{(\w+)\}")
