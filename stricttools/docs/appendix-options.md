@@ -67,14 +67,15 @@ Each tool ships a separate options registry, validated by the built-in schema
 `options-registry`, declaring every option it offers:
 
 ```toml
-format_version = 1
+format_version = 2
 
 [[option]]
-name = "changelog-coverage"
-subject = "changelog"
-values = "on > deferred > off"
+name = "version-consistency"
+subject = "release"
+values = "on > warn > off"
 default = "on"
 scope = "none"          # or a scope kind the tool defines, such as "path"
+requires = ["config-schema"]
 description = "..."
 ```
 
@@ -87,6 +88,12 @@ description = "..."
 - `default` is one of the declared values.
 - `subject` names the one subject file every entry for this option lives in;
   it follows the value-name grammar and is never `manifest`.
+- `requires` names the other options of the same registry this option depends
+  on, each once, by the tool's own name for them; it is `[]` when the option
+  depends on none. Every name is an option the registry declares, no option
+  requires itself, and no option depends on itself through others: the
+  requirements form no cycle.
+- The registry schema is at `format_version = 2`; version 2 added `requires`.
 
 ## Ranking rules
 
@@ -103,14 +110,43 @@ description = "..."
 - Each tool judges only its own namespace (`<tool>:*`). It refuses an unknown
   option name, a value its declaration does not list, an entry filed in the
   wrong subject file (naming the right one), a scope on an option that takes
-  none, a redundant entry, and a `current` ranked above `ideal`. It never
+  none, a redundant entry, a `current` ranked above `ideal`, and an entry that
+  sets an option's `current` or `ideal` to `off` while a dependent of the
+  option is not (see Dependencies). It never
   judges another tool's entries, so a tool a repository does not use cannot
   block it.
+- The registry refuses a `requires` name it does not declare, an option that
+  requires itself, and a cycle of requirements.
 - The ranking parser, the entry loader, and the per-namespace validator live
   in strictspec's runtime, identically in Go, Python, and TypeScript, so every
   tool applies the same rules. Each refusal is a catalogued error in the
   `OPTIONS` area of the error-code appendix. The TypeScript runtime parses
   document text; loading files from disk is offered in Go and Python.
+
+## Dependencies
+
+An option depends on every option it `requires`, and on everything those
+depend on; its dependents are the options that depend on it. Nothing is
+switched off silently:
+
+- A tool refuses an entry whose `current` is `off` while any dependent of its
+  option is not switched off. The refusal names the option and every such
+  dependent; the fix is to switch each of them off too, each in its own entry
+  with its own reason, or to keep the option on (a `current` other than `off`).
+- The same rule applies to `ideal`: an entry whose `ideal` is `off` is refused
+  while any dependent does not have the ideal `off`; the fix is to give each of
+  them the ideal `off`, each in its own entry with its own reason, or to give
+  the option an ideal other than `off`.
+- Only the value `off` triggers the rule. Any other value, such as `warn`,
+  never affects dependents, and an option whose default is `off` constrains
+  nothing until an entry names it.
+- A dependent is switched off (has the ideal `off`) when one of its entries has
+  `current` (`ideal`) `off` and either carries no scope, or carries the refused
+  entry's scope while both options declare the same scope kind. A dependent
+  whose default is `off` is switched off (has the ideal `off`) without an entry,
+  as long as none of its entries sets `current` (`ideal`) to another value.
+- A dependent's entry counts whatever else is refused in it; its own refusals
+  are reported on their own.
 
 ## Writing entries
 
