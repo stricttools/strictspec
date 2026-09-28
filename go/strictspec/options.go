@@ -84,13 +84,16 @@ func OptionsRegistryProgram() *Program { builtins(); return registryProgram }
 // UpstreamProgram is the compiled built-in upstream schema.
 func UpstreamProgram() *Program { builtins(); return upstreamProgram }
 
-// OptionDeclaration is one [[option]] of a tool's options registry.
+// OptionDeclaration is one [[option]] of a tool's options registry. Requires
+// names the other options of the same registry the option depends on (empty,
+// never nil, when read from a registry document that requires none).
 type OptionDeclaration struct {
 	Name        string
 	Subject     string
 	Values      string
 	Default     string
 	Scope       string
+	Requires    []string
 	Description string
 }
 
@@ -175,6 +178,12 @@ func ReadOptionsRegistry(input []byte) (*OptionsRegistry, []Diagnostic) {
 		d.Values, _ = tomlStr(o, "values")
 		d.Default, _ = tomlStr(o, "default")
 		d.Scope, _ = tomlStr(o, "scope")
+		reqs, _ := o.Field("requires")
+		d.Requires = []string{}
+		for _, r := range reqs.Items() {
+			n, _ := r.AsString()
+			d.Requires = append(d.Requires, n)
+		}
 		d.Description, _ = tomlStr(o, "description")
 		reg.Options = append(reg.Options, d)
 	}

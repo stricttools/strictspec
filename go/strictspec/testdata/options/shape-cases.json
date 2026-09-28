@@ -190,7 +190,7 @@
  {
   "name": "registry-valid",
   "schema": "registry",
-  "input": "format_version = 1\n\n[[option]]\nname = \"changelog-coverage\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n\n[[option]]\nname = \"publish\"\nsubject = \"release\"\nvalues = \"npm = pypi = jsr > none\"\ndefault = \"none\"\nscope = \"path\"\ndescription = \"where\"\n",
+  "input": "format_version = 2\n\n[[option]]\nname = \"changelog-coverage\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\nrequires = []\ndescription = \"d\"\n\n[[option]]\nname = \"publish\"\nsubject = \"release\"\nvalues = \"npm = pypi = jsr > none\"\ndefault = \"none\"\nscope = \"path\"\nrequires = [\"changelog-coverage\"]\ndescription = \"where\"\n",
   "expect": {
    "options": [
     {
@@ -199,6 +199,7 @@
      "values": "on > deferred > off",
      "default": "on",
      "scope": "none",
+     "requires": [],
      "description": "d"
     },
     {
@@ -207,7 +208,53 @@
      "values": "npm = pypi = jsr > none",
      "default": "none",
      "scope": "path",
+     "requires": [
+      "changelog-coverage"
+     ],
      "description": "where"
+    }
+   ]
+  }
+ },
+ {
+  "name": "registry-requires-repeated",
+  "schema": "registry",
+  "input": "format_version = 2\n[[option]]\nname = \"a\"\nsubject = \"changelog\"\nvalues = \"on > off\"\ndefault = \"on\"\nscope = \"none\"\nrequires = []\ndescription = \"d\"\n[[option]]\nname = \"b\"\nsubject = \"changelog\"\nvalues = \"on > off\"\ndefault = \"on\"\nscope = \"none\"\nrequires = [\"a\", \"a\"]\ndescription = \"d\"\n",
+  "expect": {
+   "diagnostics": [
+    {
+     "code": "STRICTSPEC_INTRA_PAIRWISE_DISTINCT",
+     "path": "$.option[1].requires",
+     "message": "Values at $.option[1].requires must be pairwise distinct; \"a\" repeats (normalization: none)."
+    }
+   ]
+  }
+ },
+ {
+  "name": "registry-requires-not-a-list",
+  "schema": "registry",
+  "input": "format_version = 2\n[[option]]\nname = \"a\"\nsubject = \"changelog\"\nvalues = \"on > off\"\ndefault = \"on\"\nscope = \"none\"\nrequires = \"b\"\ndescription = \"d\"\n",
+  "expect": {
+   "diagnostics": [
+    {
+     "code": "STRICTSPEC_TYPE_NOT_ARRAY",
+     "path": "$.option[0].requires",
+     "message": "Expected an array at $.option[0].requires, got string."
+    }
+   ]
+  }
+ },
+ {
+  "name": "registry-format-version-1",
+  "schema": "registry",
+  "note": "format_version 2 added requires; a version-1 registry is refused by the gate.",
+  "input": "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"changelog\"\nvalues = \"on > off\"\ndefault = \"on\"\nscope = \"none\"\nrequires = []\ndescription = \"d\"\n",
+  "expect": {
+   "diagnostics": [
+    {
+     "code": "STRICTSPEC_GATE_UNSUPPORTED",
+     "path": "$",
+     "message": "Document `format_version` is 1, but schema options-registry accepts exactly 2 (migration set options-registry). Run: strictspec migrate --schema options-registry --to 2 <paths>"
     }
    ]
   }
@@ -215,7 +262,7 @@
  {
   "name": "registry-duplicate-name",
   "schema": "registry",
-  "input": "format_version = 1\n[[option]]\nname = \"x\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n[[option]]\nname = \"x\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n",
+  "input": "format_version = 2\n[[option]]\nname = \"x\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\nrequires = []\ndescription = \"d\"\n[[option]]\nname = \"x\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\nrequires = []\ndescription = \"d\"\n",
   "expect": {
    "diagnostics": [
     {
@@ -229,7 +276,7 @@
  {
   "name": "registry-missing-fields",
   "schema": "registry",
-  "input": "format_version = 1\n[[option]]\nname = \"x\"\n",
+  "input": "format_version = 2\n[[option]]\nname = \"x\"\n",
   "expect": {
    "diagnostics": [
     {
@@ -255,6 +302,11 @@
     {
      "code": "STRICTSPEC_TYPE_MISSING_REQUIRED",
      "path": "$.option[0]",
+     "message": "Missing required field requires at $.option[0]."
+    },
+    {
+     "code": "STRICTSPEC_TYPE_MISSING_REQUIRED",
+     "path": "$.option[0]",
      "message": "Missing required field description at $.option[0]."
     }
    ]
@@ -263,7 +315,7 @@
  {
   "name": "registry-missing-option",
   "schema": "registry",
-  "input": "format_version = 1\n",
+  "input": "format_version = 2\n",
   "expect": {
    "diagnostics": [
     {
@@ -277,7 +329,7 @@
  {
   "name": "registry-unknown-key",
   "schema": "registry",
-  "input": "format_version = 1\n[[option]]\nname = \"x\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\ntool = \"rlsbl\"\n",
+  "input": "format_version = 2\n[[option]]\nname = \"x\"\nsubject = \"changelog\"\nvalues = \"on > deferred > off\"\ndefault = \"on\"\nscope = \"none\"\nrequires = []\ndescription = \"d\"\ntool = \"rlsbl\"\n",
   "expect": {
    "diagnostics": [
     {

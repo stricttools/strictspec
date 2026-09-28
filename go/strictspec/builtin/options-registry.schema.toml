@@ -6,11 +6,11 @@
 # copies from it.
 name = "options-registry"
 meta_version = 1
-format_version = 1
+format_version = 2
 document_syntax = "toml"
 role = "schema"
 root = "OptionsRegistry"
-description = "A family tool's registry of the options it offers: each option's name, subject file, ranked values, default, and scope kind."
+description = "A family tool's registry of the options it offers: each option's name, subject file, ranked values, default, scope kind, and the options it requires."
 
 [types.OptionsRegistry]
 type = "record"
@@ -56,6 +56,19 @@ description = "The value a repository runs when it has no entry for the option; 
 type = "string"
 required = true
 description = "none, or the scope kind (defined by the tool) an entry's scope names."
+
+[types.OptionDeclaration.fields.requires]
+type = "array"
+required = true
+description = "The names of the other options of this registry the option depends on, each once; empty when it depends on none."
+[types.OptionDeclaration.fields.requires.item]
+type = "string"
+
+[[types.OptionDeclaration.constraints]]
+form = "pairwise-distinct"
+collection = "requires"
+normalization = "none"
+description = "An option requires each other option once."
 
 [types.OptionDeclaration.fields.description]
 type = "string"
