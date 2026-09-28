@@ -49,6 +49,7 @@ def _run_shape(c):
                     "values": o.values,
                     "default": o.default,
                     "scope": o.scope,
+                    "requires": list(o.requires),
                     "description": o.description,
                 }
                 for o in reg.options
@@ -81,11 +82,14 @@ def test_shape_case(case):
         ("upstream", ss.upstream_program),
     ],
 )
-def test_builtin_schema_accepts_only_format_version_1(name, program):
+def test_builtin_schema_accepts_only_its_format_version(name, program):
+    # options-registry is at 2: version 2 added requires.
+    version = 2 if name == "options-registry" else 1
     res = program().validate(b"format_version = 7\n", "toml")
     assert [d.code for d in res.diagnostics] == ["STRICTSPEC_GATE_UNSUPPORTED"]
     assert f"schema {name} " in res.diagnostics[0].message
-    assert program()._prog.format_version() == 1
+    assert f"accepts exactly {version} " in res.diagnostics[0].message
+    assert program()._prog.format_version() == version
 
 
 def _write(path: Path, text: str) -> None:
@@ -120,12 +124,13 @@ def test_load_options_registry_file(tmp_path):
     path = tmp_path / "options.toml"
     _write(
         path,
-        'format_version = 1\n[[option]]\nname = "a"\nsubject = "s"\nvalues = "on > off"\n'
-        'default = "on"\nscope = "none"\ndescription = "d"\n',
+        'format_version = 2\n[[option]]\nname = "a"\nsubject = "s"\nvalues = "on > off"\n'
+        'default = "on"\nscope = "none"\nrequires = []\ndescription = "d"\n',
     )
     reg, diags = ss.load_options_registry(path)
     assert diags == ()
     assert reg.options[0].values == "on > off"
+    assert reg.options[0].requires == ()
     with pytest.raises(OSError):
         ss.load_options_registry(tmp_path / "absent.toml")
 
@@ -177,7 +182,9 @@ def _registry(inp) -> ss.OptionsRegistry:
     reader, or options handed to the validator directly.
     """
     if "options" in inp:
-        return ss.OptionsRegistry(options=tuple(ss.OptionDeclaration(**o) for o in inp["options"]))
+        return ss.OptionsRegistry(
+            options=tuple(ss.OptionDeclaration(**{**o, "requires": tuple(o["requires"])}) for o in inp["options"])
+        )
     return _registry_text(inp["registry"])
 
 

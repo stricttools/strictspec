@@ -79,13 +79,16 @@ def upstream_program() -> Program:
 
 @dataclass(frozen=True)
 class OptionDeclaration:
-    """One [[option]] of a tool's options registry."""
+    """One [[option]] of a tool's options registry. requires names the other
+    options of the same registry the option depends on.
+    """
 
     name: str
     subject: str
     values: str
     default: str
     scope: str
+    requires: tuple[str, ...]
     description: str
 
 
@@ -173,6 +176,7 @@ def read_options_registry(input: bytes) -> tuple[OptionsRegistry | None, tuple[D
                     values=_str(o, "values"),
                     default=_str(o, "default"),
                     scope=_str(o, "scope"),
+                    requires=tuple(r.string()[0] for r in o.field("requires")[0].items()),
                     description=_str(o, "description"),
                 )
                 for o in opts.items()
@@ -277,6 +281,10 @@ def load_upstream(repo_root: str | os.PathLike) -> tuple[Upstream | None, bool, 
 # offer yet". A ranking never declares it.
 OPTIONS_NON_EXISTENT = "non-existent"
 _SCOPE_NONE = "none"
+# The one value that switches an option off: an entry setting an option's
+# current or ideal to it requires every dependent of the option to be off too.
+# No other value affects dependents.
+_OFF = "off"
 _VALUE_NAME = re.compile(r"[a-z0-9-]+")
 
 # The ranking classification of an accepted entry: current and ideal have equal
@@ -372,10 +380,13 @@ class CheckedOptionsRegistry:
     validate_options_registry makes one.
     """
 
-    __slots__ = ("_options",)
+    __slots__ = ("_options", "_dependents")
 
-    def __init__(self, options: dict[str, CheckedOption]) -> None:
+    def __init__(self, options: dict[str, CheckedOption], dependents: dict[str, tuple[str, ...]]) -> None:
         self._options = options
+        # Each option's dependents: the options that require it, directly or
+        # through other options, in declaration order.
+        self._dependents = dependents
 
     def option(self, name: str) -> CheckedOption | None:
         """The checked option named name (the tool's own name for it, without
@@ -395,19 +406,49 @@ def _valid_subject(s: str) -> bool:
     return bool(_VALUE_NAME.fullmatch(s)) and s + ".toml" != _OPTIONS_MANIFEST_FILE
 
 
+def _rendered_list(names) -> str:
+    """The {dependents} / {options} slot text: each name rendered as a value
+    slot renders it, joined by ", ", never truncated as a whole.
+    """
+    return ", ".join(_render.render_value(_diag.StringVal(n)) for n in names)
+
+
+def _reach(name: str, requires: dict[str, list[str]]) -> set[str]:
+    """The options reachable from name through requires, following only
+    declared names other than the option itself.
+    """
+    seen: set[str] = set()
+    stack = [name]
+    while stack:
+        n = stack.pop()
+        for r in requires[n]:
+            if r not in seen:
+                seen.add(r)
+                stack.append(r)
+    return seen
+
+
 def validate_options_registry(
     reg: OptionsRegistry,
 ) -> tuple[CheckedOptionsRegistry | None, tuple[Diagnostic, ...]]:
     """Apply the registry rules to a registry: each option's values parse as a
-    ranking, its default is a declared value, and its subject is a valid
-    subject file stem. Option names are unique by the built-in schema; a
-    registry handed over directly with a repeated name draws the same
-    STRICTSPEC_INTRA_UNIQUE_BY diagnostic the shape reader reports. Paths
-    locate the refused field in the registry document. Non-empty diagnostics
-    mean None.
+    ranking, its default is a declared value, its subject is a valid subject
+    file stem, and its requires name only other options the registry
+    declares, with no cycle among them. Option names are unique by the
+    built-in schema, and so are the names in one option's requires; a
+    registry handed over directly with a repeat draws the same
+    STRICTSPEC_INTRA_UNIQUE_BY or STRICTSPEC_INTRA_PAIRWISE_DISTINCT
+    diagnostic the shape reader reports. Paths locate the refused field in the
+    registry document. Non-empty diagnostics mean None.
     """
     out: dict[str, CheckedOption] = {}
     ds: list[_diag.Diagnostic] = []
+    declared: dict[str, int] = {}
+    for i, o in enumerate(reg.options):
+        declared.setdefault(o.name, i)
+    # Per first-declared option, the declared names it requires other than
+    # itself: the edges the cycle rule and the dependents follow.
+    requires: dict[str, list[str]] = {}
     for i, o in enumerate(reg.options):
         at = _diag.new_path(_diag.Key("option"), _diag.Index(i))
         if o.name in out:
@@ -440,11 +481,63 @@ def validate_options_registry(
                     {"value": _str_val(o.subject)},
                 )
             )
+        req_at = _diag.append_key(at, "requires")
+        seen: set[str] = set()
+        for r in o.requires:
+            if r in seen:
+                ds.append(
+                    _diag.Diagnostic(
+                        "STRICTSPEC_INTRA_PAIRWISE_DISTINCT",
+                        req_at,
+                        {"value": _str_val(r), "normalization": _diag.SlotString("none")},
+                    )
+                )
+                break
+            seen.add(r)
+        candidates = tuple(n.name for n in reg.options if n.name != o.name)
+        edges: list[str] = []
+        for j, r in enumerate(o.requires):
+            r_at = _diag.append_index(req_at, j)
+            if r == o.name:
+                ds.append(_diag.Diagnostic("STRICTSPEC_OPTIONS_REQUIRES_SELF", r_at, {"name": _str_val(o.name)}))
+            elif r not in declared:
+                ds.append(
+                    _diag.Diagnostic(
+                        "STRICTSPEC_OPTIONS_REQUIRES_UNDECLARED",
+                        r_at,
+                        {
+                            "name": _str_val(o.name),
+                            "value": _str_val(r),
+                            "suggestion": _diag.SlotSuggestion(r, candidates),
+                        },
+                    )
+                )
+            else:
+                edges.append(r)
         if o.name not in out:
             out[o.name] = CheckedOption(declaration=o, ranking=rk)
+            requires[o.name] = edges
+    # A cycle is a set of two or more options each depending on all the
+    # others, reported once, at the requires of its first-declared member.
+    names = list(out)
+    reach = {n: _reach(n, requires) for n in names}
+    in_cycle: set[str] = set()
+    for n in names:
+        if n in in_cycle or n not in reach[n]:
+            continue
+        members = [m for m in names if m == n or (m in reach[n] and n in reach[m])]
+        in_cycle.update(members)
+        ds.append(
+            _diag.Diagnostic(
+                "STRICTSPEC_OPTIONS_REQUIRES_CYCLE",
+                _diag.new_path(_diag.Key("option"), _diag.Index(declared[n]), _diag.Key("requires")),
+                {"options": _diag.SlotString(_rendered_list(members))},
+            )
+        )
     if ds:
         return None, _public(ds)
-    return CheckedOptionsRegistry(out), ()
+    dependents = {n: tuple(m for m in names if n in reach[m]) for n in names}
+    return CheckedOptionsRegistry(out, dependents), ()
 
 
 @dataclass(frozen=True)
@@ -481,6 +574,27 @@ def validate_options_namespace(
     prefix = tool + ":"
     candidates = tuple(prefix + n for n in reg.names())
     first: dict[tuple[str, str | None], OptionsEntry] = {}
+    by_id: dict[str, list[OptionsEntry]] = {}
+    for e in entries:
+        by_id.setdefault(e.id, []).append(e)
+
+    def missing(e: OptionsEntry, decl: OptionDeclaration, field: str) -> list[str]:
+        """The dependents of the option of entry e (declaration decl) that are
+        not off in field (current or ideal).
+        """
+        out: list[str] = []
+        for dep in reg._dependents[decl.name]:
+            dep_decl = reg._options[dep].declaration
+            off = other = False
+            for f in by_id.get(prefix + dep, ()):
+                if getattr(f, field) != _OFF:
+                    other = True
+                elif f.scope is None or (e.scope is not None and f.scope == e.scope and dep_decl.scope == decl.scope):
+                    off = True
+            if not off and (dep_decl.default != _OFF or other):
+                out.append(prefix + dep)
+        return out
+
     accepted: list[ClassifiedOptionsEntry] = []
     ds: list[_diag.Diagnostic] = []
     for e in entries:
@@ -546,6 +660,22 @@ def validate_options_namespace(
                         "STRICTSPEC_OPTIONS_CURRENT_ABOVE_IDEAL",
                         at,
                         {"current": _str_val(e.current), "ideal": _str_val(e.ideal), "ranking": _str_val(decl.values)},
+                    )
+            if e.current == _OFF and current_ok:
+                deps = missing(e, decl, "current")
+                if deps:
+                    refuse(
+                        "STRICTSPEC_OPTIONS_DEPENDENTS_NOT_OFF",
+                        _diag.append_key(at, "current"),
+                        {"dependents": _diag.SlotString(_rendered_list(deps))},
+                    )
+            if e.ideal == _OFF and ideal_ok:
+                deps = missing(e, decl, "ideal")
+                if deps:
+                    refuse(
+                        "STRICTSPEC_OPTIONS_DEPENDENTS_IDEAL_NOT_OFF",
+                        _diag.append_key(at, "ideal"),
+                        {"dependents": _diag.SlotString(_rendered_list(deps))},
                     )
         if e.reason == "":
             refuse("STRICTSPEC_OPTIONS_EMPTY_REASON", _diag.append_key(at, "reason"), {})
