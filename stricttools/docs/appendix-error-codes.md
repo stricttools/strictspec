@@ -406,6 +406,9 @@ within the refused document: `$.option[<n>]...` in a registry, `$.entry[<n>]...`
 subject document, and `$` for a ranking parsed on its own. `{file}` names the subject
 document the entry was read from, and `{subject}` and `{first_file}` the subject documents the
 fix involves, each as a repository-relative path under `.strictmetadata/options/`.
+`{dependents}` and `{options}` list option ids or names, each rendered as a `value` slot
+renders it and joined by `, `, in registry declaration order; the list itself is never
+truncated, so the message names every one.
 
 | Code | Template | Slots | Notes |
 |---|---|---|---|
@@ -415,6 +418,9 @@ fix involves, each as a repository-relative path under `.strictmetadata/options/
 | `STRICTSPEC_OPTIONS_RANKING_DUPLICATE` | `The ranking at {path} declares {value} more than once; declare each value once.` | value: value | One per repetition. |
 | `STRICTSPEC_OPTIONS_DEFAULT_UNDECLARED` | `Default {value} at {path} is not a value of the ranking {ranking}.` | value: value, ranking: value | Checked only when the ranking parses. |
 | `STRICTSPEC_OPTIONS_SUBJECT_INVALID` | `Subject {value} at {path} does not name a subject file: a subject is lowercase letters, digits, and hyphens, without .toml, and is never manifest.` | value: value | |
+| `STRICTSPEC_OPTIONS_REQUIRES_UNDECLARED` | `Option {name} at {path} requires {value}, which this registry does not declare; remove it from requires, or declare the option.{suggestion}` | name: value, value: value, suggestion: string | `{path}` is the `requires` element; the suggestion is computed over the registry's other option names. |
+| `STRICTSPEC_OPTIONS_REQUIRES_SELF` | `Option {name} at {path} requires itself; remove it from requires.` | name: value | `{path}` is the `requires` element. |
+| `STRICTSPEC_OPTIONS_REQUIRES_CYCLE` | `Options {options} require one another in a cycle, starting at {path}; remove requirements among them until none of them depends on itself.` | options: string | One per set of two or more options that each depend on all the others, at the `requires` of the set's first-declared member; `{options}` lists every member. A self-requirement is `STRICTSPEC_OPTIONS_REQUIRES_SELF` instead. |
 | `STRICTSPEC_OPTIONS_UNKNOWN_OPTION` | `Entry at {path} in {file} names {id}, which is not an option {tool} declares.{suggestion}` | file: string, id: value, tool: string, suggestion: string | `{tool}` is the namespace's tool name; the suggestion is computed over the tool's option ids. |
 | `STRICTSPEC_OPTIONS_WRONG_SUBJECT` | `Entry {id} at {path} in {file} belongs in {subject}; move it there.` | id: value, file: string, subject: string | `{subject}` is the option's subject document. |
 | `STRICTSPEC_OPTIONS_SCOPE_NOT_ACCEPTED` | `Entry {id} at {path} in {file} has scope {value}, but the option takes no scope; remove the scope.` | id: value, file: string, value: value | The option declares `scope = "none"`. |
@@ -423,6 +429,8 @@ fix involves, each as a repository-relative path under `.strictmetadata/options/
 | `STRICTSPEC_OPTIONS_REDUNDANT` | `Entry {id} at {path} in {file} sets both current and ideal to the default {value}, so it deviates from nothing; remove the entry.` | id: value, file: string, value: value | A value merely ranked equal to the default is not redundant. |
 | `STRICTSPEC_OPTIONS_CURRENT_ABOVE_IDEAL` | `Entry {id} at {path} in {file} has current {current} ranked above its ideal {ideal} in {ranking}; current never ranks above ideal.` | id: value, file: string, current: value, ideal: value, ranking: value | |
 | `STRICTSPEC_OPTIONS_DUPLICATE_ENTRY` | `Entry {id} at {path} in {file} repeats the entry at {first} in {first_file}, which has the same id and scope; remove one of them.` | id: value, file: string, first: path, first_file: string | Across all of the repository's subject documents; names the first occurrence. |
+| `STRICTSPEC_OPTIONS_DEPENDENTS_NOT_OFF` | `Entry {id} at {path} in {file} switches the option off while options that require it, directly or through other options, are not switched off: {dependents}. Switch each of them off in its own entry with its own reason, or keep {id} on with a current value other than off.` | id: value, file: string, dependents: string | `{path}` is the entry's `current`; `{dependents}` lists every dependent not switched off (`appendix-options.md`, "Dependencies"). Only the value `off` triggers it. |
+| `STRICTSPEC_OPTIONS_DEPENDENTS_IDEAL_NOT_OFF` | `Entry {id} at {path} in {file} has the ideal off while options that require it, directly or through other options, do not: {dependents}. Give each of them the ideal off in its own entry with its own reason, or give {id} an ideal other than off.` | id: value, file: string, dependents: string | `{path}` is the entry's `ideal`; `{dependents}` lists every dependent without the ideal `off`. |
 | `STRICTSPEC_OPTIONS_EMPTY_REASON` | `Entry {id} at {path} in {file} has an empty reason; state why the repository deviates from the option's default.` | id: value, file: string | An entry read through the built-in schema is refused first by `STRICTSPEC_VALUE_STRING_EMPTY`; this code covers entries handed to the validator directly. |
 
 ## 22. Cross-references

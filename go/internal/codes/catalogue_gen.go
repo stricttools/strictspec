@@ -689,6 +689,28 @@ var catalogue = map[string]Entry{
 			{Name: "ranking", Type: SlotTypeValue},
 		},
 	},
+	"STRICTSPEC_OPTIONS_DEPENDENTS_IDEAL_NOT_OFF": {
+		Code:     "STRICTSPEC_OPTIONS_DEPENDENTS_IDEAL_NOT_OFF",
+		Area:     "OPTIONS",
+		Template: "Entry {id} at {path} in {file} has the ideal off while options that require it, directly or through other options, do not: {dependents}. Give each of them the ideal off in its own entry with its own reason, or give {id} an ideal other than off.",
+		Slots: []SlotSpec{
+			{Name: "id", Type: SlotTypeValue},
+			{Name: "path", Type: SlotTypePath},
+			{Name: "file", Type: SlotTypeString},
+			{Name: "dependents", Type: SlotTypeString},
+		},
+	},
+	"STRICTSPEC_OPTIONS_DEPENDENTS_NOT_OFF": {
+		Code:     "STRICTSPEC_OPTIONS_DEPENDENTS_NOT_OFF",
+		Area:     "OPTIONS",
+		Template: "Entry {id} at {path} in {file} switches the option off while options that require it, directly or through other options, are not switched off: {dependents}. Switch each of them off in its own entry with its own reason, or keep {id} on with a current value other than off.",
+		Slots: []SlotSpec{
+			{Name: "id", Type: SlotTypeValue},
+			{Name: "path", Type: SlotTypePath},
+			{Name: "file", Type: SlotTypeString},
+			{Name: "dependents", Type: SlotTypeString},
+		},
+	},
 	"STRICTSPEC_OPTIONS_DUPLICATE_ENTRY": {
 		Code:     "STRICTSPEC_OPTIONS_DUPLICATE_ENTRY",
 		Area:     "OPTIONS",
@@ -756,6 +778,35 @@ var catalogue = map[string]Entry{
 			{Name: "path", Type: SlotTypePath},
 			{Name: "file", Type: SlotTypeString},
 			{Name: "value", Type: SlotTypeValue},
+		},
+	},
+	"STRICTSPEC_OPTIONS_REQUIRES_CYCLE": {
+		Code:     "STRICTSPEC_OPTIONS_REQUIRES_CYCLE",
+		Area:     "OPTIONS",
+		Template: "Options {options} require one another in a cycle, starting at {path}; remove requirements among them until none of them depends on itself.",
+		Slots: []SlotSpec{
+			{Name: "options", Type: SlotTypeString},
+			{Name: "path", Type: SlotTypePath},
+		},
+	},
+	"STRICTSPEC_OPTIONS_REQUIRES_SELF": {
+		Code:     "STRICTSPEC_OPTIONS_REQUIRES_SELF",
+		Area:     "OPTIONS",
+		Template: "Option {name} at {path} requires itself; remove it from requires.",
+		Slots: []SlotSpec{
+			{Name: "name", Type: SlotTypeValue},
+			{Name: "path", Type: SlotTypePath},
+		},
+	},
+	"STRICTSPEC_OPTIONS_REQUIRES_UNDECLARED": {
+		Code:     "STRICTSPEC_OPTIONS_REQUIRES_UNDECLARED",
+		Area:     "OPTIONS",
+		Template: "Option {name} at {path} requires {value}, which this registry does not declare; remove it from requires, or declare the option.{suggestion}",
+		Slots: []SlotSpec{
+			{Name: "name", Type: SlotTypeValue},
+			{Name: "path", Type: SlotTypePath},
+			{Name: "value", Type: SlotTypeValue},
+			{Name: "suggestion", Type: SlotTypeString},
 		},
 	},
 	"STRICTSPEC_OPTIONS_SCOPE_NOT_ACCEPTED": {

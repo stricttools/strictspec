@@ -761,6 +761,28 @@ CATALOGUE: dict[str, Entry] = {
             SlotSpec('ranking', SlotType.VALUE),
         ),
     ),
+    'STRICTSPEC_OPTIONS_DEPENDENTS_IDEAL_NOT_OFF': Entry(
+        code='STRICTSPEC_OPTIONS_DEPENDENTS_IDEAL_NOT_OFF',
+        area='OPTIONS',
+        template='Entry {id} at {path} in {file} has the ideal off while options that require it, directly or through other options, do not: {dependents}. Give each of them the ideal off in its own entry with its own reason, or give {id} an ideal other than off.',
+        slots=(
+            SlotSpec('id', SlotType.VALUE),
+            SlotSpec('path', SlotType.PATH),
+            SlotSpec('file', SlotType.STRING),
+            SlotSpec('dependents', SlotType.STRING),
+        ),
+    ),
+    'STRICTSPEC_OPTIONS_DEPENDENTS_NOT_OFF': Entry(
+        code='STRICTSPEC_OPTIONS_DEPENDENTS_NOT_OFF',
+        area='OPTIONS',
+        template='Entry {id} at {path} in {file} switches the option off while options that require it, directly or through other options, are not switched off: {dependents}. Switch each of them off in its own entry with its own reason, or keep {id} on with a current value other than off.',
+        slots=(
+            SlotSpec('id', SlotType.VALUE),
+            SlotSpec('path', SlotType.PATH),
+            SlotSpec('file', SlotType.STRING),
+            SlotSpec('dependents', SlotType.STRING),
+        ),
+    ),
     'STRICTSPEC_OPTIONS_DUPLICATE_ENTRY': Entry(
         code='STRICTSPEC_OPTIONS_DUPLICATE_ENTRY',
         area='OPTIONS',
@@ -828,6 +850,35 @@ CATALOGUE: dict[str, Entry] = {
             SlotSpec('path', SlotType.PATH),
             SlotSpec('file', SlotType.STRING),
             SlotSpec('value', SlotType.VALUE),
+        ),
+    ),
+    'STRICTSPEC_OPTIONS_REQUIRES_CYCLE': Entry(
+        code='STRICTSPEC_OPTIONS_REQUIRES_CYCLE',
+        area='OPTIONS',
+        template='Options {options} require one another in a cycle, starting at {path}; remove requirements among them until none of them depends on itself.',
+        slots=(
+            SlotSpec('options', SlotType.STRING),
+            SlotSpec('path', SlotType.PATH),
+        ),
+    ),
+    'STRICTSPEC_OPTIONS_REQUIRES_SELF': Entry(
+        code='STRICTSPEC_OPTIONS_REQUIRES_SELF',
+        area='OPTIONS',
+        template='Option {name} at {path} requires itself; remove it from requires.',
+        slots=(
+            SlotSpec('name', SlotType.VALUE),
+            SlotSpec('path', SlotType.PATH),
+        ),
+    ),
+    'STRICTSPEC_OPTIONS_REQUIRES_UNDECLARED': Entry(
+        code='STRICTSPEC_OPTIONS_REQUIRES_UNDECLARED',
+        area='OPTIONS',
+        template='Option {name} at {path} requires {value}, which this registry does not declare; remove it from requires, or declare the option.{suggestion}',
+        slots=(
+            SlotSpec('name', SlotType.VALUE),
+            SlotSpec('path', SlotType.PATH),
+            SlotSpec('value', SlotType.VALUE),
+            SlotSpec('suggestion', SlotType.STRING),
         ),
     ),
     'STRICTSPEC_OPTIONS_SCOPE_NOT_ACCEPTED': Entry(
