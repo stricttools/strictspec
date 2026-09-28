@@ -474,6 +474,11 @@
         },
         {
           "level": 2,
+          "text": "Dependencies",
+          "anchor": "dependencies"
+        },
+        {
+          "level": 2,
           "text": "Writing entries",
           "anchor": "writing-entries"
         },
@@ -1288,7 +1293,7 @@
     }
   ],
   "posts": [],
-  "last_gen": "2026-09-27T22:58:35.952867+00:00",
+  "last_gen": "2026-09-28T14:24:04.176676+00:00",
   "theme": "minimal",
   "vocabulary": {
     "accepted": [
