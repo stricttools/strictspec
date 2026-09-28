@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/stricttools/strictspec/go/internal/diag"
+	"github.com/stricttools/strictspec/go/internal/render"
 )
 
 // OptionsNonExistent is the reserved ideal value meaning "the right value is
@@ -24,6 +25,11 @@ const OptionsNonExistent = "non-existent"
 // optionsScopeNone is the registry scope declaring that an option takes no
 // scope.
 const optionsScopeNone = "none"
+
+// optionsOff is the one value that switches an option off: an entry setting an
+// option's current or ideal to it requires every dependent of the option to be
+// off too. No other value affects dependents.
+const optionsOff = "off"
 
 var optionsValueName = regexp.MustCompile(`^[a-z0-9-]+$`)
 
@@ -124,6 +130,9 @@ type CheckedOption struct {
 type CheckedOptionsRegistry struct {
 	options map[string]CheckedOption
 	names   []string
+	// dependents maps each option to the options that require it, directly
+	// or through other options, in declaration order.
+	dependents map[string][]string
 }
 
 // Option returns the checked option named name (the tool's own name for it,
@@ -145,16 +154,56 @@ func validOptionsSubject(s string) bool {
 	return optionsValueName.MatchString(s) && s+".toml" != optionsManifestFile
 }
 
+// renderedList is the {dependents} / {options} slot text: each name rendered
+// as a value slot renders it, joined by ", ", never truncated as a whole.
+func renderedList(names []string) string {
+	parts := make([]string, len(names))
+	for i, n := range names {
+		parts[i] = render.Value(diag.StringVal(n))
+	}
+	return strings.Join(parts, ", ")
+}
+
+// optionsReach returns the options reachable from name through requires,
+// following only declared names other than the option itself.
+func optionsReach(name string, requires map[string][]string) map[string]bool {
+	seen := map[string]bool{}
+	stack := []string{name}
+	for len(stack) > 0 {
+		n := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+		for _, r := range requires[n] {
+			if !seen[r] {
+				seen[r] = true
+				stack = append(stack, r)
+			}
+		}
+	}
+	return seen
+}
+
 // ValidateOptionsRegistry applies the registry rules to a registry: each
-// option's values parse as a ranking, its default is a declared value, and its
-// subject is a valid subject file stem. Option names are unique by the
-// built-in schema; a registry handed over directly with a repeated name draws
-// the same STRICTSPEC_INTRA_UNIQUE_BY diagnostic the shape reader reports.
-// Paths locate the refused field in the registry document. Non-empty
-// diagnostics mean a nil registry.
+// option's values parse as a ranking, its default is a declared value, its
+// subject is a valid subject file stem, and its requires name only other
+// options the registry declares, with no cycle among them. Option names are
+// unique by the built-in schema, and so are the names in one option's
+// requires; a registry handed over directly with a repeat draws the same
+// STRICTSPEC_INTRA_UNIQUE_BY or STRICTSPEC_INTRA_PAIRWISE_DISTINCT diagnostic
+// the shape reader reports. Paths locate the refused field in the registry
+// document. Non-empty diagnostics mean a nil registry.
 func ValidateOptionsRegistry(reg *OptionsRegistry) (*CheckedOptionsRegistry, []Diagnostic) {
-	out := &CheckedOptionsRegistry{options: map[string]CheckedOption{}}
+	out := &CheckedOptionsRegistry{options: map[string]CheckedOption{}, dependents: map[string][]string{}}
 	var ds []diag.Diagnostic
+	declared := map[string]int{}
+	for i, o := range reg.Options {
+		if _, dup := declared[o.Name]; !dup {
+			declared[o.Name] = i
+		}
+	}
+	// requires holds, per first-declared option, the declared names it
+	// requires other than itself: the edges the cycle rule and the
+	// dependents follow.
+	requires := map[string][]string{}
 	for i, o := range reg.Options {
 		at := diag.NewPath(diag.Key{Name: "option"}, diag.Index{N: i})
 		if _, dup := out.options[o.Name]; dup {
@@ -182,13 +231,89 @@ func ValidateOptionsRegistry(reg *OptionsRegistry) (*CheckedOptionsRegistry, []D
 				Slots: map[string]diag.Slot{"value": strVal(o.Subject)},
 			})
 		}
+		reqAt := fieldPath(at, "requires")
+		seen := map[string]bool{}
+		for _, r := range o.Requires {
+			if seen[r] {
+				ds = append(ds, diag.Diagnostic{
+					Code: "STRICTSPEC_INTRA_PAIRWISE_DISTINCT", Path: reqAt,
+					Slots: map[string]diag.Slot{
+						"value":         strVal(r),
+						"normalization": diag.SlotString{S: "none"},
+					},
+				})
+				break
+			}
+			seen[r] = true
+		}
+		var candidates []string
+		for _, n := range reg.Options {
+			if n.Name != o.Name {
+				candidates = append(candidates, n.Name)
+			}
+		}
+		var edges []string
+		for j, r := range o.Requires {
+			rAt := diag.Path{Steps: append(append([]diag.Step(nil), reqAt.Steps...), diag.Index{N: j})}
+			_, known := declared[r]
+			switch {
+			case r == o.Name:
+				ds = append(ds, diag.Diagnostic{
+					Code: "STRICTSPEC_OPTIONS_REQUIRES_SELF", Path: rAt,
+					Slots: map[string]diag.Slot{"name": strVal(o.Name)},
+				})
+			case !known:
+				ds = append(ds, diag.Diagnostic{
+					Code: "STRICTSPEC_OPTIONS_REQUIRES_UNDECLARED", Path: rAt,
+					Slots: map[string]diag.Slot{
+						"name":       strVal(o.Name),
+						"value":      strVal(r),
+						"suggestion": diag.SlotSuggestion{Unknown: r, Candidates: candidates},
+					},
+				})
+			default:
+				edges = append(edges, r)
+			}
+		}
 		if _, dup := out.options[o.Name]; !dup {
 			out.options[o.Name] = CheckedOption{Declaration: o, Ranking: rk}
 			out.names = append(out.names, o.Name)
+			requires[o.Name] = edges
 		}
+	}
+	// A cycle is a set of two or more options each depending on all the
+	// others, reported once, at the requires of its first-declared member.
+	reach := map[string]map[string]bool{}
+	for _, n := range out.names {
+		reach[n] = optionsReach(n, requires)
+	}
+	inCycle := map[string]bool{}
+	for _, n := range out.names {
+		if inCycle[n] || !reach[n][n] {
+			continue
+		}
+		var members []string
+		for _, m := range out.names {
+			if m == n || (reach[n][m] && reach[m][n]) {
+				members = append(members, m)
+				inCycle[m] = true
+			}
+		}
+		ds = append(ds, diag.Diagnostic{
+			Code:  "STRICTSPEC_OPTIONS_REQUIRES_CYCLE",
+			Path:  diag.NewPath(diag.Key{Name: "option"}, diag.Index{N: declared[n]}, diag.Key{Name: "requires"}),
+			Slots: map[string]diag.Slot{"options": diag.SlotString{S: renderedList(members)}},
+		})
 	}
 	if ds != nil {
 		return nil, publicDiagnostics(ds)
+	}
+	for _, n := range out.names {
+		for _, m := range out.names {
+			if reach[m][n] {
+				out.dependents[n] = append(out.dependents[n], m)
+			}
+		}
 	}
 	return out, nil
 }
@@ -238,6 +363,30 @@ func ValidateOptionsNamespace(tool string, reg *CheckedOptionsRegistry, entries 
 		candidates = append(candidates, prefix+n)
 	}
 	first := map[key]OptionsEntry{}
+	byID := map[string][]OptionsEntry{}
+	for _, e := range entries {
+		byID[e.ID] = append(byID[e.ID], e)
+	}
+	// missing lists the dependents of the option of entry e (declaration decl)
+	// that are not off in the field (current or ideal) value reads.
+	missing := func(e OptionsEntry, decl OptionDeclaration, value func(OptionsEntry) string) []string {
+		var out []string
+		for _, dep := range reg.dependents[decl.Name] {
+			depDecl := reg.options[dep].Declaration
+			off, other := false, false
+			for _, f := range byID[prefix+dep] {
+				if value(f) != optionsOff {
+					other = true
+				} else if !f.HasScope || (e.HasScope && f.Scope == e.Scope && depDecl.Scope == decl.Scope) {
+					off = true
+				}
+			}
+			if !off && (depDecl.Default != optionsOff || other) {
+				out = append(out, prefix+dep)
+			}
+		}
+		return out
+	}
 	accepted := []ClassifiedOptionsEntry{}
 	var ds []diag.Diagnostic
 	for _, e := range entries {
@@ -300,6 +449,20 @@ func ValidateOptionsNamespace(tool string, reg *CheckedOptionsRegistry, entries 
 				} else if !waiting && rk.Level[e.Current] < rk.Level[e.Ideal] {
 					refuse("STRICTSPEC_OPTIONS_CURRENT_ABOVE_IDEAL", at, map[string]diag.Slot{
 						"current": strVal(e.Current), "ideal": strVal(e.Ideal), "ranking": strVal(decl.Values),
+					})
+				}
+			}
+			if e.Current == optionsOff && currentOK {
+				if deps := missing(e, decl, func(f OptionsEntry) string { return f.Current }); deps != nil {
+					refuse("STRICTSPEC_OPTIONS_DEPENDENTS_NOT_OFF", fieldPath(at, "current"), map[string]diag.Slot{
+						"dependents": diag.SlotString{S: renderedList(deps)},
+					})
+				}
+			}
+			if e.Ideal == optionsOff && idealOK {
+				if deps := missing(e, decl, func(f OptionsEntry) string { return f.Ideal }); deps != nil {
+					refuse("STRICTSPEC_OPTIONS_DEPENDENTS_IDEAL_NOT_OFF", fieldPath(at, "ideal"), map[string]diag.Slot{
+						"dependents": diag.SlotString{S: renderedList(deps)},
 					})
 				}
 			}

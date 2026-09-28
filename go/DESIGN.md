@@ -159,8 +159,9 @@ absence throughout: no flag reads an empty string as "not supplied".
   validate a document's shape against them and bind it (`ReadOptionsRegistry`,
   `LoadOptionsRegistry`, `ReadOptionsEntries`, `LoadOptionsEntries`, `ReadUpstream`,
   `LoadUpstream`), and the options rules: the ranking parser (`ParseOptionsRanking`), the
-  registry validator (`ValidateOptionsRegistry`), and the per-namespace entry validator that
-  classifies accepted entries as settled, debt, or waiting on the tool
+  registry validator (`ValidateOptionsRegistry`, which also checks each option's `requires`),
+  and the per-namespace entry validator that classifies accepted entries as settled, debt, or
+  waiting on the tool and refuses switching an option off while an option requiring it is not
   (`ValidateOptionsNamespace`, given the tool's name). Every refusal is a catalogued
   `STRICTSPEC_OPTIONS_*` diagnostic whose path locates the refused field and whose message
   names the subject file.

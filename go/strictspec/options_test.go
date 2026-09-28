@@ -40,12 +40,13 @@ type jsonEntry struct {
 }
 
 type jsonOption struct {
-	Name        string `json:"name"`
-	Subject     string `json:"subject"`
-	Values      string `json:"values"`
-	Default     string `json:"default"`
-	Scope       string `json:"scope"`
-	Description string `json:"description"`
+	Name        string   `json:"name"`
+	Subject     string   `json:"subject"`
+	Values      string   `json:"values"`
+	Default     string   `json:"default"`
+	Scope       string   `json:"scope"`
+	Requires    []string `json:"requires"`
+	Description string   `json:"description"`
 }
 
 type jsonUpstream struct {
@@ -146,15 +147,20 @@ func TestOptionsShapeCases(t *testing.T) {
 }
 
 // TestBuiltinSchemasCompile: each built-in compiles against the meta-schema and
-// accepts only format_version 1, naming the schema by its appendix name.
+// accepts only its current format_version, naming the schema by its appendix
+// name. options-registry is at 2: version 2 added requires.
 func TestBuiltinSchemasCompile(t *testing.T) {
-	for name, p := range map[string]*Program{
-		"options-entries":  OptionsEntriesProgram(),
-		"options-registry": OptionsRegistryProgram(),
-		"upstream":         UpstreamProgram(),
+	for name, want := range map[string]struct {
+		p       *Program
+		version int64
+	}{
+		"options-entries":  {OptionsEntriesProgram(), 1},
+		"options-registry": {OptionsRegistryProgram(), 2},
+		"upstream":         {UpstreamProgram(), 1},
 	} {
-		if p.prog.FormatVersion() != 1 {
-			t.Errorf("%s: format_version %d, want 1", name, p.prog.FormatVersion())
+		p := want.p
+		if p.prog.FormatVersion() != want.version {
+			t.Errorf("%s: format_version %d, want %d", name, p.prog.FormatVersion(), want.version)
 		}
 		res := p.Validate([]byte("format_version = 7\n"), "toml")
 		if len(res.Diagnostics) != 1 || res.Diagnostics[0].Code != "STRICTSPEC_GATE_UNSUPPORTED" ||
@@ -210,9 +216,10 @@ func TestLoadOptionsEntriesDirectory(t *testing.T) {
 
 func TestLoadOptionsRegistryFile(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "options.toml")
-	writeFile(t, path, "format_version = 1\n[[option]]\nname = \"a\"\nsubject = \"s\"\nvalues = \"on > off\"\ndefault = \"on\"\nscope = \"none\"\ndescription = \"d\"\n")
+	writeFile(t, path, "format_version = 2\n[[option]]\nname = \"a\"\nsubject = \"s\"\nvalues = \"on > off\"\ndefault = \"on\"\nscope = \"none\"\nrequires = []\ndescription = \"d\"\n")
 	reg, diags, err := LoadOptionsRegistry(path)
-	if err != nil || diags != nil || len(reg.Options) != 1 || reg.Options[0].Values != "on > off" {
+	if err != nil || diags != nil || len(reg.Options) != 1 || reg.Options[0].Values != "on > off" ||
+		reg.Options[0].Requires == nil || len(reg.Options[0].Requires) != 0 {
 		t.Fatalf("reg %+v diags %+v err %v", reg, diags, err)
 	}
 	if _, _, err := LoadOptionsRegistry(filepath.Join(t.TempDir(), "absent.toml")); err == nil {
