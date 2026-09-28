@@ -75,9 +75,10 @@ first, with the structured remediation payload.
   document's shape against them and bind it (`read_options_registry`, `load_options_registry`,
   `read_options_entries`, `load_options_entries`, `read_upstream`, `load_upstream`), and
   the options rules: the ranking parser (`parse_options_ranking`), the registry validator
-  (`validate_options_registry`), and the per-namespace entry validator that classifies
-  accepted entries as settled, debt, or waiting on the tool (`validate_options_namespace`,
-  given the tool's name). Every refusal is a catalogued `STRICTSPEC_OPTIONS_*` diagnostic
+  (`validate_options_registry`, which also checks each option's `requires`), and the
+  per-namespace entry validator that classifies accepted entries as settled, debt, or waiting
+  on the tool and refuses switching an option off while an option requiring it is not
+  (`validate_options_namespace`, given the tool's name). Every refusal is a catalogued `STRICTSPEC_OPTIONS_*` diagnostic
   whose path locates the refused field and whose message names the subject file.
 
 ## Invariants
