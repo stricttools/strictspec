@@ -1,5 +1,5 @@
 +++
-description = "The options model: how a repository declares every deviation from a family tool's defaults in .strictmetadata/options/, how each tool declares the options it offers, and the ranking, validation, and debt rules every reader applies through strictspec's built-in schemas and runtime."
+description = "The options model: how a repository declares every deviation from a family tool's defaults in .strictmetadata/options/, how each tool declares the options it offers and the options each requires, and the ranking, dependency, validation, and debt rules every reader applies through strictspec's built-in schemas and runtime."
 +++
 # Appendix: Options (normative)
 
