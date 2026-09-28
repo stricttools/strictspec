@@ -29,7 +29,7 @@ import {
 	type Program,
 	type Value,
 } from "./index.js";
-import { render } from "./render.js";
+import { render, renderValue } from "./render.js";
 
 export { OPTIONS_ENTRIES_SCHEMA, OPTIONS_REGISTRY_SCHEMA, UPSTREAM_SCHEMA };
 
@@ -74,13 +74,15 @@ export function upstreamProgram(): Program {
 	return builtin("upstream.schema.toml", UPSTREAM_SCHEMA);
 }
 
-// One [[option]] of a tool's options registry.
+// One [[option]] of a tool's options registry. requires names the other
+// options of the same registry the option depends on.
 export interface OptionDeclaration {
 	readonly name: string;
 	readonly subject: string;
 	readonly values: string;
 	readonly default: string;
 	readonly scope: string;
+	readonly requires: readonly string[];
 	readonly description: string;
 }
 
@@ -144,6 +146,10 @@ export function readOptionsRegistry(
 			values: str(o, "values") as string,
 			default: str(o, "default") as string,
 			scope: str(o, "scope") as string,
+			requires: o
+				.field("requires")[0]
+				.items()
+				.map((r) => r.string()[0] as string),
 			description: str(o, "description") as string,
 		}));
 	return [{ options }, []];
@@ -199,6 +205,10 @@ export function readUpstream(text: string): [Upstream | null, Diagnostic[]] {
 // offer yet". A ranking never declares it.
 export const OPTIONS_NON_EXISTENT = "non-existent";
 const SCOPE_NONE = "none";
+// The one value that switches an option off: an entry setting an option's
+// current or ideal to it requires every dependent of the option to be off too.
+// No other value affects dependents.
+const OFF = "off";
 const VALUE_NAME = /^[a-z0-9-]+$/;
 
 // A parsed ranking string. values lists the declared values in the order
@@ -294,19 +304,36 @@ export interface CheckedOption {
 // call the private constructor and nothing outside this module can.
 let makeCheckedRegistry: (
 	options: ReadonlyMap<string, CheckedOption>,
+	dependents: ReadonlyMap<string, readonly string[]>,
 ) => CheckedOptionsRegistry;
+
+// Set by the same static block, so validateOptionsNamespace can read a
+// checked registry's dependents and nothing outside this module can.
+let dependentsOf: (
+	reg: CheckedOptionsRegistry,
+	name: string,
+) => readonly string[];
 
 // A registry that passed every registry rule. Only validateOptionsRegistry
 // makes one.
 export class CheckedOptionsRegistry {
 	readonly #options: ReadonlyMap<string, CheckedOption>;
+	// Each option's dependents: the options that require it, directly or
+	// through other options, in declaration order.
+	readonly #dependents: ReadonlyMap<string, readonly string[]>;
 
-	private constructor(options: ReadonlyMap<string, CheckedOption>) {
+	private constructor(
+		options: ReadonlyMap<string, CheckedOption>,
+		dependents: ReadonlyMap<string, readonly string[]>,
+	) {
 		this.#options = options;
+		this.#dependents = dependents;
 	}
 
 	static {
-		makeCheckedRegistry = (options) => new CheckedOptionsRegistry(options);
+		makeCheckedRegistry = (options, dependents) =>
+			new CheckedOptionsRegistry(options, dependents);
+		dependentsOf = (reg, name) => reg.#dependents.get(name) ?? [];
 	}
 
 	// The checked option named name (the tool's own name for it, without the
@@ -327,17 +354,55 @@ function validSubject(s: string): boolean {
 	return VALUE_NAME.test(s) && `${s}.toml` !== OPTIONS_MANIFEST_FILE;
 }
 
+// The {dependents} / {options} slot text: each name rendered as a value slot
+// renders it, joined by ", ", never truncated as a whole.
+function renderedList(names: readonly string[]): string {
+	return names.map((n) => renderValue(diag.stringVal(n))).join(", ");
+}
+
+// The options reachable from name through requires, following only declared
+// names other than the option itself.
+function reachFrom(
+	name: string,
+	requires: ReadonlyMap<string, readonly string[]>,
+): Set<string> {
+	const seen = new Set<string>();
+	const stack = [name];
+	while (stack.length > 0) {
+		const n = stack.pop() as string;
+		for (const r of requires.get(n) ?? []) {
+			if (!seen.has(r)) {
+				seen.add(r);
+				stack.push(r);
+			}
+		}
+	}
+	return seen;
+}
+
 // Apply the registry rules to a registry: each option's values parse as a
-// ranking, its default is a declared value, and its subject is a valid subject
-// file stem. Option names are unique by the built-in schema; a registry handed
-// over directly with a repeated name draws the same STRICTSPEC_INTRA_UNIQUE_BY
-// diagnostic the shape reader reports. Paths locate the refused field in the
-// registry document. Non-empty diagnostics mean a null registry.
+// ranking, its default is a declared value, its subject is a valid subject file
+// stem, and its requires name only other options the registry declares, with
+// no cycle among them. Option names are unique by the built-in schema, and so
+// are the names in one option's requires; a registry handed over directly with
+// a repeat draws the same STRICTSPEC_INTRA_UNIQUE_BY or
+// STRICTSPEC_INTRA_PAIRWISE_DISTINCT diagnostic the shape reader reports. Paths
+// locate the refused field in the registry document. Non-empty diagnostics mean
+// a null registry.
 export function validateOptionsRegistry(
 	reg: OptionsRegistry,
 ): [CheckedOptionsRegistry | null, Diagnostic[]] {
 	const out = new Map<string, CheckedOption>();
 	const ds: diag.Diagnostic[] = [];
+	const declared = new Map<string, number>();
+	reg.options.forEach((o, index) => {
+		if (!declared.has(o.name)) {
+			declared.set(o.name, index);
+		}
+	});
+	// Per first-declared option, the declared names it requires other than
+	// itself: the edges the cycle rule and the dependents follow.
+	const requires = new Map<string, string[]>();
 	reg.options.forEach((o, index) => {
 		const at = diag.newPath(diag.stepKey("option"), diag.stepIndex(index));
 		if (out.has(o.name)) {
@@ -373,14 +438,86 @@ export function validateOptionsRegistry(
 				),
 			);
 		}
-		if (rk !== null && !out.has(o.name)) {
-			out.set(o.name, { declaration: o, ranking: rk });
+		const reqAt = diag.appendKey(at, "requires");
+		const seen = new Set<string>();
+		for (const r of o.requires) {
+			if (seen.has(r)) {
+				ds.push(
+					diag.newDiagnostic("STRICTSPEC_INTRA_PAIRWISE_DISTINCT", reqAt, {
+						value: strVal(r),
+						normalization: diag.slotString("none"),
+					}),
+				);
+				break;
+			}
+			seen.add(r);
+		}
+		const candidates = reg.options
+			.map((n) => n.name)
+			.filter((n) => n !== o.name);
+		const edges: string[] = [];
+		o.requires.forEach((r, j) => {
+			const rAt = diag.appendIndex(reqAt, j);
+			if (r === o.name) {
+				ds.push(
+					diag.newDiagnostic("STRICTSPEC_OPTIONS_REQUIRES_SELF", rAt, {
+						name: strVal(o.name),
+					}),
+				);
+			} else if (!declared.has(r)) {
+				ds.push(
+					diag.newDiagnostic("STRICTSPEC_OPTIONS_REQUIRES_UNDECLARED", rAt, {
+						name: strVal(o.name),
+						value: strVal(r),
+						suggestion: diag.slotSuggestion(r, candidates),
+					}),
+				);
+			} else {
+				edges.push(r);
+			}
+		});
+		if (!requires.has(o.name)) {
+			requires.set(o.name, edges);
+			if (rk !== null) {
+				out.set(o.name, { declaration: o, ranking: rk });
+			}
 		}
 	});
+	// A cycle is a set of two or more options each depending on all the
+	// others, reported once, at the requires of its first-declared member.
+	const names = [...requires.keys()];
+	const reach = new Map(names.map((n) => [n, reachFrom(n, requires)]));
+	const inCycle = new Set<string>();
+	for (const n of names) {
+		const fromN = reach.get(n) as Set<string>;
+		if (inCycle.has(n) || !fromN.has(n)) {
+			continue;
+		}
+		const members = names.filter(
+			(m) => m === n || (fromN.has(m) && reach.get(m)?.has(n) === true),
+		);
+		for (const m of members) {
+			inCycle.add(m);
+		}
+		ds.push(
+			diag.newDiagnostic(
+				"STRICTSPEC_OPTIONS_REQUIRES_CYCLE",
+				diag.newPath(
+					diag.stepKey("option"),
+					diag.stepIndex(declared.get(n) as number),
+					diag.stepKey("requires"),
+				),
+				{ options: diag.slotString(renderedList(members)) },
+			),
+		);
+	}
 	if (ds.length > 0) {
 		return [null, publicDiagnostics(ds)];
 	}
-	return [makeCheckedRegistry(out), []];
+	const dependents = new Map(
+		names.map((n) => [n, names.filter((m) => reach.get(m)?.has(n) === true)]),
+	);
+	return [makeCheckedRegistry(out, dependents), []];
 }
 
 // The ranking classification of an accepted entry: current and ideal have
@@ -417,6 +554,45 @@ export function validateOptionsNamespace(
 	const prefix = `${tool}:`;
 	const candidates = reg.names().map((n) => prefix + n);
 	const first = new Map<string, OptionsEntry>();
+	const byId = new Map<string, OptionsEntry[]>();
+	for (const e of entries) {
+		const list = byId.get(e.id);
+		if (list === undefined) {
+			byId.set(e.id, [e]);
+		} else {
+			list.push(e);
+		}
+	}
+	// The dependents of the option of entry e (declaration decl) that are not
+	// off in the field (current or ideal) value reads.
+	const missing = (
+		e: OptionsEntry,
+		decl: OptionDeclaration,
+		value: (f: OptionsEntry) => string,
+	): string[] => {
+		const out: string[] = [];
+		for (const dep of dependentsOf(reg, decl.name)) {
+			const depDecl = (reg.option(dep) as CheckedOption).declaration;
+			let off = false;
+			let other = false;
+			for (const f of byId.get(prefix + dep) ?? []) {
+				if (value(f) !== OFF) {
+					other = true;
+				} else if (
+					f.scope === null ||
+					(e.scope !== null &&
+						f.scope === e.scope &&
+						depDecl.scope === decl.scope)
+				) {
+					off = true;
+				}
+			}
+			if (!off && (depDecl.default !== OFF || other)) {
+				out.push(prefix + dep);
+			}
+		}
+		return out;
+	};
 	const accepted: ClassifiedOptionsEntry[] = [];
 	const ds: diag.Diagnostic[] = [];
 	for (const e of entries) {
@@ -500,6 +676,26 @@ export function validateOptionsNamespace(
 						ideal: strVal(e.ideal),
 						ranking: strVal(decl.values),
 					});
+				}
+			}
+			if (e.current === OFF && currentOk) {
+				const deps = missing(e, decl, (f) => f.current);
+				if (deps.length > 0) {
+					refuse(
+						"STRICTSPEC_OPTIONS_DEPENDENTS_NOT_OFF",
+						diag.appendKey(at, "current"),
+						{ dependents: diag.slotString(renderedList(deps)) },
+					);
+				}
+			}
+			if (e.ideal === OFF && idealOk) {
+				const deps = missing(e, decl, (f) => f.ideal);
+				if (deps.length > 0) {
+					refuse(
+						"STRICTSPEC_OPTIONS_DEPENDENTS_IDEAL_NOT_OFF",
+						diag.appendKey(at, "ideal"),
+						{ dependents: diag.slotString(renderedList(deps)) },
+					);
 				}
 			}
 		}
