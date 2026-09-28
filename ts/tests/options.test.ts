@@ -90,14 +90,18 @@ for (const [name, program] of [
 	["options-registry", optionsRegistryProgram],
 	["upstream", upstreamProgram],
 ] as const) {
-	test(`built-in ${name} accepts only format_version 1`, () => {
+	// options-registry is at 2: version 2 added requires.
+	const version = name === "options-registry" ? 2 : 1;
+	test(`built-in ${name} accepts only format_version ${version}`, () => {
 		const res = program().validate("format_version = 7\n", "toml");
 		assert.deepEqual(
 			res.diagnostics.map((d) => d.code),
 			["STRICTSPEC_GATE_UNSUPPORTED"],
 		);
 		assert.ok(res.diagnostics[0]?.message.includes(`schema ${name} `));
-		assert.ok(res.diagnostics[0]?.message.includes("accepts exactly 1 "));
+		assert.ok(
+			res.diagnostics[0]?.message.includes(`accepts exactly ${version} `),
+		);
 	});
 }
 

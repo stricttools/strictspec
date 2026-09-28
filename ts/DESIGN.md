@@ -84,9 +84,10 @@ declarations and canonical rules — never from auto-application.
   `readUpstream`). The readers take text, not paths: reading the options directory and the
   upstream file needs Node's filesystem, which belongs in a Node-scoped entry point this
   package does not have. The options rules are exported too: the ranking parser
-  (`parseOptionsRanking`), the registry validator (`validateOptionsRegistry`), and the
-  per-namespace entry validator that classifies accepted entries as settled, debt, or waiting
-  on the tool (`validateOptionsNamespace`, given the tool's name). Every refusal is a
+  (`parseOptionsRanking`), the registry validator (`validateOptionsRegistry`, which also
+  checks each option's `requires`), and the per-namespace entry validator that classifies
+  accepted entries as settled, debt, or waiting on the tool and refuses switching an option
+  off while an option requiring it is not (`validateOptionsNamespace`, given the tool's name). Every refusal is a
   catalogued `STRICTSPEC_OPTIONS_*` diagnostic whose path locates the refused field and whose
   message names the subject file.
 
