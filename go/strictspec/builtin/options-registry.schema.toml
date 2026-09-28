@@ -64,13 +64,13 @@ description = "The names of the other options of this registry the option depend
 [types.OptionDeclaration.fields.requires.item]
 type = "string"
 
+[types.OptionDeclaration.fields.description]
+type = "string"
+required = true
+description = "What the option governs."
+
 [[types.OptionDeclaration.constraints]]
 form = "pairwise-distinct"
 collection = "requires"
 normalization = "none"
 description = "An option requires each other option once."
-
-[types.OptionDeclaration.fields.description]
-type = "string"
-required = true
-description = "What the option governs."
