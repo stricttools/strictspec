@@ -1,0 +1,30 @@
+# The same interleaving as interleaved-valid.toml, with a tag repeated in the
+# second group and that group's two items sharing an id (one item on each side
+# of [meta.extra]), so the constraints the schema declares between its field
+# tables must fire on entries the reader assembled across interleaved headers.
+format_version = 1
+
+[[group]]
+name = "a"
+tag = ["x", "y"]
+label.text = "x"
+
+[[group.item]]
+id = "a"
+
+[meta]
+owner = "x"
+
+[[group]]
+name = "b"
+tag = ["x", "x"]
+label.text = "a"
+
+[[group.item]]
+id = "x"
+
+[meta.extra]
+note = "a"
+
+[[group.item]]
+id = "x"
