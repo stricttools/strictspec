@@ -1,0 +1,17 @@
+# Archived by rlsbl at release time. This release had no unreleased.toml
+# (a batch member takes its metadata from the batch release file); the
+# archive is written so later changelog regenerations keep the
+# description and context.
+# strictspec document version gate (do not remove)
+format_version = 1
+bump = "minor"
+include = ["pypi", "go", "npm"]
+exclude = []
+description = "Options built-in schemas and catalogued OPTIONS errors in every runtime, options that require other options, a Python TOML reader fix, and the CLI on strictcli 0.37.0."
+context = "The Go, Python, and TypeScript runtimes gain the options appendix: the options-entries, options-registry, and upstream built-in schemas with readers that validate and bind them, and the options ranking parser, registry validator, and per-namespace entry validator, whose refusals are catalogued STRICTSPEC_OPTIONS_* error codes in a new OPTIONS area. An option may now name the options it depends on in a required requires list, which moves the options-registry schema to format_version 2. The Python runtime reads TOML whose tables interleave with arrays of tables, as Go and TypeScript already did. The Go CLI follows strictcli's module move to github.com/stricttools/strictcli/go and requires v0.37.0, so it inherits that release's help and version commands, help --json in place of --dump-schema, prefixed errors, and refusal of a repeated non-repeatable flag; that part is breaking for scripts, which in 0.x is a minor."
+candidate_sha = "5d38d348d819f2b6fbe3a55ba2895af2af729786"
+
+[tree_hashes]
+go = "58f96c899f905dc38c14de2864fade50d75a7b35"
+python = "1dc055b12ba84d3d155438d73067b6c01966028b"
+ts = "d15aee44dd455a67ccb2122ae426fa1904b2efc1"
