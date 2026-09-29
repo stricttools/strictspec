@@ -2,6 +2,31 @@
 
 # Changelog
 
+## 0.5.0
+
+Options built-in schemas and catalogued OPTIONS errors in every runtime, options that require other options, a Python TOML reader fix, and the CLI on strictcli 0.37.0.
+
+<details>
+<summary>Context</summary>
+
+The Go, Python, and TypeScript runtimes gain the options appendix: the options-entries, options-registry, and upstream built-in schemas with readers that validate and bind them, and the options ranking parser, registry validator, and per-namespace entry validator, whose refusals are catalogued STRICTSPEC_OPTIONS_* error codes in a new OPTIONS area. An option may now name the options it depends on in a required requires list, which moves the options-registry schema to format_version 2. The Python runtime reads TOML whose tables interleave with arrays of tables, as Go and TypeScript already did. The Go CLI follows strictcli's module move to github.com/stricttools/strictcli/go and requires v0.37.0, so it inherits that release's help and version commands, help --json in place of --dump-schema, prefixed errors, and refusal of a repeated non-repeatable flag; that part is breaking for scripts, which in 0.x is a minor.
+
+</details>
+
+### Breaking
+
+- [go-strictspec] **The `strictspec` CLI is built on strictcli 0.37.0.** `strictspec --dump-schema` is refused; `strictspec help --json` prints the help document instead, and `strictspec help <command>` and `strictspec version` are new. Errors and warnings print as `error: <message>` and `warning: <message>` in human mode, a flag that is not repeatable is refused when given more than once instead of keeping the last value, and the `--json` document is `interface_version` 3 with an `output` member. A script that called `--dump-schema`, matched unprefixed error text, or repeated a flag to override it must change.
+
+### Features
+
+- [go-strictspec, py-strictspec, ts-strictspec] **Options built-in schemas.** The Go, Python, and TypeScript runtimes ship the `options-entries`, `options-registry`, and `upstream` built-in schemas defined by the new options appendix, with readers that validate a document's shape and bind it; the Go and Python runtimes also read a repository's `.strictmetadata/options/` directory and upstream file.
+- [go-strictspec, py-strictspec, ts-strictspec] **Options rules with catalogued errors.** The Go, Python, and TypeScript runtimes export the options ranking parser, registry validator, and per-namespace entry validator (`ParseOptionsRanking`, `ValidateOptionsRegistry`, and `ValidateOptionsNamespace` in Go; `parse_options_ranking`, `validate_options_registry`, and `validate_options_namespace` in Python; `parseOptionsRanking`, `validateOptionsRegistry`, and `validateOptionsNamespace` in TypeScript). Accepted entries come back classified as settled, debt, or waiting on the tool, and every refusal is a `STRICTSPEC_OPTIONS_*` diagnostic from the new `OPTIONS` area of the error-code catalogue, whose message names the subject file and, where one applies, the fix.
+- [go-strictspec, py-strictspec, ts-strictspec] **Options may require other options.** An option declared in a tool's `options-registry` names the options of the same registry it depends on in the new, required `requires` list, and the `options-registry` built-in schema moves to `format_version = 2`. The registry validator refuses a `requires` name the registry does not declare, an option requiring itself, and a cycle of requirements. The namespace validator refuses an entry that sets an option's `current` or `ideal` to `off` while an option requiring it, directly or through others, is not also `off`, naming every such dependent and the fix; any other value, such as `warn`, never affects dependents. Five new `STRICTSPEC_OPTIONS_*` codes cover these refusals, and `OptionDeclaration` carries `Requires` in Go and `requires` in Python and TypeScript.
+
+### Fixes
+
+- [go-strictspec, py-strictspec, ts-strictspec] **Python reads TOML whose tables interleave with arrays of tables.** The Python runtime no longer fails with an internal "could not locate TOML lexeme" error on a valid TOML document or schema that places an `[[array-of-tables]]` entry, such as a type's `[[...constraints]]`, between two other tables, or that interleaves array-of-tables entries with other tables; it now reads them as Go and TypeScript do. A comment on its own line inside a TOML array is no longer read as an extra empty-string element.
+
 ## 0.4.0
 
 Generated validators describe the constraint vocabulary without plan numbering, and the generated-code format moves to 2: regenerate committed validators with `strictspec gen` and raise the strictspec floor to this release.
