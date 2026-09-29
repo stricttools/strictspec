@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/smm-h/strictcli/go/strictcli"
+	"github.com/stricttools/strictcli/go/strictcli"
 	"github.com/stricttools/strictspec/go/internal/diag"
 	"github.com/stricttools/strictspec/go/internal/diffeng"
 	"github.com/stricttools/strictspec/go/internal/doc"

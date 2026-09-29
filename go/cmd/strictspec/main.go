@@ -1,5 +1,6 @@
 // Command strictspec is the toolchain CLI, built on strictcli (Go): flag
-// conventions are enforced at registration, and `--dump-schema` is auto-injected.
+// conventions are enforced at registration, and the `help` and `version`
+// commands are framework-provided (`strictspec help --json` prints the help document).
 // Subcommands: gen (file-driven codegen from strictspec.toml), validate
 // (interpreter-backed document validation), check (schema-authoring +
 // generated-code freshness), init (scaffold a manifest), export (JSON Schema),
@@ -15,7 +16,7 @@
 package main
 
 import (
-	"github.com/smm-h/strictcli/go/strictcli"
+	"github.com/stricttools/strictcli/go/strictcli"
 	"github.com/stricttools/strictspec/go/strictspec"
 )
 
