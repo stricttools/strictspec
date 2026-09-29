@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "name": "strictspec",
+  "name": "release-checkout",
   "slug": "strictspec",
   "version": "0.1.0",
   "description": "Define a schema once in TOML, and generate the full toolchain in your language: validation, versioning, migrations, etc. -- First-class support for Go, Python, and TypeScript",
@@ -1293,7 +1293,7 @@
     }
   ],
   "posts": [],
-  "last_gen": "2026-09-28T14:24:04.176676+00:00",
+  "last_gen": "2026-09-29T20:43:00.733522+00:00",
   "theme": "minimal",
   "vocabulary": {
     "accepted": [
