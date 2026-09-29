@@ -25,7 +25,7 @@ name = "ts-strictspec"
 releasable = "strictspec"
 
 [[projects]]
-path = "conformance/"
+path = "conformance"
 name = "conformance"
 dev_only = true
 releasable = false
