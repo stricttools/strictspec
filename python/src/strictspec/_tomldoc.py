@@ -11,8 +11,22 @@ Exact LEXEMES come straight from tomlkit's Item.as_string() and are what
 validation consumes (decodeString, numeric parsing, enum/literal comparison).
 
 SPANS (byte offsets): tomlkit exposes no source positions. This backend derives
-byte-accurate spans by a document-order forward scan of the raw source for each
-scalar's exact lexeme. Two properties make this sound for strictspec's use:
+byte-accurate spans by a forward scan of the raw source for each scalar's exact
+lexeme, restarted at the header of every table section it enters.
+
+tomlkit does NOT keep table sections in source order: it folds every
+[[array-of-tables]] entry, and every table under a shared implicit super-table,
+into one container, so `[t.fields.a]`, `[[t.constraints]]`, `[t.fields.b]` is
+visited as fields.a, fields.b, constraints. Only the key/value lines WITHIN one
+section keep their source order. So before converting, _section_starts() scans
+the source once for its [table] / [[array-of-tables]] headers (skipping strings,
+comments, and multi-line arrays, which can hold header look-alikes) and maps
+each header's resolved path -- array-of-tables entries by index -- to the byte
+offset just past the header. The fold restarts the scan there on entering the
+section and restores the enclosing cursor on leaving it, so each scalar is found
+in its own section whatever order tomlkit presents the sections in.
+
+Two properties make this sound for strictspec's use:
 
   1. A derived span always satisfies source[span] == lexeme by construction (the
      scan matches the exact lexeme bytes), so span/lexeme exactness holds.
@@ -42,6 +56,7 @@ from tomlkit.items import (
     Float,
     InlineTable,
     Integer,
+    Null,
     String,
     Table,
     Time,
@@ -49,6 +64,7 @@ from tomlkit.items import (
 
 from . import _doc as doc
 from ._doc import Kind, ParseError, Position, Span
+from ._strdecode import decode_toml
 
 
 def parse(src: bytes) -> doc.Document:
@@ -148,14 +164,170 @@ def _cover(nodes: list[doc.Node]) -> Span:
     return Span(spans[0].start, spans[-1].end)
 
 
+# A section path: key segments, each array-of-tables segment followed by the
+# int index of its entry, e.g. ("types", "T", "constraints", 0).
+_SectionPath = tuple
+
+
+# Bare-key bytes; bytes >= 0x80 are included so a reader that accepts TOML 1.1's
+# non-ASCII bare keys still resolves those headers.
+_BARE_KEY = frozenset(
+    b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"
+    + bytes(range(0x80, 0x100))
+)
+
+
+def _section_starts(src: bytes) -> dict[_SectionPath, int]:
+    """Map each [table] / [[array-of-tables]] header of already-valid TOML
+    source to the byte offset just past its closing bracket(s).
+
+    A header path resolves per TOML: a prefix that names an array of tables
+    refers to its latest entry, and a [[header]] appends a new entry.
+    """
+    starts: dict[_SectionPath, int] = {}
+    aot_len: dict[_SectionPath, int] = {}
+    n = len(src)
+    i = 0
+    while i < n:
+        i = _skip_blank(src, i)
+        if i >= n:
+            break
+        c = src[i]
+        if c in b"\r\n":
+            i += 1
+            continue
+        if c == 0x23:  # '#'
+            i = _line_end(src, i)
+            continue
+        if c == 0x5B:  # '['
+            is_aot = src[i + 1 : i + 2] == b"["
+            segs, i = _read_key(src, i + (2 if is_aot else 1))
+            i += 2 if is_aot else 1  # the closing ']' or ']]'
+            path: list = []
+            for seg in segs[:-1]:
+                path.append(seg)
+                count = aot_len.get(tuple(path))
+                if count:
+                    path.append(count - 1)
+            path.append(segs[-1])
+            if is_aot:
+                key = tuple(path)
+                idx = aot_len.get(key, 0)
+                aot_len[key] = idx + 1
+                path.append(idx)
+            starts[tuple(path)] = i
+            i = _line_end(src, i)
+            continue
+        _, i = _read_key(src, i)
+        i = _skip_value(src, i + 1)  # past the '='
+    return starts
+
+
+def _skip_blank(src: bytes, i: int) -> int:
+    n = len(src)
+    while i < n and src[i] in b" \t":
+        i += 1
+    return i
+
+
+def _line_end(src: bytes, i: int) -> int:
+    """The offset of the next line feed at/after i (len(src) if none)."""
+    j = src.find(b"\n", i)
+    return len(src) if j < 0 else j
+
+
+def _read_key(src: bytes, i: int) -> tuple[list[str], int]:
+    """Read a (possibly dotted, possibly quoted) key starting at/after i; stop
+    at the first byte that is not part of it (']', '=', or the like).
+    """
+    segs: list[str] = []
+    n = len(src)
+    while True:
+        i = _skip_blank(src, i)
+        if i < n and src[i] in b"\"'":
+            end = _string_end(src, i)
+            segs.append(decode_toml(src[i:end].decode("utf-8")))
+            i = end
+        else:
+            j = i
+            while j < n and src[j] in _BARE_KEY:
+                j += 1
+            segs.append(src[i:j].decode("utf-8"))
+            i = j
+        i = _skip_blank(src, i)
+        if i < n and src[i] == 0x2E:  # '.'
+            i += 1
+            continue
+        return segs, i
+
+
+def _string_end(src: bytes, i: int) -> int:
+    """The offset just past the TOML string (any of the four forms) at i."""
+    q = src[i : i + 1]
+    escapes = q == b'"'
+    triple = q * 3
+    n = len(src)
+    if src[i : i + 3] == triple:
+        j = i + 3
+        while j < n:
+            if escapes and src[j] == 0x5C:  # backslash
+                j += 2
+                continue
+            if src[j : j + 3] == triple:
+                j += 3
+                # Up to two quotes may sit right before the closing delimiter.
+                extra = 0
+                while extra < 2 and src[j : j + 1] == q:
+                    j += 1
+                    extra += 1
+                return j
+            j += 1
+        return n
+    j = i + 1
+    while j < n:
+        if escapes and src[j] == 0x5C:
+            j += 2
+            continue
+        if src[j : j + 1] == q:
+            return j + 1
+        j += 1
+    return n
+
+
+def _skip_value(src: bytes, i: int) -> int:
+    """Skip the value starting at/after i, through the line feed that ends its
+    line; arrays may span lines and hold comments.
+    """
+    depth = 0
+    n = len(src)
+    while i < n:
+        c = src[i]
+        if c in b"\"'":
+            i = _string_end(src, i)
+        elif c == 0x23:  # '#'
+            i = _line_end(src, i)
+        elif c in b"[{":
+            depth += 1
+            i += 1
+        elif c in b"]}":
+            depth -= 1
+            i += 1
+        elif c == 0x0A and depth <= 0:
+            return i + 1
+        else:
+            i += 1
+    return n
+
+
 class _Converter:
-    __slots__ = ("src", "text", "line_starts", "cursor")
+    __slots__ = ("src", "text", "line_starts", "cursor", "sections")
 
     def __init__(self, src: bytes) -> None:
         self.src = src
         self.text = src.decode("utf-8")
         self.line_starts = _line_starts(src)
         self.cursor = 0  # byte offset
+        self.sections = _section_starts(src)
 
     def _pos(self, off: int) -> Position:
         li = bisect_right(self.line_starts, off) - 1
@@ -179,42 +351,65 @@ class _Converter:
 
     def build_root(self, tk_container) -> doc.Node:
         b = _Builder()
-        self._fold_container(b, tk_container)
+        self._fold_container(b, tk_container, ())
         root_span = Span(Position(1, 1, 0), self._pos(len(self.src)))
         return b.finalize(root_span)
 
-    def _fold_container(self, b: _Builder, container) -> None:
+    def _fold_container(self, b: _Builder, container, path: _SectionPath) -> None:
         for key, item in container.body:
             if key is None:
                 continue  # whitespace / comment
             seg = key.key  # decoded single segment
             slot = b.note(seg)
-            self._fold_item(slot, item)
+            self._fold_item(slot, item, path + (seg,))
 
-    def _fold_item(self, slot: _Slot, item) -> None:
+    def _fold_item(self, slot: _Slot, item, path: _SectionPath) -> None:
         if isinstance(item, InlineTable):
             slot.value = self._convert_inline_table(item)
         elif isinstance(item, Table):
             if slot.sub is None:
                 slot.sub = _Builder()
-            self._fold_container(slot.sub, item.value)
+            self._fold_section(slot.sub, item.value, path)
         elif isinstance(item, AoT):
             for entry in item.body:
                 eb = _Builder()
-                self._fold_container(eb, entry.value)
+                # tomlkit may split one array of tables over several bindings,
+                # so the entry index counts the slot's entries so far.
+                self._fold_section(eb, entry.value, path + (len(slot.arr),))
                 slot.arr.append(eb)
         else:
             slot.value = self._convert_value(item)
 
+    def _fold_section(self, b: _Builder, container, path: _SectionPath) -> None:
+        """Fold a table's container; when the table has its own header, scan
+        its values from that header and then resume the enclosing scan.
+        A table with no header (implicit, or made by dotted keys) continues the
+        enclosing scan, which is where its values are.
+        """
+        start = self.sections.get(path)
+        if start is None:
+            self._fold_container(b, container, path)
+            return
+        saved = self.cursor
+        self.cursor = start
+        self._fold_container(b, container, path)
+        self.cursor = saved
+
     def _convert_inline_table(self, item: InlineTable) -> doc.Node:
         b = _Builder()
-        self._fold_container(b, item.value)
+        # An inline table holds no headers and sits inside the current scan;
+        # the (None,) path matches no header, so its sub-tables never restart it.
+        self._fold_container(b, item.value, (None,))
         return b.finalize(Span())
 
     def _convert_value(self, item) -> doc.Node:
         if isinstance(item, Array):
+            # A comment on its own line inside an array is a group whose value
+            # is a Null placeholder, not an element.
             children = [
-                self._convert_value(g.value) for g in item._value if g.value is not None
+                self._convert_value(g.value)
+                for g in item._value
+                if g.value is not None and not isinstance(g.value, Null)
             ]
             return doc.new_array(children, _cover(children))
         if isinstance(item, InlineTable):
