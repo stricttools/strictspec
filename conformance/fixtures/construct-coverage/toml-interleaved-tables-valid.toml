@@ -1,0 +1,14 @@
+name = "toml-interleaved-tables-valid"
+category = "construct-coverage"
+provenance = "hand-authored"
+description = """
+TOML reader layout: a schema whose source declares [[...constraints]] entries between field tables of
+the same type, validating a document whose [[group]] and [[group.item]] entries are interleaved with
+[meta] and [meta.extra], with dotted keys inside array-of-tables entries, values repeated across
+sections, and comment lines inside an array that are not elements. Every reader must assemble both
+files by TOML semantics; the document validates clean."""
+schema = "_schemas/toml-interleaved-tables.toml"
+input = "_inputs/toml-layout/interleaved-valid.toml"
+
+[expected]
+valid = true

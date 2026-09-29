@@ -1,0 +1,23 @@
+name = "toml-interleaved-tables-invalid"
+category = "construct-coverage"
+provenance = "hand-authored"
+description = """
+TOML reader layout: the interleaved document of toml-interleaved-tables-valid with a tag repeated in
+the second group and that group's two items (one on each side of [meta.extra]) sharing an id. Both
+constraints are declared between field tables in the schema source; both fire, in declaration order,
+on the second group's collections."""
+schema = "_schemas/toml-interleaved-tables.toml"
+input = "_inputs/toml-layout/interleaved-invalid.toml"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_INTRA_PAIRWISE_DISTINCT"
+path = "$.group[1].tag"
+slots = { value = '"x"', normalization = "none" }
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_INTRA_UNIQUE_BY"
+path = "$.group[1].item"
+slots = { value = '"x"', field = "id", normalization = "none" }

@@ -1,0 +1,104 @@
+# Reader-layout schema: its own source interleaves array-of-tables headers with
+# the field tables of the same type. Each type declares a [[...constraints]]
+# entry BETWEEN two of its field tables, and the root's second constraint comes
+# after a field table that follows the first, so a TOML reader must resolve the
+# headers by TOML semantics, not by the order a library groups them in. The
+# meaning is the same as if every constraint followed every field.
+name = "toml-interleaved-tables"
+meta_version = 1
+format_version = 1
+document_syntax = "toml"
+role = "schema"
+root = "Doc"
+targets = ["go", "python", "ts"]
+description = "A document of groups (each with distinct tags and unique item ids) and one metadata table, declared with constraints between field tables."
+
+[types.Doc]
+type = "record"
+
+[types.Doc.fields.group]
+type = "array"
+required = true
+description = "The groups, in document order."
+[types.Doc.fields.group.item]
+type = "Group"
+
+[[types.Doc.constraints]]
+form = "unique-by"
+collection = "group"
+field = "name"
+normalization = "none"
+description = "Group names are unique."
+
+[types.Doc.fields.meta]
+type = "Meta"
+required = true
+description = "Who owns the document."
+
+[types.Group]
+type = "record"
+
+[types.Group.fields.name]
+type = "string"
+required = true
+
+[types.Group.fields.tag]
+type = "array"
+required = true
+[types.Group.fields.tag.item]
+type = "string"
+
+[[types.Group.constraints]]
+form = "pairwise-distinct"
+collection = "tag"
+normalization = "none"
+description = "A group names each tag once."
+
+[types.Group.fields.item]
+type = "array"
+required = true
+[types.Group.fields.item.item]
+type = "Item"
+
+[[types.Group.constraints]]
+form = "unique-by"
+collection = "item"
+field = "id"
+normalization = "none"
+description = "Item ids are unique within a group."
+
+[types.Group.fields.label]
+type = "Label"
+required = true
+
+[types.Item]
+type = "record"
+
+[types.Item.fields.id]
+type = "string"
+required = true
+
+[types.Label]
+type = "record"
+
+[types.Label.fields.text]
+type = "string"
+required = true
+
+[types.Meta]
+type = "record"
+
+[types.Meta.fields.owner]
+type = "string"
+required = true
+
+[types.Meta.fields.extra]
+type = "Extra"
+required = true
+
+[types.Extra]
+type = "record"
+
+[types.Extra.fields.note]
+type = "string"
+required = true

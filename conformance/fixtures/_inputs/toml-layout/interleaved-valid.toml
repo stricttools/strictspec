@@ -1,0 +1,37 @@
+# Array-of-tables entries interleaved with other tables: [[group]] entries sit
+# on either side of [meta] and [meta.extra], and each group's nested
+# [[group.item]] entries follow it. Values repeat across sections ("a", "x") so
+# a reader that locates a value by searching forward from the wrong place would
+# find the wrong occurrence or none. The second group's tags carry comment lines,
+# which are not elements (two phantom elements would repeat each other).
+format_version = 1
+
+[[group]]
+name = "a"
+tag = ["x", "y"]
+label.text = "x"
+
+[[group.item]]
+id = "a"
+
+[meta]
+owner = "x"
+
+[[group]]
+name = "b"
+tag = [
+  # the first tag
+  "y",
+  # the second tag
+  "x",
+]
+label.text = "a"
+
+[[group.item]]
+id = "x"
+
+[meta.extra]
+note = "a"
+
+[[group.item]]
+id = "a"
