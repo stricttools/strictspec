@@ -9,7 +9,7 @@ package tomldoc
 import (
 	"errors"
 
-	tomledit "github.com/smm-h/go-toml-edit"
+	tomledit "github.com/stricttools/go-toml-edit"
 	"github.com/stricttools/strictspec/go/internal/doc"
 )
 
