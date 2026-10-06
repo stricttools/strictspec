@@ -1,0 +1,1 @@
+{"format_version":1,"id":"18dc0c8f6f3578acc58085424140490385e7ade7f165ae00","commits":["a5f2bfd8e30033e5fa7547e7451ff735923d97f7"],"user_facing":true,"description":"**go-toml-edit is required at its new path, `github.com/stricttools/go-toml-edit`, at 0.5.0.** A program using strictspec no longer pulls the module under its old path.","type":"fix","packages":["go-strictspec"]}
