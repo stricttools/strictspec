@@ -270,7 +270,7 @@ from = 2026-01-01
 reason = "a"
 `)
 	ref := refusal(t, func() error { _, err := r.ConfidentialNames(day(t, "2026-10-07"), ""); return err }(), lifecycle.RuleConfidentialNames)
-	if !strings.Contains(ref.Fix, "repository's name") {
+	if !strings.Contains(ref.Fix, "repository's names") {
 		t.Errorf("fix %q", ref.Fix)
 	}
 	names, err := r.ConfidentialNames(day(t, "2026-10-07"), "Portal")
@@ -279,6 +279,23 @@ reason = "a"
 	}
 	if !reflect.DeepEqual(names, []string{"Portal"}) {
 		t.Fatalf("names %v: the subject and the repository name differ only in case and keep one spelling", names)
+	}
+}
+
+func TestEveryRepositoryNameGivenIsConfidential(t *testing.T) {
+	r := parse(t, `format_version = 1
+[[licenses]]
+subject = "portal"
+license = "proprietary"
+from = 2026-01-01
+reason = "a"
+`)
+	names, err := r.ConfidentialNames(day(t, "2026-10-07"), "portal-checkout", "", "moonbase")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(names, []string{"moonbase", "portal", "portal-checkout"}) {
+		t.Fatalf("names %v", names)
 	}
 }
 

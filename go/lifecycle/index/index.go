@@ -6,8 +6,13 @@
 // and scan what a public repository commits or publishes against every name in
 // it.
 //
-// The package performs no file write of its own: Upsert and Remove write
-// through the lifecycle.FileWriter the caller injects.
+// An entry is keyed by its repository's lifecycle-and-license record, never by
+// a remote: by the values of the record's open releasable-name identities (see
+// SubjectsOf), so a repository without an origin remote has an entry, and
+// finding it asks no network.
+//
+// The package performs no file write of its own: Upsert, Remove, Rename, and
+// Apply write through the lifecycle.FileWriter the caller injects.
 package index
 
 import (
@@ -16,6 +21,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -40,11 +46,14 @@ func DefaultPath() (string, error) {
 	return filepath.Join(dir, "strictspec", FileName), nil
 }
 
-// Entry is one repository's entry: its normalized origin and the names it
+// Entry is one repository's entry: the subjects that key it and the names it
 // protects.
 type Entry struct {
-	Origin string
-	Names  []string
+	// Subjects are the values of the record's open releasable-name
+	// identities when the entry was written (see SubjectsOf), sorted. No
+	// subject keys more than one entry.
+	Subjects []string
+	Names    []string
 }
 
 // Index is the confidential-name index as read from its file.
@@ -59,13 +68,14 @@ type fileShape struct {
 }
 
 type repoShape struct {
-	Origin string   `toml:"origin,required"`
-	Names  []string `toml:"names,required"`
+	Subjects []string `toml:"subjects,required"`
+	Names    []string `toml:"names,required"`
 }
 
 // Load reads the index at path. A missing file is an empty index (the file is
-// created on the first Upsert). Unknown keys, a wrong format version, a
-// repeated or unnormalized origin, and an entry without names are refused.
+// created on the first Upsert). Unknown keys, a wrong format version, an entry
+// without subjects or names, subjects not sorted, and a subject keying more
+// than one entry are refused.
 func Load(path string) (*Index, error) {
 	x := &Index{path: path}
 	src, err := os.ReadFile(path)
@@ -82,23 +92,25 @@ func Load(path string) (*Index, error) {
 	if shape.FormatVersion != FormatVersion {
 		return nil, fmt.Errorf("%s: format_version is %d; this index reader reads %d", path, shape.FormatVersion, FormatVersion)
 	}
-	seen := map[string]bool{}
-	for _, r := range shape.Repositories {
-		norm, err := renormalizeStored(r.Origin)
-		if err != nil {
-			return nil, fmt.Errorf("%s: %w", path, err)
+	owner := map[string]int{}
+	for i, r := range shape.Repositories {
+		clean := cleanSubjects(r.Subjects)
+		if len(clean) == 0 {
+			return nil, fmt.Errorf("%s: entry %d has no subjects; every entry is keyed by the releasable names of its repository", path, i+1)
 		}
-		if norm != r.Origin {
-			return nil, fmt.Errorf("%s: origin %q is not normalized (it reads %q normalized); the index holds normalized origins only", path, r.Origin, norm)
+		if !equalStrings(clean, r.Subjects) {
+			return nil, fmt.Errorf("%s: entry %d has the subjects %q, which are not sorted, unique, and trimmed (they read %q so)", path, i+1, r.Subjects, clean)
 		}
-		if seen[r.Origin] {
-			return nil, fmt.Errorf("%s: origin %q has more than one entry", path, r.Origin)
+		for _, s := range clean {
+			if j, ok := owner[s]; ok {
+				return nil, fmt.Errorf("%s: the subject %q keys entries %d and %d; a subject keys one entry", path, s, j+1, i+1)
+			}
+			owner[s] = i
 		}
-		seen[r.Origin] = true
 		if len(r.Names) == 0 {
-			return nil, fmt.Errorf("%s: origin %q has no names; an entry exists only for a confidential repository", path, r.Origin)
+			return nil, fmt.Errorf("%s: entry %d (%s) has no names; an entry exists only for a confidential repository", path, i+1, strings.Join(clean, ", "))
 		}
-		x.entries = append(x.entries, Entry{Origin: r.Origin, Names: append([]string(nil), r.Names...)})
+		x.entries = append(x.entries, Entry{Subjects: clean, Names: append([]string(nil), r.Names...)})
 	}
 	return x, nil
 }
@@ -106,11 +118,23 @@ func Load(path string) (*Index, error) {
 // Path is the file the index was read from and is written to.
 func (x *Index) Path() string { return x.path }
 
-// Entries returns the index's entries in origin order.
+// Entries returns the index's entries, ordered by their first subject.
 func (x *Index) Entries() []Entry {
 	out := make([]Entry, len(x.entries))
 	for i, e := range x.entries {
-		out[i] = Entry{Origin: e.Origin, Names: append([]string(nil), e.Names...)}
+		out[i] = copyEntry(e)
+	}
+	return out
+}
+
+// Held returns the entries keyed by any of subjects.
+func (x *Index) Held(subjects []string) []Entry {
+	want := setOf(cleanSubjects(subjects))
+	var out []Entry
+	for _, e := range x.entries {
+		if shares(e.Subjects, want) {
+			out = append(out, copyEntry(e))
+		}
 	}
 	return out
 }
@@ -125,52 +149,72 @@ func (x *Index) Names() []string {
 	return cleanNames(all)
 }
 
-// Upsert sets the names of origin's entry (origin is normalized first) and
-// writes the index through w when anything changed. An empty name list is
-// refused: a repository with no confidential names is removed with Remove.
-func (x *Index) Upsert(w lifecycle.FileWriter, origin string, names []string) error {
-	norm, err := NormalizeOrigin(origin)
-	if err != nil {
-		return err
+// Upsert writes the entry of the repository whose subjects are subjects (see
+// SubjectsOf) with names, through w, when anything changed. Every entry keyed
+// by one of subjects is the repository's: it is replaced, except that its
+// subjects outside subjects keep their own entry with the names it held, since
+// a releasable another repository took over (an extract) is that
+// repository's to rewrite. An empty name list is refused: a repository with
+// no confidential names is removed with Remove.
+func (x *Index) Upsert(w lifecycle.FileWriter, subjects, names []string) error {
+	key := cleanSubjects(subjects)
+	if len(key) == 0 {
+		return fmt.Errorf("upserting names with no subjects; the index keys a repository by the values of its open releasable-name identities")
 	}
 	clean := cleanNames(names)
 	if len(clean) == 0 {
-		return fmt.Errorf("upserting %s with no names; a repository with no confidential names is removed from the index, not upserted", norm)
+		return fmt.Errorf("upserting %s with no names; a repository with no confidential names is removed from the index, not upserted", strings.Join(key, ", "))
 	}
-	for i, e := range x.entries {
-		if e.Origin == norm {
-			if equalStrings(e.Names, clean) {
-				return nil
-			}
-			next := x.Entries()
-			next[i].Names = clean
-			return x.write(w, next)
-		}
-	}
-	next := append(x.Entries(), Entry{Origin: norm, Names: clean})
+	next := append(x.without(key), Entry{Subjects: key, Names: clean})
 	return x.write(w, next)
 }
 
-// Remove drops origin's entry (origin is normalized first) and writes the
-// index through w when it had one.
-func (x *Index) Remove(w lifecycle.FileWriter, origin string) error {
-	norm, err := NormalizeOrigin(origin)
-	if err != nil {
-		return err
+// Remove drops the entries keyed by subjects, through w, when the index holds
+// any; their other subjects keep their own entry with the names it held.
+func (x *Index) Remove(w lifecycle.FileWriter, subjects []string) error {
+	key := cleanSubjects(subjects)
+	if len(key) == 0 {
+		return nil
 	}
+	return x.write(w, x.without(key))
+}
+
+// Rename moves the subject from to the name to, through w, as a renamed
+// releasable's repository does: the entry keyed by from is keyed by to
+// instead, merged (subjects and names alike) with the entry to keys already.
+// An index without from is left as it is.
+func (x *Index) Rename(w lifecycle.FileWriter, from, to string) error {
+	from, to = strings.TrimSpace(from), strings.TrimSpace(to)
+	if from == "" || to == "" {
+		return fmt.Errorf("renaming a subject of the index needs the old and the new name")
+	}
+	var moved *Entry
 	var next []Entry
-	found := false
 	for _, e := range x.Entries() {
-		if e.Origin == norm {
-			found = true
+		if slices.Contains(e.Subjects, from) {
+			e.Subjects = slices.DeleteFunc(e.Subjects, func(s string) bool { return s == from })
+			e.Subjects = append(e.Subjects, to)
+			moved = &e
 			continue
 		}
 		next = append(next, e)
 	}
-	if !found {
+	if moved == nil {
 		return nil
 	}
-	return x.write(w, next)
+	merged := *moved
+	var rest []Entry
+	for _, e := range next {
+		if slices.Contains(e.Subjects, to) {
+			merged.Subjects = append(merged.Subjects, e.Subjects...)
+			merged.Names = append(merged.Names, e.Names...)
+			continue
+		}
+		rest = append(rest, e)
+	}
+	merged.Subjects = cleanSubjects(merged.Subjects)
+	merged.Names = cleanNames(merged.Names)
+	return x.write(w, append(rest, merged))
 }
 
 // Scan matches text against every name in the index (see ScanTerms).
@@ -178,8 +222,30 @@ func (x *Index) Scan(text string) []Match {
 	return ScanTerms(text, x.Names())
 }
 
+// without is the entries with every subject of key taken out; an entry left
+// with no subject is dropped.
+func (x *Index) without(key []string) []Entry {
+	drop := setOf(key)
+	var out []Entry
+	for _, e := range x.Entries() {
+		if !shares(e.Subjects, drop) {
+			out = append(out, e)
+			continue
+		}
+		rest := slices.DeleteFunc(e.Subjects, func(s string) bool { return drop[s] })
+		if len(rest) > 0 {
+			out = append(out, Entry{Subjects: rest, Names: e.Names})
+		}
+	}
+	return out
+}
+
+// write writes entries through w when they differ from the index's own.
 func (x *Index) write(w lifecycle.FileWriter, entries []Entry) error {
-	sort.Slice(entries, func(i, j int) bool { return entries[i].Origin < entries[j].Origin })
+	sort.Slice(entries, func(i, j int) bool { return entries[i].Subjects[0] < entries[j].Subjects[0] })
+	if equalEntries(entries, x.entries) {
+		return nil
+	}
 	src, err := render(entries)
 	if err != nil {
 		return err
@@ -203,7 +269,7 @@ func render(entries []Entry) ([]byte, error) {
 		if err := d.NewArrayTable("repositories"); err != nil {
 			return nil, err
 		}
-		if err := d.Set("repositories[-1].origin", e.Origin); err != nil {
+		if err := d.Set("repositories[-1].subjects", e.Subjects); err != nil {
 			return nil, err
 		}
 		if err := d.Set("repositories[-1].names", e.Names); err != nil {
@@ -241,6 +307,52 @@ func equalStrings(a, b []string) bool {
 	}
 	for i := range a {
 		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+// cleanSubjects trims subjects, drops empty and repeated ones, and sorts the
+// rest. Subjects are releasable names, compared as written.
+func cleanSubjects(subjects []string) []string {
+	out := []string{}
+	for _, s := range subjects {
+		if t := strings.TrimSpace(s); t != "" {
+			out = append(out, t)
+		}
+	}
+	sort.Strings(out)
+	return slices.Compact(out)
+}
+
+func setOf(xs []string) map[string]bool {
+	out := make(map[string]bool, len(xs))
+	for _, x := range xs {
+		out[x] = true
+	}
+	return out
+}
+
+func shares(subjects []string, set map[string]bool) bool {
+	for _, s := range subjects {
+		if set[s] {
+			return true
+		}
+	}
+	return false
+}
+
+func copyEntry(e Entry) Entry {
+	return Entry{Subjects: append([]string(nil), e.Subjects...), Names: append([]string(nil), e.Names...)}
+}
+
+func equalEntries(a, b []Entry) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if !equalStrings(a[i].Subjects, b[i].Subjects) || !equalStrings(a[i].Names, b[i].Names) {
 			return false
 		}
 	}

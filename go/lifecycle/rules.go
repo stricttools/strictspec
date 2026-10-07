@@ -325,8 +325,9 @@ func (r *Record) ReleaseAllowed(subject string, on time.Time) error {
 // names recorded for them, the repository's name when no subject has a
 // non-proprietary license on that date, the codenames, and the distinctive
 // terms; deduplicated ignoring case and sorted. A public repository has none.
-// repositoryName is required only when it is one of the names.
-func (r *Record) ConfidentialNames(on time.Time, repositoryName string) ([]string, error) {
+// repositoryNames (the repository's own names, such as its directory's and its
+// origin's) are required only when they are among the names.
+func (r *Record) ConfidentialNames(on time.Time, repositoryNames ...string) ([]string, error) {
 	if !r.Confidential(on) {
 		return nil, nil
 	}
@@ -357,14 +358,20 @@ func (r *Record) ConfidentialNames(on time.Time, repositoryName string) ([]strin
 		}
 	}
 	if !anyPublic {
-		if strings.TrimSpace(repositoryName) == "" {
+		given := false
+		for _, n := range repositoryNames {
+			if strings.TrimSpace(n) != "" {
+				given = true
+				names = append(names, n)
+			}
+		}
+		if !given {
 			return nil, &Refusal{
 				Rule:   RuleConfidentialNames,
 				Detail: "no releasable carries a non-proprietary license, so the repository's name is confidential, and no repository name was given",
-				Fix:    "Pass the repository's name (the last segment of its origin URL).",
+				Fix:    "Pass the repository's names (its directory's, and its origin's last path segment when it has an origin).",
 			}
 		}
-		names = append(names, repositoryName)
 	}
 	names = append(names, r.codenames...)
 	names = append(names, r.distinctiveTerms...)

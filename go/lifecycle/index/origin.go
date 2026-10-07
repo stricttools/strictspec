@@ -13,8 +13,8 @@ import (
 // alias from ~/.ssh/config.
 var scpOrigin = regexp.MustCompile(`^(?:[^/@:]+@)?([^:/@]+):(.+)$`)
 
-// NormalizeOrigin reduces a git remote URL to the form the index keys entries
-// by, so the spellings of one remote agree:
+// NormalizeOrigin reduces a git remote URL to one form, so the spellings of
+// one remote agree:
 //
 //   - https://github.com/owner/repo.git, ssh://git@github.com/owner/repo, and
 //     git@github.com:owner/repo.git all become github.com/owner/repo (the host
@@ -27,7 +27,7 @@ var scpOrigin = regexp.MustCompile(`^(?:[^/@:]+@)?([^:/@]+):(.+)$`)
 func NormalizeOrigin(origin string) (string, error) {
 	o := strings.TrimSpace(origin)
 	if o == "" {
-		return "", fmt.Errorf("the origin URL is empty; the index keys entries by the repository's origin")
+		return "", fmt.Errorf("the origin URL is empty")
 	}
 	if m := scpOrigin.FindStringSubmatch(o); m != nil && !strings.Contains(o, "://") {
 		return joinHostPath(m[1], m[2])
@@ -66,18 +66,4 @@ func joinHostPath(host, p string) (string, error) {
 func trimRepoPath(p string) string {
 	p = strings.TrimRight(p, "/")
 	return strings.TrimSuffix(p, ".git")
-}
-
-// renormalizeStored normalizes an origin as the index stores it. A stored
-// origin is either file:///path or host/path with its scheme already dropped,
-// so the second form is read back as an https URL before normalizing; a
-// stored origin that is normalized comes back unchanged.
-func renormalizeStored(stored string) (string, error) {
-	if strings.HasPrefix(stored, "file://") {
-		return NormalizeOrigin(stored)
-	}
-	if strings.Contains(stored, "://") {
-		return "", fmt.Errorf("origin %q carries a scheme; the index stores host/path origins without one", stored)
-	}
-	return NormalizeOrigin("https://" + stored)
 }
