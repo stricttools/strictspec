@@ -280,7 +280,7 @@ func (r *Record) PrivateRepositoryOutputAllowed(output Output, visibility Visibi
 }
 
 var privateOutputFix = map[Output]string{
-	BuildAttestation:        "Turn build attestations off (provenance false on the npm pipeline; regenerate the publish workflow so it carries attestations: false) and commit the result.",
+	BuildAttestation:        "Turn build attestations off in the committed publish workflow: regenerate it so its npm publish carries no --provenance and its PyPI publish step carries attestations: false, and commit the result.",
 	GoProxyNotification:     "Publish the Go code as binaries only (no library pipeline and no local Go pipeline), regenerate the publish workflow, and commit the result.",
 	GoLibrary:               "Publish the Go code as binaries through npm per-platform packages and PyPI wheels instead of a library pipeline.",
 	HomebrewTap:             "Remove the Homebrew tap from the releasable's pipelines.",

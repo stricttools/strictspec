@@ -173,8 +173,13 @@ func TestAPrivateRepositoryRefusesAGoProxyNotification(t *testing.T) {
 func TestAPrivateRepositoryRefusesBuildAttestations(t *testing.T) {
 	r := parse(t, "format_version = 1\n")
 	ref := refusal(t, r.PrivateRepositoryOutputAllowed(lifecycle.BuildAttestation, lifecycle.VisibilityPrivate, day(t, "2026-10-07")), lifecycle.RulePrivateRepositoryPublishing)
-	if !strings.Contains(ref.Fix, "attestations: false") || !strings.Contains(ref.Fix, "provenance false") {
-		t.Errorf("fix names neither PyPI attestations nor npm provenance: %v", ref)
+	// The fix is performed in the committed publish workflow: no declaration
+	// carries build attestations, so the text names no declaration key.
+	if !strings.Contains(ref.Fix, "attestations: false") || !strings.Contains(ref.Fix, "--provenance") {
+		t.Errorf("fix names neither PyPI attestations nor npm --provenance: %v", ref)
+	}
+	if strings.Contains(ref.Fix, "provenance false") || strings.Contains(ref.Fix, "pipeline") {
+		t.Errorf("fix names a declaration key that does not exist: %v", ref)
 	}
 }
 
