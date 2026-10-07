@@ -71,7 +71,7 @@ func ResolveImportsFrom(s *Schema, files FileSet) []diag.Diagnostic {
 			}
 		}
 	}
-	return out
+	return append(out, checkNodeKindUnions(s)...)
 }
 
 // LoadManifestScalarsFrom scans a FileSet for `[[scalars]]` declarations (the
@@ -105,7 +105,8 @@ func LoadFile(path string) (*Schema, []diag.Diagnostic, error) {
 
 // ResolveImports loads the schema's imported type-definition files (relative to
 // the schema's directory) and merges the named imported types into s.Types.
-// Imported-file authoring diagnostics are surfaced. Only the type NAMES listed
+// Imported-file authoring diagnostics are surfaced, and so are the checks that
+// need every named type resolvable (an ambiguous node-kind union). Only the type NAMES listed
 // in each import entry are pulled in.
 func ResolveImports(s *Schema) []diag.Diagnostic {
 	var out []diag.Diagnostic
@@ -148,7 +149,7 @@ func ResolveImports(s *Schema) []diag.Diagnostic {
 			}
 		}
 	}
-	return out
+	return append(out, checkNodeKindUnions(s)...)
 }
 
 // LoadManifestScalars scans dir for TOML files declaring `[[scalars]]` (the

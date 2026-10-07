@@ -447,28 +447,9 @@ func (v *exec) resolveRecord(t *schema.Type) *schema.Type {
 	return t
 }
 
-// armCategory returns the node-kind category (scalar/record/array) an arm accepts.
+// armCategory returns the node category (scalar/record/array) an arm accepts.
 func (v *exec) armCategory(t *schema.Type) string {
-	seen := 0
-	for t != nil && t.Kind == schema.KindRef {
-		if named, ok := v.s.Types[t.Ref]; ok && seen < 32 {
-			t = named
-			seen++
-			continue
-		}
-		return "scalar" // builtin/custom scalar
-	}
-	if t == nil {
-		return "scalar"
-	}
-	switch t.Kind {
-	case schema.KindRecord, schema.KindMap:
-		return "record"
-	case schema.KindArray, schema.KindTuple:
-		return "array"
-	default:
-		return "scalar"
-	}
+	return v.s.ArmCategory(t)
 }
 
 func (v *exec) enumMembers(t *schema.Type) []string {
