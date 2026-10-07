@@ -232,9 +232,10 @@ var (
 
 func (v *exec) validateDatetime(t *schema.Type, n doc.Node, path diag.Path) {
 	// Determine the value's datetime form. JSON carries RFC 3339 strings; TOML
-	// natives carry their own kind.
+	// natives carry their own form, and a quoted string in a TOML document is
+	// not a datetime (form stays empty, so the type check refuses it).
 	var form string // "date" | "time" | "datetime-offset" | "datetime-local" | ""
-	if n != nil && n.Kind() == doc.String {
+	if n != nil && n.Kind() == doc.String && v.format != doc.FormatTOML {
 		form = classifyRFC3339(v.decodeString(n))
 	} else if n != nil {
 		switch n.Kind() {
