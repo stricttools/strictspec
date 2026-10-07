@@ -104,7 +104,7 @@ func (r *Record) structuralProblems() []string {
 			var open []string
 			for _, p := range ps {
 				if p.Open() {
-					open = append(open, p.String())
+					open = append(open, p.describe())
 				}
 			}
 			if len(open) > 1 {
@@ -117,7 +117,7 @@ func (r *Record) structuralProblems() []string {
 					if ps[i].overlaps(ps[j]) {
 						problems = append(problems, fmt.Sprintf(
 							"%s: %s has overlapping periods (%s) and (%s); periods of one subject must not share a day",
-							table, key, ps[i], ps[j]))
+							table, key, ps[i].describe(), ps[j].describe()))
 					}
 				}
 			}

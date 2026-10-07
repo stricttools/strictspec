@@ -97,7 +97,7 @@ func (e *Refusal) Error() string {
 	}
 	b.WriteString(e.Detail)
 	if !e.Period.From.IsZero() {
-		fmt.Fprintf(&b, " (period %s)", e.Period)
+		fmt.Fprintf(&b, " (period %s)", e.Period.describe())
 	}
 	b.WriteString(". ")
 	b.WriteString(e.Fix)

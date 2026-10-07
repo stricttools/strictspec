@@ -107,8 +107,9 @@ func (p Period) Contains(on time.Time) bool {
 	return p.Open() || d.Before(p.Until)
 }
 
-// String renders the period for messages.
-func (p Period) String() string {
+// describe renders the period for messages. (It is not String, so the entry
+// types that embed Period do not print as their period alone.)
+func (p Period) describe() string {
 	if p.Open() {
 		return "from " + formatDate(p.From) + ", open"
 	}
