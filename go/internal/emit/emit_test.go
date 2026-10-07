@@ -148,3 +148,89 @@ func interpOutcome(t *testing.T, schemaPath, inputPath, syntax string) []observe
 	}
 	return diags
 }
+
+// unionRootSchema is a schema whose root is a discriminated union rather than a
+// record, so its entry points return strictspec.Value instead of a pointer.
+const unionRootSchema = `name = "union-root"
+meta_version = 1
+format_version = 1
+document_syntax = "json"
+role = "schema"
+root = "Event"
+targets = ["go"]
+description = "A document whose root is a discriminated union."
+
+[types.Started]
+type = "record"
+
+[types.Started.fields.kind]
+type = "literal"
+value = "started"
+required = true
+
+[types.Started.fields.at]
+type = "string"
+required = true
+
+[types.Ended]
+type = "record"
+
+[types.Ended.fields.kind]
+type = "literal"
+value = "ended"
+required = true
+
+[types.Ended.fields.outcome]
+type = "enum"
+required = true
+values = ["exited", "crashed"]
+
+[types.Event]
+type = "discriminated-union"
+discriminator = "kind"
+
+[types.Event.arms.started]
+type = "Started"
+
+[types.Event.arms.ended]
+type = "Ended"
+`
+
+// TestUnionRootCompiles generates the validator of a schema whose root is a
+// discriminated union, compiles it against the runtime, and checks its verdicts
+// against the reference interpreter for a valid and an invalid document.
+func TestUnionRootCompiles(t *testing.T) {
+	if _, err := exec.LookPath("go"); err != nil {
+		t.Skip("go toolchain not available")
+	}
+	runtimeDir, _ := dirs(t)
+	dir := t.TempDir()
+	schemaPath := filepath.Join(dir, "union-root.schema.toml")
+	if err := os.WriteFile(schemaPath, []byte(unionRootSchema), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	built, err := Build(schemaPath, t.TempDir(), runtimeDir, runtimeVersion)
+	if err != nil {
+		t.Fatalf("Build (generate+compile) failed: %v", err)
+	}
+	inputs := map[string]string{
+		"valid.json":   `{"kind": "ended", "outcome": "exited"}`,
+		"invalid.json": `{"kind": "ended", "outcome": "vanished"}`,
+	}
+	for name, body := range inputs {
+		inputPath := filepath.Join(dir, name)
+		if err := os.WriteFile(inputPath, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		got := runValidator(t, built.BinPath, inputPath, "json")
+		want := interpOutcome(t, schemaPath, inputPath, "json")
+		if got.Valid != (len(want) == 0) || len(got.Diagnostics) != len(want) {
+			t.Fatalf("%s: generated valid=%v %v, interpreter %v", name, got.Valid, got.Diagnostics, want)
+		}
+		for i := range want {
+			if got.Diagnostics[i] != want[i] {
+				t.Errorf("%s: parity break at diag[%d]:\n gen: %+v\n int: %+v", name, i, got.Diagnostics[i], want[i])
+			}
+		}
+	}
+}

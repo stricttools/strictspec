@@ -153,18 +153,27 @@ func (g *goEmitter) entryPoints() {
 	rootBind := "bind" + g.exportType(g.s.Root)
 	rootIsRecord := g.isRecord(g.s.Root)
 	ret := "strictspec.Value"
+	// none is what an entry point returns beside its diagnostics when the
+	// document is invalid: nil for a record root, the zero Value otherwise.
+	none := "strictspec.Value{}"
 	if rootIsRecord {
 		ret = "*" + rootGo
+		none = "nil"
 	}
 
 	fmt.Fprintf(w, "// ValidateBytes is the raw-bytes entry point: lossless parse of input in the\n")
 	fmt.Fprintf(w, "// given syntax (\"json\" | \"toml\" | \"jsonl\"), then validate. It returns the\n")
-	fmt.Fprintf(w, "// typed root value (nil when any diagnostic fired) and the ordered diagnostics.\n")
+	if rootIsRecord {
+		fmt.Fprintf(w, "// typed root value (nil when any diagnostic fired) and the ordered diagnostics.\n")
+	} else {
+		fmt.Fprintf(w, "// root value (the zero Value when any diagnostic fired) and the ordered\n")
+		fmt.Fprintf(w, "// diagnostics.\n")
+	}
 	fmt.Fprintf(w, "func ValidateBytes(input []byte, syntax string) (%s, []strictspec.Diagnostic) {\n", ret)
 	fmt.Fprintf(w, "\tres := program.Validate(input, syntax)\n")
-	fmt.Fprintf(w, "\tif !res.Valid {\n\t\treturn nil, res.Diagnostics\n\t}\n")
+	fmt.Fprintf(w, "\tif !res.Valid {\n\t\treturn %s, res.Diagnostics\n\t}\n", none)
 	fmt.Fprintf(w, "\tv, err := strictspec.LoadValue(input, syntax)\n")
-	fmt.Fprintf(w, "\tif err != nil {\n\t\treturn nil, res.Diagnostics\n\t}\n")
+	fmt.Fprintf(w, "\tif err != nil {\n\t\treturn %s, res.Diagnostics\n\t}\n", none)
 	if rootIsRecord {
 		fmt.Fprintf(w, "\treturn %s(v), nil\n", rootBind)
 	} else {
@@ -176,7 +185,7 @@ func (g *goEmitter) entryPoints() {
 	fmt.Fprintf(w, "// tagged document value (from strictspec.LoadValue or a typed constructor).\n")
 	fmt.Fprintf(w, "func ValidateValue(v strictspec.Value) (%s, []strictspec.Diagnostic) {\n", ret)
 	fmt.Fprintf(w, "\tres := program.ValidateValue(v)\n")
-	fmt.Fprintf(w, "\tif !res.Valid {\n\t\treturn nil, res.Diagnostics\n\t}\n")
+	fmt.Fprintf(w, "\tif !res.Valid {\n\t\treturn %s, res.Diagnostics\n\t}\n", none)
 	if rootIsRecord {
 		fmt.Fprintf(w, "\treturn %s(v), nil\n", rootBind)
 	} else {
@@ -188,9 +197,9 @@ func (g *goEmitter) entryPoints() {
 	fmt.Fprintf(w, "// evidence for the constraint vocabulary.\n")
 	fmt.Fprintf(w, "func ValidateBytesWithEvidence(input []byte, syntax string, evidence map[string][]map[string]any) (%s, []strictspec.Diagnostic) {\n", ret)
 	fmt.Fprintf(w, "\tres := program.ValidateWithEvidence(input, syntax, evidence)\n")
-	fmt.Fprintf(w, "\tif !res.Valid {\n\t\treturn nil, res.Diagnostics\n\t}\n")
+	fmt.Fprintf(w, "\tif !res.Valid {\n\t\treturn %s, res.Diagnostics\n\t}\n", none)
 	fmt.Fprintf(w, "\tv, err := strictspec.LoadValue(input, syntax)\n")
-	fmt.Fprintf(w, "\tif err != nil {\n\t\treturn nil, res.Diagnostics\n\t}\n")
+	fmt.Fprintf(w, "\tif err != nil {\n\t\treturn %s, res.Diagnostics\n\t}\n", none)
 	if rootIsRecord {
 		fmt.Fprintf(w, "\treturn %s(v), nil\n", rootBind)
 	} else {
