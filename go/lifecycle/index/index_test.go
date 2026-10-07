@@ -220,6 +220,8 @@ func TestNormalizeOrigin(t *testing.T) {
 		"http://github.com/owner/portal":         "github.com/owner/portal",
 		"ssh://git@github.com:22/owner/portal":   "github.com/owner/portal",
 		"git@github.com:owner/portal.git":        "github.com/owner/portal",
+		"github.com:owner/portal.git":            "github.com/owner/portal",
+		"gp:owner/portal.git":                    "gp/owner/portal",
 		"git+ssh://git@github.com/owner/portal":  "github.com/owner/portal",
 		"file:///srv/remotes/portal.git":         "file:///srv/remotes/portal",
 		"/srv/remotes/portal.git/":               "file:///srv/remotes/portal",

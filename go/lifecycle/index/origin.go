@@ -8,15 +8,18 @@ import (
 	"strings"
 )
 
-// scpOrigin is git's scp-like remote syntax: user@host:path.
-var scpOrigin = regexp.MustCompile(`^[^/@:]+@([^:/]+):(.+)$`)
+// scpOrigin is git's scp-like remote syntax, [user@]host:path, which git
+// reads when no slash comes before the first colon: the host may be an SSH
+// alias from ~/.ssh/config.
+var scpOrigin = regexp.MustCompile(`^(?:[^/@:]+@)?([^:/@]+):(.+)$`)
 
 // NormalizeOrigin reduces a git remote URL to the form the index keys entries
 // by, so the spellings of one remote agree:
 //
 //   - https://github.com/owner/repo.git, ssh://git@github.com/owner/repo, and
 //     git@github.com:owner/repo.git all become github.com/owner/repo (the host
-//     lowercased, user and port dropped, a trailing .git and slashes removed);
+//     lowercased, user and port dropped, a trailing .git and slashes removed),
+//     and an SSH alias's gp:owner/repo becomes gp/owner/repo;
 //   - file:///srv/repo.git and the absolute path /srv/repo.git become
 //     file:///srv/repo.
 //
