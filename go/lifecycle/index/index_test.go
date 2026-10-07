@@ -237,3 +237,24 @@ func TestNormalizeOrigin(t *testing.T) {
 		}
 	}
 }
+
+func TestLoadReadsTheOriginsUpsertWrites(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "index.toml")
+	x, err := index.Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := x.Upsert(diskWriter{}, "git@github.com:owner/portal.git", []string{"portal"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := x.Upsert(diskWriter{}, "/srv/widget.git", []string{"widget"}); err != nil {
+		t.Fatal(err)
+	}
+	again, err := index.Load(path)
+	if err != nil {
+		t.Fatalf("loading the index Upsert wrote: %v", err)
+	}
+	if got := again.Entries(); len(got) != 2 || got[0].Origin != "file:///srv/widget" || got[1].Origin != "github.com/owner/portal" {
+		t.Fatalf("entries = %+v", got)
+	}
+}

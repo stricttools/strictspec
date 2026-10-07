@@ -84,7 +84,7 @@ func Load(path string) (*Index, error) {
 	}
 	seen := map[string]bool{}
 	for _, r := range shape.Repositories {
-		norm, err := NormalizeOrigin(r.Origin)
+		norm, err := renormalizeStored(r.Origin)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", path, err)
 		}

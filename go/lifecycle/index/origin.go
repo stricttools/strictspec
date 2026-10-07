@@ -64,3 +64,17 @@ func trimRepoPath(p string) string {
 	p = strings.TrimRight(p, "/")
 	return strings.TrimSuffix(p, ".git")
 }
+
+// renormalizeStored normalizes an origin as the index stores it. A stored
+// origin is either file:///path or host/path with its scheme already dropped,
+// so the second form is read back as an https URL before normalizing; a
+// stored origin that is normalized comes back unchanged.
+func renormalizeStored(stored string) (string, error) {
+	if strings.HasPrefix(stored, "file://") {
+		return NormalizeOrigin(stored)
+	}
+	if strings.Contains(stored, "://") {
+		return "", fmt.Errorf("origin %q carries a scheme; the index stores host/path origins without one", stored)
+	}
+	return NormalizeOrigin("https://" + stored)
+}
