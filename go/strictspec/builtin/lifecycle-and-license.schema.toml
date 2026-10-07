@@ -1,0 +1,237 @@
+# Toolchain-shipped built-in schema: a repository's lifecycle-and-license
+# record, .strictmetadata/lifecycle-and-license/lifecycle-and-license.toml.
+# The Go package github.com/stricttools/strictspec/go/lifecycle validates the
+# record's shape against this schema and adds the checks a schema cannot state
+# (non-overlapping periods, at most one open period, pending identities).
+name = "lifecycle-and-license"
+meta_version = 1
+format_version = 1
+document_syntax = "toml"
+role = "schema"
+root = "LifecycleAndLicense"
+description = "A repository's dated lifecycle, license, and identity periods for each releasable, the registry names it holds, and the tags it releases nothing under."
+
+[types.LifecycleAndLicense]
+type = "record"
+
+[types.LifecycleAndLicense.fields.format_version]
+type = "literal"
+value = 1
+required = true
+description = "The record's format version."
+
+[types.LifecycleAndLicense.fields.codenames]
+type = "array"
+required = false
+description = "Extra names a confidential repository protects; refused while the repository is public."
+[types.LifecycleAndLicense.fields.codenames.item]
+type = "string"
+non_empty = true
+
+[types.LifecycleAndLicense.fields.distinctive_terms]
+type = "array"
+required = false
+description = "Prose terms a confidential repository protects; refused while the repository is public."
+[types.LifecycleAndLicense.fields.distinctive_terms.item]
+type = "string"
+non_empty = true
+
+[types.LifecycleAndLicense.fields.lifecycle]
+type = "array"
+required = false
+description = "Dated lifecycle periods, per subject."
+[types.LifecycleAndLicense.fields.lifecycle.item]
+type = "LifecyclePeriod"
+
+[types.LifecycleAndLicense.fields.licenses]
+type = "array"
+required = false
+description = "Dated license periods, per subject."
+[types.LifecycleAndLicense.fields.licenses.item]
+type = "LicensePeriod"
+
+[types.LifecycleAndLicense.fields.identities]
+type = "array"
+required = false
+description = "Dated or pending identities, per subject and facet, with the tag namespaces they own."
+[types.LifecycleAndLicense.fields.identities.item]
+type = "Identity"
+
+[types.LifecycleAndLicense.fields.registry_names]
+type = "array"
+required = false
+description = "Registry names the repository holds; an entry is never removed."
+[types.LifecycleAndLicense.fields.registry_names.item]
+type = "RegistryName"
+
+[types.LifecycleAndLicense.fields.unversioned_tags]
+type = "array"
+required = false
+description = "Tags that release no version, each with its reason."
+[types.LifecycleAndLicense.fields.unversioned_tags.item]
+type = "UnversionedTag"
+
+[types.LifecyclePeriod]
+type = "record"
+
+[types.LifecyclePeriod.fields.subject]
+type = "string"
+required = true
+non_empty = true
+description = "A releasable or member name."
+
+[types.LifecyclePeriod.fields.status]
+type = "enum"
+required = true
+values = ["active", "on-hold", "retired"]
+description = "The subject's lifecycle status while the period runs."
+
+[types.LifecyclePeriod.fields.from]
+type = "date"
+required = true
+description = "The first day of the period."
+
+[types.LifecyclePeriod.fields.until]
+type = "date"
+required = false
+description = "The first day after the period; absent while the period is open."
+
+[types.LifecyclePeriod.fields.reason]
+type = "string"
+required = true
+non_empty = true
+description = "Why the period began."
+
+[types.LicensePeriod]
+type = "record"
+
+[types.LicensePeriod.fields.subject]
+type = "string"
+required = true
+non_empty = true
+description = "A releasable or member name."
+
+[types.LicensePeriod.fields.license]
+type = "string"
+required = true
+regex = "^(proprietary|[A-Za-z0-9][A-Za-z0-9.+()-]*( (AND|OR|WITH) [A-Za-z0-9][A-Za-z0-9.+()-]*)*)$"
+description = "An SPDX license expression, or proprietary."
+
+[types.LicensePeriod.fields.from]
+type = "date"
+required = true
+description = "The first day of the period; a future date schedules a change."
+
+[types.LicensePeriod.fields.until]
+type = "date"
+required = false
+description = "The first day after the period; absent while the period is open."
+
+[types.LicensePeriod.fields.reason]
+type = "string"
+required = true
+non_empty = true
+description = "Why the period began."
+
+[types.Identity]
+type = "record"
+
+[types.Identity.fields.subject]
+type = "string"
+required = true
+non_empty = true
+description = "A releasable or member name."
+
+[types.Identity.fields.facet]
+type = "enum"
+required = true
+values = ["releasable-name", "package-name", "project-name", "go-module-path", "tag-format", "repository-url"]
+description = "Which identity of the subject the entry records."
+
+[types.Identity.fields.value]
+type = "string"
+required = true
+non_empty = true
+description = "The identity's value."
+
+[types.Identity.fields.registry]
+type = "enum"
+required = true
+values = ["npm", "pypi", "go", ""]
+description = "The registry the value names a package in, or the empty string when it names none."
+
+[types.Identity.fields.tag_patterns]
+type = "array"
+required = true
+description = "The git tag globs the identity owned while its period ran."
+[types.Identity.fields.tag_patterns.item]
+type = "string"
+non_empty = true
+
+[types.Identity.fields.from]
+type = "date"
+required = false
+description = "The first day of the period; absent on a pending entry."
+
+[types.Identity.fields.until]
+type = "date"
+required = false
+description = "The first day after the period; absent while the period is open and on a pending entry."
+
+[types.Identity.fields.effective_version]
+type = "string"
+required = false
+regex = "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+description = "Present only on a pending entry, in place of from: the version whose release starts the period."
+
+[types.Identity.fields.reason]
+type = "string"
+required = true
+non_empty = true
+description = "Why the identity began."
+
+[types.RegistryName]
+type = "record"
+
+[types.RegistryName.fields.registry]
+type = "enum"
+required = true
+values = ["npm", "pypi", "go"]
+description = "The registry holding the name."
+
+[types.RegistryName.fields.name]
+type = "string"
+required = true
+non_empty = true
+description = "The name held."
+
+[types.RegistryName.fields.subject]
+type = "string"
+required = true
+non_empty = true
+description = "The releasable or member the name was recorded for."
+
+[types.RegistryName.fields.recorded_since]
+type = "date"
+required = true
+description = "The day the name was recorded."
+
+[types.UnversionedTag]
+type = "record"
+
+[types.UnversionedTag.fields.tag]
+type = "string"
+required = true
+non_empty = true
+description = "The tag name."
+
+[types.UnversionedTag.fields.reason]
+type = "string"
+required = true
+non_empty = true
+description = "Why the tag releases no version."
+
+[types.UnversionedTag.fields.recorded]
+type = "date"
+required = true
+description = "The day the tag was recorded."
