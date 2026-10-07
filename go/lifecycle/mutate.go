@@ -143,8 +143,9 @@ func (r *Record) closeAt(table Table, index int, until time.Time) error {
 }
 
 // AddIdentity appends a dated identity (From set, no EffectiveVersion). An
-// identity whose subject and facet already have an open identity is refused;
-// close that one first with CloseIdentity.
+// identity whose subject and facet (and registry, for a registry-scoped
+// facet) already have an open identity is refused; close that one first with
+// CloseIdentity.
 func (r *Record) AddIdentity(id Identity) error {
 	if id.Pending() {
 		return fmt.Errorf("identity %q carries an effective version; use AddPendingIdentity", id.Value)
@@ -205,19 +206,24 @@ func (r *Record) appendIdentity(id Identity) error {
 	})
 }
 
-// CloseIdentity closes the open dated identity of the subject and facet,
-// setting until. A subject and facet without an open identity is refused.
-func (r *Record) CloseIdentity(subject string, facet Facet, until time.Time) error {
-	index := r.openIdentity(subject, facet)
+// CloseIdentity closes the open dated identity of the subject and facet (in
+// the registry, for a registry-scoped facet; the registry is not read
+// otherwise), setting until. A subject and facet without an open identity is
+// refused.
+func (r *Record) CloseIdentity(subject string, facet Facet, registry string, until time.Time) error {
+	index := r.openIdentity(subject, facet, registry)
 	if index < 0 {
+		if facet.RegistryScoped() {
+			return fmt.Errorf("identities: subject %q facet %q registry %q has no open identity to close", subject, facet, registry)
+		}
 		return fmt.Errorf("identities: subject %q facet %q has no open identity to close", subject, facet)
 	}
 	return r.closeAt(TableIdentities, index, until)
 }
 
-func (r *Record) openIdentity(subject string, facet Facet) int {
+func (r *Record) openIdentity(subject string, facet Facet, registry string) int {
 	for i, id := range r.identities {
-		if id.Subject == subject && id.Facet == facet && !id.Pending() && id.Open() {
+		if id.Fills(subject, facet, registry) && !id.Pending() && id.Open() {
 			return i
 		}
 	}
@@ -226,7 +232,8 @@ func (r *Record) openIdentity(subject string, facet Facet) int {
 
 // ActivatePendingIdentities converts every pending identity whose
 // EffectiveVersion is version, as the release of that version does at its
-// archive step: the open identity of the same subject and facet is closed with
+// archive step: the open identity of the same subject and facet (and
+// registry, for a registry-scoped facet) is closed with
 // until set to the date of on (the release commit's committer date), and the
 // pending entry gets from set to that date and loses its effective version. It
 // returns the converted identities; none pending for the version is not an
@@ -248,7 +255,7 @@ func (r *Record) ActivatePendingIdentities(version string, on time.Time) ([]Iden
 	err := r.edit(func(d *tomledit.Document) error {
 		for _, i := range pending {
 			id := r.identities[i]
-			if open := r.openIdentity(id.Subject, id.Facet); open >= 0 {
+			if open := r.openIdentity(id.Subject, id.Facet, id.Registry); open >= 0 {
 				if err := set(d, fmt.Sprintf("identities[%d].until", open), day); err != nil {
 					return err
 				}

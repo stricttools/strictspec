@@ -213,6 +213,34 @@ tag_patterns = []
 effective_version = "0.6.0"
 reason = "b"
 `, "pending entries"},
+		{"package-name identity without a registry", `format_version = 1
+[[identities]]
+subject = "portal"
+facet = "package-name"
+value = "p"
+registry = ""
+tag_patterns = []
+effective_version = "0.5.0"
+reason = "a"
+`, "names no registry"},
+		{"two open package-name identities in one registry", `format_version = 1
+[[identities]]
+subject = "portal"
+facet = "package-name"
+value = "p"
+registry = "pypi"
+tag_patterns = []
+from = 2026-01-01
+reason = "a"
+[[identities]]
+subject = "portal"
+facet = "package-name"
+value = "q"
+registry = "pypi"
+tag_patterns = []
+from = 2026-03-01
+reason = "b"
+`, "open periods"},
 		{"bracket in a tag pattern", `format_version = 1
 [[identities]]
 subject = "portal"
@@ -278,6 +306,45 @@ codenames = ["Bluebird", "bluebird"]
 			t.Errorf("%s: error does not say %q: %v", c.name, c.want, err)
 		}
 	}
+}
+
+// A package name is a name in one registry: a subject publishing to npm and
+// PyPI holds one package-name identity in each, open and pending alike.
+func TestPackageNameIdentitiesAreKeyedByRegistry(t *testing.T) {
+	parse(t, `format_version = 1
+[[identities]]
+subject = "portal"
+facet = "package-name"
+value = "portal"
+registry = "npm"
+tag_patterns = ["v*"]
+from = 2026-01-01
+reason = "a"
+[[identities]]
+subject = "portal"
+facet = "package-name"
+value = "portal"
+registry = "pypi"
+tag_patterns = ["v*"]
+from = 2026-01-01
+reason = "a"
+[[identities]]
+subject = "portal"
+facet = "package-name"
+value = "portal-client"
+registry = "npm"
+tag_patterns = ["v*"]
+effective_version = "0.5.0"
+reason = "renamed"
+[[identities]]
+subject = "portal"
+facet = "package-name"
+value = "portal-client"
+registry = "pypi"
+tag_patterns = ["v*"]
+effective_version = "0.5.0"
+reason = "renamed"
+`)
 }
 
 func TestAdjacentPeriodsAndOneOfEachFacetAreAccepted(t *testing.T) {

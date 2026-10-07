@@ -141,6 +141,14 @@ func (r *Record) structuralProblems() []string {
 	var pendingOrder []string
 	for _, id := range r.identities {
 		key := "subject " + quote(id.Subject) + " facet " + quote(string(id.Facet))
+		if id.Facet.RegistryScoped() {
+			key += " registry " + quote(id.Registry)
+			if id.Registry == "" {
+				problems = append(problems, fmt.Sprintf(
+					"identities: subject %q facet %q value %q names no registry; a %s is a name in one registry, so the identity names it (npm, pypi, or go), one identity per registry",
+					id.Subject, id.Facet, id.Value, id.Facet))
+			}
+		}
 		hasFrom := !id.From.IsZero()
 		switch {
 		case id.Pending() && hasFrom:

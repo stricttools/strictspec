@@ -87,6 +87,12 @@ const (
 	FacetRepositoryURL  Facet = "repository-url"
 )
 
+// RegistryScoped reports whether the facet's value is a name in one
+// registry, so a subject holds one identity of the facet per registry (a
+// package published to npm and to PyPI has a package name in each). Such an
+// identity names its registry.
+func (f Facet) RegistryScoped() bool { return f == FacetPackageName }
+
 // Period is a run of days. From is its first day; Until is the first day after
 // it, and is the zero time while the period is open. Both are dates at
 // midnight UTC.
@@ -164,6 +170,13 @@ type Identity struct {
 // Pending reports whether the identity waits for the release of its
 // EffectiveVersion.
 func (i Identity) Pending() bool { return i.EffectiveVersion != "" }
+
+// Fills reports whether the identity is one of the subject's identities of
+// the facet in the registry: the registry counts only for a registry-scoped
+// facet, whose identities are kept per registry.
+func (i Identity) Fills(subject string, facet Facet, registry string) bool {
+	return i.Subject == subject && i.Facet == facet && (!facet.RegistryScoped() || i.Registry == registry)
+}
 
 // RegistryName is one [[registry_names]] entry.
 type RegistryName struct {

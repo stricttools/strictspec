@@ -124,7 +124,7 @@ func TestMutatorRefusals(t *testing.T) {
 
 func TestRenamingClosesTheOldIdentityAndOpensTheNew(t *testing.T) {
 	r := parse(t, commentedRecord)
-	if err := r.CloseIdentity("portal", lifecycle.FacetPackageName, day(t, "2026-10-07")); err != nil {
+	if err := r.CloseIdentity("portal", lifecycle.FacetPackageName, "npm", day(t, "2026-10-07")); err != nil {
 		t.Fatal(err)
 	}
 	if err := r.AddIdentity(lifecycle.Identity{
@@ -138,7 +138,7 @@ func TestRenamingClosesTheOldIdentityAndOpensTheNew(t *testing.T) {
 	if len(ids) != 2 || ids[0].Open() || !ids[1].Open() || ids[1].Value != "portal-client" {
 		t.Fatalf("identities %+v", ids)
 	}
-	if err := r.CloseIdentity("portal", lifecycle.FacetProjectName, day(t, "2026-10-07")); err == nil {
+	if err := r.CloseIdentity("portal", lifecycle.FacetProjectName, "", day(t, "2026-10-07")); err == nil {
 		t.Error("closing an identity the subject does not have was accepted")
 	}
 	if err := r.AddIdentity(lifecycle.Identity{Subject: "portal", Facet: lifecycle.FacetPackageName, Value: "x", Registry: "npm", EffectiveVersion: "0.5.0", Reason: "x"}); err == nil {
@@ -299,5 +299,65 @@ func TestWriteKeepsAStrictspecManifestAndRefusesAnotherOwner(t *testing.T) {
 	}
 	if err := r.Write(newRecordingWriter(), root); err != nil {
 		t.Fatalf("correcting the manifest did not clear the refusal: %v", err)
+	}
+}
+
+// The release of a version converts the pending identity of each registry,
+// closing the open identity of that registry only.
+func TestPendingIdentitiesOfTwoRegistriesConvertSeparately(t *testing.T) {
+	r := parse(t, `format_version = 1
+[[identities]]
+subject = "portal"
+facet = "package-name"
+value = "portal"
+registry = "npm"
+tag_patterns = ["v*"]
+from = 2026-01-01
+reason = "a"
+[[identities]]
+subject = "portal"
+facet = "package-name"
+value = "portal"
+registry = "pypi"
+tag_patterns = ["v*"]
+from = 2026-01-01
+reason = "a"
+`)
+	for _, registry := range []string{"npm", "pypi"} {
+		if err := r.AddPendingIdentity(lifecycle.Identity{
+			Subject: "portal", Facet: lifecycle.FacetPackageName, Value: "portal-client",
+			Registry: registry, TagPatterns: []string{"v*"}, EffectiveVersion: "0.5.0", Reason: "renamed",
+		}); err != nil {
+			t.Fatalf("pending %s identity: %v", registry, err)
+		}
+	}
+	if err := r.AddPendingIdentity(lifecycle.Identity{
+		Subject: "portal", Facet: lifecycle.FacetPackageName, Value: "portal-client",
+		Registry: "", TagPatterns: []string{"v*"}, EffectiveVersion: "0.5.0", Reason: "renamed",
+	}); err == nil || !strings.Contains(err.Error(), "names no registry") {
+		t.Fatalf("a pending package-name identity without a registry: %v", err)
+	}
+	converted, err := r.ActivatePendingIdentities("0.5.0", day(t, "2026-10-09"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(converted) != 2 {
+		t.Fatalf("converted %+v", converted)
+	}
+	for _, id := range r.Identities() {
+		switch {
+		case id.Value == "portal" && (id.Open() || !id.Until.Equal(day(t, "2026-10-09"))):
+			t.Errorf("the replaced %s identity was not closed on the release date: %+v", id.Registry, id)
+		case id.Value == "portal-client" && (id.Pending() || !id.Open()):
+			t.Errorf("the converted %s identity %+v", id.Registry, id)
+		}
+	}
+	if err := r.CloseIdentity("portal", lifecycle.FacetPackageName, "pypi", day(t, "2026-10-10")); err != nil {
+		t.Fatal(err)
+	}
+	for _, id := range r.Identities() {
+		if id.Value == "portal-client" && id.Registry == "npm" && !id.Open() {
+			t.Errorf("closing the pypi identity closed the npm one: %+v", id)
+		}
 	}
 }

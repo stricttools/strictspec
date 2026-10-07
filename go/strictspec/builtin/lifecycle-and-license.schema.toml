@@ -2,7 +2,8 @@
 # record, .strictmetadata/lifecycle-and-license/lifecycle-and-license.toml.
 # The Go package github.com/stricttools/strictspec/go/lifecycle validates the
 # record's shape against this schema and adds the checks a schema cannot state
-# (non-overlapping periods, at most one open period, pending identities).
+# (non-overlapping periods, at most one open period, pending identities, and
+# the registry every package-name identity names).
 name = "lifecycle-and-license"
 meta_version = 1
 format_version = 1
@@ -53,7 +54,7 @@ type = "LicensePeriod"
 [types.LifecycleAndLicense.fields.identities]
 type = "array"
 required = false
-description = "Dated or pending identities, per subject and facet, with the tag namespaces they own."
+description = "Dated or pending identities, per subject and facet (and registry, for a package name), with the tag namespaces they own."
 [types.LifecycleAndLicense.fields.identities.item]
 type = "Identity"
 
@@ -158,7 +159,7 @@ description = "The identity's value."
 type = "enum"
 required = true
 values = ["npm", "pypi", "go", ""]
-description = "The registry the value names a package in, or the empty string when it names none."
+description = "The registry the value names a package in, or the empty string when it names none. A package-name identity names its registry, and a subject holds one package-name identity per registry."
 
 [types.Identity.fields.tag_patterns]
 type = "array"
