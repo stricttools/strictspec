@@ -9,3 +9,8 @@ context = "Only the Go module is released: the Python and TypeScript implementat
 # The targets released, and the ones left out; between them they name every target of the releasable's members.
 include = ["go"]
 exclude = ["pypi", "npm"]
+release_commit = "8fd8af419c3dca817680d2dc5b20f805c94cd13a"
+[released_trees]
+go = "d01eb88292dc608b77f05899e6006bce9a2f4109"
+python = "7790a88a58cc4db0f67894371a8dbbe3b6418ce4"
+ts = "dadada1ddf4750052708fbe7a663716ba173f9eb"
