@@ -59,3 +59,9 @@ type = "npm"
 target = "npm"
 local = false
 artifact = "package"
+
+[[members]]
+path = "conformance/spikes/toml-eslint-parser"
+name = "toml-eslint-parser"
+releasable = false
+dev_only = true

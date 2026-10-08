@@ -1,0 +1,44 @@
+# Development and CI
+tests/
+test/
+__tests__/
+.github/
+scripts/
+docs/
+e2e/
+
+# Private paths: the upload-private-paths check refuses a release whose
+# package carries any of them
+/todo/
+/experiments/
+/screenshots/
+/stricttools/
+.rlsbl/
+.rlsbl-monorepo/
+.strictmetadata/
+.stricttools/
+.claude/
+.selfdoc/
+.strictcli/
+CLAUDE.md
+AGENTS.md
+.env*
+*.local-only
+
+# Python artifacts (for multi-target projects)
+__pycache__/
+*.pyc
+*.py
+*.toml
+.venv/
+
+# Build/cache
+coverage/
+.nyc_output/
+
+# Editor/OS
+.DS_Store
+*.log
+
+# Selfdoc
+selfdoc.json
