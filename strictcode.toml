@@ -1,0 +1,2 @@
+[python_tools.lint]
+paths = ["conformance", "python"]

@@ -1,0 +1,61 @@
+format_version = 1
+repository_layout = "workspace"
+release_branches = ["main", "master"]
+
+[[releasables]]
+name = "strictspec"
+tag_format = "{name}@v{version}"
+publish_mode = "ci"
+
+[[members]]
+path = "."
+name = "root"
+releasable = false
+dev_only = true
+
+[[members]]
+path = "conformance"
+name = "conformance"
+releasable = false
+dev_only = true
+
+[[members]]
+path = "go"
+name = "go-strictspec"
+releasable = "strictspec"
+targets = [{ name = "go" }]
+
+[[members.pipelines]]
+name = "go"
+type = "go"
+target = "go"
+local = false
+artifact = "binary"
+install_paths = ["./cmd/strictspec"]
+
+[[members]]
+path = "python"
+name = "py-strictspec"
+releasable = "strictspec"
+import_name = "strictspec"
+targets = [{ name = "pypi" }]
+
+[[members.pipelines]]
+name = "pypi"
+type = "pypi"
+target = "pypi"
+local = false
+artifact = "package"
+
+[[members]]
+path = "ts"
+name = "ts-strictspec"
+releasable = "strictspec"
+targets = [{ name = "npm" }]
+
+[[members.pipelines]]
+name = "npm"
+type = "npm"
+target = "npm"
+local = false
+artifact = "package"

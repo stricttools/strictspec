@@ -1,0 +1,29 @@
+format_version = 1
+[[lifecycle]]
+subject = "strictspec"
+status = "active"
+from = 2026-10-08
+reason = "active when rlsbl's records moved to the .strictmetadata layout"
+[[licenses]]
+subject = "strictspec"
+license = "MIT"
+from = 2026-10-08
+reason = "read from the package manifests when rlsbl's records moved to the .strictmetadata layout"
+[[registry_names]]
+registry = "pypi"
+name = "strictspec"
+subject = "strictspec"
+recorded_since = 2026-10-08
+[[registry_names]]
+registry = "npm"
+name = "strictspec"
+subject = "strictspec"
+recorded_since = 2026-10-08
+[[identities]]
+subject = "strictspec"
+facet = "releasable-name"
+value = "strictspec"
+registry = ""
+tag_patterns = ["strictspec@v*"]
+from = 2026-07-18
+reason = "recorded when rlsbl's records moved to the .strictmetadata layout"

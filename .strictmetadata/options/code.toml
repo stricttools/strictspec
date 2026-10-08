@@ -1,0 +1,15 @@
+format_version = 1
+
+[[entry]]
+id = "strictcode:lint"
+current = "error"
+ideal = "error"
+reason = "ruff-lint checked this member before the check moved into strictcode's lint rule"
+scope = "conformance"
+
+[[entry]]
+id = "strictcode:lint"
+current = "error"
+ideal = "error"
+reason = "ruff-lint checked this member before the check moved into strictcode's lint rule"
+scope = "python"
