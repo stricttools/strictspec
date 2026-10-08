@@ -1,11 +1,11 @@
 # The next release of strictspec. Fill in bump and description, then run `rlsbl release run --watch`.
 format_version = 2
 # How the release moves the version: patch, minor, major, or infra (moved as a patch, recorded as infra).
-bump = ""
+bump = "minor"
 # What this release is, in a sentence or two. Required.
-description = ""
+description = "The Go module gains the lifecycle-and-license library (the lifecycle package and the confidential-name index, with public-client declarations), compiles Go validators for a discriminated-union root, refuses ambiguous node-kind unions and quoted TOML dates, and prints the output of diff, doc-diff, export, and migrate --dry-run again."
 # Why these changes were made. Optional.
-context = ""
+context = "Only the Go module is released: the Python and TypeScript implementations are paused while the tools are rewritten in Go. The lifecycle package is what rlsbl, safegit, and selfdoc read the lifecycle-and-license record and the confidential-name index through; the union-root fix lets claudewheel generate its Go validators with a released strictspec. The module now requires strictcli 0.39.0 and go-toml-edit 0.5.1."
 # The targets released, and the ones left out; between them they name every target of the releasable's members.
-include = ["go", "pypi", "npm"]
-exclude = []
+include = ["go"]
+exclude = ["pypi", "npm"]
