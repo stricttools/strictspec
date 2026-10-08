@@ -241,6 +241,9 @@ onward is governed by semver at release boundaries, not by a freeze.
   (release-file gate + certificate deploy gate + changelog engine, with the fleet-wide per-line
   `format_version` backfill COMPLETE); pgdesign (gate-not-swap + three custom scalars); and
   selfdoc directives.
+- claudestream, adopted in wave 1, dropped its strictspec schema with its Go rewrite (0.16.0)
+  and is no longer a consumer; its agent schema stays in examples/ and conformance/ as a test
+  input.
 - predraw, adopted in wave 1, is retired (2026-09-26) and is no longer a consumer; its scene
   schema stays in examples/ and conformance/ as a test input.
 - wavescript adoption is BLOCKED on three recorded design walls awaiting owner decisions:
