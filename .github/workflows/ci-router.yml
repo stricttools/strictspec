@@ -3,14 +3,13 @@ name: CI Router
 on:
   push:
     branches:
-    - main
+      - 'main'
+      - 'master'
   pull_request:
   workflow_dispatch:
     inputs:
       run_all:
-        description: Run every project's CI jobs, ignoring the paths filter. Use
-          this to make a release candidate's members run their own CI on a 
-          commit whose push window does not touch their paths.
+        description: Run every member's CI jobs whatever the path filters say, so a release candidate's members run their own CI on a commit whose push touched none of their paths
         type: boolean
         required: false
         default: false
@@ -21,138 +20,452 @@ jobs:
   detect:
     runs-on: ubuntu-latest
     outputs:
-      py-strictspec: ${{ steps.changes.outputs.py-strictspec }}
-      go-strictspec: ${{ steps.changes.outputs.go-strictspec }}
-      ts-strictspec: ${{ steps.changes.outputs.ts-strictspec }}
-      conformance: ${{ steps.changes.outputs.conformance }}
+      conformance: ${{ steps.changes.outputs['conformance'] }}
+      go-strictspec: ${{ steps.changes.outputs['go-strictspec'] }}
+      py-strictspec: ${{ steps.changes.outputs['py-strictspec'] }}
+      ts-strictspec: ${{ steps.changes.outputs['ts-strictspec'] }}
     steps:
-    - uses: actions/checkout@v6
-    - uses: dorny/paths-filter@v4
-      id: changes
-      with:
-        filters: |
-          py-strictspec:
-            - 'python/**'
-            - '.github/workflows/ci-router.yml'
-            - '.rlsbl-monorepo/releasables/strictspec/CHANGELOG.md'
-          go-strictspec:
-            - 'go/**'
-            - '.github/workflows/ci-router.yml'
-            - '.rlsbl-monorepo/releasables/strictspec/CHANGELOG.md'
-          ts-strictspec:
-            - 'ts/**'
-            - '.github/workflows/ci-router.yml'
-            - '.rlsbl-monorepo/releasables/strictspec/CHANGELOG.md'
-          conformance:
-            - 'conformance/**'
-            - '.github/workflows/ci-router.yml'
-        predicate-quantifier: some-with-excludes
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v4
+        id: changes
+        with:
+          filters: |
+            conformance:
+              - 'conformance/**'
+              - '.github/workflows/ci-router.yml'
+            go-strictspec:
+              - 'go/**'
+              - '.github/workflows/ci-router.yml'
+              - '.strictmetadata/changelog/strictspec/CHANGELOG.md'
+            py-strictspec:
+              - 'python/**'
+              - '.github/workflows/ci-router.yml'
+              - '.strictmetadata/changelog/strictspec/CHANGELOG.md'
+            ts-strictspec:
+              - 'ts/**'
+              - '.github/workflows/ci-router.yml'
+              - '.strictmetadata/changelog/strictspec/CHANGELOG.md'
+          predicate-quantifier: some-with-excludes
+  conformance-ci-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+      - run: uv python install 3.13
+      # The harness drives all four runtimes, so the conformance job needs the
+      # full toolchain matrix: uv (python), go (adapters + generated validators),
+      # and node (ts dist + adapter).
+      - uses: actions/setup-go@v6
+        with:
+          # rlsbl sync prefixes this with the sub-project path (conformance/); the
+          # go module is the sibling repo-root go/, so `../go/go.mod` resolves to
+          # <workspace>/go/go.mod after the prefix.
+          go-version-file: conformance/../go/go.mod
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Sync conformance project
+        run: uv sync --locked
+      - name: Install ts runtime dependencies
+        run: npm ci
+        working-directory: ts
+      # All four targets are LIVE (interpreter, python, go, ts). The harness
+      # builds the Go adapters, the Python env, and the TS dist on the fly, then
+      # asserts byte-identical outcomes + parity across all four. A mismatch or a
+      # parity break fails here.
+      - name: Run conformance harness
+        run: uv run strictspec-conformance
+      - name: Run harness tests
+        run: uv run pytest -q
+    name: conformance-ci / test
+    needs:
+      - detect
+    if: (needs.detect.outputs['conformance'] == 'true' || inputs.run_all)
+    defaults:
+      run:
+        working-directory: conformance
+  go-strictspec-ci-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      # setup-go reads go.mod's `toolchain` line first, then its `go` directive.
+      # Declare the development Go in `toolchain` (go mod edit -toolchain=goX.Y.Z)
+      # so CI tests with it; `go` stays the minimum consumers need.
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go/go.mod
+      - run: go vet ./...
+      - run: go test ./... -race -short -timeout=10m
+    name: go-strictspec-ci / test
+    needs:
+      - detect
+    if: (needs.detect.outputs['go-strictspec'] == 'true' || inputs.run_all)
+    defaults:
+      run:
+        working-directory: go
   py-strictspec-ci-test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         # requires-python: >= 3.11
-        python-version: ['3.12', '3.13', '3.14']
+        python-version: ["3.12", "3.13", "3.14"]
     steps:
-    - uses: actions/checkout@v6
-    - uses: astral-sh/setup-uv@v7
-    - run: uv python install ${{ matrix.python-version }}
-    - run: uv sync --locked
-    - run: uv run python -c "import strictspec"
-    - name: Install gitleaks
-      run: |
-        GITLEAKS_VERSION=8.24.3
-        curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar xz -C /usr/local/bin gitleaks
-    - run: uv run pytest --rootdir .
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+      - run: uv python install ${{ matrix.python-version }}
+      - run: uv sync --locked
+      - run: uv run python -c "import strictspec"
+      - run: uv run pytest --rootdir .
+      # Listing what the upload carries takes building it, which needs the
+      # network, so the upload is built and checked here, on the candidate
+      # commit a release waits on, rather than before the release starts.
+      - name: Build the upload
+        run: uv build --out-dir "$RUNNER_TEMP/rlsbl-upload"
+      # A registry keeps every upload permanently: planning notes, release
+      # metadata, agent instructions, scratch output, and environment files
+      # are refused. The program is rlsbl's own private-path rule.
+      - uses: actions/setup-go@v6
+        with:
+          go-version: stable
+      - name: Check the upload carries no private paths
+        run: |
+          cat > "$RUNNER_TEMP/privatepathscheck.go" <<'GO'
+          // Code generated by internal/targets/gen from internal/targets/privatepaths.go and internal/targets/privatepathscheck.go.in; DO NOT EDIT.
+
+          // Command privatepathscheck refuses every private path in the Python
+          // artifacts built into the directory it is given. The pypi CI workflow runs
+          // it from the package directory, after `uv build --out-dir <dir>`:
+          //
+          //	go run privatepathscheck.go <dir>
+          //
+          // It prints one ::error:: line per private path an sdist or wheel would
+          // ship, and exits 1 when there is any.
+          package main
+
+          import (
+          	"archive/tar"
+          	"archive/zip"
+          	"bufio"
+          	"compress/gzip"
+          	"errors"
+          	"fmt"
+          	"io"
+          	"os"
+          	"path"
+          	"path/filepath"
+          	"strings"
+          )
+
+          func main() { os.Exit(run(os.Args[1:])) }
+
+          func run(args []string) int {
+          	if len(args) != 1 {
+          		fmt.Fprintln(os.Stderr, "usage: go run privatepathscheck.go <directory the upload was built into>")
+          		return 2
+          	}
+          	backend, err := buildBackend("pyproject.toml")
+          	if err != nil {
+          		fmt.Fprintln(os.Stderr, err)
+          		return 2
+          	}
+          	entries, err := os.ReadDir(args[0])
+          	if err != nil {
+          		fmt.Fprintln(os.Stderr, err)
+          		return 2
+          	}
+          	var refused []string
+          	for _, e := range entries {
+          		part := ""
+          		switch {
+          		case strings.HasSuffix(e.Name(), ".tar.gz"):
+          			part = "sdist"
+          		case strings.HasSuffix(e.Name(), ".whl"):
+          			part = "wheel"
+          		default:
+          			continue
+          		}
+          		paths, err := archivePaths(filepath.Join(args[0], e.Name()))
+          		if err != nil {
+          			fmt.Fprintln(os.Stderr, err)
+          			return 2
+          		}
+          		for _, p := range PrivatePathsIn(paths) {
+          			refused = append(refused, fmt.Sprintf("%s would ship %s, a private path (%s): %s", e.Name(), p.Rel, p.Rule, PythonFix(backend, part, p.Rel, p.Rule, p.Directory)))
+          		}
+          	}
+          	for _, line := range refused {
+          		fmt.Println("::error::" + line)
+          	}
+          	if len(refused) > 0 {
+          		fmt.Printf("%d private path(s) in the upload; a registry keeps every upload permanently, so this release is refused until each is excluded\n", len(refused))
+          		return 1
+          	}
+          	fmt.Println("the upload carries no private paths")
+          	return 0
+          }
+
+          // archivePaths are the package-relative files an artifact carries: a wheel
+          // from its install root without its .dist-info metadata, an sdist below its
+          // one top-level directory.
+          func archivePaths(file string) ([]string, error) {
+          	var out []string
+          	if strings.HasSuffix(file, ".whl") {
+          		r, err := zip.OpenReader(file)
+          		if err != nil {
+          			return nil, err
+          		}
+          		defer r.Close()
+          		for _, f := range r.File {
+          			if !strings.HasSuffix(f.Name, "/") && !strings.Contains(f.Name, ".dist-info/") {
+          				out = append(out, f.Name)
+          			}
+          		}
+          		return out, nil
+          	}
+          	handle, err := os.Open(file)
+          	if err != nil {
+          		return nil, err
+          	}
+          	defer handle.Close()
+          	gz, err := gzip.NewReader(handle)
+          	if err != nil {
+          		return nil, fmt.Errorf("%s: %w", file, err)
+          	}
+          	tr := tar.NewReader(gz)
+          	for {
+          		h, err := tr.Next()
+          		if errors.Is(err, io.EOF) {
+          			return out, nil
+          		}
+          		if err != nil {
+          			return nil, fmt.Errorf("%s: %w", file, err)
+          		}
+          		if _, rel, ok := strings.Cut(h.Name, "/"); ok && h.Typeflag == tar.TypeReg && rel != "" {
+          			out = append(out, rel)
+          		}
+          	}
+          }
+
+          // buildBackend is [build-system] build-backend of the pyproject.toml at
+          // path, or "" when it declares none. The standard library has no TOML
+          // reader, so this reads the key's plain one-line spelling, the one uv and
+          // rlsbl write; it names the backend only to word each refusal's fix.
+          func buildBackend(path string) (string, error) {
+          	f, err := os.Open(path)
+          	if err != nil {
+          		return "", err
+          	}
+          	defer f.Close()
+          	section := ""
+          	sc := bufio.NewScanner(f)
+          	for sc.Scan() {
+          		line := strings.TrimSpace(sc.Text())
+          		if strings.HasPrefix(line, "[") {
+          			section = strings.TrimSpace(strings.Trim(line, "[]"))
+          			continue
+          		}
+          		key, value, ok := strings.Cut(line, "=")
+          		if !ok || section != "build-system" || strings.TrimSpace(key) != "build-backend" {
+          			continue
+          		}
+          		value = strings.TrimSpace(value)
+          		if len(value) >= 2 && (value[0] == '"' || value[0] == '\'') {
+          			if end := strings.IndexByte(value[1:], value[0]); end >= 0 {
+          				return value[1 : end+1], nil
+          			}
+          		}
+          	}
+          	return "", sc.Err()
+          }
+
+          // The paths a published upload must never carry. A package directory holds
+          // the project's working state beside its product: planning notes, release
+          // metadata, agent instructions, scratch output, and secrets. A registry
+          // keeps what it is sent permanently, so an upload carrying any of them is
+          // refused before it is published. npm packages and Go module zips are
+          // listed offline and refused before a release changes anything; a Python
+          // upload can only be listed by building it, which needs the network, so the
+          // pypi CI workflow builds it on the candidate commit and runs a standalone
+          // program over the result. That program is generated from this file's text
+          // (internal/targets/gen), which is why this file imports only the standard
+          // library and nothing of rlsbl: the rules rlsbl applies and the rules CI
+          // applies are one text.
+          //
+          // Paths are relative to the package directory: the root of an sdist or npm
+          // tarball below its top-level directory, the root of a Go module zip below
+          // module@version/, or a wheel's install root.
+
+          // PrivateRootDirs are private only at the package directory's root: the
+          // same name deeper in may be ordinary source (a todo package, a test's
+          // screenshots fixture). stricttools/ is the family's earlier metadata root.
+          var PrivateRootDirs = []string{"todo", "experiments", "screenshots", "stricttools"}
+
+          // PrivateDirs are private at any depth: release state, the family's metadata
+          // roots, and tool and agent state.
+          var PrivateDirs = []string{".rlsbl", ".rlsbl-monorepo", ".strictmetadata", ".stricttools", ".claude", ".selfdoc", ".strictcli"}
+
+          // PrivateFiles are agent instruction files, private at any depth.
+          var PrivateFiles = []string{"CLAUDE.md", "AGENTS.md"}
+
+          // PrivateNamePatterns are private at any depth, for a file or a directory
+          // alike: environment files, and anything named local-only.
+          var PrivateNamePatterns = []string{".env*", "*.local-only"}
+
+          // FixtureDir holds test fixtures, never the project's own state (Go's
+          // testdata convention): a fixture may hold any private name as a test's
+          // input or expected output.
+          const FixtureDir = "testdata"
+
+          // ExcludeEntries are every rule as a gitignore-syntax exclude entry, in
+          // declaration order; a refusal names its rule in this spelling.
+          func ExcludeEntries() []string {
+          	var out []string
+          	for _, d := range PrivateRootDirs {
+          		out = append(out, "/"+d+"/")
+          	}
+          	for _, d := range PrivateDirs {
+          		out = append(out, d+"/")
+          	}
+          	out = append(out, PrivateFiles...)
+          	return append(out, PrivateNamePatterns...)
+          }
+
+          // PrivateMatch is why the package-relative path rel is private: its rule (an
+          // exclude entry) and the private directory holding it, relative to the
+          // package directory ("" when the path is a private file itself). The
+          // outermost private component wins, so a whole private directory is one
+          // rule however deep its files sit, and nothing under a testdata directory is
+          // private. found is false for a path that is not private.
+          func PrivateMatch(rel string) (rule, directory string, found bool) {
+          	var parts []string
+          	for _, p := range strings.Split(strings.ReplaceAll(rel, "\\", "/"), "/") {
+          		if p != "" && p != "." {
+          			parts = append(parts, p)
+          		}
+          	}
+          	last := len(parts) - 1
+          	for _, p := range parts[:max(last, 0)] {
+          		if p == FixtureDir {
+          			return "", "", false
+          		}
+          	}
+          	for i, part := range parts {
+          		isDir := i < last
+          		dir := ""
+          		if isDir {
+          			dir = strings.Join(parts[:i+1], "/")
+          		}
+          		if isDir && i == 0 && contains(PrivateRootDirs, part) {
+          			return "/" + part + "/", dir, true
+          		}
+          		if isDir && contains(PrivateDirs, part) {
+          			return part + "/", dir, true
+          		}
+          		if !isDir && contains(PrivateFiles, part) {
+          			return part, "", true
+          		}
+          		for _, pattern := range PrivateNamePatterns {
+          			if ok, _ := path.Match(pattern, part); ok {
+          				return pattern, dir, true
+          			}
+          		}
+          	}
+          	return "", "", false
+          }
+
+          func contains(list []string, s string) bool {
+          	for _, item := range list {
+          		if item == s {
+          			return true
+          		}
+          	}
+          	return false
+          }
+
+          // PrivatePath is one private path an upload would carry.
+          type PrivatePath struct {
+          	Rel       string
+          	Rule      string
+          	Directory string
+          }
+
+          // PrivatePathsIn are the private paths among paths, in their order.
+          func PrivatePathsIn(paths []string) []PrivatePath {
+          	var found []PrivatePath
+          	for _, rel := range paths {
+          		if rule, dir, ok := PrivateMatch(rel); ok {
+          			found = append(found, PrivatePath{Rel: rel, Rule: rule, Directory: dir})
+          		}
+          	}
+          	return found
+          }
+
+          // PythonFix says how to keep rel out of a Python upload of the given part
+          // ("sdist" or "wheel"), in the spelling of the build backend that builds it.
+          func PythonFix(backend, part, rel, rule, directory string) string {
+          	switch {
+          	case strings.HasPrefix(backend, "hatchling"):
+          		return "add \"" + rule + "\" to exclude under [tool.hatch.build.targets." + part + "] in pyproject.toml"
+          	case strings.HasPrefix(backend, "uv_build"):
+          		key := "wheel-exclude"
+          		if part == "sdist" {
+          			key = "source-exclude"
+          		}
+          		return "add \"" + rule + "\" to " + key + " under [tool.uv.build-backend] in pyproject.toml"
+          	case strings.HasPrefix(backend, "setuptools"):
+          		if part == "wheel" {
+          			what := rel
+          			if directory != "" {
+          				what = directory
+          			}
+          			return "leave " + what + " out of the packages and package data under [tool.setuptools] in pyproject.toml"
+          		}
+          		line := "exclude " + rel
+          		if directory != "" {
+          			line = "prune " + directory
+          		}
+          		return "add \"" + line + "\" to MANIFEST.in"
+          	}
+          	shown := backend
+          	if shown == "" {
+          		shown = "the default build backend"
+          	}
+          	return "exclude " + rule + " from the " + part + " in the configuration of " + shown
+          }
+          GO
+          go run "$RUNNER_TEMP/privatepathscheck.go" "$RUNNER_TEMP/rlsbl-upload"
+    name: py-strictspec-ci / test
+    needs:
+      - detect
+    if: (needs.detect.outputs['py-strictspec'] == 'true' || inputs.run_all)
     defaults:
       run:
         working-directory: python
-    name: py-strictspec-ci / test
-    needs:
-    - detect
-    if: (needs.detect.outputs.py-strictspec == 'true' || inputs.run_all)
-  go-strictspec-ci-test:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v6
-      # setup-go reads go.mod's `toolchain` line first, then its `go` directive.
-      # Declare the development Go in `toolchain` (go mod edit -toolchain=goX.Y.Z)
-      # so CI tests with it; `go` stays the consumers' floor.
-    - uses: actions/setup-go@v6
-      with:
-        go-version-file: go/go.mod
-    - run: go vet ./...
-    - run: go test ./... -race -short -timeout=10m
-    defaults:
-      run:
-        working-directory: go
-    name: go-strictspec-ci / test
-    needs:
-    - detect
-    if: (needs.detect.outputs.go-strictspec == 'true' || inputs.run_all)
   ts-strictspec-ci-test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # engines.node: >= 22
+        # Every supported Node line package.json's engines.node admits.
         node-version: [22, 24]
     steps:
-    - uses: actions/checkout@v6
-    - uses: actions/setup-node@v6
-      with:
-        node-version: ${{ matrix.node-version }}
-    - name: Install dependencies
-      run: |
-        if [ -f package-lock.json ]; then
-          npm ci
-        else
-          npm install
-        fi
-    - run: npm test --if-present
-    - run: npm audit --audit-level=moderate || true
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+      - run: npm test --if-present
+      - run: npm audit --audit-level=moderate || true
+    name: ts-strictspec-ci / test
+    needs:
+      - detect
+    if: (needs.detect.outputs['ts-strictspec'] == 'true' || inputs.run_all)
     defaults:
       run:
         working-directory: ts
-    name: ts-strictspec-ci / test
-    needs:
-    - detect
-    if: (needs.detect.outputs.ts-strictspec == 'true' || inputs.run_all)
-  conformance-ci-test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-    - uses: actions/checkout@v6
-    - uses: astral-sh/setup-uv@v7
-    - run: uv python install 3.13
-      # The harness drives all four runtimes, so the conformance job needs the
-      # full toolchain matrix: uv (python), go (adapters + generated validators),
-      # and node (ts dist + adapter).
-    - uses: actions/setup-go@v6
-      with:
-          # rlsbl sync prefixes this with the sub-project path (conformance/); the
-          # go module is the sibling repo-root go/, so `../go/go.mod` resolves to
-          # <workspace>/go/go.mod after the prefix.
-        go-version-file: conformance/../go/go.mod
-    - uses: actions/setup-node@v6
-      with:
-        node-version: 22
-    - name: Sync conformance project
-      run: uv sync --locked
-    - name: Install ts runtime dependencies
-      run: npm ci
-      working-directory: ts
-      # All four targets are LIVE (interpreter, python, go, ts). The harness
-      # builds the Go adapters, the Python env, and the TS dist on the fly, then
-      # asserts byte-identical outcomes + parity across all four. A mismatch or a
-      # parity break fails here.
-    - name: Run conformance harness
-      run: uv run strictspec-conformance
-    - name: Run harness tests
-      run: uv run pytest -q
-    defaults:
-      run:
-        working-directory: conformance
-    name: conformance-ci / test
-    needs:
-    - detect
-    if: (needs.detect.outputs.conformance == 'true' || inputs.run_all)
