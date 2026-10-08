@@ -52,13 +52,15 @@
       "flags": [],
       "flag_sets": [],
       "args": [],
+      "args_after_separator": null,
       "tags": [],
       "constraints": [],
       "hidden": false,
       "interactive": false,
       "config_fields": [],
       "grants": [],
-      "forwarding": null
+      "forwarding": null,
+      "requires": []
     },
     "group": {
       "commands": {},
@@ -82,7 +84,7 @@
   },
   "project_id": "github.com/stricttools/strictspec/go",
   "name": "strictspec",
-  "version": "0.3.0",
+  "version": "0.6.0",
   "help": "strictspec: strict, byte-identical schema validation and code generation",
   "commands": {
     "gen": {

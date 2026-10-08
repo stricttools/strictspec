@@ -4,11 +4,21 @@
 
 ## strictspec
 
-### Unreleased
+### 0.6.0
+
+The Go module gains the lifecycle-and-license library (the lifecycle package and the confidential-name index, with public-client declarations), compiles Go validators for a discriminated-union root, refuses ambiguous node-kind unions and quoted TOML dates, and prints the output of diff, doc-diff, export, and migrate --dry-run again.
+
+<details>
+<summary>Context</summary>
+
+Only the Go module is released: the Python and TypeScript implementations are paused while the tools are rewritten in Go. The lifecycle package is what rlsbl, safegit, and selfdoc read the lifecycle-and-license record and the confidential-name index through; the union-root fix lets claudewheel generate its Go validators with a released strictspec. The module now requires strictcli 0.39.0 and go-toml-edit 0.5.1.
+
+</details>
 
 #### Features
 
 - [go-strictspec] **The lifecycle-and-license record.** The Go module ships the built-in `lifecycle-and-license` schema and the `lifecycle` package, which reads, validates, and writes a repository's `.strictmetadata/lifecycle-and-license/lifecycle-and-license.toml` (dated lifecycle, license, and identity periods, pending identities, registry names, and unversioned tags) and answers the release, publishing, and tag-ownership rules from it; `lifecycle/index` keeps the machine-local confidential-name index and scans text against it. Every write goes through a writer the caller supplies.
+- [go-strictspec] The confidential-name index keeps only a confidential repository's registry names, its own names, its codenames, and its distinctive terms, no longer its releasable names and identity values; a new `[[public_clients]]` table in the lifecycle-and-license record (`DeclarePublicClient`) declares that a subject has a public client, which takes its registry names and the repository's names out of the index
 
 #### Fixes
 
@@ -16,6 +26,9 @@
 - [go-strictspec] **Go validators for a union root compile.** `strictspec gen` wrote Go entry points that returned `nil` as a `strictspec.Value` when a schema's root is a discriminated union, so the generated package did not compile; they now return the zero `Value`.
 - [go-strictspec] **Ambiguous node-kind unions are refused.** A `node-kind-union` with two arms of one node category (a string and a boolean, a record and a map) compiled, and the runtime sent every input of that category to the first arm, so a valid value for the second was refused; `strictspec check`, `strictspec gen`, and a generated validator's compilation now refuse the schema with `STRICTSPEC_SCHEMA_NODE_KIND_UNION_AMBIGUOUS` at the union.
 - [go-strictspec] **Quoted dates in TOML documents are refused.** A `date`, `time`, or `datetime` field in a TOML document accepted a quoted string such as `"2026-10-07"`; the runtime now refuses it with `STRICTSPEC_TYPE_NOT_DATE`, `STRICTSPEC_TYPE_NOT_TIME`, or `STRICTSPEC_TYPE_NOT_DATETIME`, as the specification requires native TOML datetime lexemes there. JSON documents still carry RFC 3339 strings.
+- [go-strictspec] The confidential-name scan no longer matches a name lying inside a URL or a dotted hostname (`https://...`, `docs.example.com`), so a common word such as a host label stops refusing ordinary links
+- [go-strictspec] `index.Plan` keeps a confidential repository's update confidential when its public-client declarations leave it no name to protect, and `Apply` removes its entry, instead of treating the repository as public
+- [go-strictspec] `strictspec diff`, `strictspec doc-diff`, `strictspec export` without `--output`, and `strictspec migrate --dry-run` print their output again; the command-line framework caught their direct writes to stdout and the certificate, delta, JSON Schema, or would-be document was lost.
 
 ### 0.5.0
 
