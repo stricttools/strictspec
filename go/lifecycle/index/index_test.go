@@ -162,14 +162,8 @@ func TestPlanKeysAConfidentialRecordByItsSubjects(t *testing.T) {
 	if !reflect.DeepEqual(u.Subjects, []string{"client", "portal"}) || !u.Confidential() {
 		t.Fatalf("update %+v", u)
 	}
-	for _, want := range []string{"portal", "oldportal", "Bluebird"} {
-		found := false
-		for _, n := range u.Names {
-			found = found || n == want
-		}
-		if !found {
-			t.Fatalf("names %v lack %q", u.Names, want)
-		}
+	if !reflect.DeepEqual(u.Names, []string{"Bluebird"}) {
+		t.Fatalf("names %v, want the codename alone (releasable names and other identity values are not confidential, and a public releasable leaves the repository's names out)", u.Names)
 	}
 	path := indexPath(t)
 	x := load(t, path)

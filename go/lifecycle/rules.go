@@ -320,13 +320,16 @@ func (r *Record) ReleaseAllowed(subject string, on time.Time) error {
 
 // ConfidentialNames evaluates RuleConfidentialNames: while the repository is
 // confidential on the date of on, the names the confidential-name index holds
-// for it. They are every subject whose license on that date is proprietary,
-// every identity value of those subjects other than tag formats, the registry
-// names recorded for them, the repository's name when no subject has a
+// for it. They are the registry names recorded for the subjects whose license
+// on that date is proprietary, the repository's names when no subject has a
 // non-proprietary license on that date, the codenames, and the distinctive
-// terms; deduplicated ignoring case and sorted. A public repository has none.
-// repositoryNames (the repository's own names, such as its directory's and its
-// origin's) are required only when they are among the names.
+// terms; deduplicated ignoring case and sorted. Releasable and member names
+// and other identity values are left out: they are often common words. A
+// proprietary subject declared to have a public client takes its registry
+// names out, and any such declaration takes the repository's names out. A
+// public repository has none. repositoryNames (the repository's own names,
+// such as its directory's and its origin's) are required only when they are
+// among the names.
 func (r *Record) ConfidentialNames(on time.Time, repositoryNames ...string) ([]string, error) {
 	if !r.Confidential(on) {
 		return nil, nil
@@ -344,20 +347,12 @@ func (r *Record) ConfidentialNames(on time.Time, repositoryNames ...string) ([]s
 		}
 	}
 	var names []string
-	for subject := range proprietary {
-		names = append(names, subject)
-	}
-	for _, id := range r.identities {
-		if proprietary[id.Subject] && id.Facet != FacetTagFormat {
-			names = append(names, id.Value)
-		}
-	}
 	for _, n := range r.registryNames {
-		if proprietary[n.Subject] {
+		if proprietary[n.Subject] && !r.hasPublicClient(n.Subject) {
 			names = append(names, n.Name)
 		}
 	}
-	if !anyPublic {
+	if !anyPublic && len(r.publicClients) == 0 {
 		given := false
 		for _, n := range repositoryNames {
 			if strings.TrimSpace(n) != "" {

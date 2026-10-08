@@ -251,9 +251,9 @@ func TestConfidentialNames(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"Bluebird", "hyperlattice", "portal", "portal-legacy", "portal-server"}
+	want := []string{"Bluebird", "hyperlattice", "portal-legacy"}
 	if !reflect.DeepEqual(names, want) {
-		t.Fatalf("names %v, want %v (no tag format, no public subject, no repository name)", names, want)
+		t.Fatalf("names %v, want %v (the proprietary subject's registry names, the codenames, and the distinctive terms; no releasable name, no other identity value, no public subject's registry name, no repository name)", names, want)
 	}
 	public, err := r.ConfidentialNames(day(t, "2026-05-01"), "")
 	if err != nil || len(public) != 0 {
@@ -278,7 +278,7 @@ reason = "a"
 		t.Fatalf("passing the repository name did not clear the refusal: %v", err)
 	}
 	if !reflect.DeepEqual(names, []string{"Portal"}) {
-		t.Fatalf("names %v: the subject and the repository name differ only in case and keep one spelling", names)
+		t.Fatalf("names %v: the repository name alone, not the releasable's name", names)
 	}
 }
 
@@ -294,8 +294,61 @@ reason = "a"
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(names, []string{"moonbase", "portal", "portal-checkout"}) {
+	if !reflect.DeepEqual(names, []string{"moonbase", "portal-checkout"}) {
 		t.Fatalf("names %v", names)
+	}
+}
+
+const publicClientRecord = `format_version = 1
+codenames = ["Bluebird"]
+distinctive_terms = ["hyperlattice"]
+
+[[licenses]]
+subject = "portal"
+license = "proprietary"
+from = 2026-01-01
+reason = "server logic"
+
+[[licenses]]
+subject = "engine"
+license = "proprietary"
+from = 2026-01-01
+reason = "server logic"
+
+[[registry_names]]
+registry = "npm"
+name = "portal-client"
+subject = "portal"
+recorded_since = 2026-02-01
+
+[[registry_names]]
+registry = "pypi"
+name = "engine-sdk"
+subject = "engine"
+recorded_since = 2026-02-01
+
+[[public_clients]]
+subject = "portal"
+reason = "a thin public client is planned"
+declared = 2026-03-01
+`
+
+func TestAPublicClientTakesItsRegistryNamesAndTheRepositoryNamesOutOfTheIndex(t *testing.T) {
+	r := parse(t, publicClientRecord)
+	names, err := r.ConfidentialNames(day(t, "2026-10-07"), "portal-checkout")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"Bluebird", "engine-sdk", "hyperlattice"}
+	if !reflect.DeepEqual(names, want) {
+		t.Fatalf("names %v, want %v (the declared subject's registry name and the repository's names leave; another subject's registry name, the codenames, and the distinctive terms stay)", names, want)
+	}
+	if _, err := r.ConfidentialNames(day(t, "2026-10-07")); err != nil {
+		t.Fatalf("a repository with a public client was refused for want of its names, which are not protected: %v", err)
+	}
+	got := r.PublicClients()
+	if len(got) != 1 || got[0].Subject != "portal" || got[0].Reason != "a thin public client is planned" || !got[0].Declared.Equal(day(t, "2026-03-01")) {
+		t.Fatalf("public clients %+v", got)
 	}
 }
 

@@ -4,8 +4,9 @@
 // answers the questions the release, documentation, and commit tools ask of it.
 //
 // The record holds dated periods of each subject's lifecycle status, license,
-// and identities, the registry names the repository holds, and the tags that
-// release no version. A repository is confidential when one of its subjects
+// and identities, the registry names the repository holds, the tags that
+// release no version, and the proprietary subjects that have, or will have, a
+// public client. A repository is confidential when one of its subjects
 // has a proprietary license period in effect, and public otherwise; a
 // repository without a record is public.
 //
@@ -186,6 +187,15 @@ type RegistryName struct {
 	RecordedSince time.Time
 }
 
+// PublicClient is one [[public_clients]] entry: a proprietary subject that
+// has, or will have, a public client, so its registry names and the
+// repository's names are not confidential.
+type PublicClient struct {
+	Subject  string
+	Reason   string
+	Declared time.Time
+}
+
 // UnversionedTag is one [[unversioned_tags]] entry.
 type UnversionedTag struct {
 	Tag      string
@@ -204,6 +214,7 @@ type Record struct {
 	identities       []Identity
 	registryNames    []RegistryName
 	unversionedTags  []UnversionedTag
+	publicClients    []PublicClient
 
 	present bool
 	doc     *tomledit.Document
@@ -249,6 +260,23 @@ func (r *Record) RegistryNames() []RegistryName {
 // UnversionedTags returns the record's unversioned tags in record order.
 func (r *Record) UnversionedTags() []UnversionedTag {
 	return append([]UnversionedTag(nil), r.unversionedTags...)
+}
+
+// PublicClients returns the record's public-client declarations in record
+// order.
+func (r *Record) PublicClients() []PublicClient {
+	return append([]PublicClient(nil), r.publicClients...)
+}
+
+// hasPublicClient reports whether subject is declared to have a public
+// client.
+func (r *Record) hasPublicClient(subject string) bool {
+	for _, p := range r.publicClients {
+		if p.Subject == subject {
+			return true
+		}
+	}
+	return false
 }
 
 // Load reads the record of the repository at repoRoot. A missing file yields
@@ -369,6 +397,18 @@ func (r *Record) bind(v strictspec.Value) error {
 			Tag:      str(it, "tag"),
 			Reason:   str(it, "reason"),
 			Recorded: recorded,
+		})
+	}
+	items, _ = v.Field("public_clients")
+	for _, it := range items.Items() {
+		declared, _, err := date(it, "declared")
+		if err != nil {
+			return err
+		}
+		r.publicClients = append(r.publicClients, PublicClient{
+			Subject:  str(it, "subject"),
+			Reason:   str(it, "reason"),
+			Declared: declared,
 		})
 	}
 	return nil

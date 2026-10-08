@@ -361,3 +361,24 @@ reason = "a"
 		}
 	}
 }
+
+func TestDeclarePublicClient(t *testing.T) {
+	r := parse(t, sharedRecord)
+	if err := r.DeclarePublicClient("portal", "", day(t, "2026-11-01")); err == nil {
+		t.Error("an empty reason was accepted")
+	}
+	if err := r.DeclarePublicClient("portal", "a thin public client is planned", day(t, "2026-11-01")); err != nil {
+		t.Fatal(err)
+	}
+	if err := r.DeclarePublicClient("portal", "again", day(t, "2026-11-02")); err == nil {
+		t.Error("a second declaration for the subject was accepted")
+	}
+	got := r.PublicClients()
+	if len(got) != 1 || got[0].Subject != "portal" || !got[0].Declared.Equal(day(t, "2026-11-01")) {
+		t.Fatalf("public clients %+v", got)
+	}
+	written := bytesOf(t, r)
+	if !strings.Contains(written, "[[public_clients]]\nsubject = \"portal\"\nreason = \"a thin public client is planned\"\ndeclared = 2026-11-01") {
+		t.Fatalf("the written record does not hold the declaration:\n%s", written)
+	}
+}

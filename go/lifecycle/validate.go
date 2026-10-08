@@ -12,8 +12,8 @@ import (
 // every releasable and member name the repository's declarations hold (empty
 // for a repository with none, such as a minimal record).
 //
-//   - Codenames and distinctive terms are refused while the repository is
-//     public on the date of on.
+//   - Codenames, distinctive terms, and public-client declarations are
+//     refused while the repository is public on the date of on.
 //   - The subject of an open or pending entry must be declared, or be the
 //     subject of a retired lifecycle period. A closed period and a registry
 //     name may name any subject: they record the past.
@@ -29,6 +29,15 @@ func (r *Record) Validate(on time.Time, declared []string) error {
 			problems = append(problems, fmt.Sprintf(
 				"distinctive_terms (%s) are recorded while the repository is public on %s; remove the distinctive_terms field, or open a proprietary license period first",
 				strings.Join(r.distinctiveTerms, ", "), formatDate(dateOf(on))))
+		}
+		if len(r.publicClients) > 0 {
+			var subjects []string
+			for _, p := range r.publicClients {
+				subjects = append(subjects, p.Subject)
+			}
+			problems = append(problems, fmt.Sprintf(
+				"public_clients (%s) are recorded while the repository is public on %s, where no name is confidential; remove the public_clients entries, or open a proprietary license period first",
+				strings.Join(subjects, ", "), formatDate(dateOf(on))))
 		}
 	}
 	known := map[string]bool{}
@@ -207,8 +216,43 @@ func (r *Record) structuralProblems() []string {
 		}
 		seenTags[t.Tag] = true
 	}
+	problems = append(problems, r.publicClientProblems()...)
 	problems = append(problems, duplicateTerms("codenames", r.codenames)...)
 	problems = append(problems, duplicateTerms("distinctive_terms", r.distinctiveTerms)...)
+	return problems
+}
+
+// publicClientProblems refuses a public-client declaration of a subject the
+// record holds no period, identity, or registry name of, and a subject
+// declared more than once.
+func (r *Record) publicClientProblems() []string {
+	known := map[string]bool{}
+	for _, l := range r.lifecycle {
+		known[l.Subject] = true
+	}
+	for _, l := range r.licenses {
+		known[l.Subject] = true
+	}
+	for _, id := range r.identities {
+		known[id.Subject] = true
+	}
+	for _, n := range r.registryNames {
+		known[n.Subject] = true
+	}
+	var problems []string
+	seen := map[string]bool{}
+	for _, p := range r.publicClients {
+		if !known[p.Subject] {
+			problems = append(problems, fmt.Sprintf(
+				"public_clients: subject %q is not one the record holds a lifecycle period, license period, identity, or registry name of; name a subject of the record",
+				p.Subject))
+		}
+		if seen[p.Subject] {
+			problems = append(problems, fmt.Sprintf(
+				"public_clients: subject %q is declared more than once; keep one entry", p.Subject))
+		}
+		seen[p.Subject] = true
+	}
 	return problems
 }
 

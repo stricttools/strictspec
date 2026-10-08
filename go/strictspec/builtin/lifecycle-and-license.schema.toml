@@ -72,6 +72,13 @@ description = "Tags that release no version, each with its reason."
 [types.LifecycleAndLicense.fields.unversioned_tags.item]
 type = "UnversionedTag"
 
+[types.LifecycleAndLicense.fields.public_clients]
+type = "array"
+required = false
+description = "Proprietary subjects that have, or will have, a public client: their registry names and the repository's names may appear in public, so the confidential-name index leaves them out (codenames and distinctive terms stay). Refused while the repository is public."
+[types.LifecycleAndLicense.fields.public_clients.item]
+type = "PublicClient"
+
 [types.LifecyclePeriod]
 type = "record"
 
@@ -236,3 +243,23 @@ description = "Why the tag releases no version."
 type = "date"
 required = true
 description = "The day the tag was recorded."
+
+[types.PublicClient]
+type = "record"
+
+[types.PublicClient.fields.subject]
+type = "string"
+required = true
+non_empty = true
+description = "The releasable or member that has, or will have, a public client; one the record holds a period, identity, or registry name of."
+
+[types.PublicClient.fields.reason]
+type = "string"
+required = true
+non_empty = true
+description = "Why the subject has a public client."
+
+[types.PublicClient.fields.declared]
+type = "date"
+required = true
+description = "The day the public client was declared."
