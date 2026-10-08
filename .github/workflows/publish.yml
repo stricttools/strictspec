@@ -43,7 +43,7 @@ jobs:
           tag_ref="${TAG_INPUT:-$GITHUB_REF_NAME}"
           case "$tag_ref" in
             'strictspec@v'*)
-              pattern='(^(go-strictspec-ci) / |^(ts-strictspec-ci) / )'
+              pattern='^(go-strictspec-ci) / '
               ;;
             *)
               echo "::error::wait-for-ci: the tag '$tag_ref' matches no project's tag scheme (strictspec@v<version>)."
@@ -310,71 +310,4 @@ jobs:
     defaults:
       run:
         working-directory: go
-    if: startsWith(inputs.tag || github.ref_name, 'strictspec@v')
-  ts-strictspec-npm:
-    needs:
-      - wait-for-ci
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.tag || github.event.release.tag_name }}
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          registry-url: https://registry.npmjs.org
-      - name: Install gitleaks
-        run: |
-          GITLEAKS_VERSION=8.24.3
-          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar xz -C /usr/local/bin gitleaks
-      - name: Install dependencies
-        # Full install (devDependencies included): publishing runs the
-        # package's prepack script, which for a TypeScript package compiles
-        # with the dev toolchain. A bare checkout has none of it.
-        run: npm ci
-      - name: Pack the publishable artifact
-        # Packing runs the same prepack build as publishing, so the tarball
-        # scanned below carries what would be published. It is packed
-        # outside the checkout: a scratch directory inside the repository
-        # would be swept into the published tarball by any package without a
-        # `files` field.
-        run: |
-          mkdir -p "$RUNNER_TEMP/artifacts"
-          npm pack --pack-destination "$RUNNER_TEMP/artifacts"
-      - name: Scan artifacts for secrets
-        # Scoped to what ships. A whole-tree scan flags files that never
-        # reach a registry (fixtures, docs, sample configs, public
-        # identifiers) and has blocked a release mid-flight. gitleaks only
-        # auto-loads .gitleaks.toml from the directory it scans, so the
-        # project's allowlist is passed explicitly.
-        run: |
-          CONFIG_ARGS=""
-          if [ -f .gitleaks.toml ]; then
-            CONFIG_ARGS="--config ${PWD}/.gitleaks.toml"
-          fi
-          gitleaks dir "$RUNNER_TEMP/artifacts" ${CONFIG_ARGS}
-      - name: Check if already published
-        id: check-npm
-        # Asks for the package's whole version list, never for one version.
-        run: |
-          PKG_NAME=$(node -p "require('./package.json').name")
-          PKG_VERSION=$(node -p "require('./package.json').version")
-          if npm view "${PKG_NAME}" versions --json 2>/dev/null | node -e 'const v=JSON.parse(require("fs").readFileSync(0,"utf8")||"[]");process.exit([].concat(v).includes(process.argv[1])?0:1)' "${PKG_VERSION}"; then
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "Already published: ${PKG_NAME}@${PKG_VERSION}"
-          fi
-      # --access public is written out because scoped packages are not used
-      # here and an unscoped public package requires it.
-      # --provenance records the build in npm's public attestation log; it is
-      # rendered only for a repository that may publish one.
-      - run: npm publish --provenance --access public
-        if: steps.check-npm.outputs.skip != 'true'
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-    permissions:
-      contents: read
-      id-token: write
-    defaults:
-      run:
-        working-directory: ts
     if: startsWith(inputs.tag || github.ref_name, 'strictspec@v')
