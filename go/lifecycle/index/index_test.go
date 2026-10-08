@@ -457,3 +457,49 @@ func TestNormalizeOrigin(t *testing.T) {
 		}
 	}
 }
+
+// A confidential repository whose public-client declaration leaves it no name
+// to protect stays confidential (so its commits and pages are not screened as
+// a public repository's), and its entry is removed.
+func TestPlanOfAConfidentialRecordWithNoNamesLeftRemovesTheEntryAndStaysConfidential(t *testing.T) {
+	path := indexPath(t)
+	x := load(t, path)
+	if err := x.Upsert(diskWriter{}, []string{"portal"}, []string{"portal"}); err != nil {
+		t.Fatal(err)
+	}
+	rec := parse(t, `format_version = 1
+
+[[licenses]]
+subject = "portal"
+license = "proprietary"
+from = 2026-01-01
+reason = "closed"
+
+[[identities]]
+subject = "portal"
+facet = "releasable-name"
+value = "portal"
+registry = ""
+tag_patterns = ["v*"]
+from = 2026-01-01
+reason = "named"
+
+[[public_clients]]
+subject = "portal"
+reason = "a thin public client is planned"
+declared = 2026-02-01
+`)
+	u, err := index.Plan(rec, day(t, "2026-06-01"), "portal")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !u.Confidential() || len(u.Names) != 0 {
+		t.Fatalf("update %+v: confidential %v, want confidential with no names", u, u.Confidential())
+	}
+	if err := x.Apply(diskWriter{}, u); err != nil {
+		t.Fatal(err)
+	}
+	if got := entries(t, path); len(got) != 0 {
+		t.Fatalf("entries after a plan with no names %+v", got)
+	}
+}

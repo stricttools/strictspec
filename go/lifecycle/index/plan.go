@@ -26,16 +26,20 @@ func SubjectsOf(rec *lifecycle.Record) []string {
 }
 
 // Update is the change a record makes to its repository's entry: the entry
-// keyed by Subjects holds Names while the repository is confidential, and is
-// removed while it is public (Names empty).
+// keyed by Subjects holds Names while the repository is confidential and has
+// names to protect, and is removed otherwise (Names empty). A confidential
+// repository can have none: a public-client declaration takes its registry
+// names and its own names out.
 type Update struct {
 	Subjects []string
 	Names    []string
+
+	confidential bool
 }
 
-// Confidential reports whether the update writes names rather than removing
-// the entry.
-func (u Update) Confidential() bool { return len(u.Names) > 0 }
+// Confidential reports whether the record makes the repository confidential,
+// whether or not it has names to protect. Plan sets it.
+func (u Update) Confidential() bool { return u.confidential }
 
 // Plan decides the update rec makes on the date of on. repositoryNames are
 // the repository's own names (see RepositoryNames), which the record protects
@@ -55,13 +59,15 @@ func Plan(rec *lifecycle.Record, on time.Time, repositoryNames ...string) (Updat
 		return Update{}, err
 	}
 	u.Names = names
+	u.confidential = true
 	return u, nil
 }
 
 // Apply writes the update through w: the names upserted under the subjects of
-// a confidential repository, or the entry removed for a public one.
+// a confidential repository, or the entry removed for a public one and for a
+// confidential one with no names to protect.
 func (x *Index) Apply(w lifecycle.FileWriter, u Update) error {
-	if u.Confidential() {
+	if len(u.Names) > 0 {
 		return x.Upsert(w, u.Subjects, u.Names)
 	}
 	return x.Remove(w, u.Subjects)
