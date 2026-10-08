@@ -169,11 +169,11 @@ on a wrong answer; only a spec-derived, hand-authored expectation catches it.
 
 ## The acceptance test
 
-Source: the hand-written strictspec TOML translation of a private project's character-preview schema
+Source: the hand-written strictspec TOML translation of the sprite tool's character-preview schema
 (examples/ draft #2; JSON Schema is never a source; translation fidelity is part of what the
 corpus checks). The `number` scalar and node-kind unions make the translation faithful.
 
-Corpus: a private project's existing character-preview test inputs + every conformance fixture
+Corpus: the sprite tool's existing character-preview test inputs + every conformance fixture
 derivable from the translated schema.
 
 Criterion:
@@ -191,14 +191,14 @@ Criterion:
   per-arm errors and stops at the first model_validator; strictspec reports one arm, all errors).
 
 Timing: at MVP time, from the schema alone, BEFORE any consumer migration. Roadmap wave 1 is
-then only the swap — which the tagged-value entry makes true for a private project's in-memory call
+then only the swap — which the tagged-value entry makes true for the sprite tool's in-memory call
 sites as well.
 
 ## Seed fixtures (imported during MVP)
 
 - wavescript: 47 score fixtures + expectations derived from its 158-pair golden manifest
   (render-hash pairs) — the strongest conditional-required / registry-gate stress in the corpus.
-- a private project: the acceptance corpus above — only documents that map to its three drafted
+- The sprite tool: the acceptance corpus above — only documents that map to its three drafted
   schemas (constraint-manifest, part-manifest, character-preview); its project.json/history.json
   save format is OUT of scope.
 - predraw: scene corpus (node-kind unions, NUMBER scalar, aliases, recursion).

@@ -37,10 +37,6 @@ word = "pgtype"
 meaning = "A custom scalar from the pgdesign example: a PostgreSQL type name, refining string with an anchored regex."
 
 [[accepted]]
-word = "private-project"
-meaning = "A consumer project whose character-preview, part, and constraint manifests were translated into strictspec (examples/private-project)."
-
-[[accepted]]
 word = "predraw"
 meaning = "A consumer project whose scene schema was translated into strictspec (examples/predraw-scene) as survey evidence."
 

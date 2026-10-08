@@ -1,8 +1,8 @@
 """THE ACCEPTANCE TEST (conformance/DESIGN.md, "The acceptance test").
 
-From the hand-written strictspec translation of a private project's character-preview
+From the hand-written strictspec translation of the sprite tool's character-preview
 schema, GENERATE Python and TS validators via ``strictspec gen``, run them over
-the real a private project corpus, and assert VERDICT PARITY against a private project's
+the sprite tool's real corpus, and assert VERDICT PARITY against the sprite tool's
 existing hand-written validators (pydantic + legacy TS) — STRICT except a
 committed, FROZEN waiver list where strictspec's stricter verdict is correct by
 definition.
@@ -12,7 +12,7 @@ consumer migration. The strictspec verdicts are produced live by the generated
 validators; the legacy verdicts are committed capture data
 (``acceptance/legacy-verdicts.json``, produced by
 ``scripts/capture_legacy_verdicts.py``); the corpus and waiver list are committed
-under ``acceptance/``. Nothing here touches the a private project working tree.
+under ``acceptance/``. Nothing here touches the sprite tool's working tree.
 
 This module is collected by the same ``uv run pytest`` invocation as the rest of
 the suite (it lives in ``tests/``), so the acceptance test is part of the gate.
@@ -62,7 +62,7 @@ def test_acceptance_schema_tracks_examples():
     """The conformance-owned schema copy is the examples/ source plus exactly one
     added schema-wide safe-integer declaration (mandatory for TS emission). Drop
     the provenance header (through the sentinel) and that one line, and it must be
-    byte-identical to examples/private-project/character-preview.toml — so the copy can
+    byte-identical to examples/sprite-tool/character-preview.toml — so the copy can
     never silently drift from the source it was translated from."""
     copy_lines = acceptance.SCHEMA_FILE.read_text().splitlines(keepends=True)
     sentinel = "# --- end conformance provenance header ---\n"

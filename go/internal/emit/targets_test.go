@@ -44,8 +44,8 @@ var parityCases = []struct {
 	input  string
 	syntax string
 }{
-	{"private-project-character-preview.toml", "private-project/character-preview.valid.json", "json"},
-	{"private-project-character-preview.toml", "private-project/character-preview.invalid-union-and-order.json", "json"},
+	{"sprite-tool-character-preview.toml", "sprite-tool/character-preview.valid.json", "json"},
+	{"sprite-tool-character-preview.toml", "sprite-tool/character-preview.invalid-union-and-order.json", "json"},
 	{"wavescript-score.schema.toml", "wavescript/valid-01-embedded-bank.json", "json"},
 	{"wavescript-score.schema.toml", "wavescript/invalid-01-gate-violations.json", "json"},
 	{"shared-canvas.toml", "shared/canvas.valid.json", "json"},
@@ -466,7 +466,7 @@ func TestGeneratedHeaderHygiene(t *testing.T) {
 // on regeneration), which the `check` drift gate relies on.
 func TestGeneratedDeterminism(t *testing.T) {
 	_, fixturesRoot := dirs(t)
-	for _, s := range []string{"private-project-character-preview.toml", "shared-canvas.toml"} {
+	for _, s := range []string{"sprite-tool-character-preview.toml", "shared-canvas.toml"} {
 		schemaPath := filepath.Join(fixturesRoot, "_schemas", s)
 		if a, b := genPythonSource(t, schemaPath, "0.0.0"), genPythonSource(t, schemaPath, "0.0.0"); a != b {
 			t.Errorf("python emitter non-deterministic for %s", s)

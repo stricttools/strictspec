@@ -222,7 +222,7 @@ enters only through the examples/ gap-note process. Released-surface compatibili
 semver at release boundaries.
 
 Bounded to the analyzed corpus. The construct-set stability gate was all examples/ drafts (claudestream
-and a private project first; the construct-only exercises for shared types, enum baking, and aggregates;
+and the sprite tool first; the construct-only exercises for shared types, enum baking, and aggregates;
 and the BetterClaude and imagine corpus-DRAFT sources) coming back clean plus resolved gap notes.
 This SUPERSEDES the former demobl/F/step paper-schema precondition — those donors left the corpus.
 
@@ -317,10 +317,10 @@ Intra-document forms (decidable from document + schema alone):
 | mutual exclusion | pgdesign body XOR file (field-level: at most one of a field set present) |
 | collections-disjoint (two sibling arrays share no element; normalization case-fold/trim) | rlsbl include/exclude (element-level set disjointness) |
 | forbidden-when | tunebox drums forbid params |
-| unique-by (normalization: case-fold, trim) | a private project x-unique-field; tunebox track names |
-| pairwise-distinct (same normalization set) | a private project x-pairwise-distinct |
-| ranges-disjoint (half-open; each range well-formed per ordered-pair first) | a private project x-range-nonoverlap |
-| ordered-pair (a < b between siblings) | a private project x-less-than-sibling |
+| unique-by (normalization: case-fold, trim) | the sprite tool's x-unique-field; tunebox track names |
+| pairwise-distinct (same normalization set) | the sprite tool's x-pairwise-distinct |
+| ranges-disjoint (half-open; each range well-formed per ordered-pair first) | the sprite tool's x-range-nonoverlap |
+| ordered-pair (a < b between siblings) | the sprite tool's x-less-than-sibling |
 | intra-document references | orxtra dependencies; incantino flow->screen |
 
 Cross-document forms (evidence supplied by named resolvers; see Domain checks — these are
@@ -385,7 +385,7 @@ Semantics in appendix-semantics.md; code `STRICTSPEC_INTRA_COLLECTIONS_DISJOINT`
 (its start strictly less than its end, i.e. a positive half-open interval) — an ill-formed range
 is a violation before disjointness is even evaluated — and disjointness is then decided over the
 HALF-OPEN intervals `[start, start+length)`. The form does NOT include an in-bounds-against-a-
-sibling-array-length leg (a private project's `start+len <= len(palette)`): that leg is consumer-native
+sibling-array-length leg (the sprite tool's `start+len <= len(palette)`): that leg is consumer-native
 (the vocabulary carries the portable disjointness/well-formedness, not a cross-collection length
 join). "Missing/invalid bounds source" remains a SCHEMA-authoring hard error (the start/length
 field names do not resolve on the element record).

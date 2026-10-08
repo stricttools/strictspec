@@ -32,7 +32,7 @@ Documents are JSON.
 ## Findings
 
 ### FINDING 1 — meta-schema surface syntax still unpinned (same as sibling drafts)
-See the a private project gap note, Finding 1. The concrete TOML spelling of records/maps/unions/
+See the sprite tool gap note, Finding 1. The concrete TOML spelling of records/maps/unions/
 tuples/aliases/named-types is invented per draft; the specification pins the language but not the authoring
 surface. Recommend a normative surface-syntax appendix (or "the shipped built-in meta-schema is
 the pinned surface, by example").

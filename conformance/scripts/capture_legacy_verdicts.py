@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
-"""Capture a private project's LEGACY validator verdicts over the acceptance corpus.
+"""Capture a private sprite tool's LEGACY validator verdicts over the acceptance corpus.
 
 The acceptance test (conformance/DESIGN.md, "The acceptance test") compares
-strictspec's verdicts against a private project's EXISTING hand-written validators —
-the pydantic model (``server/src/private-project/character_preview_generated.py``)
+strictspec's verdicts against the sprite tool's EXISTING hand-written validators —
+the pydantic model (``server/src/<package>/character_preview_generated.py``)
 and the legacy TypeScript validator
 (``src/lib/character/character-preview.generated.ts``). Those verdicts are
 CAPTURED ONCE, read-only, and committed as fixture data
 (``acceptance/legacy-verdicts.json``) so the test is reproducible and never
-touches the a private project working tree at run time.
+touches the sprite tool's working tree at run time.
 
 This script is the reproducible capture. Run it once (and again only when the
 corpus or a legacy validator changes):
 
     cd conformance
     uv run python scripts/capture_legacy_verdicts.py \
-        --private-project-root /home/m/Projects/private-project
+        --source-root <sprite-tool-root> --package <package>
 
-It shells out to (a) a private project's uv environment for the pydantic model and
+It shells out to (a) the sprite tool's uv environment for the pydantic model and
 (b) ``node --experimental-strip-types`` for the legacy TS validator, running
 each over every corpus document, and writes the RAW verdicts (pydantic loc
 tuples + error types; TS error strings) to ``acceptance/legacy-verdicts.json``.
@@ -41,14 +41,16 @@ ACCEPTANCE = Path(__file__).resolve().parent.parent / "acceptance"
 CORPUS = ACCEPTANCE / "corpus"
 DEFAULT_OUTPUT = ACCEPTANCE / "legacy-verdicts.json"
 
-# Driver run inside a private project's uv env: validate every corpus doc with the
-# pydantic CharacterPreviewState model, exactly as a private project's state layer does
-# (server/src/private-project/state.py::set_character_preview -> model_validate on a
+# Driver run inside the sprite tool's uv env: validate every corpus doc with the
+# pydantic CharacterPreviewState model, exactly as the sprite tool's state layer does
+# (server/src/<package>/state.py::set_character_preview -> model_validate on a
 # json.loads'd dict). format_version is stripped first (legacy predates it).
 _PYDANTIC_DRIVER = r'''
-import json, sys
-sys.path.insert(0, sys.argv[3])  # <pw_root>/server/src
-from a private project.character_preview_generated import CharacterPreviewState
+import importlib, json, sys
+sys.path.insert(0, sys.argv[3])  # <source_root>/server/src
+CharacterPreviewState = importlib.import_module(
+    sys.argv[4] + ".character_preview_generated"
+).CharacterPreviewState
 
 corpus_dir, out_path = sys.argv[1], sys.argv[2]
 import os
@@ -74,7 +76,7 @@ json.dump(result, open(out_path, "w"), indent=2)
 
 # Driver run under node --experimental-strip-types: validate every corpus doc
 # with the legacy TS validator, imported by absolute path. Legacy parses with
-# JSON.parse (like a private project's frontend); format_version is stripped first.
+# JSON.parse (like the sprite tool's frontend); format_version is stripped first.
 _TS_DRIVER = r'''
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -92,15 +94,15 @@ writeFileSync(outPath, JSON.stringify(result, null, 2));
 '''
 
 
-def _capture_pydantic(pw_root: Path, tmp: Path) -> dict:
+def _capture_pydantic(pw_root: Path, package: str, tmp: Path) -> dict:
     driver = tmp / "pydantic_driver.py"
     driver.write_text(_PYDANTIC_DRIVER)
     out = tmp / "pydantic.json"
     server_src = pw_root / "server" / "src"
     if not server_src.is_dir():
-        raise SystemExit(f"a private project server/src not found under {pw_root}")
+        raise SystemExit(f"server/src not found under {pw_root}")
     subprocess.run(
-        ["uv", "run", "python", str(driver), str(CORPUS), str(out), str(server_src)],
+        ["uv", "run", "python", str(driver), str(CORPUS), str(out), str(server_src), package],
         cwd=str(pw_root),
         check=True,
     )
@@ -113,7 +115,7 @@ def _capture_ts(pw_root: Path, tmp: Path) -> dict:
     out = tmp / "ts.json"
     validator = pw_root / "src" / "lib" / "character" / "character-preview.generated.ts"
     if not validator.is_file():
-        raise SystemExit(f"a private project legacy TS validator not found: {validator}")
+        raise SystemExit(f"legacy TS validator not found: {validator}")
     subprocess.run(
         ["node", "--experimental-strip-types", str(driver),
          str(CORPUS), str(out), str(validator)],
@@ -125,17 +127,22 @@ def _capture_ts(pw_root: Path, tmp: Path) -> dict:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--private-project-root",
-        default="/home/m/Projects/private-project",
-        help="path to the a private project working tree (read-only)",
+        "--source-root",
+        required=True,
+        help="path to the sprite tool's working tree (read-only)",
+    )
+    parser.add_argument(
+        "--package",
+        required=True,
+        help="the sprite tool's Python package name under server/src",
     )
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT))
     args = parser.parse_args(argv)
 
-    pw_root = Path(args.private-project_root).resolve()
+    pw_root = Path(args.source_root).resolve()
     with tempfile.TemporaryDirectory() as td:
         tmp = Path(td)
-        pydantic = _capture_pydantic(pw_root, tmp)
+        pydantic = _capture_pydantic(pw_root, args.package, tmp)
         ts = _capture_ts(pw_root, tmp)
 
     names = sorted(p.stem for p in CORPUS.glob("*.json"))
@@ -150,15 +157,15 @@ def main(argv: list[str] | None = None) -> int:
             "captured_by": "conformance/scripts/capture_legacy_verdicts.py",
             "capture_command": (
                 "cd conformance && uv run python scripts/capture_legacy_verdicts.py "
-                "--private-project-root <a private project>"
+                "--source-root <sprite-tool-root> --package <package>"
             ),
             "sources": {
                 "pydantic": (
-                    "a private project server/src/private-project/character_preview_generated.py "
+                    "the sprite tool's server/src/<package>/character_preview_generated.py "
                     "(CharacterPreviewState.model_validate, as state.py::set_character_preview does)"
                 ),
                 "ts": (
-                    "a private project src/lib/character/character-preview.generated.ts "
+                    "the sprite tool's src/lib/character/character-preview.generated.ts "
                     "(validateCharacterPreviewState, run under node --experimental-strip-types)"
                 ),
             },

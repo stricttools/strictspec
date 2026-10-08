@@ -34,7 +34,7 @@ remains within-backend, like every backend.
    all-errors-in-one-pass per line; byte-offset positions; LF-only).
 2. TAGGED document-model values: from the parsers or from generated typed constructors. Raw
    untagged JS objects are NOT accepted — ambiguity never enters the model. This is the entry
-   a private project's real call sites need (state setters, snapshot sub-objects, literals built in
+   the sprite tool's real call sites need (state setters, snapshot sub-objects, literals built in
    code): post-migration they build tagged values via generated constructors and `with_*`
    helpers, no re-serialization, no false rejections.
 

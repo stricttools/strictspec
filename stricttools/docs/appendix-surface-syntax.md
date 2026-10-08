@@ -22,14 +22,14 @@ description = "The single concrete TOML surface syntax for every strictspec auth
 appendix pinned the actual grammar — how records, maps, unions, constraints, aliases, named types,
 imports, enum sourcing, opaque leaves, and migration files are spelled. The three examples/ drafting
 batches each invented a divergent notation, and the divergence itself was the largest
-surface-notation finding (every private-project/claudestream/predraw/wavescript/rlsbl/betterclaude gap
-note raised it).
+surface-notation finding (every sprite-tool/claudestream/predraw/rlsbl/betterclaude gap note raised
+it, and so did a private audio tool's).
 
 The three invented notations were:
 
 | Batch | Representative drafts | Notation shape |
 |---|---|---|
-| 1 | a private project, claudestream, predraw | `[schema]` header block; `[root]` (`kind = "record"`); `[root.fields.<f>]`; `[types.<Name>]` (`kind = …`); array items `.items`; map values `.values`; constraints `[[root.constraints]]` / `[[types.<N>.constraints]]` |
+| 1 | sprite-tool, claudestream, predraw | `[schema]` header block; `[root]` (`kind = "record"`); `[root.fields.<f>]`; `[types.<Name>]` (`kind = …`); array items `.items`; map values `.values`; constraints `[[root.constraints]]` / `[[types.<N>.constraints]]` |
 | 2 | wavescript-score, rlsbl-release-file, rlsbl-config, rlsbl-changelog-entry | bare header keys (`schema =`, `syntax =`); records `[record.<Name>.<field>]` (root is `[record.ROOT.*]`); constraints `[[constraint]]` carrying a `scope` PATH string |
 | 3 | betterclaude-contracts, imagine, shared-types, aggregates, enum-baking, orxtra, pgdesign | bare header keys (`name =`, `document_syntax =`, `imports =`); root `[fields.<f>]` (implicit, unnamed); KIND-TYPED named types `[types.<Name>]` (`kind = "record"|"enum"|"scalar"|…`); constraints `[[constraints]]` / `[[types.<N>.constraints]]` |
 

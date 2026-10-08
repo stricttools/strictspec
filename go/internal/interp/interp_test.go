@@ -162,7 +162,7 @@ func TestUnionsAndConstraints(t *testing.T) {
 }
 
 func TestOrderedPairInConstraintPass(t *testing.T) {
-	got := runFixture(t, "_schemas/private-project-character-preview.toml", "_inputs/private-project/character-preview.invalid-union-and-order.json", "json", nil)
+	got := runFixture(t, "_schemas/sprite-tool-character-preview.toml", "_inputs/sprite-tool/character-preview.invalid-union-and-order.json", "json", nil)
 	assertDiags(t, got, []want{
 		{"STRICTSPEC_UNION_DISCRIMINATOR_UNKNOWN", "$.oscillators.functions[0]"},
 		{"STRICTSPEC_INTRA_ORDERED_PAIR", "$.oscillators.functions[1](blink)"},

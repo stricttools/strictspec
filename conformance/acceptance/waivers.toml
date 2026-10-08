@@ -1,6 +1,6 @@
 # Acceptance-test WAIVER LIST — FROZEN (conformance/DESIGN.md, "The acceptance test").
 #
-# Verdict parity between strictspec and a private project's legacy validators (pydantic +
+# Verdict parity between strictspec and the sprite tool's legacy validators (pydantic +
 # legacy TS) is STRICT except the entries below, where divergence is the PASS
 # condition: strictspec's stricter verdict is correct BY DEFINITION and the legacy
 # validator's acceptance is the defect. Every entry names the specific legacy defect

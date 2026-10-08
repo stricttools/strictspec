@@ -32,7 +32,7 @@ paths.
 2. Tagged document-model values: from the reader or from generated typed constructors (where
    integer/float/number/datetime is explicit in the type). Raw untagged dicts are NOT accepted
    as validation input — ambiguity never enters the model. This serves in-memory
-   mutate-then-validate consumers (a private project's server validates dicts built by MCP mutations
+   mutate-then-validate consumers (the sprite tool's server validates dicts built by MCP mutations
    today; post-migration it builds tagged values via constructors and `with_*` helpers).
 
 Result type: (typed value | None) x ordered diagnostics; every diagnostic is an error (no

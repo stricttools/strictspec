@@ -1,11 +1,11 @@
 # Acceptance-test corpus — provenance for every character-preview document.
 #
-# The corpus (conformance/DESIGN.md, "The acceptance test") is: a private project's existing
+# The corpus (conformance/DESIGN.md, "The acceptance test") is: the sprite tool's existing
 # character-preview test inputs + conformance fixtures derivable from the translated schema.
 # It is stored HERE (conformance-owned) so the acceptance test never reaches into the
-# a private project working tree at run time.
+# sprite tool's working tree at run time.
 #
-# BOOTSTRAP STAMP: a private project's real documents predate strictspec, so they carry no
+# BOOTSTRAP STAMP: the sprite tool's real documents predate strictspec, so they carry no
 # `format_version`. Each imported real document is stamped `format_version = 1` on import —
 # the one-time pre-versioning conversion of decision 13 (stamp, never reshape). strictspec's
 # `format_version` gate is invisible to the legacy validators, which predate it; the capture
@@ -19,10 +19,10 @@
 #   note      — what the document exercises
 
 [["real-valid"]]
-source = "a private project server/tests/test_character_preview.py::_doc() (the canonical valid document)"
+source = "the sprite tool's server/tests/test_character_preview.py::_doc() (the canonical valid document)"
 nature = "valid"
 stamped = true
-note = "The real a private project character-preview document. Clean under all validators."
+note = "The sprite tool's real character-preview document. Clean under all validators."
 
 [["real-bad-version"]]
 source = "derived-from(real-valid) — mirrors test_character_preview.py::test_rejects_bad_version"
@@ -46,13 +46,13 @@ mutation = 'oscillators.functions[1].id = "s1" (duplicates functions[0].id)'
 note = "unique-by (functions.id) rejection; agreed by all three validators."
 
 [["sample-valid"]]
-source = "copied-from(examples/private-project/samples/character-preview.valid.json)"
+source = "copied-from(examples/sprite-tool/samples/character-preview.valid.json)"
 nature = "valid"
 stamped = false
 note = "Conformance fixture derivable from the translated schema (already carries format_version). Clean."
 
 [["sample-invalid-union-and-order"]]
-source = "copied-from(examples/private-project/samples/character-preview.invalid-union-and-order.json)"
+source = "copied-from(examples/sprite-tool/samples/character-preview.invalid-union-and-order.json)"
 nature = "invalid"
 stamped = false
 mutation = 'functions[0].type = "wobble" (unknown discriminator); functions[1] onMs 200.0 >= periodMs 100.0'

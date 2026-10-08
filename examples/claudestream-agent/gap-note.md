@@ -31,7 +31,7 @@ Documents are JSON.
 ## Findings
 
 ### FINDING 1 — meta-schema surface syntax still unpinned (shared with sibling drafts)
-See the a private project gap note, Finding 1. Not repeated.
+See the sprite tool gap note, Finding 1. Not repeated.
 
 ### FINDING 2 — three distinct "version" tokens coexist in one document (a naming clarity WIN)
 The at-rest document carries BOTH the strictspec integer `format_version` gate (NEW) AND the

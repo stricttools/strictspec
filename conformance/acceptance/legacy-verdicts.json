@@ -1,10 +1,10 @@
 {
   "_meta": {
     "captured_by": "conformance/scripts/capture_legacy_verdicts.py",
-    "capture_command": "cd conformance && uv run python scripts/capture_legacy_verdicts.py --private-project-root <a private project>",
+    "capture_command": "cd conformance && uv run python scripts/capture_legacy_verdicts.py --source-root <sprite-tool-root> --package <package>",
     "sources": {
-      "pydantic": "a private project server/src/private-project/character_preview_generated.py (CharacterPreviewState.model_validate, as state.py::set_character_preview does)",
-      "ts": "a private project src/lib/character/character-preview.generated.ts (validateCharacterPreviewState, run under node --experimental-strip-types)"
+      "pydantic": "the sprite tool's server/src/<package>/character_preview_generated.py (CharacterPreviewState.model_validate, as state.py::set_character_preview does)",
+      "ts": "the sprite tool's src/lib/character/character-preview.generated.ts (validateCharacterPreviewState, run under node --experimental-strip-types)"
     },
     "bootstrap_note": "format_version is stripped from every document before legacy validation: the legacy validators predate strictspec's format_version gate (decision 13).",
     "raw_shape": "pydantic errors carry loc (list, ints are array indices) + type; ts errors are the validator's raw message strings. Path normalization and waiver adjudication happen in the test, not in this committed capture."

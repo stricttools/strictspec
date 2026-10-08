@@ -56,8 +56,8 @@ func TestGoldenCompileAndParity(t *testing.T) {
 		input  string
 		syntax string
 	}{
-		{"private-project-character-preview.toml", "private-project/character-preview.valid.json", "json"},
-		{"private-project-character-preview.toml", "private-project/character-preview.invalid-union-and-order.json", "json"},
+		{"sprite-tool-character-preview.toml", "sprite-tool/character-preview.valid.json", "json"},
+		{"sprite-tool-character-preview.toml", "sprite-tool/character-preview.invalid-union-and-order.json", "json"},
 		{"wavescript-score.schema.toml", "wavescript/valid-01-embedded-bank.json", "json"},
 		{"wavescript-score.schema.toml", "wavescript/invalid-01-gate-violations.json", "json"},
 		{"shared-canvas.toml", "shared/canvas.valid.json", "json"},

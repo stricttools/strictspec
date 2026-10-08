@@ -1,9 +1,9 @@
-"""The acceptance test — strictspec vs a private project's legacy validators.
+"""The acceptance test — strictspec vs the sprite tool's legacy validators.
 
 conformance/DESIGN.md, "The acceptance test": from the hand-written strictspec
-translation of a private project's character-preview schema, GENERATE Python and TS
-validators via ``strictspec gen``, run them over the real a private project corpus, and
-assert VERDICT PARITY against a private project's existing hand-written validators
+translation of the sprite tool's character-preview schema, GENERATE Python and TS
+validators via ``strictspec gen``, run them over the sprite tool's real corpus, and
+assert VERDICT PARITY against the sprite tool's existing hand-written validators
 (pydantic + legacy TS) — STRICT except a committed, FROZEN waiver list where
 divergence is the pass condition (strictspec's stricter-but-correct behaviour).
 
@@ -12,7 +12,7 @@ conformance-owned schema copy, compiles and runs the generated Python and TS
 validators over the committed corpus, and provides the path-normalization and
 adjudication helpers the pytest entry point asserts on. The corpus and the legacy
 verdicts are committed fixture data (``acceptance/``), so the test never reaches
-into the a private project working tree at run time.
+into the sprite tool's working tree at run time.
 
 Strictspec verdicts come from the GENERATED validators (two of the four
 conformance targets); because every target drives the shared emitter IR, the
@@ -42,7 +42,7 @@ SCHEMA_FILE = ACCEPTANCE_DIR / "schema" / "character-preview.schema.toml"
 CORPUS_DIR = ACCEPTANCE_DIR / "corpus"
 LEGACY_VERDICTS_FILE = ACCEPTANCE_DIR / "legacy-verdicts.json"
 WAIVERS_FILE = ACCEPTANCE_DIR / "waivers.toml"
-EXAMPLES_SCHEMA = REPO_ROOT / "examples" / "private-project" / "character-preview.toml"
+EXAMPLES_SCHEMA = REPO_ROOT / "examples" / "sprite-tool" / "character-preview.toml"
 
 _PYTHON_DIR = REPO_ROOT / "python"
 _TS_DIR = REPO_ROOT / "ts"

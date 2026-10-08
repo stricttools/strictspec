@@ -62,7 +62,7 @@ EDITS: list[tuple[str, str, str, int]] = [
      "gap-note items resolved in the specification;", 1),
     ("examples/migrations/gap-note.md", "Just as spec/ pins the language",
      "Just as the specification pins the language", 1),
-    ("examples/private-project/gap-note.md", "is not pinned anywhere in spec/",
+    ("examples/sprite-tool/gap-note.md", "is not pinned anywhere in spec/",
      "is not pinned anywhere in the specification", 1),
     ("examples/predraw-scene/gap-note.md", "spec/ pins the language but not the authoring",
      "the specification pins the language but not the authoring", 1),
