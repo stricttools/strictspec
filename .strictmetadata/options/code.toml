@@ -2,14 +2,14 @@ format_version = 1
 
 [[entry]]
 id = "strictcode:lint"
-current = "error"
+current = "off"
 ideal = "error"
-reason = "ruff-lint checked this member before the check moved into strictcode's lint rule"
+reason = "the conformance suite's Python harness is paused while the tools are rewritten in Go and receives no updates, so its ruff findings are not fixed until it is taken up again"
 scope = "conformance"
 
 [[entry]]
 id = "strictcode:lint"
-current = "error"
+current = "off"
 ideal = "error"
-reason = "ruff-lint checked this member before the check moved into strictcode's lint rule"
+reason = "the Python implementation is paused while the tools are rewritten in Go and receives no updates, so its ruff findings are not fixed until it is taken up again"
 scope = "python"
