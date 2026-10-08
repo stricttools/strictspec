@@ -10,7 +10,6 @@ __pycache__/
 .venv/
 *.log
 .DS_Store
-coverage/
 .rlsbl-notes-*.tmp
 .rlsbl/lock
 .rlsbl-monorepo/lock
