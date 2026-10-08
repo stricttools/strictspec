@@ -7,8 +7,8 @@ import (
 	"github.com/stricttools/strictspec/go/internal/doc"
 )
 
-// JSONL framing rules, pinned by stricttools/docs/DESIGN.md ("Document model" bullet on
-// JSONL) and the parse-error catalogue in stricttools/docs/appendix-error-codes.md:
+// JSONL framing rules, pinned by .strictmetadata/docs/DESIGN.md ("Document model" bullet on
+// JSONL) and the parse-error catalogue in .strictmetadata/docs/appendix-error-codes.md:
 //
 //   - One JSON document per line. Lines are split on LF only ("LF-only
 //     splitting"); a trailing LF terminates the final line rather than starting

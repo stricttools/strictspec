@@ -1,5 +1,5 @@
 +++
-description = "The strictspec constitution, the pages under stricttools/docs/: the language-neutral definition of the schema language, constraint vocabulary, op set, error model, versioning and migration rules, and the normative appendices."
+description = "The strictspec constitution, the pages under .strictmetadata/docs/: the language-neutral definition of the schema language, constraint vocabulary, op set, error model, versioning and migration rules, and the normative appendices."
 +++
 # The strictspec Schema Language
 

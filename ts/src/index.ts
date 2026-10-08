@@ -7,7 +7,7 @@
 // shared emitter IR, so a generated TS validator runs the identical checks as the
 // reference interpreter and the Go/Python runtimes). It also ships the options
 // built-in schemas (options-entries, options-registry, and upstream; see
-// stricttools/docs/appendix-options.md) with readers that validate and bind
+// .strictmetadata/docs/appendix-options.md) with readers that validate and bind
 // those documents, and the options rules: the ranking parser, the registry
 // validator, and the per-namespace entry validator that classifies accepted
 // entries, each refusing with catalogued STRICTSPEC_OPTIONS_* diagnostics.
@@ -569,7 +569,7 @@ function embeddedSchemaError(diags: diagMod.Diagnostic[]): string {
 	return parts.join("");
 }
 
-// --- options built-ins (stricttools/docs/appendix-options.md) ---------------
+// --- options built-ins (.strictmetadata/docs/appendix-options.md) ---------------
 
 export type {
 	CheckedOption,

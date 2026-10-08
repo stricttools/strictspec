@@ -155,7 +155,7 @@ absence throughout: no flag reads an empty string as "not supplied".
 - The constraint engine (cross-document vocabulary evaluator) and the Go implementations of
   the evidence resolvers.
 - The options built-in schemas (`options-entries`, `options-registry`, `upstream`;
-  stricttools/docs/appendix-options.md), embedded from `strictspec/builtin/`, with readers that
+  .strictmetadata/docs/appendix-options.md), embedded from `strictspec/builtin/`, with readers that
   validate a document's shape against them and bind it (`ReadOptionsRegistry`,
   `LoadOptionsRegistry`, `ReadOptionsEntries`, `LoadOptionsEntries`, `ReadUpstream`,
   `LoadUpstream`), and the options rules: the ranking parser (`ParseOptionsRanking`), the

@@ -1,5 +1,5 @@
 # Toolchain-shipped built-in schema: a fork's upstream declaration,
-# .strictmetadata/upstream/upstream.toml (stricttools/docs/appendix-options.md,
+# .strictmetadata/upstream/upstream.toml (.strictmetadata/docs/appendix-options.md,
 # "The upstream document").
 # This file is the single source of the schema: python/scripts/genbuiltins.py
 # and ts/scripts/genbuiltins.mjs generate the Python and TypeScript runtimes'

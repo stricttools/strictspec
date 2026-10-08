@@ -1,4 +1,4 @@
-// The options built-ins and rules (stricttools/docs/appendix-options.md).
+// The options built-ins and rules (.strictmetadata/docs/appendix-options.md).
 //
 // The shape and rules cases live in go/strictspec/testdata/options/ and are
 // shared with the Go and Python runtimes' tests, so every runtime asserts the

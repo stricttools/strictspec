@@ -7,7 +7,7 @@ validators that report identical verdicts, codes, paths, and message text.
 The Go binary (`go/cmd/strictspec`, built on strictcli) is the whole
 toolchain: `gen`, `check`, `validate`, `migrate`, `export`, `init`, `diff`,
 and `doc-diff`. The schema language is defined by the constitution under
-`stricttools/docs/` (surface syntax in `appendix-surface-syntax.md`: the
+`.strictmetadata/docs/` (surface syntax in `appendix-surface-syntax.md`: the
 header, `[types.<Name>]` type sites, `fields`, constraints, `when`
 conditions, imports, enum sourcing, and migration files). A schema file is
 itself checked against a built-in meta-schema (authoring diagnostics in
@@ -164,7 +164,7 @@ Solution 1 is the most correct.
 - New: the TypeScript extension directory (manifest, client, webview code,
   build step), placed as a new project in the rlsbl monorepo or in a
   separate repository, to be decided.
-- `stricttools/docs/`: a page documenting the server and the extension, and
+- `.strictmetadata/docs/`: a page documenting the server and the extension, and
   the custom protocol methods, once they exist.
 
 ## Effort estimate

@@ -78,13 +78,13 @@ FINDINGS: 3 — RESOLVED (Phase 3.3).
 ## RESOLUTION (Phase 3.3)
 
 - **F1 (migration-file surface unpinned)** — ADOPTED. The migration-file surface is pinned in
-  `stricttools/docs/appendix-surface-syntax.md` §9 (`[migration]` header, `[[ops]]`, author-supplied
+  `.strictmetadata/docs/appendix-surface-syntax.md` §9 (`[migration]` header, `[[ops]]`, author-supplied
   `[[down_ops]]`). Both migration drafts normalized.
 - **F2 (no admission-criterion pressure)** — BOUNDARY-CONFIRMED. The op vocabulary fits with zero
   pressure; no new op.
 - **F3 (down engine-derived vs author-supplied)** — RESOLVED: `down` is AUTHOR-SUPPLIED. The
   migration file carries explicit `[[down_ops]]`; the engine NEVER derives down ops; `diff`'s
-  down-taxonomy verification checks the DECLARATION against the corpus (`stricttools/docs/DESIGN.md` —
+  down-taxonomy verification checks the DECLARATION against the corpus (`.strictmetadata/docs/DESIGN.md` —
   Reversibility taxonomy; `appendix-surface-syntax.md` §9). This decides the note's open question
   in the author-supplied direction (not auto-derivation). The reference-comment inverses become
   real `[[down_ops]]` in normalization.

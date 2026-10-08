@@ -1,6 +1,6 @@
 package strictspec
 
-// The options rules beyond shape (stricttools/docs/appendix-options.md,
+// The options rules beyond shape (.strictmetadata/docs/appendix-options.md,
 // "The option registry", "Ranking rules", and "Validation"): the ranking
 // parser, the registry rules, the per-namespace entry validator, and the
 // settled / debt / waiting-on-the-tool classification.

@@ -70,7 +70,7 @@ first, with the structured remediation payload.
   migration engine via the packaged CLI (the engine itself never lives in this runtime); the
   wrappers are generated only for manifest-declared stores/channels.
 - The options built-in schemas (`options-entries`, `options-registry`, `upstream`;
-  stricttools/docs/appendix-options.md), generated into `_builtins.py` from
+  .strictmetadata/docs/appendix-options.md), generated into `_builtins.py` from
   `go/strictspec/builtin/` by `scripts/genbuiltins.py`, with readers that validate a
   document's shape against them and bind it (`read_options_registry`, `load_options_registry`,
   `read_options_entries`, `load_options_entries`, `read_upstream`, `load_upstream`), and

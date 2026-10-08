@@ -1,4 +1,4 @@
-// The options built-ins (stricttools/docs/appendix-options.md).
+// The options built-ins (.strictmetadata/docs/appendix-options.md).
 //
 // Three toolchain-shipped built-in schemas -- options-entries (a subject
 // document under .strictmetadata/options/), options-registry (a tool's registry

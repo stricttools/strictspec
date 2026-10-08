@@ -78,7 +78,7 @@ declarations and canonical rules — never from auto-application.
   is no consumer registration surface; the bespoke tail is consumer-native code over typed
   values, run downstream of validation.
 - The options built-in schemas (`options-entries`, `options-registry`, `upstream`;
-  stricttools/docs/appendix-options.md), generated into `src/builtins.generated.ts` from
+  .strictmetadata/docs/appendix-options.md), generated into `src/builtins.generated.ts` from
   `go/strictspec/builtin/` by `scripts/genbuiltins.mjs`, with readers that validate a
   document's text against them and bind it (`readOptionsRegistry`, `readOptionsEntries`,
   `readUpstream`). The readers take text, not paths: reading the options directory and the

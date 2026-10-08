@@ -1,5 +1,5 @@
 # Toolchain-shipped built-in schema: a subject document under
-# .strictmetadata/options/ (stricttools/docs/appendix-options.md, "The entry
+# .strictmetadata/options/ (.strictmetadata/docs/appendix-options.md, "The entry
 # document").
 # This file is the single source of the schema: python/scripts/genbuiltins.py
 # and ts/scripts/genbuiltins.mjs generate the Python and TypeScript runtimes'

@@ -10,7 +10,7 @@
 # --- end conformance provenance header ---
 # strictspec schema — the sprite tool's CharacterPreviewState (paper draft)
 # THIS IS THE ACCEPTANCE-TEST SOURCE — it must come out complete.
-# Pinned surface (stricttools/docs/appendix-surface-syntax.md): discriminated-union arms are subtables
+# Pinned surface (.strictmetadata/docs/appendix-surface-syntax.md): discriminated-union arms are subtables
 # `[types.<U>.arms.<arm>]` (each a type-site referencing the arm record, keyed by the discriminator
 # literal); maps use `.value`; a nullable field is `type = "nullable"` + `.inner`.
 # Translated from schemas/character-preview.schema.json (the sprite tool, JSON docs).

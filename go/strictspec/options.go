@@ -1,6 +1,6 @@
 package strictspec
 
-// The options built-ins (stricttools/docs/appendix-options.md): three
+// The options built-ins (.strictmetadata/docs/appendix-options.md): three
 // toolchain-shipped built-in schemas — options-entries (a subject document under
 // .strictmetadata/options/), options-registry (a tool's registry of the options
 // it offers), and upstream (.strictmetadata/upstream/upstream.toml) — plus the

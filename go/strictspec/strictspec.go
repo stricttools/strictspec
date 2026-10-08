@@ -14,7 +14,7 @@
 // driven by the shared emitter IR, internal/ir, so a generated Go validator runs
 // the identical checks as the reference interpreter). It also ships the options
 // built-in schemas (options-entries, options-registry, and upstream; see
-// stricttools/docs/appendix-options.md) with readers that validate and bind
+// .strictmetadata/docs/appendix-options.md) with readers that validate and bind
 // those documents, and the options rules: the ranking parser, the registry
 // validator, and the per-namespace entry validator that classifies accepted
 // entries, each refusing with catalogued STRICTSPEC_OPTIONS_* diagnostics.

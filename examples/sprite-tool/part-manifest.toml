@@ -1,5 +1,5 @@
 # strictspec schema — the sprite tool's PartManifest (paper draft)
-# Pinned surface (stricttools/docs/appendix-surface-syntax.md). Translated from
+# Pinned surface (.strictmetadata/docs/appendix-surface-syntax.md). Translated from
 # schemas/part-manifest.schema.json (the sprite tool, JSON docs).
 
 name = "PartManifest"
