@@ -48,3 +48,20 @@ func TestScanTermsReportsEveryTermAtOnePlace(t *testing.T) {
 		t.Fatalf("matches %+v", got)
 	}
 }
+
+func TestScanTermsIgnoresTermsInsideURLsAndDottedHostnames(t *testing.T) {
+	text := "docs at https://cdn.npmjs.com/package/portal, mirror cdn.example.com.\n" +
+		"portal.example.org and cdn portal\n" +
+		"portal.toml stays a match\n" +
+		"[x](https://example.com/portal) portal"
+	got := index.ScanTerms(text, []string{"portal", "cdn", "example"})
+	want := []index.Match{
+		{Term: "cdn", Line: 2, Column: 24},
+		{Term: "portal", Line: 2, Column: 28},
+		{Term: "portal", Line: 3, Column: 1},
+		{Term: "portal", Line: 4, Column: 33},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("matches %+v\nwant %+v", got, want)
+	}
+}
