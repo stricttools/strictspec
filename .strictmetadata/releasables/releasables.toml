@@ -40,25 +40,11 @@ releasable = "strictspec"
 import_name = "strictspec"
 targets = [{ name = "pypi" }]
 
-[[members.pipelines]]
-name = "pypi"
-type = "pypi"
-target = "pypi"
-local = false
-artifact = "package"
-
 [[members]]
 path = "ts"
 name = "ts-strictspec"
 releasable = "strictspec"
 targets = [{ name = "npm" }]
-
-[[members.pipelines]]
-name = "npm"
-type = "npm"
-target = "npm"
-local = false
-artifact = "package"
 
 [[members]]
 path = "conformance/spikes/toml-eslint-parser"
