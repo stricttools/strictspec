@@ -31,6 +31,7 @@ packages = ["src/strictspec"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+norecursedirs = ["*.egg", ".*", "_darcs", "build", "CVS", "dist", "node_modules", "venv", "{arch}", "experiments", "screenshots"]
 
 [project.urls]
 Homepage = "https://smmh.dev/strictspec/"
@@ -38,3 +39,22 @@ Documentation = "https://smmh.dev/strictspec/"
 Repository = "https://github.com/stricttools/strictspec"
 Issues = "https://github.com/stricttools/strictspec/issues"
 Changelog = "https://github.com/stricttools/strictspec/blob/main/CHANGELOG.md"
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "/todo/",
+    "/experiments/",
+    "/screenshots/",
+    "/stricttools/",
+    ".rlsbl/",
+    ".rlsbl-monorepo/",
+    ".strictmetadata/",
+    ".stricttools/",
+    ".claude/",
+    ".selfdoc/",
+    ".strictcli/",
+    "CLAUDE.md",
+    "AGENTS.md",
+    ".env*",
+    "*.local-only",
+]
