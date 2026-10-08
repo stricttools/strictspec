@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "description": "Spike: validate toml-eslint-parser against strictspec's lossless TOML write-side requirements (decision 5).",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "test": "node --test"
   },
