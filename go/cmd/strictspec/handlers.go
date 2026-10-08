@@ -584,8 +584,7 @@ func exportHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strict
 		return strictcli.Exit(1)
 	}
 	if !haveOutput {
-		os.Stdout.Write(out)
-		os.Stdout.Write([]byte("\n"))
+		ctx.Out(string(out))
 		return strictcli.Exit(0)
 	}
 	if _, err := ctx.Effects().Write(output, append(out, '\n')); err != nil {

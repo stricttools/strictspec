@@ -120,7 +120,7 @@ func TestMigrateDryRunLeavesTheDocumentUntouched(t *testing.T) {
 		t.Fatal("--dry-run left a temp file behind")
 	}
 	// The would-be document bytes are still shown.
-	if !strings.Contains(r.Stdout, "cost_thresholds") {
+	if !strings.Contains(r.Stdout, docV2ExpectedJSON) {
 		t.Fatalf("--dry-run must still render the would-be output, stdout:\n%s", r.Stdout)
 	}
 }

@@ -109,10 +109,7 @@ func migrateHandler(ctx *strictcli.Context, kwargs map[string]interface{}) stric
 	if dryRun {
 		for _, p := range outputs {
 			ctx.Info(fmt.Sprintf("--- %s (dry-run, would write) ---", p.path))
-			os.Stdout.Write(p.output)
-			if len(p.output) == 0 || p.output[len(p.output)-1] != '\n' {
-				os.Stdout.Write([]byte("\n"))
-			}
+			ctx.Out(strings.TrimSuffix(string(p.output), "\n"))
 		}
 	}
 
@@ -224,8 +221,7 @@ func diffHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strictcl
 	violations = append(violations, diffeng.Adjudicate(cert, adj)...)
 
 	out, _ := json.MarshalIndent(cert, "", "  ")
-	os.Stdout.Write(out)
-	os.Stdout.Write([]byte("\n"))
+	ctx.Out(string(out))
 	if len(violations) > 0 {
 		ctx.Error("diff found violated claims (blocks release):")
 		printDiags(ctx, violations)
@@ -280,8 +276,7 @@ func docDiffHandler(ctx *strictcli.Context, kwargs map[string]interface{}) stric
 		return strictcli.Exit(1)
 	}
 	out, _ := json.MarshalIndent(res, "", "  ")
-	os.Stdout.Write(out)
-	os.Stdout.Write([]byte("\n"))
+	ctx.Out(string(out))
 	return strictcli.Exit(0)
 }
 

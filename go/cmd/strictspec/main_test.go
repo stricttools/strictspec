@@ -111,6 +111,19 @@ func TestExportProducesJSONSchema(t *testing.T) {
 	}
 }
 
+// Without --output the JSON Schema is the command's answer on stdout, written
+// through the framework, which catches a handler writing to the process stdout.
+func TestExportWithoutOutputPrintsJSONSchema(t *testing.T) {
+	schema := filepath.Join(fixturesSchemas(t), "shared-canvas.toml")
+	r := newApp().Test([]string{"export", schema})
+	if r.ExitCode != 0 {
+		t.Fatalf("export exit = %d: %s", r.ExitCode, r.Stderr)
+	}
+	if !strings.Contains(r.Stdout, "json-schema.org") || !strings.Contains(r.Stdout, "\"$defs\"") {
+		t.Fatalf("export stdout does not hold the JSON Schema:\n%s", r.Stdout)
+	}
+}
+
 func min(a, b int) int {
 	if a < b {
 		return a
