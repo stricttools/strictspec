@@ -249,13 +249,6 @@ jobs:
           # arrived that way and broke every prefixed-tag repository.
           version: v2.18.1
           args: release --clean --skip=publish,announce,validate
-          # A job's `defaults.run.working-directory` applies to `run:` steps
-          # only, never to an action. Without this the action runs at the
-          # repository root, finds no .goreleaser.yml, falls back to its
-          # defaults and fails with "does not contain a main function". rlsbl's
-          # inliner does not rewrite this input (unlike go-version-file), so the
-          # module directory is named here.
-          workdir: go
         env:
           # A prefixed tag is not parseable as a version, and validation would
           # compare the stripped tag against a git tag that does not exist.

@@ -1,0 +1,31 @@
+version: 2
+
+# The archives are named <binary>_<version>_<os>_<arch>.tar.gz, the names the
+# npm and PyPI packaging jobs download, for every platform of rlsbl's
+# platform table.
+project_name: strictspec
+
+builds:
+  - main: ./cmd/strictspec
+    binary: strictspec
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X main.Version={{.Version}}
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  use: github-native
+

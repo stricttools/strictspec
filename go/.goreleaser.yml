@@ -23,6 +23,9 @@
 # release.
 version: 2
 
+# The archives are named <binary>_<version>_<os>_<arch>.tar.gz, the names the
+# npm and PyPI packaging jobs download, for every platform of rlsbl's
+# platform table.
 project_name: strictspec
 
 builds:
@@ -37,7 +40,6 @@ builds:
     goos:
       - linux
       - darwin
-      - windows
     goarch:
       - amd64
       - arm64
@@ -45,9 +47,6 @@ builds:
 archives:
   - formats: [tar.gz]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    format_overrides:
-      - goos: windows
-        formats: [zip]
 
 checksum:
   name_template: checksums.txt
