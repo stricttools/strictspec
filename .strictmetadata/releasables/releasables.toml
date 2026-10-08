@@ -62,6 +62,6 @@ artifact = "package"
 
 [[members]]
 path = "conformance/spikes/toml-eslint-parser"
-name = "toml-eslint-parser"
+name = "toml-eslint-parser-spike"
 releasable = false
 dev_only = true
