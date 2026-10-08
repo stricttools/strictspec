@@ -1,0 +1,97 @@
+# strictspec schema — the sprite tool's ConstraintManifest (paper draft)
+# Authored in the pinned surface (stricttools/docs/appendix-surface-syntax.md): bare header, root-as-named-type
+# via `root`, `role`, kind-typed `[types.<Name>]`, uniform `.fields.*` / `.item` sites, and
+# nesting-scoped `[[types.<Name>.constraints]]`.
+# Translated from schemas/constraint-manifest.schema.json (the sprite tool, JSON docs).
+
+name = "ConstraintManifest"
+meta_version = 1
+format_version = 1
+document_syntax = "json"
+role = "schema"
+root = "ConstraintManifest"
+description = "Constraint manifest for semantic painting (v1). Palette-classed layers store ramp roles; this document defines the palette, the classes (index ranges into the palette), and the alpha policy."
+
+[types.ConstraintManifest]
+type = "record"
+
+[types.ConstraintManifest.fields.version]
+type = "string"
+required = true
+regex = '^\d+\.\d+\.\d+$'
+description = "Semver version of the manifest content."
+
+[types.ConstraintManifest.fields.palette]
+type = "array"
+required = true
+description = "Ordered list of hex RGB colors (#rrggbb). Pairwise distinct (case-insensitive)."
+[types.ConstraintManifest.fields.palette.item]
+type = "string"
+regex = '^#[0-9a-fA-F]{6}$'
+
+[types.ConstraintManifest.fields.classes]
+type = "array"
+required = true
+description = "Palette classes: non-overlapping, in-bounds index ranges into the palette."
+[types.ConstraintManifest.fields.classes.item]
+type = "PaletteClass"
+
+[types.ConstraintManifest.fields.alphaPolicy]
+type = "literal"
+required = true
+value = "binary"
+description = "Alpha policy. Only \"binary\" is legal in v1."
+
+# --- x- keyword mappings (see gap-note.md) ---
+
+# x-pairwise-distinct: "case-insensitive"  ->  pairwise-distinct, normalization case-fold
+[[types.ConstraintManifest.constraints]]
+form = "pairwise-distinct"
+collection = "palette"
+normalization = "case-fold"
+
+# x-unique-field: "id"  ->  unique-by, field id
+[[types.ConstraintManifest.constraints]]
+form = "unique-by"
+collection = "classes"
+field = "id"
+normalization = "none"
+
+# x-range-nonoverlap: {start,len}  ->  ranges-disjoint (half-open). Each range is first well-formed
+# per ordered-pair (start < start+len), then half-open disjointness is evaluated. The in-bounds
+# leg (start+len <= len(palette)) is consumer-native (not part of ranges-disjoint).
+[[types.ConstraintManifest.constraints]]
+form = "ranges-disjoint"
+collection = "classes"
+start = "start"
+length = "len"
+
+# --- named types ---
+
+[types.PaletteClass]
+type = "record"
+description = "A named, non-overlapping index range into the manifest palette."
+[types.PaletteClass.fields.id]
+type = "string"
+required = true
+min_length = 1
+description = "Stable identifier referenced by role layers (paletteClassId)."
+[types.PaletteClass.fields.name]
+type = "string"
+required = true
+min_length = 1
+description = "Human-readable class name."
+[types.PaletteClass.fields.start]
+type = "integer"
+required = true
+min = 0
+description = "Start index into the palette."
+[types.PaletteClass.fields.len]
+type = "integer"
+required = true
+min = 1
+description = "Number of palette entries in this class (>= 1)."
+[types.PaletteClass.fields.reserved]
+type = "boolean"
+required = false
+description = "Optional flag marking the class as reserved."

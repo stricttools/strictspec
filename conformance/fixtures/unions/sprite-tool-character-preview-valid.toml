@@ -1,0 +1,9 @@
+name = "sprite-tool-character-preview-valid"
+category = "unions"
+provenance = "derived-from(examples/sprite-tool/samples/character-preview.valid.json, verified against spec)"
+description = "Sprite tool character-preview (the acceptance-test schema source): nested maps, discriminated oscillator-function unions, nullable paletteClassId. Validates clean."
+schema = "_schemas/sprite-tool-character-preview.toml"
+input = "_inputs/sprite-tool/character-preview.valid.json"
+
+[expected]
+valid = true

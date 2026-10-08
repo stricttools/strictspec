@@ -1,0 +1,28 @@
+name = "sprite-tool-character-preview-union-and-order"
+category = "unions"
+provenance = "derived-from(examples/sprite-tool/samples/character-preview.invalid-union-and-order.json, verified against spec)"
+description = """
+Structural pass before constraint pass. functions[0] has discriminator type="wobble" -- not a known arm, so no arm
+is validated (STRICTSPEC_UNION_DISCRIMINATOR_UNKNOWN; "wobble" is edit-distance > 2 from both
+`sine` and `blink`, so `suggestion` is empty). functions[1] is a valid `blink` whose body violates
+the ordered-pair rule onMs < periodMs (200.0 vs 100.0).
+
+RE-VERIFICATION CORRECTION vs the draft gap note: per the path grammar (appendix-rendering Part B),
+an arm step `(armname)` appears when a matched discriminated-union arm's BODY produces the
+diagnostic. The gap note omitted it; functions[1] matched the `blink` arm, so the ordered-pair
+diagnostic's path is `$.oscillators.functions[1](blink)`."""
+schema = "_schemas/sprite-tool-character-preview.toml"
+input = "_inputs/sprite-tool/character-preview.invalid-union-and-order.json"
+
+[expected]
+valid = false
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_UNION_DISCRIMINATOR_UNKNOWN"
+path = "$.oscillators.functions[0]"
+slots = { got = '"wobble"', expected = '["sine", "blink"]', suggestion = "" }
+
+[[expected.diagnostics]]
+code = "STRICTSPEC_INTRA_ORDERED_PAIR"
+path = "$.oscillators.functions[1](blink)"
+slots = { actual = "onMs", value = "periodMs" }

@@ -1,0 +1,9 @@
+{
+  "version": "1.0.0",
+  "palette": ["#000000", "#FF0000", "#ff0000"],
+  "classes": [
+    { "id": "skin", "name": "Skin ramp", "start": 0, "len": 2 },
+    { "id": "skin", "name": "Dup ramp", "start": 1, "len": 2 }
+  ],
+  "alphaPolicy": "binary"
+}

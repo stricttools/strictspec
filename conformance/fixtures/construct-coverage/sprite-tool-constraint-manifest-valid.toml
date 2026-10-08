@@ -1,0 +1,9 @@
+name = "sprite-tool-constraint-manifest-valid"
+category = "construct-coverage"
+provenance = "derived-from(examples/sprite-tool/samples/constraint-manifest.valid.json, verified against spec)"
+description = "Sprite tool constraint-manifest: distinct palette colors, unique class ids, disjoint half-open ranges. Validates clean."
+schema = "_schemas/sprite-tool-constraint-manifest.toml"
+input = "_inputs/sprite-tool/constraint-manifest.valid.json"
+
+[expected]
+valid = true
