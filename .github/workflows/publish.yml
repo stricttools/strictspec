@@ -43,7 +43,7 @@ jobs:
           tag_ref="${TAG_INPUT:-$GITHUB_REF_NAME}"
           case "$tag_ref" in
             'strictspec@v'*)
-              pattern='(^(go-strictspec-ci) / |^(py-strictspec-ci) / |^(ts-strictspec-ci) / )'
+              pattern='(^(go-strictspec-ci) / |^(ts-strictspec-ci) / )'
               ;;
             *)
               echo "::error::wait-for-ci: the tag '$tag_ref' matches no project's tag scheme (strictspec@v<version>)."
@@ -310,41 +310,6 @@ jobs:
     defaults:
       run:
         working-directory: go
-    if: startsWith(inputs.tag || github.ref_name, 'strictspec@v')
-  py-strictspec-pypi:
-    needs:
-      - wait-for-ci
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.tag || github.event.release.tag_name }}
-      - uses: astral-sh/setup-uv@v7
-      - name: Install gitleaks
-        run: |
-          GITLEAKS_VERSION=8.24.3
-          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar xz -C /usr/local/bin gitleaks
-      - run: uv build --out-dir dist
-      - name: Scan artifacts for secrets
-        # gitleaks only auto-loads .gitleaks.toml from the directory it scans,
-        # and dist/ never holds the project's allowlist, so the config is
-        # passed explicitly.
-        run: |
-          CONFIG_ARGS=""
-          if [ -f .gitleaks.toml ]; then
-            CONFIG_ARGS="--config ${PWD}/.gitleaks.toml"
-          fi
-          gitleaks dir dist/ ${CONFIG_ARGS}
-      - uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          skip-existing: true
-          packages-dir: python/dist/
-    permissions:
-      contents: read
-      id-token: write
-    defaults:
-      run:
-        working-directory: python
     if: startsWith(inputs.tag || github.ref_name, 'strictspec@v')
   ts-strictspec-npm:
     needs:
