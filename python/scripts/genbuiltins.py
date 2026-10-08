@@ -24,6 +24,7 @@ OUT_REL = "python/src/strictspec/_builtins.py"
 
 # (constant name, source file name), in emission order.
 BUILTINS = (
+    ("LIFECYCLE_AND_LICENSE_SCHEMA", "lifecycle-and-license.schema.toml"),
     ("OPTIONS_ENTRIES_SCHEMA", "options-entries.schema.toml"),
     ("OPTIONS_REGISTRY_SCHEMA", "options-registry.schema.toml"),
     ("UPSTREAM_SCHEMA", "upstream.schema.toml"),
