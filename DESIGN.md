@@ -275,3 +275,7 @@ Phases, in order (all complete as of 2026-07-28):
    PyPI + npm + Go module + GitHub Release assets; released-surface compatibility now governed by semver at release boundaries).
 6. ~~Then the adoption waves (wave 1, wave 2, late).~~ DONE except wavescript (BLOCKED) and the
    BetterClaude/imagine/mage checkpoints (recorded) — see the migration roadmap above.
+
+## History rewrites
+
+- A private project's name was removed from the whole pushed history in one scrub, in every letter case, file and directory names included (approved by the owner). In prose it became "a private project"; spelled as a path segment, a slug, or a quoted identifier, and as a file or directory name, it became "private-project", so the rewritten paths and the text naming them still agree. The scrub's archive is under `.strictmetadata/history-rewrites/`.
