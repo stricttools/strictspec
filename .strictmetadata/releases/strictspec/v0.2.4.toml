@@ -9,9 +9,8 @@ include = ["pypi", "go", "npm"]
 exclude = []
 description = "Clearer TOML parse errors, on go-toml-edit 0.4.0."
 context = "The Go TOML reader moved to go-toml-edit 0.4.0, whose diagnostics name tokens in plain language and report accurate byte offsets, so a syntax error in a spec file now points at the right place and reads like a sentence."
-release_commit = "c6f929df1f82bec48e2f52b9bb55cab79a59e500"
-
+release_commit = "63db192e8a612634de2462c883cd9e06791358cd"
 [released_trees]
-go = "af85542ea65e61109cb58fa3b8f7df8233b6fa8f"
-python = "0e809d16e27799e09c681505d4ff734663b48165"
-ts = "83d18103c7287732c283fefb68ca1081149fb59c"
+go = "9b5cb103f0d8e6619333adb7edbc3b6d5491acdf"
+python = "fba2dd4a8d964ac060b4657e5b0ee09332a823e7"
+ts = "06546b12b6c086d985ef62d2d67978f97a592a0c"

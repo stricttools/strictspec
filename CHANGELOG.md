@@ -4,6 +4,10 @@
 
 ## strictspec
 
+### Unreleased
+
+- No user-facing changes.
+
 ### 0.6.0
 
 The Go module gains the lifecycle-and-license library (the lifecycle package and the confidential-name index, with public-client declarations), compiles Go validators for a discriminated-union root, refuses ambiguous node-kind unions and quoted TOML dates, and prints the output of diff, doc-diff, export, and migrate --dry-run again.

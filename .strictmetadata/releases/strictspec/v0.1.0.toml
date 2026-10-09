@@ -22,9 +22,8 @@ construction.
 # preid = ""
 include = ["go", "pypi", "npm"]
 exclude = []
-release_commit = "8259f275537f764c24ffcd6cecf8a6af8ff97871"
-
+release_commit = "fb0120cb447f9207b5a6f0199384217f0fa915f7"
 [released_trees]
-go = "1937e9da194775d5ad76133c95658628820f58fc"
-python = "20de9267bda8d0f269ea6cc05f9ebba2a0bd58d0"
-ts = "16c966b65b8dc8fb63ba16df774f2e225ea998c8"
+go = "b59968bc54caacdb533114ce2b6fa9f96aa15514"
+python = "919e4afbb1496fc6b01f0287798e3aa226712e19"
+ts = "f2e0e90331374ba35da2f507c389d85c664493d2"
