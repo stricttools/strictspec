@@ -11,13 +11,12 @@ import (
 	"testing"
 )
 
-// sourceFiles parses every non-test Go file of this package and of
-// lifecycle/index.
+// sourceFiles parses every non-test Go file of this package.
 func sourceFiles(t *testing.T) map[string]*ast.File {
 	t.Helper()
 	out := map[string]*ast.File{}
 	fset := token.NewFileSet()
-	for _, dir := range []string{".", "index"} {
+	for _, dir := range []string{"."} {
 		entries, err := os.ReadDir(dir)
 		if err != nil {
 			t.Fatal(err)

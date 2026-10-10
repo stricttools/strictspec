@@ -1,12 +1,30 @@
-package index
+package confidential
 
 import (
 	"fmt"
 	"net/url"
 	"path"
+	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 )
+
+// RepositoryNames are the names of the repository whose work tree is root,
+// which an entry's except scope is matched against: the name of its root
+// directory, and, when origin (its origin remote's URL) is not empty, the last
+// path segment of the origin.
+func RepositoryNames(root, origin string) ([]string, error) {
+	names := []string{filepath.Base(filepath.Clean(root))}
+	if strings.TrimSpace(origin) != "" {
+		norm, err := NormalizeOrigin(origin)
+		if err != nil {
+			return nil, fmt.Errorf("reading the origin remote %q: %w", origin, err)
+		}
+		names = append(names, path.Base(strings.TrimPrefix(norm, "file://")))
+	}
+	return slices.Compact(names), nil
+}
 
 // scpOrigin is git's scp-like remote syntax, [user@]host:path, which git
 // reads when no slash comes before the first colon: the host may be an SSH
@@ -50,7 +68,7 @@ func NormalizeOrigin(origin string) (string, error) {
 	case "":
 		return "", fmt.Errorf("origin %q is a relative path; use the remote's URL or absolute path", origin)
 	default:
-		return "", fmt.Errorf("origin %q has the scheme %q, which the index does not read; use https, ssh, git, or file", origin, u.Scheme)
+		return "", fmt.Errorf("origin %q has the scheme %q, which is not read here; use https, ssh, git, or file", origin, u.Scheme)
 	}
 }
 
