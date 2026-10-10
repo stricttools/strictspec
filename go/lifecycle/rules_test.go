@@ -209,22 +209,58 @@ func TestPublishAllowedComposesBothPublishingRules(t *testing.T) {
 
 func TestReleaseAllowed(t *testing.T) {
 	r := parse(t, sharedRecord)
-	if err := r.ReleaseAllowed("portal", day(t, "2026-12-01")); err != nil {
+	if err := r.ReleaseAllowed("portal", day(t, "2026-12-01"), true); err != nil {
 		t.Errorf("active: %v", err)
 	}
-	if err := r.ReleaseAllowed("widget", day(t, "2026-10-31")); err != nil {
+	if err := r.ReleaseAllowed("widget", day(t, "2026-10-31"), true); err != nil {
 		t.Errorf("active before the hold: %v", err)
 	}
-	ref := refusal(t, r.ReleaseAllowed("widget", day(t, "2026-11-01")), lifecycle.RuleLifecycleAllowsRelease)
+	ref := refusal(t, r.ReleaseAllowed("widget", day(t, "2026-11-01"), true), lifecycle.RuleLifecycleAllowsRelease)
 	if ref.Subject != "widget" || !strings.Contains(ref.Detail, "on-hold") {
 		t.Errorf("on-hold refusal %v", ref)
 	}
-	ref = refusal(t, r.ReleaseAllowed("gadget", day(t, "2026-12-01")), lifecycle.RuleLifecycleAllowsRelease)
+	ref = refusal(t, r.ReleaseAllowed("gadget", day(t, "2026-12-01"), true), lifecycle.RuleLifecycleAllowsRelease)
 	if !strings.Contains(ref.Detail, "retired") {
 		t.Errorf("retired refusal %v", ref)
 	}
-	if err := r.ReleaseAllowed("unrecorded", day(t, "2026-12-01")); err != nil {
-		t.Errorf("a subject without a lifecycle period: %v", err)
+	if err := r.ReleaseAllowed("unrecorded", day(t, "2026-12-01"), true); err != nil {
+		t.Errorf("a released subject without a lifecycle period: %v", err)
+	}
+}
+
+func TestUnreleasedIsDerivedFromNoReleaseAndNoPeriod(t *testing.T) {
+	r := parse(t, sharedRecord)
+	on := day(t, "2026-12-01")
+	if got := r.StatusOn("unrecorded", on, false); got != lifecycle.StatusUnreleased {
+		t.Errorf("no period and no release: status %q, want unreleased", got)
+	}
+	if got := r.StatusOn("unrecorded", on, true); got != lifecycle.StatusActive {
+		t.Errorf("no period and a release: status %q, want active", got)
+	}
+	// An active period opened before the first release is what allows it.
+	if got := r.StatusOn("portal", on, false); got != lifecycle.StatusActive {
+		t.Errorf("an active period and no release: status %q, want active", got)
+	}
+	if got := r.StatusOn("widget", on, false); got != lifecycle.StatusOnHold {
+		t.Errorf("an on-hold period: status %q, want on-hold", got)
+	}
+	ref := refusal(t, r.ReleaseAllowed("unrecorded", on, false), lifecycle.RuleLifecycleAllowsRelease)
+	if ref.Subject != "unrecorded" || !strings.Contains(ref.Detail, "unreleased") || !strings.Contains(ref.Fix, "active lifecycle period") {
+		t.Errorf("unreleased refusal %v", ref)
+	}
+	if err := r.ReleaseAllowed("portal", on, false); err != nil {
+		t.Errorf("an active period allows the first release: %v", err)
+	}
+}
+
+func TestUnreleasedIsNeverRecorded(t *testing.T) {
+	r := parse(t, sharedRecord)
+	err := r.OpenPeriod(lifecycle.TableLifecycle, "fresh", string(lifecycle.StatusUnreleased), day(t, "2026-12-01"), "never released")
+	if err == nil {
+		t.Fatal("an unreleased period was recorded; unreleased is derived")
+	}
+	if _, err := lifecycle.Parse([]byte("format_version = 1\n[[lifecycle]]\nsubject = \"fresh\"\nstatus = \"unreleased\"\nfrom = 2026-12-01\nreason = \"x\"\n")); err == nil {
+		t.Fatal("a record holding an unreleased period parsed")
 	}
 }
 
@@ -236,7 +272,7 @@ func TestReopeningAnActivePeriodClearsTheHold(t *testing.T) {
 	if err := r.OpenPeriod(lifecycle.TableLifecycle, "widget", "active", day(t, "2026-12-01"), "resumed"); err != nil {
 		t.Fatal(err)
 	}
-	if err := r.ReleaseAllowed("widget", day(t, "2026-12-01")); err != nil {
+	if err := r.ReleaseAllowed("widget", day(t, "2026-12-01"), true); err != nil {
 		t.Fatalf("the hold did not clear: %v", err)
 	}
 }

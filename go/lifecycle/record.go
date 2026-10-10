@@ -66,6 +66,10 @@ const (
 	StatusActive  Status = "active"
 	StatusOnHold  Status = "on-hold"
 	StatusRetired Status = "retired"
+	// StatusUnreleased is derived, never recorded: the status of a subject
+	// that has no lifecycle period in effect and has never been released (see
+	// StatusOn). The record's schema refuses it as a period's status.
+	StatusUnreleased Status = "unreleased"
 )
 
 // Table names one of the record's period tables.

@@ -293,23 +293,46 @@ func (r *Record) PublishAllowed(subject string, output Output, visibility Visibi
 	return r.PrivateRepositoryOutputAllowed(output, visibility, on)
 }
 
+// StatusOn returns the subject's lifecycle status on the date of on: the
+// status of its lifecycle period in effect then; without one, active when the
+// subject has been released and unreleased when it has not. Whether it has
+// been released is the caller's to say (released), from its release record,
+// which this record does not hold. Unreleased is never recorded: a subject
+// leaves it by its first release, which an active period allows.
+func (r *Record) StatusOn(subject string, on time.Time, released bool) Status {
+	if l, ok := r.LifecycleOn(subject, on); ok {
+		return l.Status
+	}
+	if released {
+		return StatusActive
+	}
+	return StatusUnreleased
+}
+
 // ReleaseAllowed evaluates RuleLifecycleAllowsRelease: a subject whose
-// lifecycle status on the date of on is on-hold or retired is not released. A
-// subject without a lifecycle period is released.
-func (r *Record) ReleaseAllowed(subject string, on time.Time) error {
-	l, ok := r.LifecycleOn(subject, on)
-	if !ok || l.Status == StatusActive {
+// lifecycle status on the date of on (see StatusOn) is on-hold, retired, or
+// unreleased is not released. released says whether the subject's release
+// record holds a release.
+func (r *Record) ReleaseAllowed(subject string, on time.Time, released bool) error {
+	status := r.StatusOn(subject, on, released)
+	if status == StatusActive {
 		return nil
 	}
+	l, _ := r.LifecycleOn(subject, on)
 	fix := "Open an active lifecycle period for the subject before releasing it."
-	if l.Status == StatusRetired {
+	detail := fmt.Sprintf("the lifecycle status is %s, so it is not released", status)
+	switch status {
+	case StatusRetired:
 		fix = "A retired subject's release history is a record, not something to release from; open an active lifecycle period first if the subject returns."
+	case StatusUnreleased:
+		detail = "the lifecycle status is unreleased (it has never been released and no lifecycle period is in effect), so it is not released"
+		fix = "Its first release is a deliberate decision: open an active lifecycle period for the subject first."
 	}
 	return &Refusal{
 		Rule:    RuleLifecycleAllowsRelease,
 		Subject: subject,
 		Period:  l.Period,
-		Detail:  fmt.Sprintf("the lifecycle status is %s, so it is not released", l.Status),
+		Detail:  detail,
 		Fix:     fix,
 	}
 }
