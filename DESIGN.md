@@ -291,3 +291,13 @@ The `confidential` package of the Go module reads the owner's confidential-term 
 - **Scope.** An `except` entry names repositories by their directory's name or their `origin` remote's last path segment, the names `RepositoryNames` gives.
 - **Hit ids.** 16 hexadecimal digits of the SHA-256 of the entry, the lowered matched text, and up to six lowered words after it on its line. Words before the match are left out so the same phrase keeps its id where a rendering puts other text before it (a JSON changelog line, a Markdown list item, a Release body). Ids name no confidential text.
 - **Resolutions.** `.strictmetadata/confidential-hits/resolutions.toml`, owned by strictspec (`manifest.toml` names it) because more than one tool reads it; a resolution is a false positive (certainty 70 to 100) or an approval (no certainty), with a one-line reason and the day. A reason carrying a term is refused, and the location is recorded redacted, since the file is committed.
+
+## The unreleased lifecycle status
+
+Owner ruling: a releasable that has never been released is `unreleased`, and its releases are refused. The status is derived, never recorded: a subject with no lifecycle period in effect is active when its release record holds a release and unreleased when it does not. An active lifecycle period, recorded deliberately (rlsbl's `transition lifecycle`), is what allows a first release. A released subject keeps releasing as before. The recorded statuses stay `active`, `on-hold`, and `retired`.
+
+Implementation decisions made while building it, not owner rulings:
+
+- **The schema is unchanged.** `unreleased` is a `Status` constant (`StatusUnreleased`) for callers to compare against, and the built-in schema's status enum still refuses it, so no record can hold an unreleased period.
+- **The release record is the caller's.** The lifecycle record does not know what was released, so `StatusOn` and `ReleaseAllowed` take `released`, whether the subject's release record holds a release. A member's caller passes its releasable's.
+- **The refusal names no tool.** `ReleaseAllowed`'s fix says to open an active lifecycle period; the tool refusing the release names its own command for it.
