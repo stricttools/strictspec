@@ -84,7 +84,7 @@
   },
   "project_id": "github.com/stricttools/strictspec/go",
   "name": "strictspec",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "help": "strictspec: strict, byte-identical schema validation and code generation",
   "commands": {
     "gen": {

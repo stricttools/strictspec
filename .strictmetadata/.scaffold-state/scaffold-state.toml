@@ -1,5 +1,5 @@
 format_version = 1
-rlsbl_version = "0.131.0"
+rlsbl_version = "0.132.1"
 
 [files]
 "conformance/.github/workflows/publish.yml" = "7323380d94b523961aeaff046c004ccbdfd91cd918817a6e91685455b5a987bd"

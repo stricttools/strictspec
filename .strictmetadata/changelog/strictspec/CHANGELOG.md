@@ -2,9 +2,21 @@
 
 # Changelog
 
-## Unreleased
+## 0.7.0
 
-- No user-facing changes.
+The Go module gains the confidential package, which reads the age-encrypted confidential-term list and a repository's resolutions of its hits; the machine-local confidential-name index is removed, and the lifecycle-and-license record holds license and lifecycle facts only.
+
+<details>
+<summary>Context</summary>
+
+Confidential terms now live in one encrypted list outside every repository, and a release scans what it pushes or publishes against it, judging each hit. Only the Go module is released: the Python and TypeScript implementations are paused while the tools are rewritten in Go, and carry only the regenerated built-in schema.
+
+</details>
+
+### Breaking
+
+- [go-strictspec, py-strictspec, ts-strictspec] **The lifecycle-and-license record holds license and lifecycle facts only.** `codenames`, `distinctive_terms`, and `[[public_clients]]` are refused as unknown keys, and the `confidential-names` rule, `ConfidentialNames`, `DeclarePublicClient`, and `ClearConfidentialTerms` are removed; delete those fields from a record and keep confidential terms in the confidential-term list.
+- [go-strictspec] **New `confidential` package; the confidential-name index is removed.** The package decrypts the age-encrypted confidential-term list in memory, finds its terms and patterns ignoring case with per-repository scopes, gives each hit an id that stays the same across renderings, and reads and writes a repository's resolutions in `.strictmetadata/confidential-hits/`. The `lifecycle/index` package and its machine-local index file are gone.
 
 ## 0.6.0
 

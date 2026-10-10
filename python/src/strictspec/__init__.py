@@ -37,7 +37,7 @@ from . import _tomldoc as _tomldoc
 # generated code: pairing is on the generated-code format below, never on this
 # string, so no tool may derive a dependency floor from the GENERATED_BY constant
 # a generated file carries.
-__version__ = "0.6.0"
+__version__ = "0.7.0"
 Version = __version__
 
 # The inclusive range of generated-code formats this runtime reads. The
