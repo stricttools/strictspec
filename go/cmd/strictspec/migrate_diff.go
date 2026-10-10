@@ -25,8 +25,7 @@ import (
 func migrateHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strictcli.Outcome {
 	schemaPath := strictcli.Get[string](kwargs, "schema")
 	to := int64(strictcli.Get[int](kwargs, "to"))
-	// Absence means the current directory, exactly as --migrations' help declares.
-	migDir := optStr(kwargs, "migrations", ".")
+	migDir := strictcli.Get[string](kwargs, "migrations")
 	// --dry-run is framework-owned; it is never declared and arrives on ctx.
 	// A variadic ArgRequired() already means at least one document.
 	dryRun := ctx.DryRun()
@@ -146,8 +145,8 @@ func diffHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strictcl
 	// invocation named, and it fails as one when it is opened.
 	migPath, haveMig := strictcli.GetOpt[string](kwargs, "migration")
 	adjPath, haveAdj := strictcli.GetOpt[string](kwargs, "adjudication")
-	// diff is read_only, so --same-version and --corpus-root may (and do) carry
-	// declared defaults; the framework always supplies them.
+	// --same-version carries a declared default (diff is read_only); --corpus-root
+	// is required, so the invocation always states it.
 	sameVersionFlag := strictcli.Get[bool](kwargs, "same_version")
 	root := strictcli.Get[string](kwargs, "corpus_root")
 

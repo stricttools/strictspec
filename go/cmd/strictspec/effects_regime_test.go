@@ -198,38 +198,25 @@ func TestExportRefusesAnExplicitEmptyOutputPath(t *testing.T) {
 	}
 }
 
-// The optional switches on the mutating commands resolve absence to the
-// fallback their own help declares -- gen/init to strictspec.toml, migrate's
-// --migrations to the current directory.
-func TestOptionalFallbacksMatchTheirHelpText(t *testing.T) {
-	dir := t.TempDir()
-	cwd, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
+// The path flags that used to fall back to a value nobody stated are required:
+// gen and init refuse a missing --manifest, migrate a missing --migrations, and
+// diff a missing --corpus-root, each naming the flag.
+func TestPathFlagsAreRequired(t *testing.T) {
+	cases := map[string][]string{
+		"manifest":    {"init"},
+		"migrations":  {"migrate", "schema.toml", "doc.json", "--to", "2"},
+		"corpus-root": {"diff", "old.toml", "new.toml", "--corpus", "*.json"},
 	}
-	if err := os.Chdir(dir); err != nil {
-		t.Fatal(err)
+	for flag, argv := range cases {
+		r := newApp().Test(argv)
+		if r.ExitCode == 0 {
+			t.Fatalf("%v without --%s must be refused", argv, flag)
+		}
+		if !strings.Contains(r.Stderr, flag) {
+			t.Fatalf("%v: the refusal must name --%s, stderr:\n%s", argv, flag, r.Stderr)
+		}
 	}
-	t.Cleanup(func() { _ = os.Chdir(cwd) })
-
-	// init with no --manifest scaffolds ./strictspec.toml.
-	if r := newApp().Test([]string{"init"}); r.ExitCode != 0 {
-		t.Fatalf("init exit = %d: %s", r.ExitCode, r.Stderr)
-	}
-	if _, err := os.Stat(filepath.Join(dir, "strictspec.toml")); err != nil {
-		t.Fatalf("init with no --manifest must write ./strictspec.toml: %v", err)
-	}
-
-	// migrate with no --migrations reads the current directory.
-	writeFile(t, filepath.Join(dir, "schema.toml"), budgetV2Schema)
-	writeFile(t, filepath.Join(dir, "budget.migration.toml"), budgetMigrationFile)
-	writeFile(t, filepath.Join(dir, "doc.json"), docV1JSON)
-	r := newApp().Test([]string{"migrate", "schema.toml", "doc.json", "--to", "2"})
-	if r.ExitCode != 0 {
-		t.Fatalf("migrate with no --migrations exit = %d: %s", r.ExitCode, r.Stderr)
-	}
-	got, _ := os.ReadFile(filepath.Join(dir, "doc.json"))
-	if string(got) != docV2ExpectedJSON {
-		t.Fatalf("migrated bytes:\n%s", got)
+	if r := newApp().Test([]string{"gen"}); r.ExitCode == 0 || !strings.Contains(r.Stderr, "manifest") {
+		t.Fatalf("gen without --manifest must be refused naming it, exit %d, stderr:\n%s", r.ExitCode, r.Stderr)
 	}
 }

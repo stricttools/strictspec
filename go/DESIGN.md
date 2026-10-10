@@ -33,9 +33,9 @@ Every command declares its effect classification. `gen`, `init`, `export` and `m
 framework-owned `--dry-run` is available on all four and records what would happen instead of
 performing it; `validate`, `check`, `diff` and `doc-diff` are `read_only`. A mutating command
 may declare no value default (a value the framework picked is a value the framework writes),
-so `gen --manifest`, `init --manifest`, `export --output` and `migrate --migrations` are
-declared optional and name their fallback in their own help text. Absence is delivered as
-absence throughout: no flag reads an empty string as "not supplied".
+so `gen --manifest`, `init --manifest` and `migrate --migrations` are required (as is
+`diff --corpus-root`), and `export --output` is optional, its absence meaning stdout. Absence
+is delivered as absence throughout: no flag reads an empty string as "not supplied".
 
 - `strictspec gen` — generate from the manifest. Output files land chmod 444 (selfdoc
   convention); gen chmods before overwrite. Every generated file carries the ecosystem's

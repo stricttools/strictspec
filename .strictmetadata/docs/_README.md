@@ -47,9 +47,9 @@ Generation is file-driven: a `strictspec.toml` manifest names each schema and
 the targets it generates.
 
 ```
-strictspec init      # scaffold strictspec.toml
-strictspec gen       # generate validators for every declared target
-strictspec check     # schema authoring validity + generated-code freshness
+strictspec init --manifest strictspec.toml   # scaffold strictspec.toml
+strictspec gen --manifest strictspec.toml    # generate validators for every declared target
+strictspec check                             # schema authoring validity + generated-code freshness
 ```
 
 Documents are validated against a schema directly, with an explicit choice of

@@ -27,7 +27,7 @@ import (
 // --- gen --------------------------------------------------------------------
 
 func genHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strictcli.Outcome {
-	manifestPath := optStr(kwargs, "manifest", "strictspec.toml")
+	manifestPath := strictcli.Get[string](kwargs, "manifest")
 	m, err := manifest.Load(manifestPath)
 	if err != nil {
 		ctx.Error(err.Error())
@@ -534,7 +534,7 @@ func checkMigrationFiles(ctx *strictcli.Context, dir string) bool {
 // --- init -------------------------------------------------------------------
 
 func initHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strictcli.Outcome {
-	manifestPath := optStr(kwargs, "manifest", "strictspec.toml")
+	manifestPath := strictcli.Get[string](kwargs, "manifest")
 	if _, err := os.Stat(manifestPath); err == nil {
 		ctx.Error(fmt.Sprintf("%s already exists (init refuses to overwrite)", manifestPath))
 		return strictcli.Exit(1)

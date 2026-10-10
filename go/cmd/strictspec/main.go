@@ -11,8 +11,8 @@
 // `ctx.Effects()`, so `--dry-run` -- which is framework-owned, never declared --
 // records what would happen instead of performing it. A mutating command may
 // not declare a value default for any flag or arg (strictcli's mutating-default
-// ban), so each of their optional switches declares Optional() and NAMES its
-// fallback in its own help text; optStr resolves absence to that fallback.
+// ban): --manifest and --migrations are required, so the invocation states every
+// path they write from; export's --output is optional, its absence meaning stdout.
 package main
 
 import (
@@ -74,8 +74,8 @@ func newApp() *strictcli.App {
 		strictcli.WithEffect(strictcli.EffectMutating),
 		strictcli.WithFlags(
 			strictcli.StringFlag("manifest",
-				"Path to the strictspec.toml manifest; omitted means strictspec.toml",
-				strictcli.Optional()),
+				"Path to the strictspec.toml manifest, such as strictspec.toml",
+				strictcli.Required()),
 		),
 	)
 
@@ -109,8 +109,8 @@ func newApp() *strictcli.App {
 		strictcli.WithEffect(strictcli.EffectMutating),
 		strictcli.WithFlags(
 			strictcli.StringFlag("manifest",
-				"Path to the strictspec.toml manifest to create; omitted means strictspec.toml",
-				strictcli.Optional()),
+				"Path to the strictspec.toml manifest to create, such as strictspec.toml",
+				strictcli.Required()),
 		),
 	)
 
@@ -141,8 +141,8 @@ func newApp() *strictcli.App {
 			strictcli.IntFlag("to", "Target format_version (must equal the schema's current format_version)",
 				strictcli.Required()),
 			strictcli.StringFlag("migrations",
-				"Directory of *.migration.toml files forming the chain; omitted means the current directory",
-				strictcli.Optional()),
+				"Directory of *.migration.toml files forming the chain (. for the current directory)",
+				strictcli.Required()),
 		),
 	)
 
@@ -158,8 +158,8 @@ func newApp() *strictcli.App {
 		strictcli.WithFlags(
 			strictcli.StringFlag("corpus", "Corpus glob (anchored at --corpus-root, lexicographic)",
 				strictcli.Required()),
-			strictcli.StringFlag("corpus-root", "Root the corpus glob is anchored at",
-				strictcli.Default(".")),
+			strictcli.StringFlag("corpus-root", "Root the corpus glob is anchored at (. for the current directory)",
+				strictcli.Required()),
 			strictcli.StringFlag("migration", "Path to the migration file between the two versions",
 				strictcli.Optional()),
 			strictcli.StringFlag("adjudication", "Path to a committed adjudication file to acknowledge",
@@ -180,23 +180,4 @@ func newApp() *strictcli.App {
 	)
 
 	return app
-}
-
-// optStr resolves an optional flag's absence to the fallback its own help text
-// declares. strictcli's mutating-default ban forbids Default() on any flag or
-// arg of a command declaring effect="mutating" -- absence must never resolve to
-// a value the invocation did not state, because on a mutating command a value
-// the framework picked is a value the framework writes. Every strictspec switch
-// that used to carry a Default() on a mutating command now declares Optional()
-// and names its fallback in its help, and this is the only place where absence
-// becomes that fallback.
-//
-// It goes through GetOpt rather than reading the map directly, so an undeclared
-// name still panics and a wrong type still panics: only a DECLARED optional
-// flag's absence resolves to the fallback.
-func optStr(kwargs map[string]interface{}, name, fallback string) string {
-	if v, ok := strictcli.GetOpt[string](kwargs, name); ok {
-		return v
-	}
-	return fallback
 }

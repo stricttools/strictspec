@@ -240,7 +240,7 @@ def emit_sources() -> dict[str, str]:
             if path.is_file():
                 shutil.copyfile(path, work / path.name)
         (work / "strictspec.toml").write_text(_MANIFEST.format(schema=PIN_SCHEMA))
-        _run([str(cli), "gen"], cwd=work, label="gen")
+        _run([str(cli), "gen", "--manifest", "strictspec.toml"], cwd=work, label="gen")
         return {
             lang: (work / rel).read_text(encoding="utf-8")
             for lang, rel in _EMITTED_FILES.items()
