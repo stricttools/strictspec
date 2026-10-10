@@ -83,6 +83,21 @@ func (m *Matcher) Scan(where, text string) []Hit {
 	return out
 }
 
+// Terms are the literal terms of the entries that apply, and whether every
+// entry that applies is a literal: a caller may then prefilter with a
+// fixed-string search that ignores case.
+func (m *Matcher) Terms() (terms []string, allLiteral bool) {
+	allLiteral = true
+	for _, e := range m.entries {
+		if e.Pattern != "" {
+			allLiteral = false
+			continue
+		}
+		terms = append(terms, e.Term)
+	}
+	return terms, allLiteral
+}
+
 // Contains reports whether text holds any hit.
 func (m *Matcher) Contains(text string) bool {
 	for _, e := range m.entries {

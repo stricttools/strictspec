@@ -38,16 +38,16 @@ const (
 
 const storeManifestContent = "owner = \"strictspec\"\n"
 
-// ResolutionKind is how a hit was resolved.
-type ResolutionKind string
+// Decision is how a hit was resolved.
+type Decision string
 
 const (
 	// FalsePositive is the agent's judgment, at least MinimumCertainty
 	// percent certain, that the hit is not confidential.
-	FalsePositive ResolutionKind = "false-positive"
+	FalsePositive Decision = "false-positive"
 	// Approved is the owner's approval to publish the hit anyway, with the
 	// owner's reason.
-	Approved ResolutionKind = "approved"
+	Approved Decision = "approved"
 )
 
 // Resolution is one recorded resolution of a hit.
@@ -57,7 +57,7 @@ type Resolution struct {
 	// Location is where the hit was when it was resolved, redacted so it
 	// carries no confidential text.
 	Location string
-	Kind     ResolutionKind
+	Decision Decision
 	// Certainty is the agent's certainty, in percent, that the hit is a
 	// false positive; zero for an approval.
 	Certainty int
@@ -129,7 +129,7 @@ func ParseResolutions(data []byte) ([]Resolution, error) {
 		res := Resolution{
 			Hit:      r.Hit,
 			Location: r.Location,
-			Kind:     ResolutionKind(r.Resolution),
+			Decision: Decision(r.Resolution),
 			Reason:   r.Reason,
 			Recorded: fmt.Sprintf("%04d-%02d-%02d", r.Recorded.Year, r.Recorded.Month, r.Recorded.Day),
 		}
@@ -158,7 +158,7 @@ func (r Resolution) problems(certaintySet bool) []string {
 	if !ValidID(r.Hit) {
 		problems = append(problems, fmt.Sprintf("hit %q is not a hit id (%d lowercase hexadecimal digits)", r.Hit, IDLength))
 	}
-	switch r.Kind {
+	switch r.Decision {
 	case FalsePositive:
 		if !certaintySet || r.Certainty < MinimumCertainty || r.Certainty > 100 {
 			problems = append(problems, fmt.Sprintf("a false positive carries a certainty from %d to 100 (percent); a hit judged less certain goes to the owner", MinimumCertainty))
@@ -168,7 +168,7 @@ func (r Resolution) problems(certaintySet bool) []string {
 			problems = append(problems, "an approval carries no certainty: the owner approved publishing the hit")
 		}
 	default:
-		problems = append(problems, fmt.Sprintf("resolution %q is not one of %q and %q", r.Kind, FalsePositive, Approved))
+		problems = append(problems, fmt.Sprintf("resolution %q is not one of %q and %q", r.Decision, FalsePositive, Approved))
 	}
 	if strings.TrimSpace(r.Reason) == "" || strings.ContainsAny(r.Reason, "\r\n") {
 		problems = append(problems, "reason is one non-empty line")
@@ -184,7 +184,7 @@ func (r Resolution) problems(certaintySet bool) []string {
 // MinimumCertainty is refused: that hit goes to the owner. A reason carrying
 // a hit of m is refused, since the resolution is committed.
 func NewFalsePositive(m *Matcher, hit Hit, certainty int, reason string, on time.Time) (Resolution, error) {
-	r := Resolution{Hit: hit.ID, Location: m.Redact(hit.location()), Kind: FalsePositive, Certainty: certainty, Reason: strings.TrimSpace(reason), Recorded: on.Format("2006-01-02")}
+	r := Resolution{Hit: hit.ID, Location: m.Redact(hit.location()), Decision: FalsePositive, Certainty: certainty, Reason: strings.TrimSpace(reason), Recorded: on.Format("2006-01-02")}
 	if certainty < MinimumCertainty || certainty > 100 {
 		return Resolution{}, fmt.Errorf("a hit is judged a false positive only at a certainty from %d to 100 percent, not %d; a hit you are less certain of goes to the owner, who has it fixed or approves publishing it", MinimumCertainty, certainty)
 	}
@@ -195,12 +195,12 @@ func NewFalsePositive(m *Matcher, hit Hit, certainty int, reason string, on time
 // reason, recorded on the day of on. A reason carrying a hit of m is refused,
 // since the approval is committed.
 func NewApproval(m *Matcher, hit Hit, reason string, on time.Time) (Resolution, error) {
-	r := Resolution{Hit: hit.ID, Location: m.Redact(hit.location()), Kind: Approved, Reason: strings.TrimSpace(reason), Recorded: on.Format("2006-01-02")}
+	r := Resolution{Hit: hit.ID, Location: m.Redact(hit.location()), Decision: Approved, Reason: strings.TrimSpace(reason), Recorded: on.Format("2006-01-02")}
 	return r, r.newProblems(m)
 }
 
 func (r Resolution) newProblems(m *Matcher) error {
-	problems := r.problems(r.Kind == FalsePositive)
+	problems := r.problems(r.Decision == FalsePositive)
 	if m.Contains(r.Reason) {
 		problems = append(problems, "the reason carries a confidential term, and the resolution is committed; reword it without the term")
 	}
@@ -222,7 +222,7 @@ func (h Hit) location() string {
 func AddResolution(w Writer, root string, existing []Resolution, r Resolution) error {
 	for _, e := range existing {
 		if e.Hit == r.Hit {
-			return fmt.Errorf("the hit %s is resolved already (%s, recorded %s); %s holds one resolution per hit", r.Hit, e.Kind, e.Recorded, StoreFile)
+			return fmt.Errorf("the hit %s is resolved already (%s, recorded %s); %s holds one resolution per hit", r.Hit, e.Decision, e.Recorded, StoreFile)
 		}
 	}
 	all := append(append([]Resolution(nil), existing...), r)
@@ -269,8 +269,8 @@ func RenderResolution(table string, r Resolution) string {
 	fmt.Fprintf(&b, "\n[[%s]]\n", table)
 	fmt.Fprintf(&b, "hit = %s\n", tomledit.QuoteString(r.Hit))
 	fmt.Fprintf(&b, "location = %s\n", tomledit.QuoteString(r.Location))
-	fmt.Fprintf(&b, "resolution = %s\n", tomledit.QuoteString(string(r.Kind)))
-	if r.Kind == FalsePositive {
+	fmt.Fprintf(&b, "resolution = %s\n", tomledit.QuoteString(string(r.Decision)))
+	if r.Decision == FalsePositive {
 		fmt.Fprintf(&b, "certainty = %d\n", r.Certainty)
 	}
 	fmt.Fprintf(&b, "reason = %s\n", tomledit.QuoteString(r.Reason))

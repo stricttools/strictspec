@@ -73,7 +73,36 @@ func (o Outcome) Find(id string) []Hit {
 // the entry that matched and every occurrence with its location and the text
 // around it.
 func (o Outcome) ReportUnresolved() string {
-	return report(o.Unresolved)
+	var b strings.Builder
+	for _, r := range o.UnresolvedReports() {
+		b.WriteString("  - " + r + "\n")
+	}
+	return b.String()
+}
+
+// UnresolvedReports are the unresolved hits, one report per id: the id, the
+// entry that matched, and every occurrence with its location and the text
+// around it, one per line.
+func (o Outcome) UnresolvedReports() []string {
+	var ids []string
+	byID := map[string][]Hit{}
+	for _, h := range o.Unresolved {
+		if _, ok := byID[h.ID]; !ok {
+			ids = append(ids, h.ID)
+		}
+		byID[h.ID] = append(byID[h.ID], h)
+	}
+	out := make([]string, 0, len(ids))
+	for _, id := range ids {
+		hs := byID[id]
+		var b strings.Builder
+		fmt.Fprintf(&b, "hit %s (%s):", id, hs[0].Entry.Describe())
+		for _, h := range hs {
+			fmt.Fprintf(&b, "\n      %s, line %d, column %d: %s", h.Where, h.Line, h.Column, h.Context)
+		}
+		out = append(out, b.String())
+	}
+	return out
 }
 
 // ReportResolved lists every resolved hit's id with its resolution: what the
@@ -82,31 +111,11 @@ func (o Outcome) ReportUnresolved() string {
 func (o Outcome) ReportResolved() string {
 	var b strings.Builder
 	for _, r := range o.Used() {
-		switch r.Kind {
+		switch r.Decision {
 		case FalsePositive:
 			fmt.Fprintf(&b, "  - hit %s at %s: passed over as a false positive (%d%% certain): %s\n", r.Hit, r.Location, r.Certainty, r.Reason)
 		default:
 			fmt.Fprintf(&b, "  - hit %s at %s: published with the owner's approval: %s\n", r.Hit, r.Location, r.Reason)
-		}
-	}
-	return b.String()
-}
-
-func report(hits []Hit) string {
-	var ids []string
-	byID := map[string][]Hit{}
-	for _, h := range hits {
-		if _, ok := byID[h.ID]; !ok {
-			ids = append(ids, h.ID)
-		}
-		byID[h.ID] = append(byID[h.ID], h)
-	}
-	var b strings.Builder
-	for _, id := range ids {
-		hs := byID[id]
-		fmt.Fprintf(&b, "  - hit %s (%s):\n", id, hs[0].Entry.Describe())
-		for _, h := range hs {
-			fmt.Fprintf(&b, "      %s, line %d, column %d: %s\n", h.Where, h.Line, h.Column, h.Context)
 		}
 	}
 	return b.String()
