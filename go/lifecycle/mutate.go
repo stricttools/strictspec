@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	tomledit "github.com/stricttools/go-toml-edit"
@@ -319,45 +318,6 @@ func (r *Record) AddUnversionedTag(tag, reason string, recorded time.Time) error
 			p+"reason", reason,
 			p+"recorded", localDate(recorded),
 		)
-	})
-}
-
-// DeclarePublicClient records that subject has, or will have, a public
-// client, so its registry names and the repository's names leave the
-// confidential-name index. reason is required; a subject declared already is
-// refused. Whether the subject is one the record knows, and whether the
-// repository is confidential, is checked by Validate.
-func (r *Record) DeclarePublicClient(subject, reason string, declared time.Time) error {
-	if declared.IsZero() {
-		return fmt.Errorf("declaring a public client of %q needs its declared date", subject)
-	}
-	if strings.TrimSpace(reason) == "" {
-		return fmt.Errorf("declaring a public client of %q needs a reason", subject)
-	}
-	return r.edit(func(d *tomledit.Document) error {
-		if err := d.NewArrayTable("public_clients"); err != nil {
-			return fmt.Errorf("adding a [[public_clients]] entry: %w", err)
-		}
-		p := "public_clients[-1]."
-		return set(d,
-			p+"subject", subject,
-			p+"reason", reason,
-			p+"declared", localDate(declared),
-		)
-	})
-}
-
-// ClearConfidentialTerms removes the codenames, the distinctive terms, and the
-// public-client declarations, which a public repository may not hold, as a
-// declassification does.
-func (r *Record) ClearConfidentialTerms() error {
-	return r.edit(func(d *tomledit.Document) error {
-		for _, key := range []string{"codenames", "distinctive_terms", "public_clients"} {
-			if err := d.Delete(key); err != nil {
-				return err
-			}
-		}
-		return nil
 	})
 }
 

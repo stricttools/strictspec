@@ -197,19 +197,6 @@ func TestPendingIdentitiesAndTheirConversion(t *testing.T) {
 	}
 }
 
-func TestClearConfidentialTerms(t *testing.T) {
-	r := parse(t, sharedRecord)
-	if err := r.ClearConfidentialTerms(); err != nil {
-		t.Fatal(err)
-	}
-	if len(r.Codenames()) != 0 || len(r.DistinctiveTerms()) != 0 {
-		t.Fatal("terms remain")
-	}
-	if strings.Contains(bytesOf(t, r), "Bluebird") {
-		t.Fatal("the written record keeps a codename")
-	}
-}
-
 func TestWriteGoesThroughTheWriterOnly(t *testing.T) {
 	root := t.TempDir()
 	r, err := lifecycle.Load(root)
@@ -359,26 +346,5 @@ reason = "a"
 		if id.Value == "portal-client" && id.Registry == "npm" && !id.Open() {
 			t.Errorf("closing the pypi identity closed the npm one: %+v", id)
 		}
-	}
-}
-
-func TestDeclarePublicClient(t *testing.T) {
-	r := parse(t, sharedRecord)
-	if err := r.DeclarePublicClient("portal", "", day(t, "2026-11-01")); err == nil {
-		t.Error("an empty reason was accepted")
-	}
-	if err := r.DeclarePublicClient("portal", "a thin public client is planned", day(t, "2026-11-01")); err != nil {
-		t.Fatal(err)
-	}
-	if err := r.DeclarePublicClient("portal", "again", day(t, "2026-11-02")); err == nil {
-		t.Error("a second declaration for the subject was accepted")
-	}
-	got := r.PublicClients()
-	if len(got) != 1 || got[0].Subject != "portal" || !got[0].Declared.Equal(day(t, "2026-11-01")) {
-		t.Fatalf("public clients %+v", got)
-	}
-	written := bytesOf(t, r)
-	if !strings.Contains(written, "[[public_clients]]\nsubject = \"portal\"\nreason = \"a thin public client is planned\"\ndeclared = 2026-11-01") {
-		t.Fatalf("the written record does not hold the declaration:\n%s", written)
 	}
 }

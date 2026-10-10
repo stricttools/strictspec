@@ -14,26 +14,18 @@ func TestValidateAcceptsTheSharedRecordWhileConfidential(t *testing.T) {
 	}
 }
 
-func TestCodenamesAndTermsAreRefusedWhilePublic(t *testing.T) {
-	r := parse(t, sharedRecord)
-	err := r.Validate(day(t, "2026-05-01"), []string{"portal", "widget"})
-	if err == nil {
-		t.Fatal("codenames accepted while the repository is public")
-	}
-	for _, want := range []string{"codenames (Bluebird)", "distinctive_terms (hyperlattice)"} {
-		if !strings.Contains(err.Error(), want) {
-			t.Errorf("error does not name %q: %v", want, err)
+func TestConfidentialTermFieldsAreRefused(t *testing.T) {
+	// The record holds license and lifecycle facts only: confidential terms
+	// live in the confidential-term list, never in a record.
+	for _, field := range []string{
+		"codenames = [\"Bluebird\"]\n",
+		"distinctive_terms = [\"hyperlattice\"]\n",
+		"[[public_clients]]\nsubject = \"portal\"\nreason = \"a client is planned\"\ndeclared = 2026-11-01\n",
+	} {
+		src := strings.Replace(sharedRecord, "format_version = 1\n", "format_version = 1\n"+field+"\n", 1)
+		if _, err := lifecycle.Parse([]byte(src)); err == nil {
+			t.Errorf("a record holding %q was accepted", field)
 		}
-	}
-}
-
-func TestRemovingTheTermsClearsThePublicRefusal(t *testing.T) {
-	r := parse(t, sharedRecord)
-	if err := r.ClearConfidentialTerms(); err != nil {
-		t.Fatal(err)
-	}
-	if err := r.Validate(day(t, "2026-05-01"), []string{"portal", "widget"}); err != nil {
-		t.Fatalf("the refusal did not clear: %v", err)
 	}
 }
 
@@ -122,59 +114,5 @@ func TestTheMinimalRecordHasNoSubjectsAndIsValid(t *testing.T) {
 	}
 	if r.Confidential(day(t, "2026-10-07")) {
 		t.Fatal("the minimal record is confidential")
-	}
-}
-
-func TestAPublicClientOfASubjectTheRecordDoesNotKnowIsRefused(t *testing.T) {
-	_, err := lifecycle.Parse([]byte(sharedRecord + `
-[[public_clients]]
-subject = "gizmo"
-reason = "a client is planned"
-declared = 2026-11-01
-`))
-	if err == nil || !strings.Contains(err.Error(), `public_clients: subject "gizmo"`) {
-		t.Fatalf("want a refusal naming gizmo, got %v", err)
-	}
-}
-
-func TestAPublicClientIsRefusedWhilePublicAndClearedWithTheTerms(t *testing.T) {
-	r := parse(t, sharedRecord+`
-[[public_clients]]
-subject = "portal"
-reason = "a client is planned"
-declared = 2026-11-01
-`)
-	if err := r.Validate(day(t, "2026-12-01"), []string{"portal", "widget"}); err != nil {
-		t.Fatalf("a public client of a known subject in a confidential repository was refused: %v", err)
-	}
-	err := r.Validate(day(t, "2026-05-01"), []string{"portal", "widget"})
-	if err == nil || !strings.Contains(err.Error(), "public_clients (portal)") {
-		t.Fatalf("want a refusal naming the public client while public, got %v", err)
-	}
-	if err := r.ClearConfidentialTerms(); err != nil {
-		t.Fatal(err)
-	}
-	if err := r.Validate(day(t, "2026-05-01"), []string{"portal", "widget"}); err != nil {
-		t.Fatalf("clearing the confidential declarations did not clear the refusal: %v", err)
-	}
-	if len(r.PublicClients()) != 0 {
-		t.Fatalf("public clients remain: %+v", r.PublicClients())
-	}
-}
-
-func TestASubjectDeclaresOnePublicClient(t *testing.T) {
-	src := sharedRecord + `
-[[public_clients]]
-subject = "portal"
-reason = "a"
-declared = 2026-11-01
-
-[[public_clients]]
-subject = "portal"
-reason = "b"
-declared = 2026-11-02
-`
-	if _, err := lifecycle.Parse([]byte(src)); err == nil || !strings.Contains(err.Error(), `public_clients: subject "portal" is declared more than once`) {
-		t.Fatalf("want a duplicate refusal, got %v", err)
 	}
 }

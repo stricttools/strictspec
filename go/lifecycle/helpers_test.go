@@ -101,8 +101,6 @@ func refusal(t *testing.T, err error, rule lifecycle.Rule) *lifecycle.Refusal {
 // The record most rule tests share: portal is proprietary from 2026-10-07,
 // widget is MIT throughout, gadget is retired.
 const sharedRecord = `format_version = 1
-codenames = ["Bluebird"]
-distinctive_terms = ["hyperlattice"]
 
 [[lifecycle]]
 subject = "portal"

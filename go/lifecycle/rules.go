@@ -15,7 +15,6 @@ import (
 //   - RuleProprietaryRefusesPublicOutput: (*Record).PublicOutputAllowed
 //   - RulePrivateRepositoryPublishing: (*Record).PrivateRepositoryOutputAllowed
 //   - RuleLifecycleAllowsRelease: (*Record).ReleaseAllowed
-//   - RuleConfidentialNames: (*Record).ConfidentialNames
 //   - RuleProprietaryHistoryIsSquashed: (*Record).ProprietaryPeriods
 //   - RuleIdentityOwnsItsTags: (*Record).TagOwner
 //   - RuleRegistryNamesAreHeld: (*Record).CheckRegistryNamesHeld
@@ -27,7 +26,6 @@ const (
 	RuleProprietaryRefusesPublicOutput Rule = "proprietary-refuses-public-output"
 	RulePrivateRepositoryPublishing    Rule = "private-repository-publishing"
 	RuleLifecycleAllowsRelease         Rule = "lifecycle-allows-release"
-	RuleConfidentialNames              Rule = "confidential-names"
 	RuleProprietaryHistoryIsSquashed   Rule = "proprietary-history-is-squashed"
 	RuleIdentityOwnsItsTags            Rule = "identity-owns-its-tags"
 	RuleRegistryNamesAreHeld           Rule = "registry-names-are-held"
@@ -52,7 +50,6 @@ var ruleClasses = map[Rule]RuleClass{
 	RuleProprietaryRefusesPublicOutput: WhileValueHolds,
 	RulePrivateRepositoryPublishing:    WhileValueHolds,
 	RuleLifecycleAllowsRelease:         WhileValueHolds,
-	RuleConfidentialNames:              WhileValueHolds,
 	RuleProprietaryHistoryIsSquashed:   OverCreatedDuringPeriod,
 	RuleIdentityOwnsItsTags:            OverCreatedDuringPeriod,
 	RuleRegistryNamesAreHeld:           PermanentOnceTriggered,
@@ -66,7 +63,6 @@ func Rules() []Rule {
 		RuleProprietaryRefusesPublicOutput,
 		RulePrivateRepositoryPublishing,
 		RuleLifecycleAllowsRelease,
-		RuleConfidentialNames,
 		RuleProprietaryHistoryIsSquashed,
 		RuleIdentityOwnsItsTags,
 		RuleRegistryNamesAreHeld,
@@ -316,79 +312,6 @@ func (r *Record) ReleaseAllowed(subject string, on time.Time) error {
 		Detail:  fmt.Sprintf("the lifecycle status is %s, so it is not released", l.Status),
 		Fix:     fix,
 	}
-}
-
-// ConfidentialNames evaluates RuleConfidentialNames: while the repository is
-// confidential on the date of on, the names the confidential-name index holds
-// for it. They are the registry names recorded for the subjects whose license
-// on that date is proprietary, the repository's names when no subject has a
-// non-proprietary license on that date, the codenames, and the distinctive
-// terms; deduplicated ignoring case and sorted. Releasable and member names
-// and other identity values are left out: they are often common words. A
-// proprietary subject declared to have a public client takes its registry
-// names out, and any such declaration takes the repository's names out. A
-// public repository has none. repositoryNames (the repository's own names,
-// such as its directory's and its origin's) are required only when they are
-// among the names.
-func (r *Record) ConfidentialNames(on time.Time, repositoryNames ...string) ([]string, error) {
-	if !r.Confidential(on) {
-		return nil, nil
-	}
-	proprietary := map[string]bool{}
-	anyPublic := false
-	for _, l := range r.licenses {
-		if !l.Contains(on) {
-			continue
-		}
-		if l.Proprietary() {
-			proprietary[l.Subject] = true
-		} else {
-			anyPublic = true
-		}
-	}
-	var names []string
-	for _, n := range r.registryNames {
-		if proprietary[n.Subject] && !r.hasPublicClient(n.Subject) {
-			names = append(names, n.Name)
-		}
-	}
-	if !anyPublic && len(r.publicClients) == 0 {
-		given := false
-		for _, n := range repositoryNames {
-			if strings.TrimSpace(n) != "" {
-				given = true
-				names = append(names, n)
-			}
-		}
-		if !given {
-			return nil, &Refusal{
-				Rule:   RuleConfidentialNames,
-				Detail: "no releasable carries a non-proprietary license, so the repository's name is confidential, and no repository name was given",
-				Fix:    "Pass the repository's names (its directory's, and its origin's last path segment when it has an origin).",
-			}
-		}
-	}
-	names = append(names, r.codenames...)
-	names = append(names, r.distinctiveTerms...)
-	return dedupeFold(names), nil
-}
-
-// dedupeFold drops empty names and names equal ignoring case to an earlier
-// one (keeping the first spelling in sorted order), and sorts the result.
-func dedupeFold(names []string) []string {
-	sort.Strings(names)
-	seen := map[string]bool{}
-	out := []string{}
-	for _, n := range names {
-		n = strings.TrimSpace(n)
-		k := strings.ToLower(n)
-		if n == "" || seen[k] {
-			continue
-		}
-		seen[k] = true
-		out = append(out, n)
-	}
-	return out
 }
 
 // ProprietaryPeriods evaluates RuleProprietaryHistoryIsSquashed: the union of

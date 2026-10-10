@@ -58,12 +58,6 @@ recorded = 2026-10-07
 	if !r.Present() {
 		t.Fatal("a loaded record is not present")
 	}
-	if got := r.Codenames(); !reflect.DeepEqual(got, []string{"Bluebird"}) {
-		t.Fatalf("codenames %v", got)
-	}
-	if got := r.DistinctiveTerms(); !reflect.DeepEqual(got, []string{"hyperlattice"}) {
-		t.Fatalf("distinctive terms %v", got)
-	}
 	lc := r.Lifecycle()
 	if len(lc) != 4 || lc[1].Subject != "widget" || lc[1].Status != lifecycle.StatusActive ||
 		!lc[1].From.Equal(day(t, "2026-01-01")) || !lc[1].Until.Equal(day(t, "2026-11-01")) ||
@@ -290,9 +284,6 @@ recorded = 2026-01-01
 tag = "nightly"
 reason = "b"
 recorded = 2026-02-01
-`, "more than once"},
-		{"codenames repeated ignoring case", `format_version = 1
-codenames = ["Bluebird", "bluebird"]
 `, "more than once"},
 	}
 	for _, c := range cases {

@@ -3,8 +3,6 @@ package strictspec
 import "testing"
 
 const lifecycleSample = `format_version = 1
-codenames = []
-distinctive_terms = []
 
 [[lifecycle]]
 subject = "portal"
@@ -65,7 +63,7 @@ func TestLifecycleAndLicenseSchemaAcceptsTheMinimalRecord(t *testing.T) {
 
 func TestLifecycleAndLicenseSchemaRefusals(t *testing.T) {
 	cases := map[string]string{
-		"missing format version": "codenames = []\n",
+		"missing format version": "[[lifecycle]]\nsubject = \"portal\"\nstatus = \"active\"\nfrom = 2026-10-07\nreason = \"first release\"\n",
 		"wrong format version":   "format_version = 2\n",
 		"unknown top-level key":  "format_version = 1\ndisclosure = \"public\"\n",
 		"unknown status": `format_version = 1
