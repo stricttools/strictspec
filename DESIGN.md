@@ -279,3 +279,15 @@ Phases, in order (all complete as of 2026-07-28):
 ## History rewrites
 
 - A private project's name was removed from the whole pushed history in one scrub, in every letter case, file and directory names included (approved by the owner). In prose it became "a private project"; spelled as a path segment, a slug, or a quoted identifier, and as a file or directory name, it became "private-project", so the rewritten paths and the text naming them still agree. The scrub's archive is under `.strictmetadata/history-rewrites/`.
+
+## The confidential-term list (implementation decisions)
+
+The `confidential` package of the Go module reads the owner's confidential-term list and the resolutions of its hits. These are implementation decisions made while building it, not owner rulings:
+
+- **Where the list is.** `Projects/CONTEXT/confidential/terms.toml.age` under the user's home directory, with the age identity at `~/.age-key.txt`, as the owner's protocol places them. `LocationIn` takes any home, so tests and callers never depend on the real one.
+- **Decryption.** In memory with `filippo.io/age`, never by running the `age` program and never through a file: the package calls no `os` function that writes (a test guards it).
+- **Format.** `format_version = 1` and `[[terms]]` tables; each entry has one and only one of `term` and `pattern`, an `added` date, a one-line `reason`, and `scope = "everywhere"` or `{ except = [...] }`. Every malformed entry is reported at once; a missing file is a list with no terms, which every caller states.
+- **Matching.** A literal matches as a substring ignoring case, inside longer words too: a match is judged hit by hit by the agent, never filtered by the matcher. A pattern is a Go regular expression compiled with `(?i)`; one that matches the empty string is refused.
+- **Scope.** An `except` entry names repositories by their directory's name or their `origin` remote's last path segment, the names `RepositoryNames` gives.
+- **Hit ids.** 16 hexadecimal digits of the SHA-256 of the entry, the lowered matched text, and up to six lowered words after it on its line. Words before the match are left out so the same phrase keeps its id where a rendering puts other text before it (a JSON changelog line, a Markdown list item, a Release body). Ids name no confidential text.
+- **Resolutions.** `.strictmetadata/confidential-hits/resolutions.toml`, owned by strictspec (`manifest.toml` names it) because more than one tool reads it; a resolution is a false positive (certainty 70 to 100) or an approval (no certainty), with a one-line reason and the day. A reason carrying a term is refused, and the location is recorded redacted, since the file is committed.
