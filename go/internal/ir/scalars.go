@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/stricttools/strictspec/go/internal/diag"
 	"github.com/stricttools/strictspec/go/internal/doc"
@@ -13,18 +14,21 @@ import (
 // compiledRegex wraps a compiled RE2 pattern (Go's regexp is RE2).
 type compiledRegex = regexp.Regexp
 
-var regexCache = map[string]*regexp.Regexp{}
+// regexCache maps a pattern to its compiled *regexp.Regexp; a sync.Map,
+// since validations run concurrently share it (a *regexp.Regexp is safe for
+// concurrent use).
+var regexCache sync.Map
 
 func (v *exec) compile(pattern string) *compiledRegex {
-	if re, ok := regexCache[pattern]; ok {
-		return re
+	if re, ok := regexCache.Load(pattern); ok {
+		return re.(*regexp.Regexp)
 	}
 	re, err := regexp.Compile(pattern)
 	if err != nil {
 		re = regexp.MustCompile(`\A\z`) // never matches; a bad schema regex fails closed
 	}
-	regexCache[pattern] = re
-	return re
+	actual, _ := regexCache.LoadOrStore(pattern, re)
+	return actual.(*regexp.Regexp)
 }
 
 // walkScalar validates a builtin or custom-scalar reference site.
