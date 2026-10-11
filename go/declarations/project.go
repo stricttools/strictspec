@@ -95,6 +95,11 @@ func checkDescriptor(name string, d Descriptor) error {
 		if len(c.Key) == 0 {
 			return bug("the collection %s has no key", c.Name)
 		}
+		for _, f := range c.FallbackKey {
+			if !contains(c.Fields, f) {
+				return bug("the collection %s names %s in its FallbackKey, which is not one of its Fields", c.Name, f)
+			}
+		}
 		if seen[c.Name] {
 			return bug("names the collection %s twice", c.Name)
 		}

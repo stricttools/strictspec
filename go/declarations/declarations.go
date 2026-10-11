@@ -89,10 +89,16 @@ type Descriptor struct {
 // Collection is one child collection: its name, the fields that identify a
 // child, and the compared non-key fields, in rendering order. An item field
 // that is neither a key nor a compared field is create-only.
+//
+// FallbackKey, when set, identifies a child that holds none of Key's fields
+// (a CORS rule a provider keeps without an id, by its origins); its fields
+// are Fields. A child holds every Key field, or none of them and every
+// FallbackKey field.
 type Collection struct {
-	Name   string
-	Key    []string
-	Fields []string
+	Name        string
+	Key         []string
+	FallbackKey []string
+	Fields      []string
 }
 
 // Value is canonical JSON data (string, int64, bool, []Value, or

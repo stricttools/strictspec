@@ -401,7 +401,7 @@ type expectedItem struct {
 }
 
 func (e expectedItem) keyUnresolved(col Collection) bool {
-	for _, k := range col.Key {
+	for _, k := range keyFields(col, e.item) {
 		if e.unresolved[k] {
 			return true
 		}

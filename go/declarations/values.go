@@ -171,10 +171,25 @@ func describeMatchers(match map[string]Matcher) string {
 	return "{" + strings.Join(parts, ", ") + "}"
 }
 
+// keyFields are the fields identifying the item: the collection's Key, or
+// its FallbackKey for an item holding none of Key's fields.
+func keyFields(c Collection, it Item) []string {
+	if len(c.FallbackKey) == 0 {
+		return c.Key
+	}
+	for _, f := range c.Key {
+		if _, ok := it.Fields[f]; ok {
+			return c.Key
+		}
+	}
+	return c.FallbackKey
+}
+
 // itemKey is the item's key fields as a map.
 func itemKey(c Collection, it Item) map[string]Value {
-	k := make(map[string]Value, len(c.Key))
-	for _, f := range c.Key {
+	fields := keyFields(c, it)
+	k := make(map[string]Value, len(fields))
+	for _, f := range fields {
 		k[f] = it.Fields[f]
 	}
 	return k
@@ -185,8 +200,9 @@ func keyJSON(c Collection, it Item) string { return valueJSON(Value(itemKey(c, i
 // nonKeyFields is the item's fields other than its key, as an object.
 func nonKeyFields(c Collection, it Item) map[string]Value {
 	out := map[string]Value{}
+	key := keyFields(c, it)
 	for f, v := range it.Fields {
-		if !contains(c.Key, f) {
+		if !contains(key, f) {
 			out[f] = v
 		}
 	}

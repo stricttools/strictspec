@@ -343,7 +343,7 @@ func checkItems(at string, c Collection, items []Item, refs bool) []string {
 	seen := map[string]int{}
 	for i, it := range items {
 		bad := false
-		for _, k := range c.Key {
+		for _, k := range keyFields(c, it) {
 			if _, ok := it.Fields[k]; !ok {
 				problems = append(problems, fmt.Sprintf("%s: %s[%d] has no %s, a key field, a bug in the tool", at, c.Name, i, k))
 				bad = true
