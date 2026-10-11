@@ -197,7 +197,7 @@ func valueOf(v strictspec.Value) declarations.Value {
 		}
 		return out
 	}
-	panic(fmt.Sprintf("unexpected value kind %v", v.Kind()))
+	panic(fmt.Sprintf("a value valueOf does not bind, at %v", v))
 }
 
 func field(doc strictspec.Value, name string) (strictspec.Value, bool) { return doc.Field(name) }
