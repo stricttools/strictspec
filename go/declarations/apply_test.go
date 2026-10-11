@@ -81,7 +81,11 @@ func stagedProject(t *testing.T) declarations.Project {
 	return p
 }
 
-func TestApplyStagesCreatesThroughReferencesAndDerivations(t *testing.T) {
+// One apply runs every step: a value an earlier change creates (the new
+// server's ipv4, the nameservers of the new zone, the records of the new
+// mail domain) resolves during the run, each change waiting on one runs
+// after the creation it waits on, and the report after it matches.
+func TestApplyRunsEveryStepResolvingWhatEarlierStepsCreate(t *testing.T) {
 	p := stagedProject(t)
 	s := load(t, p)
 	claims := claimAll(t, s)
@@ -89,7 +93,40 @@ func TestApplyStagesCreatesThroughReferencesAndDerivations(t *testing.T) {
 	w := &fakeWriter{live: l}
 	g := &fakeGit{}
 
-	after, err := declarations.Apply(s, l, claims, w, g, planID(t, s, l, claims))
+	plan, err := declarations.PlanApply(s, l, claims, w, g)
+	if err != nil {
+		t.Fatalf("PlanApply: %v", err)
+	}
+	wantPlan := []string{
+		"create test-zone/example.org",
+		"create test-zone/example.org record hello,example.org,TXT",
+		"create test-mail/example.org",
+		"deferred test-zone/example.org record from test-mail/example.org",
+		"deferred test-zone/example.org record from test-mail/example.org",
+		"create test-mail/example.org mailbox me",
+		"create test-server/web1",
+		"create test-zone/example.org record <ipv4 of new test-server web1>,example.org,A",
+		"create test-domain/example.org",
+	}
+	var got []string
+	for _, ch := range plan.Changes {
+		if ch.Deferred != nil {
+			got = append(got, "deferred "+ch.ResourceType+"/"+ch.Name+" "+ch.Collection+" from "+ch.Deferred.Source)
+			continue
+		}
+		got = append(got, describe(ch.WithPlaceholders()))
+	}
+	if !reflect.DeepEqual(got, wantPlan) {
+		t.Fatalf("plan:\n got  %q\n want %q", got, wantPlan)
+	}
+	if ns := plan.Changes[8].WithPlaceholders().Resource.Fields["nameservers"]; ns != "<nameservers test-zone example.org derives>" {
+		t.Fatalf("the domain's create shows its nameservers by their placeholder: %v", ns)
+	}
+	if d := plan.Changes[3].Deferred; d.Why != "the mail domain example.org is not live yet" || !reflect.DeepEqual(d.After, []string{"test-mail/example.org", "test-zone/example.org"}) {
+		t.Fatalf("a deferred change says why and what it waits on: %+v", d)
+	}
+
+	after, err := declarations.Apply(s, l, claims, w, g, plan.ID)
 	if err != nil {
 		t.Fatalf("Apply: %v", err)
 	}
@@ -97,50 +134,98 @@ func TestApplyStagesCreatesThroughReferencesAndDerivations(t *testing.T) {
 		"create test-zone/example.org",
 		"create test-zone/example.org record hello,example.org,TXT",
 		"create test-mail/example.org",
+		"create test-zone/example.org record mx.mail.test,example.org,MX",
+		"create test-zone/example.org record ,dkim._domainkey.example.org,TXT",
 		"create test-mail/example.org mailbox me",
 		"create test-server/web1",
-	}
-	if got := describeAll(w.changes); !reflect.DeepEqual(got, want) {
-		t.Fatalf("first apply:\n got  %q\n want %q", got, want)
-	}
-	if !reflect.DeepEqual(g.calls, [][2]string{{p.Root, declDir}}) {
-		t.Fatalf("git status calls %v", g.calls)
-	}
-	create := w.changes[0]
-	if create.Stage != 20 || create.Resource.Fields["delegate"] != true || len(create.Resource.Children["record"]) != 1 {
-		t.Fatalf("a resource create carries the full expected resource without what is unresolved: %+v", create)
-	}
-	if w.changes[3].Item.Fields["invitation"] != "me@elsewhere.test" {
-		t.Fatalf("an item create carries the expected item, create-only fields included: %+v", w.changes[3].Item)
-	}
-
-	// The servers and zones this apply created resolve in its report: the
-	// next apply executes what they unblocked.
-	w.changes = nil
-	if after.Matching {
-		t.Fatal("the staged apply's report must show the next stage")
-	}
-	if _, err := declarations.Apply(s, l, claims, w, g, planID(t, s, l, claims)); err != nil {
-		t.Fatalf("second Apply: %v", err)
-	}
-	want = []string{
-		"create test-zone/example.org record ,dkim._domainkey.example.org,TXT",
 		"create test-zone/example.org record 203.0.113.1,example.org,A",
-		"create test-zone/example.org record mx.mail.test,example.org,MX",
 		"create test-domain/example.org",
 	}
 	if got := describeAll(w.changes); !reflect.DeepEqual(got, want) {
-		t.Fatalf("second apply:\n got  %q\n want %q", got, want)
+		t.Fatalf("apply:\n got  %q\n want %q", got, want)
 	}
-	if w.changes[1].Item.Fields["content"] != "203.0.113.1" || w.changes[1].Resource.Children["record"][0].Fields["content"] != "203.0.113.1" {
-		t.Fatalf("references are resolved in a change: %+v", w.changes[1])
+	create := w.changes[0]
+	if create.Stage != 20 || create.Resource.Fields["delegate"] != true || len(create.Resource.Children["record"]) != 1 {
+		t.Fatalf("a resource create carries the expected resource without what waits on a creation that has not run: %+v", create)
 	}
-	if !reflect.DeepEqual(w.changes[3].Resource.Fields["nameservers"], []declarations.Value{"a.ns.test", "b.ns.test"}) {
-		t.Fatalf("derived fields are in the expected resource: %+v", w.changes[3].Resource)
+	if w.changes[5].Item.Fields["invitation"] != "me@elsewhere.test" {
+		t.Fatalf("an item create carries the expected item, create-only fields included: %+v", w.changes[5].Item)
 	}
-	final := verify(t, s, l, claims)
-	if !final.Matching {
-		t.Fatalf("after two applies: %+v", final.Differences)
+	if a := w.changes[7]; a.Item.Fields["content"] != "203.0.113.1" || a.Key["content"] != "203.0.113.1" || len(a.Resource.Children["record"]) != 2 {
+		t.Fatalf("a reference to a value created earlier in the run is resolved in the change: %+v", a)
+	}
+	if !reflect.DeepEqual(w.changes[8].Resource.Fields["nameservers"], []declarations.Value{"a.ns.test", "b.ns.test"}) {
+		t.Fatalf("a derived field created earlier in the run is in the expected resource: %+v", w.changes[8].Resource)
+	}
+	if !after.Matching {
+		t.Fatalf("after one apply: %+v", after.Differences)
+	}
+}
+
+// A deferred change makes the live children its slot covers match the
+// derivation: it keeps a matching one, updates one whose fields differ, and
+// deletes one the derivation does not give, each listed in the plan as
+// covered.
+func TestApplyDeferredChildrenReplaceTheCoveredLiveChildren(t *testing.T) {
+	p := newProject(t, "example")
+	declare(t, p, "test-zone", "example.org", zoneBody(false, "", txtRecord))
+	declare(t, p, "test-mail", "example.org", "plan = \"micro\"\nunmanaged = []\nmailbox = []\n")
+	s := load(t, p)
+	claims := claimAll(t, s)
+	l := newLive()
+	l.put(liveZone("example.org", false,
+		record("TXT", "example.org", "hello", int64(300), ""),
+		record("MX", "example.org", "mx.mail.test", int64(600), ""),
+		record("MX", "example.org", "mx.old.test", int64(300), "")))
+	w := &fakeWriter{live: l, created: map[string]declarations.Resource{"test-mail/example.org": {Fields: M{"dkim_key": "k=2"}}}}
+	plan, err := declarations.PlanApply(s, l, claims, w, &fakeGit{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var covered []string
+	for _, ch := range plan.Changes {
+		if ch.Deferred != nil {
+			for _, it := range ch.Deferred.Covered {
+				covered = append(covered, fmt.Sprint(it.Fields["content"]))
+			}
+		}
+	}
+	sort.Strings(covered)
+	if !reflect.DeepEqual(covered, []string{"mx.mail.test", "mx.old.test"}) {
+		t.Fatalf("the plan lists the covered live children: %q", covered)
+	}
+	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, plan.ID); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{
+		"create test-mail/example.org",
+		"update test-zone/example.org record mx.mail.test,example.org,MX ttl",
+		"delete test-zone/example.org record mx.old.test,example.org,MX",
+		"create test-zone/example.org record k=2,dkim._domainkey.example.org,TXT",
+	}
+	if got := describeAll(w.changes); !reflect.DeepEqual(got, want) {
+		t.Fatalf("apply:\n got  %q\n want %q", got, want)
+	}
+	if !verify(t, s, l, claims).Matching {
+		t.Fatal("not matching after apply")
+	}
+}
+
+// The plan's identifier covers its placeholders: a declaration edit to a
+// value waiting on a creation changes it.
+func TestPlanIdentifierCoversPendingValues(t *testing.T) {
+	p := siteProject(t)
+	s := load(t, p)
+	claims := claimAll(t, s)
+	l := newLive()
+	before := planID(t, s, l, claims)
+	declare(t, p, "test-zone", "example.org", zoneBody(false, "", strings.Replace(aRecord, "ipv4", "ipv6", 1), txtRecord))
+	if _, err := declarations.Load(testTool(), p); err == nil {
+		t.Fatal("a reference to a value the server does not expose loaded")
+	}
+	declare(t, p, "test-zone", "example.org", zoneBody(false, "", strings.Replace(aRecord, "\"the site\"", "\"the new site\"", 1), txtRecord))
+	if after := planID(t, load(t, p), l, claims); after == before {
+		t.Fatal("the identifier did not change with the plan")
 	}
 }
 
@@ -345,11 +430,23 @@ func TestApplyInAProjectNeverDeletesAResource(t *testing.T) {
 	}
 }
 
-// A rule keyed by port whose source waits on a server that is not live yet,
-// while its description changed: the description's update carries the rule
-// with the live source in place of the unresolved one, and the expected
-// resource holds that rule too.
-func TestApplyUpdateOfAChildWithAnUnresolvedFieldCarriesTheLiveValue(t *testing.T) {
+// A value the plan waits on that does not exist once its creation ran stops
+// the apply at the change needing it, naming the placeholder.
+func TestApplyStopsWhenAPendingValueDoesNotExistAfterItsCreation(t *testing.T) {
+	p := siteProject(t)
+	s := load(t, p)
+	claims := claimAll(t, s)
+	l := newLive()
+	w := &fakeWriter{live: l, noIPv4: true}
+	_, err := declarations.Apply(s, l, claims, w, &fakeGit{}, planID(t, s, l, claims))
+	mustContain(t, err, "apply stopped at the create of test-zone/example.org record", "<ipv4 of new test-server web1> does not exist after its creation", "3 change(s) were applied before it", "run infratool manifest apply --dry-run again")
+}
+
+// A rule keyed by port whose source refers to a server the apply creates,
+// while its description changed: both updates run after the server's
+// creation, the source's carrying the new server's ipv4, and the
+// description's carrying the rule with that source too.
+func TestApplyUpdateOfAChildWithAPendingFieldRunsAfterTheCreation(t *testing.T) {
 	p := newProject(t, "example")
 	declare(t, p, "test-server", "web1", serverBody)
 	declare(t, p, "test-firewall", "edge", "unmanaged = []\n[[rule]]\nport = 22\nsource = { test_server = \"web1\", value = \"ipv4\" }\ndescription = \"new\"\n")
@@ -364,16 +461,44 @@ func TestApplyUpdateOfAChildWithAnUnresolvedFieldCarriesTheLiveValue(t *testing.
 	want := []string{
 		"create test-server/web1",
 		"update test-firewall/edge rule 22 description",
+		"update test-firewall/edge rule 22 source",
 	}
 	if got := describeAll(w.changes); !reflect.DeepEqual(got, want) {
 		t.Fatalf("apply:\n got  %q\n want %q", got, want)
 	}
-	wantItem := declarations.Item{Fields: M{"port": int64(22), "source": "198.51.100.1", "description": "new"}}
-	if !reflect.DeepEqual(w.changes[1].Item, wantItem) {
-		t.Fatalf("the update carries %+v; want %+v", w.changes[1].Item, wantItem)
+	wantItem := declarations.Item{Fields: M{"port": int64(22), "source": "203.0.113.1", "description": "new"}}
+	for _, ch := range w.changes[1:] {
+		if !reflect.DeepEqual(ch.Item, wantItem) || !reflect.DeepEqual(ch.Resource.Children["rule"], []declarations.Item{wantItem}) {
+			t.Fatalf("the update carries %+v and %+v; want %+v", ch.Item, ch.Resource.Children["rule"], wantItem)
+		}
 	}
-	if got := w.changes[1].Resource.Children["rule"]; !reflect.DeepEqual(got, []declarations.Item{wantItem}) {
-		t.Fatalf("the expected resource's rules are %+v; want %+v", got, []declarations.Item{wantItem})
+	if !verify(t, s, l, claims).Matching {
+		t.Fatal("not matching after apply")
+	}
+}
+
+// A rule whose source refers to a live server lacking the value waits on a
+// value no change creates: an update of its description carries the live
+// source in place of the unresolved one.
+func TestApplyUpdateOfAChildWithAnUnresolvedFieldCarriesTheLiveValue(t *testing.T) {
+	p := newProject(t, "example")
+	declare(t, p, "test-server", "web1", serverBody)
+	declare(t, p, "test-firewall", "edge", "unmanaged = []\n[[rule]]\nport = 22\nsource = { test_server = \"web1\", value = \"ipv4\" }\ndescription = \"new\"\n")
+	s := load(t, p)
+	claims := claimAll(t, s)
+	l := newLive()
+	l.put(liveServer("web1"))
+	l.put(declarations.Resource{Type: "test-firewall", Name: "edge", Children: map[string][]declarations.Item{"rule": {{Fields: M{"port": int64(22), "source": "198.51.100.1", "description": "old"}}}}})
+	w := &fakeWriter{live: l}
+	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, planID(t, s, l, claims)); err != nil {
+		t.Fatal(err)
+	}
+	if got := describeAll(w.changes); !reflect.DeepEqual(got, []string{"update test-firewall/edge rule 22 description"}) {
+		t.Fatalf("apply: %q", got)
+	}
+	wantItem := declarations.Item{Fields: M{"port": int64(22), "source": "198.51.100.1", "description": "new"}}
+	if !reflect.DeepEqual(w.changes[0].Item, wantItem) || !reflect.DeepEqual(w.changes[0].Resource.Children["rule"], []declarations.Item{wantItem}) {
+		t.Fatalf("the update carries %+v; want %+v", w.changes[0], wantItem)
 	}
 }
 

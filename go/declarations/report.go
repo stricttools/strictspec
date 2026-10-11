@@ -12,7 +12,10 @@ const (
 	// StatusChanged is one field that differs: apply updates it.
 	StatusChanged Status = "changed"
 	// StatusUnresolved is an expected value waiting on a provider-assigned
-	// value that does not exist yet: apply does not execute it.
+	// value that does not exist yet and that no change of the plan creates
+	// (a live server without an IPv6 address): apply does not execute it. A
+	// value the plan creates is planned instead: the difference is missing
+	// or changed, its value shown by its placeholder.
 	StatusUnresolved Status = "unresolved"
 	// StatusUnclaimed is, in the account repository, a live account-level
 	// resource neither declared there, claimed, nor unmanaged: apply deletes

@@ -163,7 +163,9 @@ func TestCompareUnexpectedAndChanged(t *testing.T) {
 	)
 }
 
-func TestCompareUnresolvedReference(t *testing.T) {
+// A reference to a resource the apply creates is planned: the child is
+// missing, its value shown by its placeholder.
+func TestCompareReferenceToAResourceTheApplyCreatesIsPlanned(t *testing.T) {
 	p := siteProject(t)
 	l := siteLive()
 	delete(l.resources, "test-server/web1")
@@ -173,6 +175,20 @@ func TestCompareUnresolvedReference(t *testing.T) {
 	r := compare(t, load(t, p), l)
 	wantLines(t, r, "differences",
 		`{"declared":{"image":"debian-13","labels":{"role":"game"},"location":"fsn1"},"name":"web1","resource_type":"test-server","source":"test-server/web1","status":"missing"}`,
+		`{"collection":"record","declared":{"comment":"the site","ttl":"automatic"},"key":{"content":"\u003cipv4 of new test-server web1\u003e","name":"example.org","type":"A"},"name":"example.org","resource_type":"test-zone","source":"test-zone/example.org","status":"missing"}`,
+	)
+}
+
+// A reference to a live resource lacking the value waits on a value no
+// change of the apply creates: unresolved.
+func TestCompareUnresolvedReference(t *testing.T) {
+	p := siteProject(t)
+	l := siteLive()
+	delete(l.exposed, "test-server/web1/ipv4")
+	z := l.resources["test-zone/example.org"]
+	z.Children["record"] = z.Children["record"][1:]
+	r := compare(t, load(t, p), l)
+	wantLines(t, r, "differences",
 		`{"collection":"record","declared":{"comment":"the site","ttl":"automatic"},"key":{"content":{"test_server":"web1","value":"ipv4"},"name":"example.org","type":"A"},"name":"example.org","resource_type":"test-zone","source":"test-zone/example.org","status":"unresolved"}`,
 	)
 }
@@ -194,7 +210,10 @@ func TestCompareDerivedChildren(t *testing.T) {
 	)
 }
 
-func TestCompareUnresolvedDerivationLeavesCoveredChildrenAlone(t *testing.T) {
+// A derivation waiting on a resource the apply creates is planned (missing),
+// and the live children its slots cover are not reported: the apply makes
+// them match once it derives them.
+func TestComparePendingDerivationLeavesCoveredChildrenAlone(t *testing.T) {
 	p := newProject(t, "example")
 	declare(t, p, "test-zone", "example.org", zoneBody(false, "", txtRecord))
 	declare(t, p, "test-mail", "example.org", mailBody)
@@ -206,8 +225,8 @@ func TestCompareUnresolvedDerivationLeavesCoveredChildrenAlone(t *testing.T) {
 	wantLines(t, r, "differences",
 		`{"declared":{"plan":"micro"},"name":"example.org","resource_type":"test-mail","source":"test-mail/example.org","status":"missing"}`,
 		`{"collection":"mailbox","declared":{"invitation":"me@elsewhere.test","name":"Me"},"key":{"local_part":"me"},"name":"example.org","resource_type":"test-mail","source":"test-mail/example.org","status":"missing"}`,
-		`{"collection":"record","declared":"the mail domain example.org is not live yet","name":"example.org","resource_type":"test-zone","source":"test-mail/example.org","status":"unresolved"}`,
-		`{"collection":"record","declared":"the mail domain example.org is not live yet","name":"example.org","resource_type":"test-zone","source":"test-mail/example.org","status":"unresolved"}`,
+		`{"collection":"record","declared":"the mail domain example.org is not live yet","name":"example.org","resource_type":"test-zone","source":"test-mail/example.org","status":"missing"}`,
+		`{"collection":"record","declared":"the mail domain example.org is not live yet","name":"example.org","resource_type":"test-zone","source":"test-mail/example.org","status":"missing"}`,
 	)
 }
 
@@ -224,20 +243,34 @@ func TestCompareDerivedField(t *testing.T) {
 		`{"declared":["a.ns.test","b.ns.test"],"field":"nameservers","live":["dns1.registrar.test"],"name":"example.org","resource_type":"test-domain","source":"test-zone/example.org","status":"changed"}`,
 	)
 
-	delete(l.resources, "test-zone/example.org")
+	// A live zone without nameservers yet: no change of the apply creates
+	// them, so the field is unresolved, and a missing resource whose create
+	// waits on an unresolved value is unresolved as a whole.
 	delete(l.exposed, "test-zone/example.org/nameservers")
 	r = compare(t, load(t, p), l)
 	wantLines(t, r, "differences",
 		`{"declared":"the zone example.org is not live yet","field":"nameservers","live":["dns1.registrar.test"],"name":"example.org","resource_type":"test-domain","source":"test-zone/example.org","status":"unresolved"}`,
-		`{"declared":{"delegate":true},"name":"example.org","resource_type":"test-zone","source":"test-zone/example.org","status":"missing"}`,
 	)
-
-	// A missing resource whose create waits on an unresolved value is
-	// unresolved as a whole.
+	live := l.resources["test-domain/example.org"]
 	delete(l.resources, "test-domain/example.org")
 	r = compare(t, load(t, p), l)
 	wantLines(t, r, "differences",
 		`{"declared":{"auto_renew":true,"nameservers":"the zone example.org is not live yet"},"name":"example.org","resource_type":"test-domain","source":"test-domain/example.org","status":"unresolved"}`,
+	)
+	l.put(live)
+
+	// A zone the apply creates: its nameservers are planned, shown by their
+	// placeholder, in the update of a live domain and in the create of one.
+	delete(l.resources, "test-zone/example.org")
+	r = compare(t, load(t, p), l)
+	wantLines(t, r, "differences",
+		`{"declared":"\u003cnameservers test-zone example.org derives\u003e","field":"nameservers","live":["dns1.registrar.test"],"name":"example.org","resource_type":"test-domain","source":"test-zone/example.org","status":"changed"}`,
+		`{"declared":{"delegate":true},"name":"example.org","resource_type":"test-zone","source":"test-zone/example.org","status":"missing"}`,
+	)
+	delete(l.resources, "test-domain/example.org")
+	r = compare(t, load(t, p), l)
+	wantLines(t, r, "differences",
+		`{"declared":{"auto_renew":true,"nameservers":"\u003cnameservers test-zone example.org derives\u003e"},"name":"example.org","resource_type":"test-domain","source":"test-domain/example.org","status":"missing"}`,
 		`{"declared":{"delegate":true},"name":"example.org","resource_type":"test-zone","source":"test-zone/example.org","status":"missing"}`,
 	)
 }
@@ -306,7 +339,7 @@ func TestCompareSortsDifferences(t *testing.T) {
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("order %q", got)
 	}
-	if r.Differences[3].Key["type"] != "TXT" || r.Differences[4].Status != declarations.StatusUnresolved {
+	if r.Differences[3].Key["type"] != "A" || r.Differences[4].Key["type"] != "TXT" || r.Differences[3].Status != declarations.StatusMissing {
 		t.Fatalf("children sorted by key: %+v", r.Differences[3:])
 	}
 }

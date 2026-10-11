@@ -167,7 +167,9 @@ func Prefix(p string) Matcher { return Matcher{prefix: p, isPrefix: true} }
 
 // Derived is the expected value of one slot: the field's value for a field
 // slot, the children for a collection slot, or, when the value does not exist
-// yet (the resource causing it is not live), Unresolved saying why.
+// yet (the resource causing it is not live), Unresolved saying why. An
+// unresolved derivation whose source or target the plan creates is planned
+// all the same: the apply derives it again once they are created.
 type Derived struct {
 	Slot       Slot
 	Value      Value
@@ -218,6 +220,14 @@ const (
 //
 // Item is the expected child as Resource.Children holds it, or the live child
 // for a delete.
+//
+// A value an earlier change of the same plan creates (a reference to a new
+// server's ipv4, the nameservers a new zone is assigned) is a Pending in the
+// plan's changes, and the plan runs the change after that creation; Execute
+// passes the writer the change with the value resolved. A change whose
+// children a derivation gives only once earlier changes create what it reads
+// carries Deferred: Execute expands it into one change per child, and it
+// never reaches the writer itself.
 type Change struct {
 	Action       Action
 	ResourceType string
@@ -228,6 +238,7 @@ type Change struct {
 	Resource     Resource
 	Item         Item
 	Stage        int
+	Deferred     *Deferred
 }
 
 // Writer executes changes; the tool supplies it. It supports a resource-level

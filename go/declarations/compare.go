@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"sort"
+	"strings"
 )
 
 // recorder is the LiveReader the engine reads through: it caches every read
@@ -92,12 +93,22 @@ func checkLive(types map[string]ResourceType, resourceType, name string, r Resou
 
 // slotState is one slot of a target during a comparison: resolved (the
 // derivation's value or children), unresolved (its value does not exist
-// yet), or skipped (its derivation failed and is reported unreadable).
+// yet), or skipped (its derivation failed and is reported unreadable). An
+// unresolved slot is pending when the plan creates its source or its target
+// (after names them): the apply derives it again once they are created.
 type slotState struct {
 	cause      cause
 	derived    Derived
 	unresolved bool
+	pending    bool
+	after      []string
 	skipped    bool
+}
+
+// deferredSlot is a pending collection slot of the target at index target.
+type deferredSlot struct {
+	target int
+	state  slotState
 }
 
 type comparison struct {
@@ -108,6 +119,8 @@ type comparison struct {
 	managed []UnmanagedMatch
 	unread  []Unreadable
 	slots   map[int][]slotState
+	// deferred are the pending collection slots, in comparison order.
+	deferred []deferredSlot
 }
 
 // Compare reads every declared resource live, resolves references and
@@ -286,7 +299,12 @@ func (c *comparison) derive() error {
 				bugs = append(bugs, p...)
 				continue
 			}
-			file(slotState{cause: cs, derived: d, unresolved: d.Unresolved != ""})
+			st := slotState{cause: cs, derived: d, unresolved: d.Unresolved != ""}
+			if st.unresolved {
+				st.after = c.created(source(r), cs.slot.ResourceType+"/"+cs.slot.Name)
+				st.pending = len(st.after) > 0
+			}
+			file(st)
 		}
 		for j, u := range used {
 			if !u {
@@ -327,6 +345,23 @@ func checkDerived(r Resource, sl Slot, d Derived, types map[string]ResourceType)
 	return problems
 }
 
+// created names those of the declared resources (each "<type>/<name>") that
+// are not live, which the plan creates. A resource whose read fails is not
+// named: the failed read is reported where the resource is compared.
+func (c *comparison) created(resources ...string) []string {
+	var out []string
+	for _, k := range resources {
+		t, n, _ := strings.Cut(k, "/")
+		if _, declared := c.set.index(t, n); !declared {
+			continue
+		}
+		if _, ok, err := c.rc.Read(t, n); err == nil && !ok && !contains(out, k) {
+			out = append(out, k)
+		}
+	}
+	return out
+}
+
 func (c *comparison) unreadable(resourceType, name string, err error) {
 	for _, u := range c.unread {
 		if u.ResourceType == resourceType && u.Name == name && u.Error == err.Error() {
@@ -336,9 +371,10 @@ func (c *comparison) unreadable(resourceType, name string, err error) {
 	c.unread = append(c.unread, Unreadable{ResourceType: resourceType, Name: name, Error: err.Error()})
 }
 
-// resolve replaces every reference in v with its exposed value. unresolved
-// is true when one does not exist yet (v is then returned as written); a
-// failed read is an error.
+// resolve replaces every reference in v with its exposed value, or with a
+// Pending when the referenced resource is not live (the plan creates it).
+// unresolved is true when one does not exist yet and the plan does not
+// create it (v is then returned as written); a failed read is an error.
 func (c *comparison) resolve(v Value) (Value, bool, error) {
 	switch x := v.(type) {
 	case Reference:
@@ -348,6 +384,10 @@ func (c *comparison) resolve(v Value) (Value, bool, error) {
 			return nil, false, err
 		}
 		if !ok {
+			if after := c.created(x.ResourceType + "/" + x.Name); len(after) > 0 {
+				ref := x
+				return Pending{text: fmt.Sprintf("%s of new %s %s", x.Value, x.ResourceType, x.Name), after: after, ref: &ref}, false, nil
+			}
 			return v, true, nil
 		}
 		return val, false, nil
@@ -444,6 +484,22 @@ func (c *comparison) expected(i int) (map[string]expectedField, map[string][]exp
 		src := c.set.sourceOf(st.cause)
 		switch {
 		case st.skipped:
+		case sl.Field != "" && st.pending:
+			// The field is written by its own resource's create or update,
+			// so it waits on its source only.
+			cs := st.cause
+			srcRes := c.set.Resources[cs.source]
+			var after []string
+			for _, a := range st.after {
+				if a != sl.ResourceType+"/"+sl.Name {
+					after = append(after, a)
+				}
+			}
+			if len(after) == 0 {
+				fields[sl.Field] = expectedField{value: st.derived.Unresolved, unresolved: true, source: src}
+				break
+			}
+			fields[sl.Field] = expectedField{value: Pending{text: fmt.Sprintf("%s %s %s derives", sl.Field, srcRes.Type, srcRes.Name), after: after, cause: &cs}, source: src}
 		case sl.Field != "" && st.unresolved:
 			fields[sl.Field] = expectedField{value: st.derived.Unresolved, unresolved: true, source: src}
 		case sl.Field != "":
@@ -505,7 +561,12 @@ func (c *comparison) compareResource(i int) []string {
 	failed := map[string]bool{}
 	for _, st := range c.slots[i] {
 		if st.unresolved && st.cause.slot.Collection != "" {
-			c.add(Difference{Status: StatusUnresolved, ResourceType: r.Type, Name: r.Name, Collection: st.cause.slot.Collection, Declared: st.derived.Unresolved, Source: c.set.sourceOf(st.cause)})
+			status := StatusUnresolved
+			if st.pending {
+				status = StatusMissing
+				c.deferred = append(c.deferred, deferredSlot{target: i, state: st})
+			}
+			c.add(Difference{Status: status, ResourceType: r.Type, Name: r.Name, Collection: st.cause.slot.Collection, Declared: st.derived.Unresolved, Source: c.set.sourceOf(st.cause)})
 		}
 		if st.skipped && st.cause.slot.Field != "" {
 			failed[st.cause.slot.Field] = true

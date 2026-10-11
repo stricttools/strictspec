@@ -732,6 +732,11 @@ type fakeWriter struct {
 	failOn  int // 1-based index of the change that fails; 0 for none
 	refuse  map[string]string
 	plans   [][]declarations.Change
+	// created are fields a created resource gets beside its declared ones,
+	// by "<type>/<name>", as a provider assigns them.
+	created map[string]declarations.Resource
+	// noIPv4 creates a server without an ipv4.
+	noIPv4 bool
 }
 
 func (w *fakeWriter) Refuse(c declarations.Change, plan []declarations.Change) error {
@@ -764,9 +769,15 @@ func (w *fakeWriter) Apply(c declarations.Change) error {
 		for f, v := range c.Resource.Fields {
 			n.Fields[f] = v
 		}
+		for f, v := range w.created[k].Fields {
+			n.Fields[f] = v
+		}
 		w.live.put(n)
 		switch c.ResourceType {
 		case "test-server":
+			if w.noIPv4 {
+				break
+			}
 			w.live.nextIP++
 			w.live.exposed[k+"/ipv4"] = fmt.Sprintf("203.0.113.%d", w.live.nextIP)
 		case "test-zone":

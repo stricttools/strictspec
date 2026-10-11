@@ -16,7 +16,8 @@ type Plan struct {
 	// ascending Stage (within one resource, the resource-level change first,
 	// then its children in the order of its resource type's collections),
 	// then deletes in descending Stage (children in the reverse order of the
-	// collections).
+	// collections); a change holding a value an earlier change creates (a
+	// Pending, or Deferred children) is moved after that creation.
 	Changes []Change
 	// ID is the lowercase hex SHA-256 of the canonical JSON of every
 	// declaration file's hash, every live resource read, and the
@@ -34,8 +35,12 @@ type Plan struct {
 // PlanApply makes the plan of an apply, which w executes. It refuses, in
 // order: while the declaration directory has an uncommitted or untracked
 // file; while a resource is misclaimed; while a live read fails; while w
-// refuses a change of the plan (Writer.Refuse), naming every change it
-// refuses. The changes never hold an unresolved or misclaimed difference. In the account repository each
+// refuses a change of the plan (Writer.Refuse; a Deferred change is not
+// asked, its expansion is when Execute makes it), naming every change it
+// refuses; while a change waits on a creation the plan does not make, or
+// changes wait on each other. The changes never hold an unresolved or
+// misclaimed difference; a value an earlier change of the plan creates is a
+// Pending, resolved by Execute. In the account repository each
 // unclaimed resource is deleted whole, with the deletes; in a project the
 // plan never deletes a resource, only children (a live resource a project
 // stops declaring is left alone, and the account repository reports it
@@ -84,8 +89,14 @@ func PlanApply(set Set, live LiveReader, claims Claims, w Writer, g Git) (Plan, 
 	if len(problems) > 0 {
 		return Plan{}, fmt.Errorf("apply refuses while a live read fails, rather than guess at what it would have read: run %s again once they read:\n  %s", set.Tool.DryRunCommand, strings.Join(problems, "\n  "))
 	}
-	changes := c.changes(rep)
+	changes, err := orderByNeeds(c.changes(rep))
+	if err != nil {
+		return Plan{}, err
+	}
 	for _, ch := range changes {
+		if ch.Deferred != nil {
+			continue
+		}
 		if err := w.Refuse(ch, changes); err != nil {
 			problems = append(problems, describeChange(ch)+": "+err.Error())
 		}
@@ -105,13 +116,39 @@ func (p Plan) Accept(id string) error {
 	return nil
 }
 
-// Execute passes each change to the plan's writer in order, then returns the
-// report computed after applying, where values this apply created resolve:
-// the next stage. A writer error stops it at once.
+// Execute passes each change to the plan's writer in order, each Pending
+// resolved by reading the value the earlier changes created, and each
+// Deferred change expanded into the changes making the children it stands
+// for match their derivation (the writer is asked to Refuse each), then
+// returns the report computed after applying. A writer error, or a value
+// that does not exist once what it waits on is created, stops it at once.
 func (p Plan) Execute() (Report, error) {
-	for i, ch := range p.Changes {
-		if err := p.writer.Apply(ch); err != nil {
-			return Report{}, fmt.Errorf("apply stopped at %s: %w; %d change(s) were applied before it: run %s again", describeChange(ch), err, i, p.tool.DryRunCommand)
+	z := &realizer{p: p, types: typesByName(p.tool), created: map[string]bool{}}
+	applied := 0
+	for _, ch := range p.Changes {
+		stop := func(err error) error {
+			return fmt.Errorf("apply stopped at %s: %w; %d change(s) were applied before it: run %s again", describeChange(ch), err, applied, p.tool.DryRunCommand)
+		}
+		writes, err := z.realize(ch)
+		if err != nil {
+			return Report{}, stop(err)
+		}
+		for _, wch := range writes {
+			if ch.Deferred != nil {
+				if err := p.writer.Refuse(wch, p.Changes); err != nil {
+					return Report{}, stop(fmt.Errorf("%s: %w", describeChange(wch), err))
+				}
+			}
+			if err := p.writer.Apply(wch); err != nil {
+				if ch.Deferred != nil {
+					err = fmt.Errorf("%s: %w", describeChange(wch), err)
+				}
+				return Report{}, stop(err)
+			}
+			applied++
+		}
+		if k, ok := isCreateOf(ch); ok {
+			z.created[k] = true
 		}
 	}
 	return Compare(p.set, p.live, p.claims)
@@ -131,6 +168,9 @@ func Apply(set Set, live LiveReader, claims Claims, w Writer, g Git, id string) 
 }
 
 func describeChange(ch Change) string {
+	if ch.Deferred != nil {
+		return fmt.Sprintf("the %s children of %s/%s that %s derives", ch.Collection, ch.ResourceType, ch.Name, ch.Deferred.Source)
+	}
 	s := fmt.Sprintf("the %s of %s/%s", ch.Action, ch.ResourceType, ch.Name)
 	if ch.Collection != "" {
 		s += fmt.Sprintf(" %s %s", ch.Collection, valueJSON(Value(ch.Key)))
@@ -174,10 +214,29 @@ func (c *comparison) changes(rep Report) []Change {
 		return out
 	}
 	var upserts, deletes []Change
+	for _, ds := range c.deferred {
+		st := ds.state
+		sl := st.cause.slot
+		r := c.set.Resources[ds.target]
+		lr, _, _ := c.rc.Read(r.Type, r.Name)
+		var covered []Item
+		for _, li := range lr.Children[sl.Collection] {
+			if matchesAll(li, sl.Match) {
+				covered = append(covered, li)
+			}
+		}
+		upserts = append(upserts, Change{Action: ActionCreate, ResourceType: r.Type, Name: r.Name, Collection: sl.Collection, Resource: expectedResource(ds.target), Stage: c.types[r.Type].Descriptor().Stage,
+			Deferred: &Deferred{Source: c.set.sourceOf(st.cause), Slot: sl, Why: st.derived.Unresolved, After: append([]string(nil), st.after...), Covered: covered, cause: st.cause}})
+	}
 	for _, d := range rep.Differences {
 		var action Action
 		switch d.Status {
 		case StatusMissing:
+			if d.Collection != "" && d.Key == nil {
+				// A pending collection slot's difference: its change is
+				// the deferred one above.
+				continue
+			}
 			action = ActionCreate
 		case StatusChanged:
 			action = ActionUpdate

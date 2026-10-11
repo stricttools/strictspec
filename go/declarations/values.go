@@ -46,6 +46,8 @@ func jsonData(v Value) any {
 	switch x := v.(type) {
 	case Reference:
 		return map[string]any{referenceKey(x.ResourceType): x.Name, "value": x.Value}
+	case Pending:
+		return x.Placeholder()
 	case []Value:
 		out := make([]any, len(x))
 		for i, e := range x {
