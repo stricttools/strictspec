@@ -286,3 +286,36 @@ func TestApplyLeavesUnclaimedResourcesAlone(t *testing.T) {
 		t.Fatalf("an unclaimed resource reached the writer: %q", describeAll(w.changes))
 	}
 }
+
+// A rule keyed by port whose source waits on a server that is not live yet,
+// while its description changed: the description's update carries the rule
+// with the live source in place of the unresolved one, and the expected
+// resource holds that rule too.
+func TestApplyUpdateOfAChildWithAnUnresolvedFieldCarriesTheLiveValue(t *testing.T) {
+	p := newProject(t, "example")
+	declare(t, p, "test-server", "web1", serverBody)
+	declare(t, p, "test-firewall", "edge", "unmanaged = []\n[[rule]]\nport = 22\nsource = { test_server = \"web1\", value = \"ipv4\" }\ndescription = \"new\"\n")
+	s := load(t, p)
+	claims := claimAll(t, s)
+	l := newLive()
+	l.put(declarations.Resource{Type: "test-firewall", Name: "edge", Children: map[string][]declarations.Item{"rule": {{Fields: M{"port": int64(22), "source": "198.51.100.1", "description": "old"}}}}})
+	w := &fakeWriter{live: l}
+	r := verify(t, s, l, claims)
+	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, r.DiffID); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{
+		"create test-server/web1",
+		"update test-firewall/edge rule 22 description",
+	}
+	if got := describeAll(w.changes); !reflect.DeepEqual(got, want) {
+		t.Fatalf("apply:\n got  %q\n want %q", got, want)
+	}
+	wantItem := declarations.Item{Fields: M{"port": int64(22), "source": "198.51.100.1", "description": "new"}}
+	if !reflect.DeepEqual(w.changes[1].Item, wantItem) {
+		t.Fatalf("the update carries %+v; want %+v", w.changes[1].Item, wantItem)
+	}
+	if got := w.changes[1].Resource.Children["rule"]; !reflect.DeepEqual(got, []declarations.Item{wantItem}) {
+		t.Fatalf("the expected resource's rules are %+v; want %+v", got, []declarations.Item{wantItem})
+	}
+}

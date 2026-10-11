@@ -190,9 +190,21 @@ const (
 // Change is one difference apply executes: the creation, update, or deletion
 // of a resource (Collection and Field empty), of one child (Collection and Key
 // set), or of one field (Field set; Collection and Key too for a child's
-// field). Resource is the full expected resource and Item the expected child
-// (the live child for a delete), references already resolved. Stage is the
-// resource type's.
+// field). Stage is the resource type's.
+//
+// Resource is the expected resource minus its unresolved values, references
+// already resolved: a top-level field waiting on a value that does not exist
+// yet is left out; a live child whose key is resolved but some of whose
+// fields wait on such a value carries the live child's values of those
+// fields; a child that is not live and waits on such a value, or whose key
+// does, is left out. Resource.Children holds only the expected children: the
+// live children unmanaged entries leave alone, the live children an
+// unresolved or failed derivation covers, and the unresolved children are not
+// in it, so a writer that replaces a whole set of children must read the
+// live set and keep every child the change does not name.
+//
+// Item is the expected child as Resource.Children holds it, or the live child
+// for a delete.
 type Change struct {
 	Action       Action
 	ResourceType string

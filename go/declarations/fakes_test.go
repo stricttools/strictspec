@@ -459,12 +459,105 @@ func (forwardType) Derive(r declarations.Resource, live declarations.LiveReader)
 	return out, nil
 }
 
+const firewallSchema = `name = "test-firewall"
+meta_version = 1
+format_version = 1
+document_syntax = "toml"
+role = "schema"
+root = "Firewall"
+imports = [{ file = "declarations.types.toml", types = ["UnmanagedEntry"] }]
+
+[types.Firewall]
+type = "record"
+[types.Firewall.fields.rule]
+type = "array"
+required = true
+[types.Firewall.fields.rule.item]
+type = "Rule"
+[types.Firewall.fields.unmanaged]
+type = "array"
+required = true
+[types.Firewall.fields.unmanaged.item]
+type = "UnmanagedEntry"
+
+[types.Rule]
+type = "record"
+[types.Rule.fields.port]
+type = "integer"
+required = true
+[types.Rule.fields.source]
+type = "Source"
+required = true
+[types.Rule.fields.description]
+type = "string"
+required = true
+
+[types.Source]
+type = "node-kind-union"
+[types.Source.arms.text]
+type = "string"
+[types.Source.arms.reference]
+type = "ServerReference"
+
+[types.ServerReference]
+type = "record"
+[types.ServerReference.fields.test_server]
+type = "string"
+required = true
+[types.ServerReference.fields.value]
+type = "string"
+required = true
+`
+
+// firewallType is a firewall whose rules are keyed by port alone, a rule's
+// source possibly referring to a server's ipv4: a child whose non-key field
+// can wait on a value that does not exist yet while its key is known.
+type firewallType struct{}
+
+func (firewallType) Name() string { return "test-firewall" }
+func (firewallType) Schema() (map[string]string, string) {
+	return map[string]string{"test-firewall.schema.toml": firewallSchema}, "test-firewall.schema.toml"
+}
+func (firewallType) Descriptor() declarations.Descriptor {
+	return declarations.Descriptor{
+		Collections: []declarations.Collection{{Name: "rule", Key: []string{"port"}, Fields: []string{"source", "description"}}},
+		Stage:       45,
+	}
+}
+func (firewallType) Decode(name string, doc strictspec.Value) (declarations.Resource, error) {
+	r := declarations.Resource{Type: "test-firewall", Name: name, Fields: map[string]declarations.Value{}, Children: map[string][]declarations.Item{"rule": {}}}
+	rules, _ := field(doc, "rule")
+	for i, rule := range rules.Items() {
+		it := declarations.Item{Fields: map[string]declarations.Value{}}
+		for _, k := range []string{"port", "description"} {
+			v, _ := field(rule, k)
+			it.Fields[k] = valueOf(v)
+		}
+		src, _ := field(rule, "source")
+		if src.Kind() == strictspec.KindRecord {
+			ref, err := declarations.ParseReference(src)
+			if err != nil {
+				return r, fmt.Errorf("test-firewall/%s.toml: rule[%d].source: %w", name, i, err)
+			}
+			it.Fields["source"] = ref
+		} else {
+			it.Fields["source"] = valueOf(src)
+		}
+		r.Children["rule"] = append(r.Children["rule"], it)
+	}
+	return r, nil
+}
+func (firewallType) Slots(declarations.Resource) []declarations.Slot { return nil }
+func (firewallType) Derive(declarations.Resource, declarations.LiveReader) ([]declarations.Derived, error) {
+	return nil, nil
+}
+
 func testTool() declarations.Tool {
 	return declarations.Tool{
 		Name:          "infratool",
 		Directory:     "web-infrastructure",
 		InitCommand:   "infratool manifest init",
-		ResourceTypes: []declarations.ResourceType{zoneType{}, serverType{}, mailType{}, domainType{}, forwardType{}},
+		ResourceTypes: []declarations.ResourceType{zoneType{}, serverType{}, mailType{}, domainType{}, forwardType{}, firewallType{}},
 	}
 }
 

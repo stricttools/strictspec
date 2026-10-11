@@ -90,7 +90,11 @@ func (c *comparison) changes(rep Report) []Change {
 			return r
 		}
 		r := c.set.Resources[i]
+		desc := c.types[r.Type].Descriptor()
 		fields, children, _ := c.expected(i)
+		// The comparison read the live resource already: this read is its
+		// cached result, and a failed one refused apply before changes run.
+		lr, _, _ := c.rc.Read(r.Type, r.Name)
 		out := Resource{Type: r.Type, Name: r.Name, Fields: map[string]Value{}, Children: map[string][]Item{}, Unmanaged: r.Unmanaged, File: r.File}
 		for f, e := range fields {
 			if !e.unresolved {
@@ -98,10 +102,11 @@ func (c *comparison) changes(rep Report) []Change {
 			}
 		}
 		for col, items := range children {
+			cd, _ := findCollection(desc, col)
 			out.Children[col] = []Item{}
 			for _, e := range items {
-				if len(e.unresolved) == 0 {
-					out.Children[col] = append(out.Children[col], e.item)
+				if it, ok := resolvedItem(cd, e, lr.Children[col]); ok {
+					out.Children[col] = append(out.Children[col], it)
 				}
 			}
 		}
@@ -137,6 +142,39 @@ func (c *comparison) changes(rep Report) []Change {
 	sort.SliceStable(upserts, func(i, j int) bool { return upserts[i].Stage < upserts[j].Stage })
 	sort.SliceStable(deletes, func(i, j int) bool { return deletes[i].Stage > deletes[j].Stage })
 	return append(upserts, deletes...)
+}
+
+// resolvedItem is the expected child a change carries: the expected item
+// itself when nothing in it is unresolved; when its key is resolved and it is
+// live, the expected item with each unresolved field replaced by the live
+// child's value (left out when the live child has none), so a writer never
+// writes an unresolved value; otherwise none (false).
+func resolvedItem(col Collection, e expectedItem, live []Item) (Item, bool) {
+	if len(e.unresolved) == 0 {
+		return e.item, true
+	}
+	if e.keyUnresolved(col) {
+		return Item{}, false
+	}
+	k := keyJSON(col, e.item)
+	for _, li := range live {
+		if keyJSON(col, li) != k {
+			continue
+		}
+		it := Item{Fields: map[string]Value{}}
+		for f, v := range e.item.Fields {
+			if !e.unresolved[f] {
+				it.Fields[f] = v
+			}
+		}
+		for f := range e.unresolved {
+			if v, ok := li.Fields[f]; ok {
+				it.Fields[f] = v
+			}
+		}
+		return it, true
+	}
+	return Item{}, false
 }
 
 // itemFor is the change's item: the live child for a delete, else the
