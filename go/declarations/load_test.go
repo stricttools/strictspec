@@ -1,6 +1,8 @@
 package declarations_test
 
 import (
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -77,9 +79,14 @@ func TestLoadRefusesAnUnknownResourceTypeDirectoryAndRemovingItClearsIt(t *testi
 
 func TestLoadRefusesAFileNotEndingInTOML(t *testing.T) {
 	p := newProject(t, "example")
-	writeFile(t, p.Root, declDir+"/test-server/web1.yaml", "")
+	writeFile(t, p.Root, declDir+"/test-server/web1.yaml", "format_version = 1\n"+serverBody)
 	_, err := declarations.Load(testTool(), p)
-	mustContain(t, err, "test-server/web1.yaml", ".toml")
+	mustContain(t, err, "test-server/web1.yaml", "<name>.toml")
+	dir := filepath.Join(p.Root, declDir, "test-server")
+	if err := os.Rename(filepath.Join(dir, "web1.yaml"), filepath.Join(dir, "web1.toml")); err != nil {
+		t.Fatal(err)
+	}
+	load(t, p)
 }
 
 func TestLoadRefusesAnUnknownFileAtTheTop(t *testing.T) {
@@ -87,6 +94,8 @@ func TestLoadRefusesAnUnknownFileAtTheTop(t *testing.T) {
 	writeFile(t, p.Root, declDir+"/README.md", "")
 	_, err := declarations.Load(testTool(), p)
 	mustContain(t, err, "README.md", "manifest.toml", "project.toml", "claims.toml")
+	removeFile(t, p.Root, declDir+"/README.md")
+	load(t, p)
 }
 
 func TestLoadReportsEveryDiagnosticOfEveryFileInOneError(t *testing.T) {
@@ -177,7 +186,9 @@ func TestLoadRefusesOverlappingExactAndPrefixSlots(t *testing.T) {
 	declare(t, p, "test-mail", "example.org", mailBody)
 	declare(t, p, "test-forward", "mx", forwardBody("example.org", "MX", "mx.", ""))
 	_, err := declarations.Load(testTool(), p)
-	mustContain(t, err, "test-forward/mx", "test-mail/example.org")
+	mustContain(t, err, "test-forward/mx", "test-mail/example.org", "remove one of them")
+	removeFile(t, p.Root, declDir+"/test-forward/mx.toml")
+	load(t, p)
 }
 
 func TestLoadRefusesTwoSlotsOnOneField(t *testing.T) {
@@ -186,7 +197,9 @@ func TestLoadRefusesTwoSlotsOnOneField(t *testing.T) {
 	declare(t, p, "test-domain", "example.org", "auto_renew = true\nunmanaged = []\n")
 	declare(t, p, "test-forward", "ns", forwardBody("example.org", "TXT", "x", "example.org"))
 	_, err := declarations.Load(testTool(), p)
-	mustContain(t, err, "test-forward/ns", "test-zone/example.org", "nameservers")
+	mustContain(t, err, "test-forward/ns", "test-zone/example.org", "nameservers", "remove one of them")
+	removeFile(t, p.Root, declDir+"/test-forward/ns.toml")
+	load(t, p)
 }
 
 func TestLoadRefusesAnUnmanagedEntryMatchingADeclaredChildAndRemovingItClearsIt(t *testing.T) {
@@ -203,22 +216,31 @@ func TestLoadRefusesAnUnmanagedEntryMatchingSlotCoveredChildren(t *testing.T) {
 	declare(t, p, "test-mail", "example.org", mailBody)
 	declare(t, p, "test-zone", "example.org", zoneBody(false, `{ collection = "record", match = { type = "MX" }, reason = "r" }`))
 	_, err := declarations.Load(testTool(), p)
-	mustContain(t, err, "unmanaged[0]", "derived and unmanaged", "test-mail/example.org")
+	mustContain(t, err, "unmanaged[0]", "derived and unmanaged", "test-mail/example.org", "remove the entry")
+	declare(t, p, "test-zone", "example.org", zoneBody(false, ""))
+	load(t, p)
 }
 
-func TestLoadRefusesMalformedUnmanagedEntries(t *testing.T) {
-	cases := map[string][]string{
-		`{ collection = "record", match = { type = ["TXT"] }, reason = "r" }`:   {"unmanaged[0].match.type", "a string, an integer, or a boolean"},
-		`{ collection = "record", match = { type = { a = 1 } }, reason = "r" }`: {"unmanaged[0].match.type", "a string, an integer, or a boolean"},
-		`{ collection = "record", match = {}, reason = "r" }`:                   {"unmanaged[0].match", "at least one"},
-		`{ collection = "record", match = { color = "x" }, reason = "r" }`:      {"unmanaged[0].match.color", "type, name, content, ttl, comment"},
-		`{ collection = "host", match = { type = "A" }, reason = "r" }`:         {"unmanaged[0].collection", "host", "record"},
+// Each malformed entry is refused, and the entry its message names the fix
+// for loads.
+func TestLoadRefusesMalformedUnmanagedEntriesAndEachNamedFixClearsIt(t *testing.T) {
+	cases := []struct {
+		entry, fixed string
+		parts        []string
+	}{
+		{`{ collection = "record", match = { type = ["TXT"] }, reason = "r" }`, `{ collection = "record", match = { type = "TXT" }, reason = "r" }`, []string{"unmanaged[0].match.type", "a string, an integer, or a boolean"}},
+		{`{ collection = "record", match = { type = { a = 1 } }, reason = "r" }`, `{ collection = "record", match = { type = "TXT" }, reason = "r" }`, []string{"unmanaged[0].match.type", "a string, an integer, or a boolean"}},
+		{`{ collection = "record", match = {}, reason = "r" }`, `{ collection = "record", match = { ttl = 300 }, reason = "r" }`, []string{"unmanaged[0].match", "at least one"}},
+		{`{ collection = "record", match = { color = "x" }, reason = "r" }`, `{ collection = "record", match = { comment = "x" }, reason = "r" }`, []string{"unmanaged[0].match.color", "type, name, content, ttl, comment"}},
+		{`{ collection = "host", match = { type = "A" }, reason = "r" }`, `{ collection = "record", match = { type = "A" }, reason = "r" }`, []string{"unmanaged[0].collection", "host", "record"}},
 	}
-	for entry, parts := range cases {
+	for _, c := range cases {
 		p := newProject(t, "example")
-		declare(t, p, "test-zone", "example.org", zoneBody(false, entry))
+		declare(t, p, "test-zone", "example.org", zoneBody(false, c.entry))
 		_, err := declarations.Load(testTool(), p)
-		mustContain(t, err, append([]string{"test-zone/example.org.toml"}, parts...)...)
+		mustContain(t, err, append([]string{"test-zone/example.org.toml"}, c.parts...)...)
+		declare(t, p, "test-zone", "example.org", zoneBody(false, c.fixed))
+		load(t, p)
 	}
 }
 
