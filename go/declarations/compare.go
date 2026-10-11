@@ -131,7 +131,10 @@ func run(set Set, live LiveReader, claims Claims) (*comparison, Report, error) {
 	if err := checkNotImporting(set); err != nil {
 		return nil, Report{}, err
 	}
-	account := samePath(set.Project.Root, claims.Root)
+	account, err := samePath(set.Project.Root, claims.Root)
+	if err != nil {
+		return nil, Report{}, err
+	}
 	if err := checkClaimsPlacement(set, claims, account); err != nil {
 		return nil, Report{}, err
 	}
@@ -171,8 +174,25 @@ func checkNotImporting(set Set) error {
 	return nil
 }
 
-func samePath(a, b string) bool {
-	return a != "" && b != "" && filepath.Clean(a) == filepath.Clean(b)
+// samePath reports whether the project's root is the account repository's,
+// comparing the paths with every symlink resolved. A path that does not
+// resolve is an error.
+func samePath(projectRoot, accountRoot string) (bool, error) {
+	if projectRoot == "" {
+		return false, fmt.Errorf("the set's project has no root")
+	}
+	if accountRoot == "" {
+		return false, fmt.Errorf("the claims carry no account repository path: load them with LoadClaims")
+	}
+	a, err := filepath.EvalSymlinks(projectRoot)
+	if err != nil {
+		return false, fmt.Errorf("the project's root %s: %w", projectRoot, err)
+	}
+	b, err := filepath.EvalSymlinks(accountRoot)
+	if err != nil {
+		return false, fmt.Errorf("the account repository's path %s: %w", accountRoot, err)
+	}
+	return a == b, nil
 }
 
 // checkClaimsPlacement refuses a claims.toml outside the account repository,
