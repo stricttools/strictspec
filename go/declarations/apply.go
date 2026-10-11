@@ -27,18 +27,20 @@ type Plan struct {
 	set    Set
 	live   LiveReader
 	claims Claims
+	writer Writer
 	tool   Tool
 }
 
-// PlanApply makes the plan of an apply. It refuses, in order: while the
-// declaration directory has an uncommitted or untracked file; while a
-// resource is misclaimed; while a live read fails. The changes never hold an
-// unresolved or misclaimed difference. In the account repository each
+// PlanApply makes the plan of an apply, which w executes. It refuses, in
+// order: while the declaration directory has an uncommitted or untracked
+// file; while a resource is misclaimed; while a live read fails; while w
+// refuses a change of the plan (Writer.Refuse), naming every change it
+// refuses. The changes never hold an unresolved or misclaimed difference. In the account repository each
 // unclaimed resource is deleted whole, with the deletes; in a project the
 // plan never deletes a resource, only children (a live resource a project
 // stops declaring is left alone, and the account repository reports it
 // unclaimed).
-func PlanApply(set Set, live LiveReader, claims Claims, g Git) (Plan, error) {
+func PlanApply(set Set, live LiveReader, claims Claims, w Writer, g Git) (Plan, error) {
 	if err := checkTool(set.Tool); err != nil {
 		return Plan{}, err
 	}
@@ -82,7 +84,16 @@ func PlanApply(set Set, live LiveReader, claims Claims, g Git) (Plan, error) {
 	if len(problems) > 0 {
 		return Plan{}, fmt.Errorf("apply refuses while a live read fails, rather than guess at what it would have read: run %s again once they read:\n  %s", set.Tool.DryRunCommand, strings.Join(problems, "\n  "))
 	}
-	return Plan{Report: rep, Changes: c.changes(rep), ID: c.planID(rep), set: set, live: live, claims: claims, tool: set.Tool}, nil
+	changes := c.changes(rep)
+	for _, ch := range changes {
+		if err := w.Refuse(ch, changes); err != nil {
+			problems = append(problems, describeChange(ch)+": "+err.Error())
+		}
+	}
+	if len(problems) > 0 {
+		return Plan{}, fmt.Errorf("apply refuses the plan before any write, since it holds changes the writer cannot make: make each fix named, then run %s again:\n  %s", set.Tool.DryRunCommand, strings.Join(problems, "\n  "))
+	}
+	return Plan{Report: rep, Changes: changes, ID: c.planID(rep), set: set, live: live, claims: claims, writer: w, tool: set.Tool}, nil
 }
 
 // Accept refuses an identifier other than the plan's: the declarations or
@@ -94,12 +105,12 @@ func (p Plan) Accept(id string) error {
 	return nil
 }
 
-// Execute passes each change to w in order, then returns the report
-// computed after applying, where values this apply created resolve: the
-// next stage. A writer error stops it at once.
-func (p Plan) Execute(w Writer) (Report, error) {
+// Execute passes each change to the plan's writer in order, then returns the
+// report computed after applying, where values this apply created resolve:
+// the next stage. A writer error stops it at once.
+func (p Plan) Execute() (Report, error) {
 	for i, ch := range p.Changes {
-		if err := w.Apply(ch); err != nil {
+		if err := p.writer.Apply(ch); err != nil {
 			return Report{}, fmt.Errorf("apply stopped at %s: %w; %d change(s) were applied before it: run %s again", describeChange(ch), err, i, p.tool.DryRunCommand)
 		}
 	}
@@ -109,14 +120,14 @@ func (p Plan) Execute(w Writer) (Report, error) {
 // Apply makes the plan (PlanApply), refuses unless its identifier is id
 // (Accept), and executes it (Execute).
 func Apply(set Set, live LiveReader, claims Claims, w Writer, g Git, id string) (Report, error) {
-	p, err := PlanApply(set, live, claims, g)
+	p, err := PlanApply(set, live, claims, w, g)
 	if err != nil {
 		return Report{}, err
 	}
 	if err := p.Accept(id); err != nil {
 		return Report{}, err
 	}
-	return p.Execute(w)
+	return p.Execute()
 }
 
 func describeChange(ch Change) string {

@@ -233,6 +233,15 @@ type Change struct {
 // Writer executes changes; the tool supplies it. It supports a resource-level
 // delete for every resource type, or refuses one naming what to do instead.
 type Writer interface {
+	// Refuse says why the writer cannot make ch, naming the fix, or returns
+	// nil when it can. It decides from ch, the live state read, and plan
+	// (every change of the plan, in execution order, ch among them, so a
+	// change may count on a resource an earlier one creates), and never
+	// writes. PlanApply asks it of every change and refuses the plan, naming
+	// each refusal, so a change the writer cannot make is refused by the dry
+	// run and before the apply's first write, never partway through.
+	Refuse(ch Change, plan []Change) error
+	// Apply executes one change.
 	Apply(Change) error
 }
 

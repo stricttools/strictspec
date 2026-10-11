@@ -12,7 +12,7 @@ import (
 // its project, with nothing uncommitted.
 func plan(t *testing.T, s declarations.Set, l declarations.LiveReader) declarations.Plan {
 	t.Helper()
-	p, err := declarations.PlanApply(s, l, claimAll(t, s), &fakeGit{})
+	p, err := declarations.PlanApply(s, l, claimAll(t, s), &fakeWriter{}, &fakeGit{})
 	if err != nil {
 		t.Fatalf("PlanApply: %v", err)
 	}

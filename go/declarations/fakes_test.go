@@ -1,6 +1,7 @@
 package declarations_test
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -722,11 +723,23 @@ func copyItem(it declarations.Item) declarations.Item {
 }
 
 // fakeWriter applies changes to a fakeLive, recording them; a created server
-// gets an ipv4, a created zone its nameservers.
+// gets an ipv4, a created zone its nameservers. It refuses each change
+// refuse names, by its description (describe), with the reason given, and
+// records the plan each Refuse is given.
 type fakeWriter struct {
 	live    *fakeLive
 	changes []declarations.Change
 	failOn  int // 1-based index of the change that fails; 0 for none
+	refuse  map[string]string
+	plans   [][]declarations.Change
+}
+
+func (w *fakeWriter) Refuse(c declarations.Change, plan []declarations.Change) error {
+	w.plans = append(w.plans, plan)
+	if why, ok := w.refuse[describe(c)]; ok {
+		return errors.New(why)
+	}
+	return nil
 }
 
 func sameKey(it declarations.Item, key map[string]declarations.Value) bool {

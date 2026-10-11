@@ -16,7 +16,7 @@ import (
 // nothing uncommitted.
 func planID(t *testing.T, s declarations.Set, live declarations.LiveReader, claims declarations.Claims) string {
 	t.Helper()
-	p, err := declarations.PlanApply(s, live, claims, &fakeGit{})
+	p, err := declarations.PlanApply(s, live, claims, &fakeWriter{}, &fakeGit{})
 	if err != nil {
 		t.Fatalf("PlanApply: %v", err)
 	}
@@ -189,7 +189,7 @@ func TestApplyRefusesUncommittedFilesAndCommittingClearsIt(t *testing.T) {
 	id := planID(t, s, l, claims)
 	_, err := declarations.Apply(s, l, claims, w, g, id)
 	mustContain(t, err, "uncommitted or untracked", declDir+"/test-zone/example.org.toml", declDir+"/test-server/backup.toml", "commit them, then run infratool manifest apply --dry-run")
-	if _, err := declarations.PlanApply(s, l, claims, g); err == nil {
+	if _, err := declarations.PlanApply(s, l, claims, w, g); err == nil {
 		t.Fatal("a dry run planned uncommitted declarations")
 	}
 	if len(w.changes) != 0 {
@@ -497,14 +497,14 @@ func TestPlanListsTheChangesExecuteRuns(t *testing.T) {
 	claims := claimAll(t, s)
 	l := siteLive()
 	delete(l.resources, "test-zone/example.org")
-	plan, err := declarations.PlanApply(s, l, claims, &fakeGit{})
+	w := &fakeWriter{live: l}
+	plan, err := declarations.PlanApply(s, l, claims, w, &fakeGit{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(plan.Changes) == 0 || plan.Report.Matching {
 		t.Fatalf("a missing zone planned nothing: %+v", plan)
 	}
-	w := &fakeWriter{live: l}
 	if err := plan.Accept(plan.ID); err != nil {
 		t.Fatal(err)
 	}
@@ -514,7 +514,7 @@ func TestPlanListsTheChangesExecuteRuns(t *testing.T) {
 	if len(w.changes) != 0 {
 		t.Fatal("planning wrote")
 	}
-	if _, err := plan.Execute(w); err != nil {
+	if _, err := plan.Execute(); err != nil {
 		t.Fatal(err)
 	}
 	if got, want := describeAll(w.changes), describeAll(plan.Changes); !reflect.DeepEqual(got, want) {
@@ -522,5 +522,50 @@ func TestPlanListsTheChangesExecuteRuns(t *testing.T) {
 	}
 	if !verify(t, s, l, claims).Matching {
 		t.Fatal("not matching after executing the plan")
+	}
+}
+
+// A change the writer refuses is refused when the plan is made, before any
+// write, naming every refused change and the writer's reason; the writer sees
+// the whole plan. Once the declaration no longer asks for the change, the
+// refusal clears and the apply runs.
+func TestAPlanHoldingAChangeTheWriterRefusesIsRefusedBeforeAnyWrite(t *testing.T) {
+	p := newProject(t, "example")
+	declare(t, p, "test-zone", "example.org", zoneBody(false, "", txtRecord))
+	declare(t, p, "test-mail", "example.org", "plan = \"micro\"\nunmanaged = []\nmailbox = []\n")
+	s := load(t, p)
+	claims := claimAll(t, s)
+	l := newLive()
+	l.put(declarations.Resource{Type: "test-mail", Name: "example.org", Fields: M{"plan": "mini", "dkim_key": "k=1"}, Children: map[string][]declarations.Item{"mailbox": {}}})
+	l.put(liveZone("example.org", false,
+		record("TXT", "example.org", "hello", int64(600), ""),
+		record("MX", "example.org", "mx.mail.test", int64(300), ""),
+		record("TXT", "dkim._domainkey.example.org", "k=1", "automatic", "")))
+	w := &fakeWriter{live: l, refuse: map[string]string{"update test-mail/example.org plan": "the provider cannot change a plan: declare plan = \"mini\""}}
+	_, err := declarations.PlanApply(s, l, claims, w, &fakeGit{})
+	mustContain(t, err, "apply refuses the plan before any write", "the update of test-mail/example.org field plan: the provider cannot change a plan: declare plan = \"mini\"", "then run infratool manifest apply --dry-run again")
+	if len(w.changes) != 0 {
+		t.Fatalf("a refused plan wrote: %q", describeAll(w.changes))
+	}
+	want := []string{"update test-zone/example.org record hello,example.org,TXT ttl", "update test-mail/example.org plan"}
+	for _, plan := range w.plans {
+		if got := describeAll(plan); !reflect.DeepEqual(got, want) {
+			t.Fatalf("Refuse was given the plan %q, want %q", got, want)
+		}
+	}
+	if len(w.plans) != len(want) {
+		t.Fatalf("Refuse was asked of %d changes, want %d", len(w.plans), len(want))
+	}
+	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, noPlan); err == nil || !strings.Contains(err.Error(), "apply refuses the plan before any write") || len(w.changes) != 0 {
+		t.Fatalf("apply ran a plan holding a refused change: %v, %q", err, describeAll(w.changes))
+	}
+	// The fix: declare the live plan.
+	declare(t, p, "test-mail", "example.org", "plan = \"mini\"\nunmanaged = []\nmailbox = []\n")
+	s = load(t, p)
+	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, planID(t, s, l, claims)); err != nil {
+		t.Fatalf("after declaring the live plan: %v", err)
+	}
+	if got := describeAll(w.changes); !reflect.DeepEqual(got, want[:1]) {
+		t.Fatalf("applied %q", got)
 	}
 }
