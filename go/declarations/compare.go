@@ -128,6 +128,9 @@ func run(set Set, live LiveReader, claims Claims) (*comparison, Report, error) {
 	if err := checkTool(set.Tool); err != nil {
 		return nil, Report{}, err
 	}
+	if err := checkNotImporting(set); err != nil {
+		return nil, Report{}, err
+	}
 	account := samePath(set.Project.Root, claims.Root)
 	if err := checkClaimsPlacement(set, claims, account); err != nil {
 		return nil, Report{}, err
@@ -153,6 +156,15 @@ func run(set Set, live LiveReader, claims Claims) (*comparison, Report, error) {
 		return nil, Report{}, refusal("the live state read", c.rc.bugs)
 	}
 	return c, c.report(), nil
+}
+
+// checkNotImporting refuses a set LoadForImport returned: it may hold slots
+// whose target is not declared.
+func checkNotImporting(set Set) error {
+	if set.importing != nil {
+		return fmt.Errorf("the set was loaded by LoadForImport for %s/%s and serves RenderImport only: load it with Load to compare or apply", set.importing.resourceType, set.importing.name)
+	}
+	return nil
 }
 
 func samePath(a, b string) bool {

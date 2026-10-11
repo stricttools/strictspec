@@ -24,6 +24,15 @@ type Set struct {
 	files     map[string]string
 	hasClaims bool
 	causes    []cause
+	// importing is the resource LoadForImport loaded the set for; such a set
+	// serves RenderImport only.
+	importing *importTarget
+}
+
+// importTarget is the resource being imported: a slot targeting it is not
+// refused when it is not declared yet.
+type importTarget struct {
+	resourceType, name string
 }
 
 // cause is one slot and the index of the declared resource causing it.
@@ -110,12 +119,31 @@ func refusal(what string, problems []string) error {
 
 // Load reads and checks every file of the project's declaration directory.
 func Load(tool Tool, project Project) (Set, error) {
+	return load(tool, project, nil)
+}
+
+// LoadForImport is Load for importing the resource (resourceType, name) with
+// one relaxation: a slot whose target is that resource is not refused when the
+// resource is not declared yet, so RenderImport leaves out the fields and
+// children the slot covers. Every other refusal stays. The set it returns
+// serves RenderImport only: Compare and Apply refuse it.
+func LoadForImport(tool Tool, project Project, resourceType, name string) (Set, error) {
+	if err := checkTool(tool); err != nil {
+		return Set{}, err
+	}
+	if typesByName(tool)[resourceType] == nil {
+		return Set{}, fmt.Errorf("%s is not a resource type %s supplies (%s)", resourceType, tool.Name, typeNames(tool))
+	}
+	return load(tool, project, &importTarget{resourceType: resourceType, name: name})
+}
+
+func load(tool Tool, project Project, importing *importTarget) (Set, error) {
 	if err := checkTool(tool); err != nil {
 		return Set{}, err
 	}
 	types := typesByName(tool)
 	dir := dirAbs(tool, project.Root)
-	set := Set{Tool: tool, Project: project, files: map[string]string{}}
+	set := Set{Tool: tool, Project: project, files: map[string]string{}, importing: importing}
 	top, err := os.ReadDir(dir)
 	if err != nil {
 		return Set{}, err
@@ -376,7 +404,7 @@ func (s *Set) check(types map[string]ResourceType) []string {
 				problems = append(problems, p)
 				continue
 			}
-			if _, ok := s.index(sl.ResourceType, sl.Name); !ok {
+			if _, ok := s.index(sl.ResourceType, sl.Name); !ok && !s.isImporting(sl.ResourceType, sl.Name) {
 				problems = append(problems, fmt.Sprintf("%s causes %s of %s/%s, which is not declared: write %s/%s.toml", r.File, describeSlot(sl), sl.ResourceType, sl.Name, sl.ResourceType, sl.Name))
 				continue
 			}
@@ -396,7 +424,10 @@ func (s *Set) check(types map[string]ResourceType) []string {
 	}
 
 	for _, c := range s.causes {
-		ti, _ := s.index(c.slot.ResourceType, c.slot.Name)
+		ti, ok := s.index(c.slot.ResourceType, c.slot.Name)
+		if !ok { // the undeclared resource being imported: nothing hand-declared
+			continue
+		}
 		t := s.Resources[ti]
 		if c.slot.Field != "" {
 			if _, ok := t.Fields[c.slot.Field]; ok {
@@ -420,8 +451,8 @@ func (s *Set) check(types map[string]ResourceType) []string {
 				}
 			}
 			for _, c := range s.causes {
-				ti, _ := s.index(c.slot.ResourceType, c.slot.Name)
-				if ti == ri && c.slot.Collection == u.Collection && compatibleMatchers(um, c.slot.Match) {
+				ti, ok := s.index(c.slot.ResourceType, c.slot.Name)
+				if ok && ti == ri && c.slot.Collection == u.Collection && compatibleMatchers(um, c.slot.Match) {
 					problems = append(problems, fmt.Sprintf("%s: unmanaged[%d] matches the %s children %s derives (%s): a child is derived and unmanaged, never both; remove the entry", r.File, ui, u.Collection, s.sourceOf(c), describeMatchers(c.slot.Match)))
 				}
 			}
@@ -432,8 +463,8 @@ func (s *Set) check(types map[string]ResourceType) []string {
 			}
 			derived := false
 			for _, c := range s.causes {
-				ti, _ := s.index(c.slot.ResourceType, c.slot.Name)
-				derived = derived || (ti == ri && c.slot.Field == f)
+				ti, ok := s.index(c.slot.ResourceType, c.slot.Name)
+				derived = derived || (ok && ti == ri && c.slot.Field == f)
 			}
 			if !derived {
 				problems = append(problems, fmt.Sprintf("%s: %s is neither declared nor derived: declare it in %s, or declare the resource whose derivation supplies it", r.File, f, r.File))
@@ -441,6 +472,12 @@ func (s *Set) check(types map[string]ResourceType) []string {
 		}
 	}
 	return problems
+}
+
+// isImporting reports whether (resourceType, name) is the resource the set
+// was loaded to import.
+func (s *Set) isImporting(resourceType, name string) bool {
+	return s.importing != nil && s.importing.resourceType == resourceType && s.importing.name == name
 }
 
 // checkSlot refuses a slot its resource type got wrong: a bug in the tool.

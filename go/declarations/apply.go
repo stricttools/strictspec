@@ -17,6 +17,9 @@ func Apply(set Set, live LiveReader, claims Claims, w Writer, g Git, diffID stri
 	if err := checkTool(set.Tool); err != nil {
 		return Report{}, err
 	}
+	if err := checkNotImporting(set); err != nil {
+		return Report{}, err
+	}
 	dir := dirRel(set.Tool)
 	out, err := g.Status(set.Project.Root, dir)
 	if err != nil {
