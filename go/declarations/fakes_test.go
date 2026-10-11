@@ -555,13 +555,13 @@ func (firewallType) Derive(declarations.Resource, declarations.LiveReader) ([]de
 func testTool() declarations.Tool {
 	return declarations.Tool{
 		Name:          "infratool",
-		Directory:     "web-infrastructure",
+		Directory:     "infrastructure",
 		InitCommand:   "infratool manifest init",
 		ResourceTypes: []declarations.ResourceType{zoneType{}, serverType{}, mailType{}, domainType{}, forwardType{}, firewallType{}},
 	}
 }
 
-const declDir = ".strictmetadata/web-infrastructure"
+const declDir = ".strictmetadata/infrastructure"
 
 // writeFile writes content to rel under root, creating directories.
 func writeFile(t *testing.T, root, rel, content string) {

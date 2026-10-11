@@ -55,7 +55,7 @@ func TestInitReturnsTheManifestAndTheProjectFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	dir := filepath.Join(root, ".strictmetadata", "web-infrastructure")
+	dir := filepath.Join(root, ".strictmetadata", "infrastructure")
 	want := map[string]string{
 		filepath.Join(dir, "manifest.toml"): "owner = \"infratool\"\n",
 		filepath.Join(dir, "project.toml"):  "format_version = 1\nname = \"example\"\n",
@@ -80,7 +80,7 @@ func TestInitRefusesABadProjectName(t *testing.T) {
 func TestInitRefusesAnExistingDirectory(t *testing.T) {
 	p := newProject(t, "example")
 	_, err := declarations.Init(testTool(), p.Root, "example")
-	mustContain(t, err, filepath.Join(p.Root, ".strictmetadata", "web-infrastructure"), "exists")
+	mustContain(t, err, filepath.Join(p.Root, ".strictmetadata", "infrastructure"), "exists")
 }
 
 func TestFindProjectRefusesAnotherOwner(t *testing.T) {
