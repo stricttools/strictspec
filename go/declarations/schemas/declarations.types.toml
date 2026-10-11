@@ -1,0 +1,40 @@
+# Built-in type definitions of the declarations engine
+# (github.com/stricttools/strictspec/go/declarations). Every resource type's
+# schema imports UnmanagedEntry for its required `unmanaged` array; the engine
+# adds this file to the resource type's schema files when it compiles them.
+name = "declarations-types"
+meta_version = 1
+format_version = 1
+document_syntax = "toml"
+role = "type-definitions"
+description = "The types every declaration file of a resource type shares."
+
+[types.UnmanagedEntry]
+type = "record"
+description = "Live children of one collection the declaration leaves alone: every live child whose fields equal all match values."
+
+[types.UnmanagedEntry.fields.collection]
+type = "string"
+required = true
+non_empty = true
+description = "The child collection, one the resource type declares."
+
+[types.UnmanagedEntry.fields.match]
+type = "map"
+required = true
+key_pattern = "^[a-z][a-z0-9_]*$"
+order = "incidental"
+description = "The fields a live child must equal to be left alone: at least one, each a field of the collection."
+[types.UnmanagedEntry.fields.match.value]
+type = "MatchValue"
+
+[types.UnmanagedEntry.fields.reason]
+type = "string"
+required = true
+non_empty = true
+description = "Why these live children are left alone."
+
+[types.MatchValue]
+type = "opaque"
+consumer_check = "declarations.match-value"
+description = "A string, an integer, or a boolean; the engine refuses anything else when it loads the file."

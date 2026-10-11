@@ -1,0 +1,70 @@
+# Built-in schema of the declarations engine: claims.toml at the top of the
+# account repository's declaration directory, assigning every account-level
+# resource a project declares to that project, and listing the live
+# account-level resources nobody declares.
+name = "declaration-claims"
+meta_version = 1
+format_version = 1
+document_syntax = "toml"
+role = "schema"
+root = "DeclarationClaims"
+description = "The account repository's claims: which project declares each account-level resource, and which live account-level resources nobody declares."
+
+[types.DeclarationClaims]
+type = "record"
+
+[types.DeclarationClaims.fields.claim]
+type = "array"
+required = true
+description = "The account-level resources projects declare; written claim = [] when there are none."
+[types.DeclarationClaims.fields.claim.item]
+type = "Claim"
+
+[types.DeclarationClaims.fields.unmanaged]
+type = "array"
+required = true
+description = "The live account-level resources nobody declares; written unmanaged = [] when there are none."
+[types.DeclarationClaims.fields.unmanaged.item]
+type = "UnmanagedResource"
+
+[types.Claim]
+type = "record"
+
+[types.Claim.fields.resource_type]
+type = "string"
+required = true
+regex = "^[a-z0-9][a-z0-9-]*$"
+description = "The resource type, a directory name of the declaration directory."
+
+[types.Claim.fields.name]
+type = "string"
+required = true
+non_empty = true
+description = "The resource's name."
+
+[types.Claim.fields.project]
+type = "string"
+required = true
+regex = "^[a-z0-9][a-z0-9-]*$"
+description = "The project.toml name of the repository declaring the resource."
+
+[types.UnmanagedResource]
+type = "record"
+
+[types.UnmanagedResource.fields.resource_type]
+type = "string"
+required = true
+regex = "^[a-z0-9][a-z0-9-]*$"
+description = "The resource type."
+
+[types.UnmanagedResource.fields.name]
+type = "string"
+required = true
+non_empty = true
+description = "The resource's name."
+
+[types.UnmanagedResource.fields.reason]
+type = "string"
+required = true
+non_empty = true
+description = "Why nobody declares the resource."

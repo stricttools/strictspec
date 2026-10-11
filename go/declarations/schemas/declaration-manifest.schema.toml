@@ -1,0 +1,20 @@
+# Built-in schema of the declarations engine: manifest.toml of a declaration
+# directory, .strictmetadata/<directory>/manifest.toml, naming the tool that
+# owns the directory. The file holds the one key owner; the engine supplies
+# format_version when it validates the file and refuses a file that writes it.
+name = "declaration-manifest"
+meta_version = 1
+format_version = 1
+document_syntax = "toml"
+role = "schema"
+root = "DeclarationManifest"
+description = "The ownership manifest of a declaration directory: the tool that owns it."
+
+[types.DeclarationManifest]
+type = "record"
+
+[types.DeclarationManifest.fields.owner]
+type = "string"
+required = true
+non_empty = true
+description = "The tool that owns the declaration directory."

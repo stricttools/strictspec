@@ -1,0 +1,188 @@
+# Built-in schema of the declarations engine: the verify report, the JSON a
+# tool's verify prints, comparing a declaration directory with live state.
+name = "declaration-report"
+meta_version = 1
+format_version = 1
+document_syntax = "json"
+role = "schema"
+root = "DeclarationReport"
+description = "The result of comparing a declaration directory with live state."
+
+[types.DeclarationReport]
+type = "record"
+
+[types.DeclarationReport.fields.tool]
+type = "string"
+required = true
+non_empty = true
+description = "The tool that owns the declaration directory."
+
+[types.DeclarationReport.fields.project]
+type = "string"
+required = true
+regex = "^[a-z0-9][a-z0-9-]*$"
+description = "The project.toml name of the repository compared."
+
+[types.DeclarationReport.fields.root]
+type = "string"
+required = true
+non_empty = true
+description = "The repository's absolute path."
+
+[types.DeclarationReport.fields.directory]
+type = "string"
+required = true
+non_empty = true
+description = "The declaration directory, relative to the root."
+
+[types.DeclarationReport.fields.diff_id]
+type = "string"
+required = true
+regex = "^[0-9a-f]{64}$"
+description = "The identifier apply requires: it changes when a declaration file or the live state read changes."
+
+[types.DeclarationReport.fields.matching]
+type = "boolean"
+required = true
+description = "True when there is no difference and no unreadable resource."
+
+[types.DeclarationReport.fields.differences]
+type = "array"
+required = true
+description = "The differences, sorted by resource type, name, collection, key, and field."
+[types.DeclarationReport.fields.differences.item]
+type = "Difference"
+
+[types.DeclarationReport.fields.unmanaged]
+type = "array"
+required = true
+description = "The live resources and children an unmanaged entry leaves alone."
+[types.DeclarationReport.fields.unmanaged.item]
+type = "UnmanagedMatch"
+
+[types.DeclarationReport.fields.unreadable]
+type = "array"
+required = true
+description = "The live reads that failed."
+[types.DeclarationReport.fields.unreadable.item]
+type = "Unreadable"
+
+[types.Difference]
+type = "record"
+
+[types.Difference.fields.status]
+type = "enum"
+required = true
+values = ["missing", "unexpected", "changed", "unresolved", "unclaimed", "misclaimed"]
+description = "missing: declared or derived, not live; unexpected: live, neither declared, derived, nor unmanaged; changed: one field differs; unresolved: the expected value waits on a provider-assigned value that does not exist yet; unclaimed: a live account-level resource neither declared, claimed, nor unmanaged; misclaimed: a declared resource the claims assign to another project or to none."
+
+[types.Difference.fields.resource_type]
+type = "string"
+required = true
+non_empty = true
+description = "The resource type."
+
+[types.Difference.fields.name]
+type = "string"
+required = true
+non_empty = true
+description = "The resource's name."
+
+[types.Difference.fields.collection]
+type = "string"
+required = false
+non_empty = true
+description = "The child collection, for a difference of one child."
+
+[types.Difference.fields.key]
+type = "map"
+required = false
+key_pattern = "^[a-z][a-z0-9_]*$"
+order = "incidental"
+description = "The child's key fields, for a difference of one child."
+[types.Difference.fields.key.value]
+type = "AnyValue"
+
+[types.Difference.fields.field]
+type = "string"
+required = false
+non_empty = true
+description = "The field, for a difference of one field."
+
+[types.Difference.fields.declared]
+type = "AnyValue"
+required = false
+description = "The expected value."
+
+[types.Difference.fields.live]
+type = "AnyValue"
+required = false
+description = "The live value."
+
+[types.Difference.fields.source]
+type = "string"
+required = false
+non_empty = true
+description = "The declaration file the expected value comes from, as <resource type>/<name>; for a derived value, the file that causes it."
+
+[types.UnmanagedMatch]
+type = "record"
+
+[types.UnmanagedMatch.fields.resource_type]
+type = "string"
+required = true
+non_empty = true
+description = "The resource type."
+
+[types.UnmanagedMatch.fields.name]
+type = "string"
+required = true
+non_empty = true
+description = "The resource's name."
+
+[types.UnmanagedMatch.fields.collection]
+type = "string"
+required = false
+non_empty = true
+description = "The child collection; absent for an account-level resource claims.toml lists."
+
+[types.UnmanagedMatch.fields.key]
+type = "map"
+required = false
+key_pattern = "^[a-z][a-z0-9_]*$"
+order = "incidental"
+description = "The child's key fields; absent for an account-level resource claims.toml lists."
+[types.UnmanagedMatch.fields.key.value]
+type = "AnyValue"
+
+[types.UnmanagedMatch.fields.reason]
+type = "string"
+required = true
+non_empty = true
+description = "The unmanaged entry's reason."
+
+[types.Unreadable]
+type = "record"
+
+[types.Unreadable.fields.resource_type]
+type = "string"
+required = true
+non_empty = true
+description = "The resource type."
+
+[types.Unreadable.fields.name]
+type = "string"
+required = false
+non_empty = true
+description = "The resource's name; absent when listing the resource type failed."
+
+[types.Unreadable.fields.error]
+type = "string"
+required = true
+non_empty = true
+description = "The live reader's error."
+
+[types.AnyValue]
+type = "opaque"
+unchecked = true
+unchecked_reason = "A value of a resource type's field: its shape is the resource type's schema's, and the engine writes it from a value that schema already accepted."

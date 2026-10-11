@@ -1,0 +1,18 @@
+# Built-in schema of the declarations engine: project.toml at the top of a
+# declaration directory, naming the project the claims refer to.
+name = "declaration-project"
+meta_version = 1
+format_version = 1
+document_syntax = "toml"
+role = "schema"
+root = "DeclarationProject"
+description = "The project a declaration directory belongs to."
+
+[types.DeclarationProject]
+type = "record"
+
+[types.DeclarationProject.fields.name]
+type = "string"
+required = true
+regex = "^[a-z0-9][a-z0-9-]*$"
+description = "The project's name, the name claims refer to it by."
