@@ -118,12 +118,19 @@ type comparison struct {
 // neither declared there, claimed, nor unmanaged; in a project it reports
 // each declared resource the claims do not assign to the project.
 func Compare(set Set, live LiveReader, claims Claims) (Report, error) {
+	_, rep, err := run(set, live, claims)
+	return rep, err
+}
+
+// run is Compare, also returning the comparison apply builds its changes
+// from.
+func run(set Set, live LiveReader, claims Claims) (*comparison, Report, error) {
 	if err := checkTool(set.Tool); err != nil {
-		return Report{}, err
+		return nil, Report{}, err
 	}
 	account := samePath(set.Project.Root, claims.Root)
 	if err := checkClaimsPlacement(set, claims, account); err != nil {
-		return Report{}, err
+		return nil, Report{}, err
 	}
 	c := &comparison{
 		set:   set,
@@ -132,7 +139,7 @@ func Compare(set Set, live LiveReader, claims Claims) (Report, error) {
 	}
 	c.rc = &recorder{live: live, types: c.types, reads: map[string]readResult{}, exposed: map[string]exposedResult{}}
 	if err := c.derive(); err != nil {
-		return Report{}, err
+		return nil, Report{}, err
 	}
 	for i := range set.Resources {
 		c.compareResource(i)
@@ -143,9 +150,9 @@ func Compare(set Set, live LiveReader, claims Claims) (Report, error) {
 		c.misclaimed(claims)
 	}
 	if len(c.rc.bugs) > 0 {
-		return Report{}, refusal("the live state read", c.rc.bugs)
+		return nil, Report{}, refusal("the live state read", c.rc.bugs)
 	}
-	return c.report(), nil
+	return c, c.report(), nil
 }
 
 func samePath(a, b string) bool {
