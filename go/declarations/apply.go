@@ -10,9 +10,13 @@ import (
 // in order: while the declaration directory has an uncommitted or untracked
 // file; unless comparing again gives diffID; while a resource is misclaimed;
 // while a live read fails. It then executes creates and updates in ascending
-// Stage, then deletes in descending Stage, and never executes an unresolved,
-// unclaimed, or misclaimed difference. It returns the report computed after
-// applying, where values this apply created resolve: the next stage.
+// Stage, then deletes in descending Stage, and never executes an unresolved
+// or misclaimed difference. In the account repository each unclaimed
+// resource is deleted whole, with the deletes; in a project apply never
+// deletes a resource, only children (a live resource a project stops
+// declaring is left alone, and the account repository reports it unclaimed).
+// It returns the report computed after applying, where values this apply
+// created resolve: the next stage.
 func Apply(set Set, live LiveReader, claims Claims, w Writer, g Git, diffID string) (Report, error) {
 	if err := checkTool(set.Tool); err != nil {
 		return Report{}, err
@@ -123,6 +127,13 @@ func (c *comparison) changes(rep Report) []Change {
 			action = ActionUpdate
 		case StatusUnexpected:
 			action = ActionDelete
+		case StatusUnclaimed:
+			// Only the account repository's comparison reports unclaimed
+			// resources: each is deleted whole. The resource is declared
+			// nowhere, so the change carries only its type and name.
+			rt := c.types[d.ResourceType]
+			deletes = append(deletes, Change{Action: ActionDelete, ResourceType: d.ResourceType, Name: d.Name, Resource: Resource{Type: d.ResourceType, Name: d.Name, Fields: map[string]Value{}, Children: map[string][]Item{}}, Stage: rt.Descriptor().Stage})
+			continue
 		default:
 			continue
 		}

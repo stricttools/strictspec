@@ -15,8 +15,8 @@ const (
 	// value that does not exist yet: apply does not execute it.
 	StatusUnresolved Status = "unresolved"
 	// StatusUnclaimed is, in the account repository, a live account-level
-	// resource neither declared there, claimed, nor unmanaged: apply does
-	// not execute it.
+	// resource neither declared there, claimed, nor unmanaged: apply deletes
+	// it.
 	StatusUnclaimed Status = "unclaimed"
 	// StatusMisclaimed is, in a project, a declared resource the claims
 	// assign to another project or to none: apply refuses to run.

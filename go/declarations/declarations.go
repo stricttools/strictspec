@@ -203,6 +203,10 @@ const (
 // in it, so a writer that replaces a whole set of children must read the
 // live set and keep every child the change does not name.
 //
+// A resource-level delete is the deletion of an unclaimed resource in the
+// account repository; its Resource holds only Type and Name, since nothing
+// declares the resource.
+//
 // Item is the expected child as Resource.Children holds it, or the live child
 // for a delete.
 type Change struct {
@@ -217,7 +221,8 @@ type Change struct {
 	Stage        int
 }
 
-// Writer executes changes; the tool supplies it.
+// Writer executes changes; the tool supplies it. It supports a resource-level
+// delete for every resource type, or refuses one naming what to do instead.
 type Writer interface {
 	Apply(Change) error
 }

@@ -758,6 +758,8 @@ func (w *fakeWriter) Apply(c declarations.Change) error {
 		case "test-zone":
 			w.live.exposed[k+"/nameservers"] = []declarations.Value{"a.ns.test", "b.ns.test"}
 		}
+	case c.Collection == "" && c.Field == "" && c.Action == declarations.ActionDelete:
+		delete(w.live.resources, k)
 	case c.Collection == "" && c.Field != "":
 		r.Fields[c.Field] = c.Resource.Fields[c.Field]
 	case c.Collection != "" && c.Field == "" && c.Action == declarations.ActionCreate:

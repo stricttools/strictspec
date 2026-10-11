@@ -265,25 +265,74 @@ func TestApplyStopsAtTheFirstWriterFailure(t *testing.T) {
 	}
 }
 
-func TestApplyLeavesUnclaimedResourcesAlone(t *testing.T) {
-	a := newAccount(t, "unmanaged = []\nclaim = []\n")
+// In the account repository, apply deletes each unclaimed resource: a
+// resource-level delete, after every create and update, in descending Stage
+// with the child deletes. Claimed and unmanaged resources are left alone.
+func TestApplyDeletesUnclaimedResourcesInTheAccountRepository(t *testing.T) {
+	a := newAccount(t, `unmanaged = [{ resource_type = "test-server", name = "old", reason = "a manual experiment" }]
+
+[[claim]]
+resource_type = "test-server"
+name = "web1"
+project = "example"
+`)
+	declare(t, a, "test-zone", "example.org", zoneBody(false, "", txtRecord))
 	claims, err := declarations.LoadClaims(testTool(), a.Root)
 	if err != nil {
 		t.Fatal(err)
 	}
 	s := load(t, a)
 	l := newLive()
+	l.put(liveZone("example.org", false, record("CNAME", "www.example.org", "example.org", "automatic", "")))
+	l.put(liveServer("web1"))
+	l.put(liveServer("old"))
 	l.put(liveServer("stray"))
+	l.put(declarations.Resource{Type: "test-mail", Name: "other.org", Fields: M{"plan": "mini"}})
 	r := verify(t, s, l, claims)
-	if len(r.Differences) != 1 || r.Differences[0].Status != declarations.StatusUnclaimed {
-		t.Fatalf("differences %+v", r.Differences)
-	}
 	w := &fakeWriter{live: l}
 	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, r.DiffID); err != nil {
 		t.Fatal(err)
 	}
-	if len(w.changes) != 0 {
-		t.Fatalf("an unclaimed resource reached the writer: %q", describeAll(w.changes))
+	want := []string{
+		"create test-zone/example.org record hello,example.org,TXT",
+		"delete test-server/stray",
+		"delete test-mail/other.org",
+		"delete test-zone/example.org record example.org,www.example.org,CNAME",
+	}
+	if got := describeAll(w.changes); !reflect.DeepEqual(got, want) {
+		t.Fatalf("apply:\n got  %q\n want %q", got, want)
+	}
+	del := w.changes[1]
+	if del.Stage != 40 || del.Resource.Type != "test-server" || del.Resource.Name != "stray" {
+		t.Fatalf("a resource delete carries its type's stage and the resource's type and name: %+v", del)
+	}
+	if !verify(t, s, l, claims).Matching {
+		t.Fatal("not matching after apply")
+	}
+}
+
+// In a project, apply never deletes a top-level resource: a live resource the
+// project does not declare is not its difference (the account repository
+// reports it unclaimed).
+func TestApplyInAProjectNeverDeletesAResource(t *testing.T) {
+	p := siteProject(t)
+	s := load(t, p)
+	claims := claimAll(t, s)
+	l := siteLive()
+	l.put(liveServer("stray"))
+	delete(l.resources, "test-zone/example.org")
+	r := verify(t, s, l, claims)
+	w := &fakeWriter{live: l}
+	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, r.DiffID); err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range w.changes {
+		if c.Action == declarations.ActionDelete {
+			t.Fatalf("a project apply deleted: %q", describeAll(w.changes))
+		}
+	}
+	if _, ok := l.resources["test-server/stray"]; !ok {
+		t.Fatal("the undeclared server is gone")
 	}
 }
 
