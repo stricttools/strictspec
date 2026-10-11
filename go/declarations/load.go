@@ -504,8 +504,8 @@ func checkSlot(r Resource, sl Slot, types map[string]ResourceType) string {
 		return bug(fmt.Sprintf("names the collection %s, which %s does not have", sl.Collection, sl.ResourceType))
 	}
 	for _, k := range sortedKeys(sl.Match) {
-		if !contains(c.Key, k) && !contains(c.Fields, k) {
-			return bug(fmt.Sprintf("matches %s, which is not a field of %s", k, sl.Collection))
+		if !contains(c.Key, k) {
+			return bug(fmt.Sprintf("matches %s, which is not a key field of %s (%s): a slot matches key fields only, so a hand-declared child sharing a derived child's key is one the slot covers, and two slots no child matches both of never derive one key", k, sl.Collection, strings.Join(c.Key, ", ")))
 		}
 		if m := sl.Match[k]; !m.isPrefix {
 			if err := checkValue(m.exact, false); err != nil {

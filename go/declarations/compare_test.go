@@ -506,3 +506,20 @@ func TestCompareFailedDerivationOfAFieldLeavesTheFieldUncompared(t *testing.T) {
 	wantLines(t, r, "unreadable", `{"error":"403 forbidden","name":"ns","resource_type":"test-forward"}`)
 	wantLines(t, r, "differences")
 }
+
+// Two declared children whose keys differ as written but are equal once a
+// reference resolves are refused at Compare, naming both sources.
+func TestCompareRefusesTwoExpectedChildrenWithOneKeyAndChangingOneClearsIt(t *testing.T) {
+	p := siteProject(t)
+	literal := "[[record]]\ntype = \"A\"\nname = \"example.org\"\ncontent = \"203.0.113.7\"\nttl = 300\ncomment = \"\"\n"
+	declare(t, p, "test-zone", "example.org", zoneBody(false, "", aRecord, literal))
+	l := siteLive()
+	s := load(t, p)
+	_, err := declarations.Compare(s, l, claimAll(t, s))
+	mustContain(t, err, "test-zone/example.org and test-zone/example.org", `"content":"203.0.113.7"`, "record")
+	declare(t, p, "test-zone", "example.org", zoneBody(false, "", aRecord, strings.Replace(literal, "203.0.113.7", "203.0.113.8", 1)))
+	s = load(t, p)
+	if _, err := declarations.Compare(s, l, claimAll(t, s)); err != nil {
+		t.Fatalf("after the fix: %v", err)
+	}
+}

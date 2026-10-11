@@ -144,8 +144,12 @@ func run(set Set, live LiveReader, claims Claims) (*comparison, Report, error) {
 	if err := c.derive(); err != nil {
 		return nil, Report{}, err
 	}
+	var dups []string
 	for i := range set.Resources {
-		c.compareResource(i)
+		dups = append(dups, c.compareResource(i)...)
+	}
+	if len(dups) > 0 {
+		return nil, Report{}, refusal("the expected children", dups)
 	}
 	if account {
 		c.unclaimed(claims)
@@ -435,18 +439,45 @@ func (c *comparison) expected(i int) (map[string]expectedField, map[string][]exp
 
 func (c *comparison) add(d Difference) { c.diffs = append(c.diffs, d) }
 
-func (c *comparison) compareResource(i int) {
+// sameKeys names every two expected children of one collection with equal
+// keys (as resolved): each would be compared with one live child, giving
+// contradictory differences.
+func sameKeys(r Resource, desc Descriptor, children map[string][]expectedItem) []string {
+	var problems []string
+	for _, col := range desc.Collections {
+		seen := map[string]expectedItem{}
+		for _, e := range children[col.Name] {
+			if e.keyUnresolved(col) {
+				continue
+			}
+			k := keyJSON(col, e.item)
+			if o, dup := seen[k]; dup {
+				problems = append(problems, fmt.Sprintf("%s and %s both expect the %s %s of %s/%s: a child has one owning file and is declared once; change or remove one of them", o.source, e.source, col.Name, k, r.Type, r.Name))
+				continue
+			}
+			seen[k] = e
+		}
+	}
+	return problems
+}
+
+// compareResource compares one declared resource with its live state; it
+// returns the expected children sharing a key, which refuse the comparison.
+func (c *comparison) compareResource(i int) []string {
 	r := c.set.Resources[i]
 	rt := c.types[r.Type]
 	desc := rt.Descriptor()
 	lr, exists, err := c.rc.Read(r.Type, r.Name)
 	if err != nil {
 		c.unreadable(r.Type, r.Name, err)
-		return
+		return nil
 	}
 	fields, children, ok := c.expected(i)
 	if !ok {
-		return
+		return nil
+	}
+	if dups := sameKeys(r, desc, children); len(dups) > 0 {
+		return dups
 	}
 	// A field whose derivation failed (reported unreadable) is not compared,
 	// as the children of a failed derivation are left alone; an unresolved
@@ -462,7 +493,7 @@ func (c *comparison) compareResource(i int) {
 	}
 	if !exists {
 		c.missingResource(r, desc, fields, children)
-		return
+		return nil
 	}
 	for _, f := range desc.Fields {
 		if failed[f] {
@@ -490,6 +521,7 @@ func (c *comparison) compareResource(i int) {
 	for _, col := range desc.Collections {
 		c.compareCollection(r, col, children[col.Name], lr.Children[col.Name], c.slots[i])
 	}
+	return nil
 }
 
 func (c *comparison) missingResource(r Resource, desc Descriptor, fields map[string]expectedField, children map[string][]expectedItem) {

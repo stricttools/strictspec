@@ -287,3 +287,28 @@ func TestEveryEntryPointRefusesAnInconsistentDescriptor(t *testing.T) {
 		mustContain(t, err, "test-server", what)
 	}
 }
+
+// ttlForward is a forward whose slot also matches the records' ttl, a field
+// outside the record key: two such slots with different ttls would derive
+// two records with one key.
+type ttlForward struct{ forwardType }
+
+func (ttlForward) Slots(r declarations.Resource) []declarations.Slot {
+	out := forwardType{}.Slots(r)
+	out[0].Match["ttl"] = declarations.Exact("automatic")
+	return out
+}
+
+func TestLoadRefusesASlotMatchingAFieldOutsideTheKeyAndAKeyOnlySlotClearsIt(t *testing.T) {
+	tool := testTool()
+	tool.ResourceTypes = []declarations.ResourceType{zoneType{}, ttlForward{}}
+	p := newProject(t, "example")
+	declare(t, p, "test-zone", "example.org", zoneBody(false, ""))
+	declare(t, p, "test-forward", "spf", forwardBody("example.org", "TXT", "v=spf1", ""))
+	_, err := declarations.Load(tool, p)
+	mustContain(t, err, "test-forward/spf.toml", "ttl", "not a key field of record", "a bug in the tool")
+	tool.ResourceTypes = []declarations.ResourceType{zoneType{}, forwardType{}}
+	if _, err := declarations.Load(tool, p); err != nil {
+		t.Fatalf("after the fix: %v", err)
+	}
+}
