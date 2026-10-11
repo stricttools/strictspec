@@ -213,7 +213,7 @@ func TestReleaseAllowed(t *testing.T) {
 		t.Errorf("active: %v", err)
 	}
 	if err := r.ReleaseAllowed("widget", day(t, "2026-10-31"), true); err != nil {
-		t.Errorf("active before the hold: %v", err)
+		t.Errorf("active before the non-releasing period: %v", err)
 	}
 	ref := refusal(t, r.ReleaseAllowed("widget", day(t, "2026-11-01"), true), lifecycle.RuleLifecycleAllowsRelease)
 	if ref.Subject != "widget" || !strings.Contains(ref.Detail, "non-releasing") {
@@ -276,7 +276,7 @@ func TestUnreleasedIsNeverRecorded(t *testing.T) {
 	}
 }
 
-func TestReopeningAnActivePeriodClearsTheHold(t *testing.T) {
+func TestReopeningAnActivePeriodClearsTheNonReleasingPeriod(t *testing.T) {
 	r := parse(t, sharedRecord)
 	if err := r.ClosePeriod(lifecycle.TableLifecycle, "widget", day(t, "2026-12-01")); err != nil {
 		t.Fatal(err)
@@ -285,7 +285,7 @@ func TestReopeningAnActivePeriodClearsTheHold(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := r.ReleaseAllowed("widget", day(t, "2026-12-01"), true); err != nil {
-		t.Fatalf("the hold did not clear: %v", err)
+		t.Fatalf("the non-releasing period did not clear: %v", err)
 	}
 }
 
