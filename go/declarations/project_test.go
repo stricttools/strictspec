@@ -31,9 +31,9 @@ func TestFindProjectRefusesAMissingManifestNamingInitAndInitClearsIt(t *testing.
 	root := t.TempDir()
 	writeFile(t, root, ".strictmetadata/options/manifest.toml", "owner = \"strictspec\"\n")
 	_, err := declarations.FindProject(testTool(), root)
-	mustContain(t, err, declDir+"/manifest.toml", "www manifest init --project <name>")
+	mustContain(t, err, declDir+"/manifest.toml", "infratool manifest init --project <name>")
 
-	files, err := declarations.Init(testTool(), root, "voxlibre")
+	files, err := declarations.Init(testTool(), root, "example")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -44,21 +44,21 @@ func TestFindProjectRefusesAMissingManifestNamingInitAndInitClearsIt(t *testing.
 	if err != nil {
 		t.Fatalf("FindProject after Init: %v", err)
 	}
-	if p.Root != root || p.Name != "voxlibre" {
+	if p.Root != root || p.Name != "example" {
 		t.Fatalf("project %+v", p)
 	}
 }
 
 func TestInitReturnsTheManifestAndTheProjectFile(t *testing.T) {
 	root := t.TempDir()
-	files, err := declarations.Init(testTool(), root, "voxlibre")
+	files, err := declarations.Init(testTool(), root, "example")
 	if err != nil {
 		t.Fatal(err)
 	}
 	dir := filepath.Join(root, ".strictmetadata", "web-infrastructure")
 	want := map[string]string{
-		filepath.Join(dir, "manifest.toml"): "owner = \"www\"\n",
-		filepath.Join(dir, "project.toml"):  "format_version = 1\nname = \"voxlibre\"\n",
+		filepath.Join(dir, "manifest.toml"): "owner = \"infratool\"\n",
+		filepath.Join(dir, "project.toml"):  "format_version = 1\nname = \"example\"\n",
 	}
 	if len(files) != len(want) {
 		t.Fatalf("files %v", files)
@@ -71,63 +71,63 @@ func TestInitReturnsTheManifestAndTheProjectFile(t *testing.T) {
 }
 
 func TestInitRefusesABadProjectName(t *testing.T) {
-	for _, name := range []string{"", "Voxlibre", "-vox", "vox libre"} {
+	for _, name := range []string{"", "Example", "-example", "an example"} {
 		_, err := declarations.Init(testTool(), t.TempDir(), name)
 		mustContain(t, err, "^[a-z0-9][a-z0-9-]*$")
 	}
 }
 
 func TestInitRefusesAnExistingDirectory(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	_, err := declarations.Init(testTool(), p.Root, "voxlibre")
+	p := newProject(t, "example")
+	_, err := declarations.Init(testTool(), p.Root, "example")
 	mustContain(t, err, filepath.Join(p.Root, ".strictmetadata", "web-infrastructure"), "exists")
 }
 
 func TestFindProjectRefusesAnotherOwner(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	writeFile(t, p.Root, declDir+"/manifest.toml", "owner = \"mobileinfra\"\n")
+	p := newProject(t, "example")
+	writeFile(t, p.Root, declDir+"/manifest.toml", "owner = \"othertool\"\n")
 	_, err := declarations.FindProject(testTool(), p.Root)
-	mustContain(t, err, "mobileinfra", "www")
+	mustContain(t, err, "othertool", "infratool")
 }
 
 func TestFindProjectRefusesAManifestWritingFormatVersionAndRemovingItClearsIt(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	writeFile(t, p.Root, declDir+"/manifest.toml", "format_version = 1\nowner = \"www\"\n")
+	p := newProject(t, "example")
+	writeFile(t, p.Root, declDir+"/manifest.toml", "format_version = 1\nowner = \"infratool\"\n")
 	_, err := declarations.FindProject(testTool(), p.Root)
 	mustContain(t, err, "format_version", "remove it")
-	writeFile(t, p.Root, declDir+"/manifest.toml", "owner = \"www\"\n")
+	writeFile(t, p.Root, declDir+"/manifest.toml", "owner = \"infratool\"\n")
 	if _, err := declarations.FindProject(testTool(), p.Root); err != nil {
 		t.Fatalf("after the fix: %v", err)
 	}
 }
 
 func TestFindProjectRefusesAnInvalidManifest(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	writeFile(t, p.Root, declDir+"/manifest.toml", "owner = \"www\"\nextra = 1\n")
+	p := newProject(t, "example")
+	writeFile(t, p.Root, declDir+"/manifest.toml", "owner = \"infratool\"\nextra = 1\n")
 	_, err := declarations.FindProject(testTool(), p.Root)
 	mustContain(t, err, "manifest.toml", "STRICTSPEC_")
 }
 
 func TestFindProjectRefusesAMissingProjectFileAndWritingItClearsIt(t *testing.T) {
-	p := newProject(t, "voxlibre")
+	p := newProject(t, "example")
 	removeFile(t, p.Root, declDir+"/project.toml")
 	_, err := declarations.FindProject(testTool(), p.Root)
 	mustContain(t, err, "project.toml", "format_version = 1", "name = ")
-	writeFile(t, p.Root, declDir+"/project.toml", "format_version = 1\nname = \"voxlibre\"\n")
+	writeFile(t, p.Root, declDir+"/project.toml", "format_version = 1\nname = \"example\"\n")
 	if _, err := declarations.FindProject(testTool(), p.Root); err != nil {
 		t.Fatalf("after the fix: %v", err)
 	}
 }
 
 func TestFindProjectRefusesAnInvalidProjectFile(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	writeFile(t, p.Root, declDir+"/project.toml", "format_version = 1\nname = \"Vox Libre\"\n")
+	p := newProject(t, "example")
+	writeFile(t, p.Root, declDir+"/project.toml", "format_version = 1\nname = \"An Example\"\n")
 	_, err := declarations.FindProject(testTool(), p.Root)
 	mustContain(t, err, "project.toml", "STRICTSPEC_")
 }
 
 func TestFindProjectFromASubdirectory(t *testing.T) {
-	p := newProject(t, "voxlibre")
+	p := newProject(t, "example")
 	sub := filepath.Join(p.Root, "src", "deep")
 	if err := os.MkdirAll(sub, 0o755); err != nil {
 		t.Fatal(err)

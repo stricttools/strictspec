@@ -461,9 +461,9 @@ func (forwardType) Derive(r declarations.Resource, live declarations.LiveReader)
 
 func testTool() declarations.Tool {
 	return declarations.Tool{
-		Name:          "www",
+		Name:          "infratool",
 		Directory:     "web-infrastructure",
-		InitCommand:   "www manifest init",
+		InitCommand:   "infratool manifest init",
 		ResourceTypes: []declarations.ResourceType{zoneType{}, serverType{}, mailType{}, domainType{}, forwardType{}},
 	}
 }

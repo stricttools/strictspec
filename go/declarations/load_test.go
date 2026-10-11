@@ -11,9 +11,9 @@ import (
 
 const (
 	serverBody = "location = \"fsn1\"\nlabels = { role = \"game\" }\nimage = \"debian-13\"\nunmanaged = []\n"
-	aRecord    = "[[record]]\ntype = \"A\"\nname = \"voxlibre.org\"\ncontent = { test_server = \"gamehome\", value = \"ipv4\" }\nttl = \"automatic\"\ncomment = \"the site\"\n"
-	txtRecord  = "[[record]]\ntype = \"TXT\"\nname = \"voxlibre.org\"\ncontent = \"hello\"\nttl = 300\ncomment = \"\"\n"
-	mxRecord   = "[[record]]\ntype = \"MX\"\nname = \"voxlibre.org\"\ncontent = \"mx.elsewhere.test\"\nttl = 300\ncomment = \"\"\n"
+	aRecord    = "[[record]]\ntype = \"A\"\nname = \"example.org\"\ncontent = { test_server = \"web1\", value = \"ipv4\" }\nttl = \"automatic\"\ncomment = \"the site\"\n"
+	txtRecord  = "[[record]]\ntype = \"TXT\"\nname = \"example.org\"\ncontent = \"hello\"\nttl = 300\ncomment = \"\"\n"
+	mxRecord   = "[[record]]\ntype = \"MX\"\nname = \"example.org\"\ncontent = \"mx.elsewhere.test\"\nttl = 300\ncomment = \"\"\n"
 	mailBody   = "plan = \"micro\"\nunmanaged = []\n[[mailbox]]\nlocal_part = \"me\"\nname = \"Me\"\ninvitation = \"me@elsewhere.test\"\n"
 	domainBody = "auto_renew = true\nnameservers = [\"a.ns.test\", \"b.ns.test\"]\nunmanaged = []\n"
 )
@@ -41,9 +41,9 @@ func forwardBody(zone, recordType, prefix, delegates string) string {
 }
 
 func TestLoadDecodesEveryFile(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	declare(t, p, "test-zone", "voxlibre.org", zoneBody(false, `{ collection = "record", match = { type = "CNAME", ttl = 300 }, reason = "managed by hand" }`, aRecord, txtRecord))
-	declare(t, p, "test-server", "gamehome", serverBody)
+	p := newProject(t, "example")
+	declare(t, p, "test-zone", "example.org", zoneBody(false, `{ collection = "record", match = { type = "CNAME", ttl = 300 }, reason = "managed by hand" }`, aRecord, txtRecord))
+	declare(t, p, "test-server", "web1", serverBody)
 	s := load(t, p)
 	if s.Project != p || len(s.Resources) != 2 {
 		t.Fatalf("set %+v", s)
@@ -52,10 +52,10 @@ func TestLoadDecodesEveryFile(t *testing.T) {
 	if srv.Type != "test-server" || zone.Type != "test-zone" {
 		t.Fatalf("resources are not sorted by type and name: %s, %s", srv.Type, zone.Type)
 	}
-	if zone.File != "test-zone/voxlibre.org.toml" || srv.File != "test-server/gamehome.toml" {
+	if zone.File != "test-zone/example.org.toml" || srv.File != "test-server/web1.toml" {
 		t.Fatalf("files %q, %q", zone.File, srv.File)
 	}
-	want := declarations.Reference{ResourceType: "test-server", Name: "gamehome", Value: "ipv4"}
+	want := declarations.Reference{ResourceType: "test-server", Name: "web1", Value: "ipv4"}
 	if got := zone.Children["record"][0].Fields["content"]; got != want {
 		t.Fatalf("reference %#v", got)
 	}
@@ -66,7 +66,7 @@ func TestLoadDecodesEveryFile(t *testing.T) {
 }
 
 func TestLoadRefusesAnUnknownResourceTypeDirectoryAndRemovingItClearsIt(t *testing.T) {
-	p := newProject(t, "voxlibre")
+	p := newProject(t, "example")
 	writeFile(t, p.Root, declDir+"/hetzner-volume/data.toml", "format_version = 1\n")
 	_, err := declarations.Load(testTool(), p)
 	mustContain(t, err, "hetzner-volume", "test-zone")
@@ -76,134 +76,134 @@ func TestLoadRefusesAnUnknownResourceTypeDirectoryAndRemovingItClearsIt(t *testi
 }
 
 func TestLoadRefusesAFileNotEndingInTOML(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	writeFile(t, p.Root, declDir+"/test-server/gamehome.yaml", "")
+	p := newProject(t, "example")
+	writeFile(t, p.Root, declDir+"/test-server/web1.yaml", "")
 	_, err := declarations.Load(testTool(), p)
-	mustContain(t, err, "test-server/gamehome.yaml", ".toml")
+	mustContain(t, err, "test-server/web1.yaml", ".toml")
 }
 
 func TestLoadRefusesAnUnknownFileAtTheTop(t *testing.T) {
-	p := newProject(t, "voxlibre")
+	p := newProject(t, "example")
 	writeFile(t, p.Root, declDir+"/README.md", "")
 	_, err := declarations.Load(testTool(), p)
 	mustContain(t, err, "README.md", "manifest.toml", "project.toml", "claims.toml")
 }
 
 func TestLoadReportsEveryDiagnosticOfEveryFileInOneError(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	declare(t, p, "test-server", "gamehome", "location = 1\nimage = \"x\"\nunmanaged = []\n")
-	declare(t, p, "test-zone", "voxlibre.org", "delegate = false\n")
+	p := newProject(t, "example")
+	declare(t, p, "test-server", "web1", "location = 1\nimage = \"x\"\nunmanaged = []\n")
+	declare(t, p, "test-zone", "example.org", "delegate = false\n")
 	_, err := declarations.Load(testTool(), p)
-	mustContain(t, err, "test-server/gamehome.toml", "test-zone/voxlibre.org.toml", "$.location", "Missing required field labels", "Missing required field record", "Missing required field unmanaged")
+	mustContain(t, err, "test-server/web1.toml", "test-zone/example.org.toml", "$.location", "Missing required field labels", "Missing required field record", "Missing required field unmanaged")
 }
 
 func TestLoadRefusesWhatDecodeRefusesAndTheNamedFixClearsIt(t *testing.T) {
-	p := newProject(t, "voxlibre")
+	p := newProject(t, "example")
 	bad := strings.Replace(txtRecord, "ttl = 300", "ttl = 30", 1)
-	declare(t, p, "test-zone", "voxlibre.org", zoneBody(false, "", bad))
+	declare(t, p, "test-zone", "example.org", zoneBody(false, "", bad))
 	_, err := declarations.Load(testTool(), p)
 	mustContain(t, err, "record[0].ttl", `write "automatic" or an integer of at least 60`)
-	declare(t, p, "test-zone", "voxlibre.org", zoneBody(false, "", txtRecord))
+	declare(t, p, "test-zone", "example.org", zoneBody(false, "", txtRecord))
 	load(t, p)
 }
 
 func TestLoadRefusesAFileNameThatIsNotTheNormalizedNameAndRenamingClearsIt(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	declare(t, p, "test-zone", "VoxLibre.org", zoneBody(false, "", txtRecord))
+	p := newProject(t, "example")
+	declare(t, p, "test-zone", "Example.org", zoneBody(false, "", txtRecord))
 	_, err := declarations.Load(testTool(), p)
-	mustContain(t, err, "test-zone/VoxLibre.org.toml", "test-zone/voxlibre.org.toml")
-	removeFile(t, p.Root, declDir+"/test-zone/VoxLibre.org.toml")
-	declare(t, p, "test-zone", "voxlibre.org", zoneBody(false, "", txtRecord))
+	mustContain(t, err, "test-zone/Example.org.toml", "test-zone/example.org.toml")
+	removeFile(t, p.Root, declDir+"/test-zone/Example.org.toml")
+	declare(t, p, "test-zone", "example.org", zoneBody(false, "", txtRecord))
 	load(t, p)
 }
 
 func TestLoadRefusesTwoChildrenWithOneKey(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	declare(t, p, "test-zone", "voxlibre.org", zoneBody(false, "", txtRecord, strings.Replace(txtRecord, "ttl = 300", "ttl = 600", 1)))
+	p := newProject(t, "example")
+	declare(t, p, "test-zone", "example.org", zoneBody(false, "", txtRecord, strings.Replace(txtRecord, "ttl = 300", "ttl = 600", 1)))
 	_, err := declarations.Load(testTool(), p)
-	mustContain(t, err, "test-zone/voxlibre.org.toml", "record", "twice")
+	mustContain(t, err, "test-zone/example.org.toml", "record", "twice")
 }
 
 func TestLoadRefusesAReferenceToAnUndeclaredResourceAndDeclaringItClearsIt(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	declare(t, p, "test-zone", "voxlibre.org", zoneBody(false, "", aRecord))
+	p := newProject(t, "example")
+	declare(t, p, "test-zone", "example.org", zoneBody(false, "", aRecord))
 	_, err := declarations.Load(testTool(), p)
-	mustContain(t, err, "test-zone/voxlibre.org.toml", "test-server/gamehome.toml")
-	declare(t, p, "test-server", "gamehome", serverBody)
+	mustContain(t, err, "test-zone/example.org.toml", "test-server/web1.toml")
+	declare(t, p, "test-server", "web1", serverBody)
 	load(t, p)
 }
 
 func TestLoadRefusesAReferenceToAValueTheTypeDoesNotExpose(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	declare(t, p, "test-server", "gamehome", serverBody)
-	declare(t, p, "test-zone", "voxlibre.org", zoneBody(false, "", strings.Replace(aRecord, `value = "ipv4"`, `value = "ipv6"`, 1)))
+	p := newProject(t, "example")
+	declare(t, p, "test-server", "web1", serverBody)
+	declare(t, p, "test-zone", "example.org", zoneBody(false, "", strings.Replace(aRecord, `value = "ipv4"`, `value = "ipv6"`, 1)))
 	_, err := declarations.Load(testTool(), p)
-	mustContain(t, err, "test-zone/voxlibre.org.toml", "ipv6", "ipv4")
+	mustContain(t, err, "test-zone/example.org.toml", "ipv6", "ipv4")
 }
 
 func TestLoadRefusesASlotWhoseTargetIsUndeclaredAndDeclaringItClearsIt(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	declare(t, p, "test-mail", "voxlibre.org", mailBody)
+	p := newProject(t, "example")
+	declare(t, p, "test-mail", "example.org", mailBody)
 	_, err := declarations.Load(testTool(), p)
-	mustContain(t, err, "test-mail/voxlibre.org.toml", "write test-zone/voxlibre.org.toml")
-	declare(t, p, "test-zone", "voxlibre.org", zoneBody(false, ""))
+	mustContain(t, err, "test-mail/example.org.toml", "write test-zone/example.org.toml")
+	declare(t, p, "test-zone", "example.org", zoneBody(false, ""))
 	load(t, p)
 }
 
 func TestLoadRefusesAHandDeclaredChildASlotCoversAndRemovingItClearsIt(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	declare(t, p, "test-mail", "voxlibre.org", mailBody)
-	declare(t, p, "test-zone", "voxlibre.org", zoneBody(false, "", mxRecord, txtRecord))
+	p := newProject(t, "example")
+	declare(t, p, "test-mail", "example.org", mailBody)
+	declare(t, p, "test-zone", "example.org", zoneBody(false, "", mxRecord, txtRecord))
 	_, err := declarations.Load(testTool(), p)
-	mustContain(t, err, "test-zone/voxlibre.org.toml", "record[0]", "test-mail/voxlibre.org")
-	declare(t, p, "test-zone", "voxlibre.org", zoneBody(false, "", txtRecord))
+	mustContain(t, err, "test-zone/example.org.toml", "record[0]", "test-mail/example.org")
+	declare(t, p, "test-zone", "example.org", zoneBody(false, "", txtRecord))
 	load(t, p)
 }
 
 func TestLoadRefusesOverlappingSlotsNamingBothSources(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	declare(t, p, "test-zone", "voxlibre.org", zoneBody(false, ""))
-	declare(t, p, "test-forward", "spf", forwardBody("voxlibre.org", "TXT", "v=spf1", ""))
-	declare(t, p, "test-forward", "spf-strict", forwardBody("voxlibre.org", "TXT", "v=spf1 -all", ""))
+	p := newProject(t, "example")
+	declare(t, p, "test-zone", "example.org", zoneBody(false, ""))
+	declare(t, p, "test-forward", "spf", forwardBody("example.org", "TXT", "v=spf1", ""))
+	declare(t, p, "test-forward", "spf-strict", forwardBody("example.org", "TXT", "v=spf1 -all", ""))
 	_, err := declarations.Load(testTool(), p)
-	mustContain(t, err, "test-forward/spf", "test-forward/spf-strict", "test-zone/voxlibre.org")
-	declare(t, p, "test-forward", "spf-strict", forwardBody("voxlibre.org", "TXT", "v=DMARC1", ""))
+	mustContain(t, err, "test-forward/spf", "test-forward/spf-strict", "test-zone/example.org")
+	declare(t, p, "test-forward", "spf-strict", forwardBody("example.org", "TXT", "v=DMARC1", ""))
 	load(t, p)
 }
 
 func TestLoadRefusesOverlappingExactAndPrefixSlots(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	declare(t, p, "test-zone", "voxlibre.org", zoneBody(false, ""))
-	declare(t, p, "test-mail", "voxlibre.org", mailBody)
-	declare(t, p, "test-forward", "mx", forwardBody("voxlibre.org", "MX", "mx.", ""))
+	p := newProject(t, "example")
+	declare(t, p, "test-zone", "example.org", zoneBody(false, ""))
+	declare(t, p, "test-mail", "example.org", mailBody)
+	declare(t, p, "test-forward", "mx", forwardBody("example.org", "MX", "mx.", ""))
 	_, err := declarations.Load(testTool(), p)
-	mustContain(t, err, "test-forward/mx", "test-mail/voxlibre.org")
+	mustContain(t, err, "test-forward/mx", "test-mail/example.org")
 }
 
 func TestLoadRefusesTwoSlotsOnOneField(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	declare(t, p, "test-zone", "voxlibre.org", zoneBody(true, ""))
-	declare(t, p, "test-domain", "voxlibre.org", "auto_renew = true\nunmanaged = []\n")
-	declare(t, p, "test-forward", "ns", forwardBody("voxlibre.org", "TXT", "x", "voxlibre.org"))
+	p := newProject(t, "example")
+	declare(t, p, "test-zone", "example.org", zoneBody(true, ""))
+	declare(t, p, "test-domain", "example.org", "auto_renew = true\nunmanaged = []\n")
+	declare(t, p, "test-forward", "ns", forwardBody("example.org", "TXT", "x", "example.org"))
 	_, err := declarations.Load(testTool(), p)
-	mustContain(t, err, "test-forward/ns", "test-zone/voxlibre.org", "nameservers")
+	mustContain(t, err, "test-forward/ns", "test-zone/example.org", "nameservers")
 }
 
 func TestLoadRefusesAnUnmanagedEntryMatchingADeclaredChildAndRemovingItClearsIt(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	declare(t, p, "test-zone", "voxlibre.org", zoneBody(false, `{ collection = "record", match = { type = "TXT" }, reason = "r" }`, txtRecord))
+	p := newProject(t, "example")
+	declare(t, p, "test-zone", "example.org", zoneBody(false, `{ collection = "record", match = { type = "TXT" }, reason = "r" }`, txtRecord))
 	_, err := declarations.Load(testTool(), p)
-	mustContain(t, err, "test-zone/voxlibre.org.toml", "unmanaged[0]", "declared and unmanaged", "record[0]")
-	declare(t, p, "test-zone", "voxlibre.org", zoneBody(false, "", txtRecord))
+	mustContain(t, err, "test-zone/example.org.toml", "unmanaged[0]", "declared and unmanaged", "record[0]")
+	declare(t, p, "test-zone", "example.org", zoneBody(false, "", txtRecord))
 	load(t, p)
 }
 
 func TestLoadRefusesAnUnmanagedEntryMatchingSlotCoveredChildren(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	declare(t, p, "test-mail", "voxlibre.org", mailBody)
-	declare(t, p, "test-zone", "voxlibre.org", zoneBody(false, `{ collection = "record", match = { type = "MX" }, reason = "r" }`))
+	p := newProject(t, "example")
+	declare(t, p, "test-mail", "example.org", mailBody)
+	declare(t, p, "test-zone", "example.org", zoneBody(false, `{ collection = "record", match = { type = "MX" }, reason = "r" }`))
 	_, err := declarations.Load(testTool(), p)
-	mustContain(t, err, "unmanaged[0]", "derived and unmanaged", "test-mail/voxlibre.org")
+	mustContain(t, err, "unmanaged[0]", "derived and unmanaged", "test-mail/example.org")
 }
 
 func TestLoadRefusesMalformedUnmanagedEntries(t *testing.T) {
@@ -215,33 +215,33 @@ func TestLoadRefusesMalformedUnmanagedEntries(t *testing.T) {
 		`{ collection = "host", match = { type = "A" }, reason = "r" }`:         {"unmanaged[0].collection", "host", "record"},
 	}
 	for entry, parts := range cases {
-		p := newProject(t, "voxlibre")
-		declare(t, p, "test-zone", "voxlibre.org", zoneBody(false, entry))
+		p := newProject(t, "example")
+		declare(t, p, "test-zone", "example.org", zoneBody(false, entry))
 		_, err := declarations.Load(testTool(), p)
-		mustContain(t, err, append([]string{"test-zone/voxlibre.org.toml"}, parts...)...)
+		mustContain(t, err, append([]string{"test-zone/example.org.toml"}, parts...)...)
 	}
 }
 
 func TestLoadRefusesAnUnsuppliedDerivableFieldAndEitherNamedWayClearsIt(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	declare(t, p, "test-domain", "voxlibre.org", "auto_renew = true\nunmanaged = []\n")
+	p := newProject(t, "example")
+	declare(t, p, "test-domain", "example.org", "auto_renew = true\nunmanaged = []\n")
 	_, err := declarations.Load(testTool(), p)
-	mustContain(t, err, "test-domain/voxlibre.org.toml", "nameservers", "declare it", "derivation")
-	declare(t, p, "test-domain", "voxlibre.org", domainBody)
+	mustContain(t, err, "test-domain/example.org.toml", "nameservers", "declare it", "derivation")
+	declare(t, p, "test-domain", "example.org", domainBody)
 	load(t, p)
 
-	declare(t, p, "test-domain", "voxlibre.org", "auto_renew = true\nunmanaged = []\n")
-	declare(t, p, "test-zone", "voxlibre.org", zoneBody(true, ""))
+	declare(t, p, "test-domain", "example.org", "auto_renew = true\nunmanaged = []\n")
+	declare(t, p, "test-zone", "example.org", zoneBody(true, ""))
 	load(t, p)
 }
 
 func TestLoadRefusesADerivableFieldDeclaredWhileDerivedAndRemovingItClearsIt(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	declare(t, p, "test-zone", "voxlibre.org", zoneBody(true, ""))
-	declare(t, p, "test-domain", "voxlibre.org", domainBody)
+	p := newProject(t, "example")
+	declare(t, p, "test-zone", "example.org", zoneBody(true, ""))
+	declare(t, p, "test-domain", "example.org", domainBody)
 	_, err := declarations.Load(testTool(), p)
-	mustContain(t, err, "test-domain/voxlibre.org.toml", "nameservers", "test-zone/voxlibre.org")
-	declare(t, p, "test-domain", "voxlibre.org", "auto_renew = true\nunmanaged = []\n")
+	mustContain(t, err, "test-domain/example.org.toml", "nameservers", "test-zone/example.org")
+	declare(t, p, "test-domain", "example.org", "auto_renew = true\nunmanaged = []\n")
 	load(t, p)
 }
 
@@ -254,11 +254,11 @@ func TestParseReference(t *testing.T) {
 		r, _ := v.Field("r")
 		return declarations.ParseReference(r)
 	}
-	got, err := parse(`{ hetzner_server = "gamehome", value = "ipv4" }`)
-	if err != nil || got != (declarations.Reference{ResourceType: "hetzner-server", Name: "gamehome", Value: "ipv4"}) {
+	got, err := parse(`{ hetzner_server = "web1", value = "ipv4" }`)
+	if err != nil || got != (declarations.Reference{ResourceType: "hetzner-server", Name: "web1", Value: "ipv4"}) {
 		t.Fatalf("ParseReference = %+v, %v", got, err)
 	}
-	for _, bad := range []string{`{ hetzner_server = "gamehome" }`, `{ value = "ipv4" }`, `{ a = "x", b = "y", value = "ipv4" }`, `{ hetzner_server = 1, value = "ipv4" }`, `"gamehome"`, `{ hetzner_server = "", value = "ipv4" }`} {
+	for _, bad := range []string{`{ hetzner_server = "web1" }`, `{ value = "ipv4" }`, `{ a = "x", b = "y", value = "ipv4" }`, `{ hetzner_server = 1, value = "ipv4" }`, `"web1"`, `{ hetzner_server = "", value = "ipv4" }`} {
 		if _, err := parse(bad); err == nil {
 			t.Errorf("ParseReference(%s) accepted", bad)
 		}

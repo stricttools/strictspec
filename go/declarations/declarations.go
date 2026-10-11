@@ -2,7 +2,7 @@
 // files of remote resources in a project's repository, compare them with live
 // state, import live state into them, and apply them.
 //
-// A tool (www, for example) supplies its resource types, a live reader, a
+// A tool supplies its resource types, a live reader, a
 // writer, and git; the engine owns the file formats (the strictspec built-in
 // schemas declaration-manifest, declaration-project, declaration-claims, and
 // declaration-report, and the type definitions declarations.types.toml every

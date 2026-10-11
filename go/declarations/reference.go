@@ -17,7 +17,7 @@ func referenceKey(resourceType string) string { return strings.ReplaceAll(resour
 
 // ParseReference binds a reference written
 // { <resource type with - as _> = "<name>", value = "<exposed value>" }, for
-// example { hetzner_server = "gamehome", value = "ipv4" }. A resource type's
+// example { hetzner_server = "web1", value = "ipv4" }. A resource type's
 // Decode calls it on a field its schema lets hold a reference; Load then
 // checks the named resource is declared and its type exposes the value.
 func ParseReference(v strictspec.Value) (Reference, error) {

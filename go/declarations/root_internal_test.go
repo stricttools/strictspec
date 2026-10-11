@@ -19,9 +19,9 @@ func TestFindRootRefusesOutsideAProjectAndTheFixClearsIt(t *testing.T) {
 		return os.Stat(p)
 	}
 	t.Cleanup(func() { stat = os.Stat })
-	tool := Tool{Name: "www", Directory: "web-infrastructure", InitCommand: "www manifest init"}
+	tool := Tool{Name: "infratool", Directory: "web-infrastructure", InitCommand: "infratool manifest init"}
 	_, err := FindRoot(tool, dir)
-	if err == nil || !strings.Contains(err.Error(), "run www from inside a project repository") {
+	if err == nil || !strings.Contains(err.Error(), "run infratool from inside a project repository") {
 		t.Fatalf("FindRoot outside a project: %v", err)
 	}
 	if err := os.Mkdir(filepath.Join(dir, ".strictmetadata"), 0o755); err != nil {

@@ -57,11 +57,11 @@ func describeAll(cs []declarations.Change) []string {
 // ipv4, delegating the domain's nameservers), the server, a mail domain
 // deriving records in the zone, and the domain.
 func stagedProject(t *testing.T) declarations.Project {
-	p := newProject(t, "voxlibre")
-	declare(t, p, "test-zone", "voxlibre.org", zoneBody(true, "", aRecord, txtRecord))
-	declare(t, p, "test-server", "gamehome", serverBody)
-	declare(t, p, "test-mail", "voxlibre.org", mailBody)
-	declare(t, p, "test-domain", "voxlibre.org", "auto_renew = true\nunmanaged = []\n")
+	p := newProject(t, "example")
+	declare(t, p, "test-zone", "example.org", zoneBody(true, "", aRecord, txtRecord))
+	declare(t, p, "test-server", "web1", serverBody)
+	declare(t, p, "test-mail", "example.org", mailBody)
+	declare(t, p, "test-domain", "example.org", "auto_renew = true\nunmanaged = []\n")
 	return p
 }
 
@@ -79,11 +79,11 @@ func TestApplyStagesCreatesThroughReferencesAndDerivations(t *testing.T) {
 		t.Fatalf("Apply: %v", err)
 	}
 	want := []string{
-		"create test-zone/voxlibre.org",
-		"create test-zone/voxlibre.org record hello,voxlibre.org,TXT",
-		"create test-mail/voxlibre.org",
-		"create test-mail/voxlibre.org mailbox me",
-		"create test-server/gamehome",
+		"create test-zone/example.org",
+		"create test-zone/example.org record hello,example.org,TXT",
+		"create test-mail/example.org",
+		"create test-mail/example.org mailbox me",
+		"create test-server/web1",
 	}
 	if got := describeAll(w.changes); !reflect.DeepEqual(got, want) {
 		t.Fatalf("first apply:\n got  %q\n want %q", got, want)
@@ -109,10 +109,10 @@ func TestApplyStagesCreatesThroughReferencesAndDerivations(t *testing.T) {
 		t.Fatalf("second Apply: %v", err)
 	}
 	want = []string{
-		"create test-zone/voxlibre.org record ,dkim._domainkey.voxlibre.org,TXT",
-		"create test-zone/voxlibre.org record 203.0.113.1,voxlibre.org,A",
-		"create test-zone/voxlibre.org record mx.mail.test,voxlibre.org,MX",
-		"create test-domain/voxlibre.org",
+		"create test-zone/example.org record ,dkim._domainkey.example.org,TXT",
+		"create test-zone/example.org record 203.0.113.1,example.org,A",
+		"create test-zone/example.org record mx.mail.test,example.org,MX",
+		"create test-domain/example.org",
 	}
 	if got := describeAll(w.changes); !reflect.DeepEqual(got, want) {
 		t.Fatalf("second apply:\n got  %q\n want %q", got, want)
@@ -130,28 +130,28 @@ func TestApplyStagesCreatesThroughReferencesAndDerivations(t *testing.T) {
 }
 
 func TestApplyUpdatesThenDeletesInDescendingStage(t *testing.T) {
-	p := newProject(t, "voxlibre")
-	declare(t, p, "test-zone", "voxlibre.org", zoneBody(false, "", txtRecord))
-	declare(t, p, "test-mail", "voxlibre.org", "plan = \"micro\"\nunmanaged = []\nmailbox = []\n")
+	p := newProject(t, "example")
+	declare(t, p, "test-zone", "example.org", zoneBody(false, "", txtRecord))
+	declare(t, p, "test-mail", "example.org", "plan = \"micro\"\nunmanaged = []\nmailbox = []\n")
 	s := load(t, p)
 	claims := claimAll(t, s)
 	l := newLive()
-	l.put(declarations.Resource{Type: "test-mail", Name: "voxlibre.org", Fields: M{"plan": "mini", "dkim_key": "k=1"}, Children: map[string][]declarations.Item{"mailbox": {{Fields: M{"local_part": "old", "name": "Old"}}}}})
-	l.put(liveZone("voxlibre.org", false,
-		record("TXT", "voxlibre.org", "hello", int64(600), ""),
-		record("CNAME", "www.voxlibre.org", "voxlibre.org", "automatic", ""),
-		record("MX", "voxlibre.org", "mx.mail.test", int64(300), ""),
-		record("TXT", "dkim._domainkey.voxlibre.org", "k=1", "automatic", "")))
+	l.put(declarations.Resource{Type: "test-mail", Name: "example.org", Fields: M{"plan": "mini", "dkim_key": "k=1"}, Children: map[string][]declarations.Item{"mailbox": {{Fields: M{"local_part": "old", "name": "Old"}}}}})
+	l.put(liveZone("example.org", false,
+		record("TXT", "example.org", "hello", int64(600), ""),
+		record("CNAME", "www.example.org", "example.org", "automatic", ""),
+		record("MX", "example.org", "mx.mail.test", int64(300), ""),
+		record("TXT", "dkim._domainkey.example.org", "k=1", "automatic", "")))
 	w := &fakeWriter{live: l}
 	r := verify(t, s, l, claims)
 	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, r.DiffID); err != nil {
 		t.Fatal(err)
 	}
 	want := []string{
-		"update test-zone/voxlibre.org record hello,voxlibre.org,TXT ttl",
-		"update test-mail/voxlibre.org plan",
-		"delete test-mail/voxlibre.org mailbox old",
-		"delete test-zone/voxlibre.org record voxlibre.org,www.voxlibre.org,CNAME",
+		"update test-zone/example.org record hello,example.org,TXT ttl",
+		"update test-mail/example.org plan",
+		"delete test-mail/example.org mailbox old",
+		"delete test-zone/example.org record example.org,www.example.org,CNAME",
 	}
 	if got := describeAll(w.changes); !reflect.DeepEqual(got, want) {
 		t.Fatalf("apply:\n got  %q\n want %q", got, want)
@@ -169,12 +169,12 @@ func TestApplyRefusesUncommittedFilesAndCommittingClearsIt(t *testing.T) {
 	s := load(t, p)
 	claims := claimAll(t, s)
 	l := siteLive()
-	delete(l.resources, "test-zone/voxlibre.org")
+	delete(l.resources, "test-zone/example.org")
 	r := verify(t, s, l, claims)
-	g := &fakeGit{status: " M " + declDir + "/test-zone/voxlibre.org.toml\n?? " + declDir + "/test-server/backup.toml\n"}
+	g := &fakeGit{status: " M " + declDir + "/test-zone/example.org.toml\n?? " + declDir + "/test-server/backup.toml\n"}
 	w := &fakeWriter{live: l}
 	_, err := declarations.Apply(s, l, claims, w, g, r.DiffID)
-	mustContain(t, err, "uncommitted or untracked", declDir+"/test-zone/voxlibre.org.toml", declDir+"/test-server/backup.toml", "commit them")
+	mustContain(t, err, "uncommitted or untracked", declDir+"/test-zone/example.org.toml", declDir+"/test-server/backup.toml", "commit them")
 	if len(w.changes) != 0 {
 		t.Fatal("a refused apply wrote")
 	}
@@ -190,7 +190,7 @@ func TestApplyRefusesAStaleDiffAndTheNewDiffClearsIt(t *testing.T) {
 	claims := claimAll(t, s)
 	l := siteLive()
 	old := verify(t, s, l, claims)
-	l.resources["test-zone/voxlibre.org"].Children["record"][1].Fields["comment"] = "edited by hand"
+	l.resources["test-zone/example.org"].Children["record"][1].Fields["comment"] = "edited by hand"
 	w := &fakeWriter{live: l}
 	_, err := declarations.Apply(s, l, claims, w, &fakeGit{}, old.DiffID)
 	mustContain(t, err, "the live state or the declarations changed since verify printed "+old.DiffID+": run verify again and pass its new diff")
@@ -201,7 +201,7 @@ func TestApplyRefusesAStaleDiffAndTheNewDiffClearsIt(t *testing.T) {
 	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, fresh.DiffID); err != nil {
 		t.Fatalf("with the new diff: %v", err)
 	}
-	if got := describeAll(w.changes); !reflect.DeepEqual(got, []string{"update test-zone/voxlibre.org record hello,voxlibre.org,TXT comment"}) {
+	if got := describeAll(w.changes); !reflect.DeepEqual(got, []string{"update test-zone/example.org record hello,example.org,TXT comment"}) {
 		t.Fatalf("changes %q", got)
 	}
 }
@@ -212,7 +212,7 @@ func TestApplyRefusesAStaleDiffAfterADeclarationEdit(t *testing.T) {
 	s := load(t, p)
 	claims := claimAll(t, s)
 	old := verify(t, s, l, claims)
-	declare(t, p, "test-server", "gamehome", "# edited\n"+serverBody)
+	declare(t, p, "test-server", "web1", "# edited\n"+serverBody)
 	_, err := declarations.Apply(load(t, p), l, claims, &fakeWriter{live: l}, &fakeGit{}, old.DiffID)
 	mustContain(t, err, "changed since verify printed "+old.DiffID)
 }
@@ -221,12 +221,12 @@ func TestApplyRefusesWhileMisclaimedAndFixingTheClaimsClearsIt(t *testing.T) {
 	p := siteProject(t)
 	s := load(t, p)
 	l := siteLive()
-	claims := declarations.Claims{Root: t.TempDir(), Claims: []declarations.Claim{{ResourceType: "test-server", Name: "gamehome", Project: "voxlibre"}, {ResourceType: "test-zone", Name: "voxlibre.org", Project: "other"}}}
+	claims := declarations.Claims{Root: t.TempDir(), Claims: []declarations.Claim{{ResourceType: "test-server", Name: "web1", Project: "example"}, {ResourceType: "test-zone", Name: "example.org", Project: "other"}}}
 	r := verify(t, s, l, claims)
 	w := &fakeWriter{live: l}
 	_, err := declarations.Apply(s, l, claims, w, &fakeGit{}, r.DiffID)
-	mustContain(t, err, "misclaimed", "test-zone/voxlibre.org", "claims.toml")
-	claims.Claims[1].Project = "voxlibre"
+	mustContain(t, err, "misclaimed", "test-zone/example.org", "claims.toml")
+	claims.Claims[1].Project = "example"
 	r = verify(t, s, l, claims)
 	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, r.DiffID); err != nil {
 		t.Fatalf("after fixing the claims: %v", err)
@@ -238,12 +238,12 @@ func TestApplyRefusesWhileAReadFailsAndARetryClearsIt(t *testing.T) {
 	s := load(t, p)
 	claims := claimAll(t, s)
 	l := siteLive()
-	l.readErr["test-server/gamehome"] = errors.New("429 rate limited")
+	l.readErr["test-server/web1"] = errors.New("429 rate limited")
 	r := verify(t, s, l, claims)
 	w := &fakeWriter{live: l}
 	_, err := declarations.Apply(s, l, claims, w, &fakeGit{}, r.DiffID)
-	mustContain(t, err, "test-server/gamehome", "429 rate limited", "run verify again")
-	delete(l.readErr, "test-server/gamehome")
+	mustContain(t, err, "test-server/web1", "429 rate limited", "run verify again")
+	delete(l.readErr, "test-server/web1")
 	r = verify(t, s, l, claims)
 	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, r.DiffID); err != nil {
 		t.Fatalf("once the read succeeds: %v", err)
@@ -255,11 +255,11 @@ func TestApplyStopsAtTheFirstWriterFailure(t *testing.T) {
 	s := load(t, p)
 	claims := claimAll(t, s)
 	l := siteLive()
-	delete(l.resources, "test-zone/voxlibre.org")
+	delete(l.resources, "test-zone/example.org")
 	r := verify(t, s, l, claims)
 	w := &fakeWriter{live: l, failOn: 2}
 	_, err := declarations.Apply(s, l, claims, w, &fakeGit{}, r.DiffID)
-	mustContain(t, err, "the provider refused", "test-zone/voxlibre.org", "1 change", "run verify again")
+	mustContain(t, err, "the provider refused", "test-zone/example.org", "1 change", "run verify again")
 	if len(w.changes) != 2 {
 		t.Fatalf("apply went on after a failure: %q", describeAll(w.changes))
 	}

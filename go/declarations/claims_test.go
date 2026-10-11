@@ -23,8 +23,8 @@ func TestLoadClaims(t *testing.T) {
 
 [[claim]]
 resource_type = "test-zone"
-name = "voxlibre.org"
-project = "voxlibre"
+name = "example.org"
+project = "example"
 `)
 	c, err := declarations.LoadClaims(testTool(), a.Root)
 	if err != nil {
@@ -32,7 +32,7 @@ project = "voxlibre"
 	}
 	want := declarations.Claims{
 		Root:      a.Root,
-		Claims:    []declarations.Claim{{ResourceType: "test-zone", Name: "voxlibre.org", Project: "voxlibre"}},
+		Claims:    []declarations.Claim{{ResourceType: "test-zone", Name: "example.org", Project: "example"}},
 		Unmanaged: []declarations.UnmanagedResource{{ResourceType: "test-server", Name: "old", Reason: "a manual experiment"}},
 	}
 	if !reflect.DeepEqual(c, want) {
@@ -57,19 +57,19 @@ func TestLoadClaimsRefusesAMissingArray(t *testing.T) {
 }
 
 func TestLoadClaimsRefusesAResourceNamedTwiceNamingEachPlaceAndRemovingOneClearsIt(t *testing.T) {
-	a := newAccount(t, `unmanaged = [{ resource_type = "test-zone", name = "voxlibre.org", reason = "r" }]
-claim = [{ resource_type = "test-zone", name = "voxlibre.org", project = "voxlibre" }, { resource_type = "test-zone", name = "voxlibre.org", project = "other" }]
+	a := newAccount(t, `unmanaged = [{ resource_type = "test-zone", name = "example.org", reason = "r" }]
+claim = [{ resource_type = "test-zone", name = "example.org", project = "example" }, { resource_type = "test-zone", name = "example.org", project = "other" }]
 `)
 	_, err := declarations.LoadClaims(testTool(), a.Root)
-	mustContain(t, err, "test-zone/voxlibre.org", "claim[0]", "claim[1]", "unmanaged[0]")
-	writeFile(t, a.Root, claimsPath, "format_version = 1\nunmanaged = []\nclaim = [{ resource_type = \"test-zone\", name = \"voxlibre.org\", project = \"voxlibre\" }]\n")
+	mustContain(t, err, "test-zone/example.org", "claim[0]", "claim[1]", "unmanaged[0]")
+	writeFile(t, a.Root, claimsPath, "format_version = 1\nunmanaged = []\nclaim = [{ resource_type = \"test-zone\", name = \"example.org\", project = \"example\" }]\n")
 	if _, err := declarations.LoadClaims(testTool(), a.Root); err != nil {
 		t.Fatalf("after the fix: %v", err)
 	}
 }
 
 func TestLoadClaimsRefusesAnUnknownResourceType(t *testing.T) {
-	a := newAccount(t, "unmanaged = []\nclaim = [{ resource_type = \"hetzner-volume\", name = \"data\", project = \"voxlibre\" }]\n")
+	a := newAccount(t, "unmanaged = []\nclaim = [{ resource_type = \"hetzner-volume\", name = \"data\", project = \"example\" }]\n")
 	_, err := declarations.LoadClaims(testTool(), a.Root)
 	mustContain(t, err, "claim[0]", "hetzner-volume", "test-zone")
 }
