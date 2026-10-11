@@ -488,3 +488,21 @@ func TestCompareRefusesADerivationOutsideItsSlot(t *testing.T) {
 	_, err = declarations.Compare(s, newLive(), claimAll(t, s))
 	mustContain(t, err, "test-mail/example.org.toml", "does not match", "a bug in the tool")
 }
+
+// A failed derivation of a top-level field leaves the field uncompared, as it
+// leaves the children it covers alone: no changed difference against the
+// live value.
+func TestCompareFailedDerivationOfAFieldLeavesTheFieldUncompared(t *testing.T) {
+	p := newProject(t, "example")
+	declare(t, p, "test-zone", "example.org", zoneBody(false, ""))
+	declare(t, p, "test-domain", "example.org", "auto_renew = true\nunmanaged = []\n")
+	declare(t, p, "test-forward", "ns", forwardBody("example.org", "TXT", "v=spf1", "example.org"))
+	l := newLive()
+	l.put(liveZone("example.org", false))
+	l.put(declarations.Resource{Type: "test-domain", Name: "example.org", Fields: M{"auto_renew": true, "nameservers": []V{"old.ns.test"}}})
+	l.put(declarations.Resource{Type: "test-forward", Name: "ns", Fields: M{"zone": "example.org", "record_type": "TXT", "prefix": "v=spf1", "delegates": "example.org"}})
+	l.readErr["test-server/relay"] = errors.New("403 forbidden")
+	r := compare(t, load(t, p), l)
+	wantLines(t, r, "unreadable", `{"error":"403 forbidden","name":"ns","resource_type":"test-forward"}`)
+	wantLines(t, r, "differences")
+}

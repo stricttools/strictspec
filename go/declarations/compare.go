@@ -448,9 +448,16 @@ func (c *comparison) compareResource(i int) {
 	if !ok {
 		return
 	}
+	// A field whose derivation failed (reported unreadable) is not compared,
+	// as the children of a failed derivation are left alone; an unresolved
+	// one gives its unresolved difference only.
+	failed := map[string]bool{}
 	for _, st := range c.slots[i] {
 		if st.unresolved && st.cause.slot.Collection != "" {
 			c.add(Difference{Status: StatusUnresolved, ResourceType: r.Type, Name: r.Name, Collection: st.cause.slot.Collection, Declared: st.derived.Unresolved, Source: c.set.sourceOf(st.cause)})
+		}
+		if st.skipped && st.cause.slot.Field != "" {
+			failed[st.cause.slot.Field] = true
 		}
 	}
 	if !exists {
@@ -458,6 +465,9 @@ func (c *comparison) compareResource(i int) {
 		return
 	}
 	for _, f := range desc.Fields {
+		if failed[f] {
+			continue
+		}
 		e, has := fields[f]
 		lv, lhas := lr.Fields[f]
 		d := Difference{ResourceType: r.Type, Name: r.Name, Field: f, Source: source(r)}
