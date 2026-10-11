@@ -61,7 +61,7 @@ recorded = 2026-10-07
 	lc := r.Lifecycle()
 	if len(lc) != 4 || lc[1].Subject != "widget" || lc[1].Status != lifecycle.StatusActive ||
 		!lc[1].From.Equal(day(t, "2026-01-01")) || !lc[1].Until.Equal(day(t, "2026-11-01")) ||
-		lc[2].Status != lifecycle.StatusOnHold || !lc[2].Open() {
+		lc[2].Status != lifecycle.StatusNonReleasing || !lc[2].Open() {
 		t.Fatalf("lifecycle %+v", lc)
 	}
 	lic := r.Licenses()
@@ -133,7 +133,7 @@ until = 2026-06-01
 reason = "a"
 [[lifecycle]]
 subject = "portal"
-status = "on-hold"
+status = "non-releasing"
 from = 2026-05-01
 until = 2026-07-01
 reason = "b"
@@ -348,7 +348,7 @@ until = 2026-06-01
 reason = "a"
 [[lifecycle]]
 subject = "portal"
-status = "on-hold"
+status = "non-releasing"
 from = 2026-06-01
 reason = "b"
 [[identities]]

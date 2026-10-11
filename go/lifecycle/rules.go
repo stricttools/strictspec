@@ -310,7 +310,7 @@ func (r *Record) StatusOn(subject string, on time.Time, released bool) Status {
 }
 
 // ReleaseAllowed evaluates RuleLifecycleAllowsRelease: a subject whose
-// lifecycle status on the date of on (see StatusOn) is on-hold, retired, or
+// lifecycle status on the date of on (see StatusOn) is non-releasing, retired, or
 // unreleased is not released. released says whether the subject's release
 // record holds a release.
 func (r *Record) ReleaseAllowed(subject string, on time.Time, released bool) error {

@@ -68,7 +68,7 @@ description = "A releasable or member name."
 [types.LifecyclePeriod.fields.status]
 type = "enum"
 required = true
-values = ["active", "on-hold", "retired"]
+values = ["active", "non-releasing", "retired"]
 description = "The subject's lifecycle status while the period runs."
 
 [types.LifecyclePeriod.fields.from]

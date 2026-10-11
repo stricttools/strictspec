@@ -50,17 +50,17 @@ func TestClosingAndOpeningAPeriodKeepsComments(t *testing.T) {
 	if err := r.ClosePeriod(lifecycle.TableLifecycle, "portal", day(t, "2026-10-07")); err != nil {
 		t.Fatal(err)
 	}
-	if err := r.OpenPeriod(lifecycle.TableLifecycle, "portal", "on-hold", day(t, "2026-10-07"), "paused for a redesign"); err != nil {
+	if err := r.OpenPeriod(lifecycle.TableLifecycle, "portal", "non-releasing", day(t, "2026-10-07"), "paused for a redesign"); err != nil {
 		t.Fatal(err)
 	}
 	out := bytesOf(t, r)
-	for _, want := range []string{"# The lifecycle-and-license record.", "# portal has been active", "# never paused", "until = 2026-10-07", `status = "on-hold"`, `reason = "paused for a redesign"`} {
+	for _, want := range []string{"# The lifecycle-and-license record.", "# portal has been active", "# never paused", "until = 2026-10-07", `status = "non-releasing"`, `reason = "paused for a redesign"`} {
 		if !strings.Contains(out, want) {
 			t.Errorf("written record lacks %q:\n%s", want, out)
 		}
 	}
 	lc := r.Lifecycle()
-	if len(lc) != 2 || lc[0].Open() || !lc[1].Open() || lc[1].Status != lifecycle.StatusOnHold {
+	if len(lc) != 2 || lc[0].Open() || !lc[1].Open() || lc[1].Status != lifecycle.StatusNonReleasing {
 		t.Fatalf("lifecycle %+v", lc)
 	}
 	again := parse(t, out)

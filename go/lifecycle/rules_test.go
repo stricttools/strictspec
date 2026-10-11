@@ -216,8 +216,8 @@ func TestReleaseAllowed(t *testing.T) {
 		t.Errorf("active before the hold: %v", err)
 	}
 	ref := refusal(t, r.ReleaseAllowed("widget", day(t, "2026-11-01"), true), lifecycle.RuleLifecycleAllowsRelease)
-	if ref.Subject != "widget" || !strings.Contains(ref.Detail, "on-hold") {
-		t.Errorf("on-hold refusal %v", ref)
+	if ref.Subject != "widget" || !strings.Contains(ref.Detail, "non-releasing") {
+		t.Errorf("non-releasing refusal %v", ref)
 	}
 	ref = refusal(t, r.ReleaseAllowed("gadget", day(t, "2026-12-01"), true), lifecycle.RuleLifecycleAllowsRelease)
 	if !strings.Contains(ref.Detail, "retired") {
@@ -241,8 +241,8 @@ func TestUnreleasedIsDerivedFromNoReleaseAndNoPeriod(t *testing.T) {
 	if got := r.StatusOn("portal", on, false); got != lifecycle.StatusActive {
 		t.Errorf("an active period and no release: status %q, want active", got)
 	}
-	if got := r.StatusOn("widget", on, false); got != lifecycle.StatusOnHold {
-		t.Errorf("an on-hold period: status %q, want on-hold", got)
+	if got := r.StatusOn("widget", on, false); got != lifecycle.StatusNonReleasing {
+		t.Errorf("an non-releasing period: status %q, want non-releasing", got)
 	}
 	ref := refusal(t, r.ReleaseAllowed("unrecorded", on, false), lifecycle.RuleLifecycleAllowsRelease)
 	if ref.Subject != "unrecorded" || !strings.Contains(ref.Detail, "unreleased") || !strings.Contains(ref.Fix, "active lifecycle period") {
@@ -250,6 +250,18 @@ func TestUnreleasedIsDerivedFromNoReleaseAndNoPeriod(t *testing.T) {
 	}
 	if err := r.ReleaseAllowed("portal", on, false); err != nil {
 		t.Errorf("an active period allows the first release: %v", err)
+	}
+}
+
+// The status that refuses a subject's releases is non-releasing; the name it
+// had before, on-hold, is refused like any status the record does not hold.
+func TestOnHoldIsNotAStatus(t *testing.T) {
+	if _, err := lifecycle.Parse([]byte("format_version = 1\n[[lifecycle]]\nsubject = \"portal\"\nstatus = \"on-hold\"\nfrom = 2026-12-01\nreason = \"x\"\n")); err == nil {
+		t.Fatal("a record holding an on-hold period parsed")
+	}
+	r := parse(t, sharedRecord)
+	if err := r.OpenPeriod(lifecycle.TableLifecycle, "portal", "on-hold", day(t, "2026-12-01"), "paused"); err == nil {
+		t.Fatal("an on-hold period was recorded")
 	}
 }
 

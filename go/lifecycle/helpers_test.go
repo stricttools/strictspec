@@ -117,7 +117,7 @@ reason = "first release"
 
 [[lifecycle]]
 subject = "widget"
-status = "on-hold"
+status = "non-releasing"
 from = 2026-11-01
 reason = "paused"
 
