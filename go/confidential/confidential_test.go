@@ -31,15 +31,20 @@ reason = "a home path"
 scope = "everywhere"
 `
 
-// writeEncrypted encrypts plaintext to a fresh identity under home, at the
-// list's default place, and writes the identity beside it.
+// locationIn is a list and an identity under home.
+func locationIn(home string) confidential.Location {
+	return confidential.Location{List: filepath.Join(home, "terms.toml.age"), Identity: filepath.Join(home, confidential.IdentityRel)}
+}
+
+// writeEncrypted encrypts plaintext to a fresh identity under home and
+// writes the list and the identity there (locationIn).
 func writeEncrypted(t *testing.T, home, plaintext string) confidential.Location {
 	t.Helper()
 	id, err := age.GenerateX25519Identity()
 	if err != nil {
 		t.Fatal(err)
 	}
-	loc := confidential.LocationIn(home)
+	loc := locationIn(home)
 	if err := os.MkdirAll(filepath.Dir(loc.List), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -73,7 +78,7 @@ func load(t *testing.T) *confidential.List {
 }
 
 func TestAMissingListHasNoTermsAndSaysSo(t *testing.T) {
-	l, err := confidential.Load(confidential.LocationIn(t.TempDir()))
+	l, err := confidential.Load(locationIn(t.TempDir()))
 	if err != nil {
 		t.Fatalf("a missing list is an error: %v", err)
 	}

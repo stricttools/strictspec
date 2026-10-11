@@ -284,7 +284,7 @@ Phases, in order (all complete as of 2026-07-28):
 
 The `confidential` package of the Go module reads the owner's confidential-term list and the resolutions of its hits. These are implementation decisions made while building it, not owner rulings:
 
-- **Where the list is.** `Projects/CONTEXT/confidential/terms.toml.age` under the user's home directory, with the age identity at `~/.age-key.txt`, as the owner's protocol places them. `LocationIn` takes any home, so tests and callers never depend on the real one.
+- **Where the list is.** At the path the family's settings file names (see "The confidential-term list's location" below), with the age identity at `~/.age-key.txt`. `LocationFromSettings` takes any settings file and home, so tests and callers never depend on the real ones.
 - **Decryption.** In memory with `filippo.io/age`, never by running the `age` program and never through a file: the package calls no `os` function that writes (a test guards it).
 - **Format.** `format_version = 1` and `[[terms]]` tables; each entry has one and only one of `term` and `pattern`, an `added` date, a one-line `reason`, and `scope = "everywhere"` or `{ except = [...] }`. Every malformed entry is reported at once; a missing file is a list with no terms, which every caller states.
 - **Matching.** A literal matches as a substring ignoring case, inside longer words too: a match is judged hit by hit by the agent, never filtered by the matcher. A pattern is a Go regular expression compiled with `(?i)`; one that matches the empty string is refused.
@@ -305,3 +305,13 @@ Implementation decisions made while building it, not owner rulings:
 ## The non-releasing lifecycle status
 
 Owner ruling: the lifecycle status that refuses a subject's releases is named `non-releasing`; its earlier name, `on-hold`, is gone, with no compatibility for it. A record holding `on-hold` is refused like any status the schema does not list, No record held `on-hold` when the rename was made, so no migration was written.
+
+## The confidential-term list's location
+
+Owner ruling: the list's location comes from a family setting in the user's configuration, not from a path written into public code. A missing setting is an error naming what to set; a missing list file at the path the setting names still means no terms.
+
+Implementation decisions made while building it, not owner rulings:
+
+- **The settings file.** `stricttools/config.toml` under the user's configuration directory (`os.UserConfigDir`: `$XDG_CONFIG_HOME`, else `~/.config`), holding `format_version = 1` and `confidential_term_list = "<absolute path>"`. It is the family's file, not one tool's, so every tool reading the list reads the same setting.
+- **Strictness.** A missing file, a missing setting, another format version, an unknown key, and a path that is not absolute (`~` included) are each refused, naming the file and what to write; nothing is filled in.
+- **The identity is unchanged.** The age identity stays `~/.age-key.txt` under the home directory; only the list's location moved to the setting.

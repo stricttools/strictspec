@@ -1,10 +1,10 @@
 // Package confidential reads the confidential-term list and finds its terms
 // in what a tool is about to publish.
 //
-// The list is one TOML file encrypted with age, outside every repository:
-// <home>/Projects/CONTEXT/confidential/terms.toml.age, decrypted with the
-// identity in <home>/.age-key.txt. It is decrypted in memory only; the package
-// never writes the plaintext anywhere. A missing list is a list with no terms,
+// The list is one TOML file encrypted with age, outside every repository, at
+// the path the family's settings file names (see settings.go), decrypted with
+// the identity in <home>/.age-key.txt. It is decrypted in memory only; the
+// package never writes the plaintext anywhere. A missing list is a list with no terms,
 // which every caller states plainly; a list that exists and cannot be read or
 // decrypted is an error.
 //
@@ -44,7 +44,6 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -54,8 +53,6 @@ import (
 )
 
 const (
-	// ListRel is the list's path relative to the user's home directory.
-	ListRel = "Projects/CONTEXT/confidential/terms.toml.age"
 	// IdentityRel is the age identity's path relative to the user's home
 	// directory.
 	IdentityRel = ".age-key.txt"
@@ -69,23 +66,6 @@ const (
 type Location struct {
 	List     string
 	Identity string
-}
-
-// DefaultLocation is the list and identity under the user's home directory.
-func DefaultLocation() (Location, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return Location{}, fmt.Errorf("locating the confidential-term list: %w", err)
-	}
-	return LocationIn(home), nil
-}
-
-// LocationIn is the list and identity under home.
-func LocationIn(home string) Location {
-	return Location{
-		List:     filepath.Join(home, filepath.FromSlash(ListRel)),
-		Identity: filepath.Join(home, filepath.FromSlash(IdentityRel)),
-	}
 }
 
 // Entry is one entry of the list.
