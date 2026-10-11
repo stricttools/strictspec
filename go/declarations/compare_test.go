@@ -438,3 +438,53 @@ func TestCompareRefusesAClaimOfTheAccountRepositorysOwnResourceAndRemovingItClea
 		t.Fatalf("after the fix: %v", err)
 	}
 }
+
+func TestCompareReportsAFailedExposedReadAsUnreadable(t *testing.T) {
+	p := siteProject(t)
+	l := siteLive()
+	l.exposedErr["test-server/gamehome/ipv4"] = errors.New("500 internal error")
+	r := compare(t, load(t, p), l)
+	wantLines(t, r, "unreadable", `{"error":"500 internal error","name":"gamehome","resource_type":"test-server"}`)
+	wantLines(t, r, "differences")
+	if r.ExitCode() != declarations.ExitFailed {
+		t.Fatalf("exit %d", r.ExitCode())
+	}
+}
+
+func TestCompareReportsAFailedDerivationUnderItsCauseAndLeavesItsChildrenAlone(t *testing.T) {
+	p := newProject(t, "voxlibre")
+	declare(t, p, "test-zone", "voxlibre.org", zoneBody(false, ""))
+	declare(t, p, "test-forward", "spf", forwardBody("voxlibre.org", "TXT", "v=spf1", ""))
+	l := newLive()
+	l.put(liveZone("voxlibre.org", false, record("TXT", "voxlibre.org", "v=spf1 old", "automatic", "")))
+	l.put(declarations.Resource{Type: "test-forward", Name: "spf", Fields: M{"zone": "voxlibre.org", "record_type": "TXT", "prefix": "v=spf1"}})
+	l.readErr["test-server/relay"] = errors.New("403 forbidden")
+	r := compare(t, load(t, p), l)
+	wantLines(t, r, "unreadable", `{"error":"403 forbidden","name":"spf","resource_type":"test-forward"}`)
+	wantLines(t, r, "differences")
+}
+
+// strayMail derives a record its slot does not cover.
+type strayMail struct{ mailType }
+
+func (strayMail) Derive(r declarations.Resource, live declarations.LiveReader) ([]declarations.Derived, error) {
+	slots := mailType{}.Slots(r)
+	return []declarations.Derived{
+		{Slot: slots[0], Items: []declarations.Item{record("A", r.Name, "203.0.113.9", "automatic", "")}},
+		{Slot: slots[1], Unresolved: "later"},
+	}, nil
+}
+
+func TestCompareRefusesADerivationOutsideItsSlot(t *testing.T) {
+	tool := testTool()
+	tool.ResourceTypes = []declarations.ResourceType{zoneType{}, strayMail{}}
+	p := newProject(t, "voxlibre")
+	declare(t, p, "test-zone", "voxlibre.org", zoneBody(false, ""))
+	declare(t, p, "test-mail", "voxlibre.org", mailBody)
+	s, err := declarations.Load(tool, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = declarations.Compare(s, newLive(), claimAll(t, s))
+	mustContain(t, err, "test-mail/voxlibre.org.toml", "does not match", "a bug in the tool")
+}

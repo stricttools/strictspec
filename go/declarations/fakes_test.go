@@ -546,16 +546,17 @@ func mustContain(t *testing.T, err error, parts ...string) {
 // fakeLive is live state in memory: resources by "<type>/<name>" and exposed
 // values by "<type>/<name>/<value>". It records every Read.
 type fakeLive struct {
-	resources map[string]declarations.Resource
-	exposed   map[string]declarations.Value
-	readErr   map[string]error
-	listErr   map[string]error
-	reads     []string
-	nextIP    int
+	resources  map[string]declarations.Resource
+	exposed    map[string]declarations.Value
+	readErr    map[string]error
+	listErr    map[string]error
+	exposedErr map[string]error
+	reads      []string
+	nextIP     int
 }
 
 func newLive() *fakeLive {
-	return &fakeLive{resources: map[string]declarations.Resource{}, exposed: map[string]declarations.Value{}, readErr: map[string]error{}, listErr: map[string]error{}}
+	return &fakeLive{resources: map[string]declarations.Resource{}, exposed: map[string]declarations.Value{}, readErr: map[string]error{}, listErr: map[string]error{}, exposedErr: map[string]error{}}
 }
 
 func (l *fakeLive) put(r declarations.Resource) {
@@ -596,7 +597,11 @@ func (l *fakeLive) Read(resourceType, name string) (declarations.Resource, bool,
 }
 
 func (l *fakeLive) Exposed(resourceType, name, value string) (declarations.Value, bool, error) {
-	v, ok := l.exposed[resourceType+"/"+name+"/"+value]
+	k := resourceType + "/" + name + "/" + value
+	if err := l.exposedErr[k]; err != nil {
+		return nil, false, err
+	}
+	v, ok := l.exposed[k]
 	return v, ok, nil
 }
 
