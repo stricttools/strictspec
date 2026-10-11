@@ -66,6 +66,36 @@ func checkTool(tool Tool) error {
 			return fmt.Errorf("declarations: the tool supplies the resource type %q twice", n)
 		}
 		seen[n] = true
+		if err := checkDescriptor(n, rt.Descriptor()); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func checkDescriptor(name string, d Descriptor) error {
+	bug := func(format string, a ...any) error {
+		return fmt.Errorf("declarations: the descriptor of the resource type %s: "+format, append([]any{name}, a...)...)
+	}
+	for _, f := range d.DerivableFields {
+		if !contains(d.Fields, f) {
+			return bug("DerivableFields names %s, which is not one of its Fields", f)
+		}
+	}
+	for _, f := range d.CreateOnly {
+		if contains(d.Fields, f) {
+			return bug("CreateOnly names %s, which is one of its Fields", f)
+		}
+	}
+	seen := map[string]bool{}
+	for _, c := range d.Collections {
+		if len(c.Key) == 0 {
+			return bug("the collection %s has no key", c.Name)
+		}
+		if seen[c.Name] {
+			return bug("names the collection %s twice", c.Name)
+		}
+		seen[c.Name] = true
 	}
 	return nil
 }
@@ -176,6 +206,13 @@ func validated(p *strictspec.Program, file string, src []byte, syntax string) (s
 		return strictspec.Value{}, fmt.Errorf("%s: %w", file, err)
 	}
 	return v, nil
+}
+
+// fieldString is a schema-valid record's string field.
+func fieldString(rec strictspec.Value, key string) string {
+	f, _ := rec.Field(key)
+	s, _ := f.AsString()
+	return s
 }
 
 func renderDiagnostics(file string, diags []strictspec.Diagnostic) string {

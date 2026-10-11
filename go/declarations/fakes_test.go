@@ -217,7 +217,7 @@ func (zoneType) Descriptor() declarations.Descriptor {
 	}
 }
 func (zoneType) Decode(name string, doc strictspec.Value) (declarations.Resource, error) {
-	r := declarations.Resource{Type: "test-zone", Name: name, Fields: map[string]declarations.Value{}, Children: map[string][]declarations.Item{"record": {}}}
+	r := declarations.Resource{Type: "test-zone", Name: strings.ToLower(name), Fields: map[string]declarations.Value{}, Children: map[string][]declarations.Item{"record": {}}}
 	d, _ := field(doc, "delegate")
 	r.Fields["delegate"] = valueOf(d)
 	recs, _ := field(doc, "record")
@@ -383,12 +383,82 @@ func (domainType) Derive(declarations.Resource, declarations.LiveReader) ([]decl
 	return nil, nil
 }
 
+const forwardSchema = `name = "test-forward"
+meta_version = 1
+format_version = 1
+document_syntax = "toml"
+role = "schema"
+root = "Forward"
+imports = [{ file = "declarations.types.toml", types = ["UnmanagedEntry"] }]
+
+[types.Forward]
+type = "record"
+[types.Forward.fields.zone]
+type = "string"
+required = true
+[types.Forward.fields.record_type]
+type = "string"
+required = true
+[types.Forward.fields.prefix]
+type = "string"
+required = true
+[types.Forward.fields.delegates]
+type = "string"
+required = false
+[types.Forward.fields.unmanaged]
+type = "array"
+required = true
+[types.Forward.fields.unmanaged.item]
+type = "UnmanagedEntry"
+`
+
+// forwardType causes, in the zone it names, the records of one type whose
+// content starts with its prefix, and, when it names a domain it delegates,
+// that domain's nameservers: a cause whose slots a test chooses.
+type forwardType struct{}
+
+func (forwardType) Name() string { return "test-forward" }
+func (forwardType) Schema() (map[string]string, string) {
+	return map[string]string{"test-forward.schema.toml": forwardSchema}, "test-forward.schema.toml"
+}
+func (forwardType) Descriptor() declarations.Descriptor {
+	return declarations.Descriptor{Fields: []string{"zone", "record_type", "prefix", "delegates"}, Stage: 30}
+}
+func (forwardType) Decode(name string, doc strictspec.Value) (declarations.Resource, error) {
+	r := declarations.Resource{Type: "test-forward", Name: name, Fields: map[string]declarations.Value{}, Children: map[string][]declarations.Item{}}
+	for _, kv := range doc.Entries() {
+		if kv.Key != "format_version" && kv.Key != "unmanaged" {
+			r.Fields[kv.Key] = valueOf(kv.Value)
+		}
+	}
+	return r, nil
+}
+func (forwardType) Slots(r declarations.Resource) []declarations.Slot {
+	zone := r.Fields["zone"].(string)
+	out := []declarations.Slot{{ResourceType: "test-zone", Name: zone, Collection: "record", Match: map[string]declarations.Matcher{
+		"type": declarations.Exact(r.Fields["record_type"]), "name": declarations.Exact(zone), "content": declarations.Prefix(r.Fields["prefix"].(string)),
+	}}}
+	if d, ok := r.Fields["delegates"].(string); ok {
+		out = append(out, declarations.Slot{ResourceType: "test-domain", Name: d, Field: "nameservers"})
+	}
+	return out
+}
+func (forwardType) Derive(r declarations.Resource, live declarations.LiveReader) ([]declarations.Derived, error) {
+	slots := forwardType{}.Slots(r)
+	zone := r.Fields["zone"].(string)
+	out := []declarations.Derived{{Slot: slots[0], Items: []declarations.Item{record(r.Fields["record_type"].(string), zone, r.Fields["prefix"].(string)+" forward", "automatic", "")}}}
+	if len(slots) > 1 {
+		out = append(out, declarations.Derived{Slot: slots[1], Value: []declarations.Value{"fwd.ns.test"}})
+	}
+	return out, nil
+}
+
 func testTool() declarations.Tool {
 	return declarations.Tool{
 		Name:          "www",
 		Directory:     "web-infrastructure",
 		InitCommand:   "www manifest init",
-		ResourceTypes: []declarations.ResourceType{zoneType{}, serverType{}, mailType{}, domainType{}},
+		ResourceTypes: []declarations.ResourceType{zoneType{}, serverType{}, mailType{}, domainType{}, forwardType{}},
 	}
 }
 
