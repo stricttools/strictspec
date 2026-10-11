@@ -745,17 +745,22 @@ func lessStrings(a, b []string) bool {
 }
 
 // diffID is the hex SHA-256 of the canonical JSON of every declaration
-// file's hash, every live resource read (exposed values excluded), and the
-// differences.
+// file's hash, every live resource read (exposed values excluded), sorted by
+// resource type then name, and the differences.
 func (c *comparison) diffID(rep Report) string {
 	decl := map[string]any{}
 	for p, h := range c.set.files {
 		decl[p] = h
 	}
-	keys := sortedKeys(c.rc.reads)
+	reads := make([]readResult, 0, len(c.rc.reads))
+	for _, res := range c.rc.reads {
+		reads = append(reads, res)
+	}
+	sort.Slice(reads, func(i, j int) bool {
+		return lessStrings([]string{reads[i].resourceType, reads[i].name}, []string{reads[j].resourceType, reads[j].name})
+	})
 	live := []any{}
-	for _, k := range keys {
-		res := c.rc.reads[k]
+	for _, res := range reads {
 		e := map[string]any{"resource_type": res.resourceType, "name": res.name, "exists": res.ok}
 		if res.err != nil {
 			e["error"] = res.err.Error()
