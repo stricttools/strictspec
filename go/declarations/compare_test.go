@@ -5,7 +5,6 @@ import (
 	"errors"
 	"os"
 	"reflect"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -127,11 +126,8 @@ func TestCompareMatching(t *testing.T) {
 	if !r.Matching || r.ExitCode() != declarations.ExitMatching {
 		t.Fatalf("matching %v, exit %d", r.Matching, r.ExitCode())
 	}
-	if !regexp.MustCompile(`^[0-9a-f]{64}$`).MatchString(r.DiffID) {
-		t.Fatalf("diff id %q", r.DiffID)
-	}
 	m := reportJSON(t, r)
-	want := map[string]any{"format_version": float64(1), "tool": "infratool", "project": "example", "root": p.Root, "directory": declDir, "diff_id": r.DiffID, "matching": true, "differences": []any{}, "unmanaged": []any{}, "unreadable": []any{}}
+	want := map[string]any{"format_version": float64(1), "tool": "infratool", "project": "example", "root": p.Root, "directory": declDir, "matching": true, "differences": []any{}, "unmanaged": []any{}, "unreadable": []any{}}
 	if !reflect.DeepEqual(m, want) {
 		t.Fatalf("report %v", m)
 	}
@@ -294,53 +290,6 @@ func TestExitCodeOrder(t *testing.T) {
 	r.Unreadable = []declarations.Unreadable{{ResourceType: "test-zone", Error: "e"}}
 	if r.ExitCode() != declarations.ExitFailed {
 		t.Fatal("an unreadable resource exits 1, differences or not")
-	}
-}
-
-func TestDiffIDIsStableAndChangesOnADeclarationEdit(t *testing.T) {
-	p := siteProject(t)
-	l := siteLive()
-	a := compare(t, load(t, p), l)
-	if b := compare(t, load(t, p), l); b.DiffID != a.DiffID {
-		t.Fatal("the diff id is not stable")
-	}
-	declare(t, p, "test-server", "web1", "# a comment\n"+serverBody)
-	c := compare(t, load(t, p), l)
-	if c.DiffID == a.DiffID {
-		t.Fatal("editing a declaration file did not change the diff id")
-	}
-	if !reflect.DeepEqual(c.Differences, a.Differences) {
-		t.Fatal("a comment changed the differences")
-	}
-}
-
-func TestDiffIDChangesOnALiveChange(t *testing.T) {
-	p := siteProject(t)
-	l := siteLive()
-	a := compare(t, load(t, p), l)
-	l.resources["test-server/web1"].Fields["status"] = "off"
-	b := compare(t, load(t, p), l)
-	if b.DiffID == a.DiffID {
-		t.Fatal("a live change did not change the diff id")
-	}
-	if len(b.Differences) != 0 {
-		t.Fatalf("a field the descriptor does not compare is a difference: %+v", b.Differences)
-	}
-}
-
-func TestDiffIDCoversWhatADerivationReads(t *testing.T) {
-	p := newProject(t, "example")
-	declare(t, p, "test-zone", "example.org", zoneBody(false, ""))
-	declare(t, p, "test-forward", "spf", forwardBody("example.org", "TXT", "v=spf1", ""))
-	l := newLive()
-	l.put(liveZone("example.org", false, record("TXT", "example.org", "v=spf1 forward", "automatic", "")))
-	l.put(declarations.Resource{Type: "test-forward", Name: "spf", Fields: M{"zone": "example.org", "record_type": "TXT", "prefix": "v=spf1"}})
-	l.put(liveServer("relay"))
-	a := compare(t, load(t, p), l)
-	wantLines(t, a, "differences")
-	l.resources["test-server/relay"].Fields["status"] = "off"
-	if b := compare(t, load(t, p), l); b.DiffID == a.DiffID {
-		t.Fatal("a change in what a derivation read did not change the diff id")
 	}
 }
 

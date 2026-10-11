@@ -19,7 +19,7 @@ func TestFindRootRefusesOutsideAProjectAndTheFixClearsIt(t *testing.T) {
 		return os.Stat(p)
 	}
 	t.Cleanup(func() { stat = os.Stat })
-	tool := Tool{Name: "infratool", Directory: "infrastructure", InitCommand: "infratool manifest init"}
+	tool := Tool{Name: "infratool", Directory: "infrastructure", InitCommand: "infratool manifest init", DryRunCommand: "infratool manifest apply --dry-run"}
 	_, err := FindRoot(tool, dir)
 	if err == nil || !strings.Contains(err.Error(), "run infratool from inside a project repository") {
 		t.Fatalf("FindRoot outside a project: %v", err)

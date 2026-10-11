@@ -7,7 +7,7 @@
 // schemas declaration-manifest, declaration-project, declaration-claims, and
 // declaration-report, and the type definitions declarations.types.toml every
 // resource type's schema imports), loading and checking a declaration
-// directory, comparing it with live state, the diff identifier, and the order
+// directory, comparing it with live state, the plan of an apply and its identifier, and the order
 // and preconditions of apply.
 //
 // The engine performs no file write and starts no process: Init and
@@ -34,11 +34,14 @@ const (
 // Tool is what a tool hands the engine: its name (the owner its manifests
 // name), its declaration directory under .strictmetadata/, the command line
 // that creates one (the engine appends --project <name> in the refusal that
-// names it), and its resource types.
+// names it), the command line of its apply's dry run, which prints the plan
+// and the identifier apply requires (the refusals of apply name it), and its
+// resource types.
 type Tool struct {
 	Name          string
 	Directory     string
 	InitCommand   string
+	DryRunCommand string
 	ResourceTypes []ResourceType
 }
 

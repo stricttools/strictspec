@@ -6,31 +6,49 @@ import (
 	"strings"
 )
 
-// Apply executes the differences verify reported under diffID. It refuses,
-// in order: while the declaration directory has an uncommitted or untracked
-// file; unless comparing again gives diffID; while a resource is misclaimed;
-// while a live read fails. It then executes creates and updates in ascending
-// Stage (within one resource, the resource-level change first, then its
-// children in the order of its resource type's collections), then deletes
-// in descending Stage (children in the reverse order of the collections),
-// and never executes an unresolved
-// or misclaimed difference. In the account repository each unclaimed
-// resource is deleted whole, with the deletes; in a project apply never
-// deletes a resource, only children (a live resource a project stops
-// declaring is left alone, and the account repository reports it unclaimed).
-// It returns the report computed after applying, where values this apply
-// created resolve: the next stage.
-func Apply(set Set, live LiveReader, claims Claims, w Writer, g Git, diffID string) (Report, error) {
+// Plan is what one apply executes: the comparison it comes from, the changes
+// in execution order, and the identifier the apply that executes it must be
+// given. PlanApply makes one; a dry run shows it, and Execute runs it.
+type Plan struct {
+	// Report is the comparison the plan comes from.
+	Report Report
+	// Changes are the writes, in execution order: creates and updates in
+	// ascending Stage (within one resource, the resource-level change first,
+	// then its children in the order of its resource type's collections),
+	// then deletes in descending Stage (children in the reverse order of the
+	// collections).
+	Changes []Change
+	// ID is the lowercase hex SHA-256 of the canonical JSON of every
+	// declaration file's hash, every live resource read, and the
+	// differences: an edited declaration or a change in the live state read
+	// changes it.
+	ID string
+
+	set    Set
+	live   LiveReader
+	claims Claims
+	tool   Tool
+}
+
+// PlanApply makes the plan of an apply. It refuses, in order: while the
+// declaration directory has an uncommitted or untracked file; while a
+// resource is misclaimed; while a live read fails. The changes never hold an
+// unresolved or misclaimed difference. In the account repository each
+// unclaimed resource is deleted whole, with the deletes; in a project the
+// plan never deletes a resource, only children (a live resource a project
+// stops declaring is left alone, and the account repository reports it
+// unclaimed).
+func PlanApply(set Set, live LiveReader, claims Claims, g Git) (Plan, error) {
 	if err := checkTool(set.Tool); err != nil {
-		return Report{}, err
+		return Plan{}, err
 	}
 	if err := checkNotImporting(set); err != nil {
-		return Report{}, err
+		return Plan{}, err
 	}
 	dir := dirRel(set.Tool)
 	out, err := g.Status(set.Project.Root, dir)
 	if err != nil {
-		return Report{}, fmt.Errorf("git status of %s: %w", dir, err)
+		return Plan{}, fmt.Errorf("git status of %s: %w", dir, err)
 	}
 	var dirty []string
 	for _, l := range strings.Split(out, "\n") {
@@ -39,14 +57,11 @@ func Apply(set Set, live LiveReader, claims Claims, w Writer, g Git, diffID stri
 		}
 	}
 	if len(dirty) > 0 {
-		return Report{}, fmt.Errorf("%s has uncommitted or untracked files; apply runs only what is committed: commit them, then run verify again and pass its diff:\n  %s", dir, strings.Join(dirty, "\n  "))
+		return Plan{}, fmt.Errorf("%s has uncommitted or untracked files; apply runs only what is committed: commit them, then run %s and pass the identifier it ends with:\n  %s", dir, set.Tool.DryRunCommand, strings.Join(dirty, "\n  "))
 	}
 	c, rep, err := run(set, live, claims)
 	if err != nil {
-		return Report{}, err
-	}
-	if rep.DiffID != diffID {
-		return Report{}, fmt.Errorf("the live state or the declarations changed since verify printed %s: run verify again and pass its new diff", diffID)
+		return Plan{}, err
 	}
 	var problems []string
 	for _, d := range rep.Differences {
@@ -55,7 +70,7 @@ func Apply(set Set, live LiveReader, claims Claims, w Writer, g Git, diffID stri
 		}
 	}
 	if len(problems) > 0 {
-		return Report{}, fmt.Errorf("apply refuses while a declared resource is misclaimed: claim each for %s in the account repository's claims.toml, or stop declaring it here, then run verify again:\n  %s", set.Project.Name, strings.Join(problems, "\n  "))
+		return Plan{}, fmt.Errorf("apply refuses while a declared resource is misclaimed: claim each for %s in the account repository's claims.toml, or stop declaring it here, then run %s again:\n  %s", set.Project.Name, set.Tool.DryRunCommand, strings.Join(problems, "\n  "))
 	}
 	for _, u := range rep.Unreadable {
 		what := u.ResourceType
@@ -65,16 +80,43 @@ func Apply(set Set, live LiveReader, claims Claims, w Writer, g Git, diffID stri
 		problems = append(problems, what+": "+u.Error)
 	}
 	if len(problems) > 0 {
-		return Report{}, fmt.Errorf("apply refuses while a live read fails, rather than guess at what it would have read: run verify again once they read, and pass its diff:\n  %s", strings.Join(problems, "\n  "))
+		return Plan{}, fmt.Errorf("apply refuses while a live read fails, rather than guess at what it would have read: run %s again once they read:\n  %s", set.Tool.DryRunCommand, strings.Join(problems, "\n  "))
 	}
+	return Plan{Report: rep, Changes: c.changes(rep), ID: c.planID(rep), set: set, live: live, claims: claims, tool: set.Tool}, nil
+}
 
-	changes := c.changes(rep)
-	for i, ch := range changes {
+// Accept refuses an identifier other than the plan's: the declarations or
+// the live state changed since the dry run that printed it.
+func (p Plan) Accept(id string) error {
+	if id != p.ID {
+		return fmt.Errorf("the live state or the declarations changed since the dry run that printed %s: run %s again, review its plan, and pass the identifier it ends with", id, p.tool.DryRunCommand)
+	}
+	return nil
+}
+
+// Execute passes each change to w in order, then returns the report
+// computed after applying, where values this apply created resolve: the
+// next stage. A writer error stops it at once.
+func (p Plan) Execute(w Writer) (Report, error) {
+	for i, ch := range p.Changes {
 		if err := w.Apply(ch); err != nil {
-			return Report{}, fmt.Errorf("apply stopped at %s: %w; %d change(s) were applied before it: run verify again", describeChange(ch), err, i)
+			return Report{}, fmt.Errorf("apply stopped at %s: %w; %d change(s) were applied before it: run %s again", describeChange(ch), err, i, p.tool.DryRunCommand)
 		}
 	}
-	return Compare(set, live, claims)
+	return Compare(p.set, p.live, p.claims)
+}
+
+// Apply makes the plan (PlanApply), refuses unless its identifier is id
+// (Accept), and executes it (Execute).
+func Apply(set Set, live LiveReader, claims Claims, w Writer, g Git, id string) (Report, error) {
+	p, err := PlanApply(set, live, claims, g)
+	if err != nil {
+		return Report{}, err
+	}
+	if err := p.Accept(id); err != nil {
+		return Report{}, err
+	}
+	return p.Execute(w)
 }
 
 func describeChange(ch Change) string {

@@ -12,6 +12,21 @@ import (
 	"github.com/stricttools/strictspec/go/strictspec"
 )
 
+// planID is the identifier of the plan of an apply of s against live, with
+// nothing uncommitted.
+func planID(t *testing.T, s declarations.Set, live declarations.LiveReader, claims declarations.Claims) string {
+	t.Helper()
+	p, err := declarations.PlanApply(s, live, claims, &fakeGit{})
+	if err != nil {
+		t.Fatalf("PlanApply: %v", err)
+	}
+	return p.ID
+}
+
+// noPlan is an identifier no plan has, for an apply refused before it
+// compares identifiers.
+var noPlan = strings.Repeat("0", 64)
+
 func verify(t *testing.T, s declarations.Set, live declarations.LiveReader, claims declarations.Claims) declarations.Report {
 	t.Helper()
 	r, err := declarations.Compare(s, live, claims)
@@ -74,8 +89,7 @@ func TestApplyStagesCreatesThroughReferencesAndDerivations(t *testing.T) {
 	w := &fakeWriter{live: l}
 	g := &fakeGit{}
 
-	first := verify(t, s, l, claims)
-	after, err := declarations.Apply(s, l, claims, w, g, first.DiffID)
+	after, err := declarations.Apply(s, l, claims, w, g, planID(t, s, l, claims))
 	if err != nil {
 		t.Fatalf("Apply: %v", err)
 	}
@@ -106,7 +120,7 @@ func TestApplyStagesCreatesThroughReferencesAndDerivations(t *testing.T) {
 	if after.Matching {
 		t.Fatal("the staged apply's report must show the next stage")
 	}
-	if _, err := declarations.Apply(s, l, claims, w, g, after.DiffID); err != nil {
+	if _, err := declarations.Apply(s, l, claims, w, g, planID(t, s, l, claims)); err != nil {
 		t.Fatalf("second Apply: %v", err)
 	}
 	want = []string{
@@ -144,8 +158,7 @@ func TestApplyUpdatesThenDeletesInDescendingStage(t *testing.T) {
 		record("MX", "example.org", "mx.mail.test", int64(300), ""),
 		record("TXT", "dkim._domainkey.example.org", "k=1", "automatic", "")))
 	w := &fakeWriter{live: l}
-	r := verify(t, s, l, claims)
-	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, r.DiffID); err != nil {
+	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, planID(t, s, l, claims)); err != nil {
 		t.Fatal(err)
 	}
 	want := []string{
@@ -171,51 +184,53 @@ func TestApplyRefusesUncommittedFilesAndCommittingClearsIt(t *testing.T) {
 	claims := claimAll(t, s)
 	l := siteLive()
 	delete(l.resources, "test-zone/example.org")
-	r := verify(t, s, l, claims)
 	g := &fakeGit{status: " M " + declDir + "/test-zone/example.org.toml\n?? " + declDir + "/test-server/backup.toml\n"}
 	w := &fakeWriter{live: l}
-	_, err := declarations.Apply(s, l, claims, w, g, r.DiffID)
-	mustContain(t, err, "uncommitted or untracked", declDir+"/test-zone/example.org.toml", declDir+"/test-server/backup.toml", "commit them")
+	id := planID(t, s, l, claims)
+	_, err := declarations.Apply(s, l, claims, w, g, id)
+	mustContain(t, err, "uncommitted or untracked", declDir+"/test-zone/example.org.toml", declDir+"/test-server/backup.toml", "commit them, then run infratool manifest apply --dry-run")
+	if _, err := declarations.PlanApply(s, l, claims, g); err == nil {
+		t.Fatal("a dry run planned uncommitted declarations")
+	}
 	if len(w.changes) != 0 {
 		t.Fatal("a refused apply wrote")
 	}
 	g.status = ""
-	if _, err := declarations.Apply(s, l, claims, w, g, r.DiffID); err != nil {
+	if _, err := declarations.Apply(s, l, claims, w, g, id); err != nil {
 		t.Fatalf("after committing: %v", err)
 	}
 }
 
-func TestApplyRefusesAStaleDiffAndTheNewDiffClearsIt(t *testing.T) {
+func TestApplyRefusesAStalePlanAndTheNewPlanClearsIt(t *testing.T) {
 	p := siteProject(t)
 	s := load(t, p)
 	claims := claimAll(t, s)
 	l := siteLive()
-	old := verify(t, s, l, claims)
+	old := planID(t, s, l, claims)
 	l.resources["test-zone/example.org"].Children["record"][1].Fields["comment"] = "edited by hand"
 	w := &fakeWriter{live: l}
-	_, err := declarations.Apply(s, l, claims, w, &fakeGit{}, old.DiffID)
-	mustContain(t, err, "the live state or the declarations changed since verify printed "+old.DiffID+": run verify again and pass its new diff")
+	_, err := declarations.Apply(s, l, claims, w, &fakeGit{}, old)
+	mustContain(t, err, "the live state or the declarations changed since the dry run that printed "+old+": run infratool manifest apply --dry-run again, review its plan, and pass the identifier it ends with")
 	if len(w.changes) != 0 {
 		t.Fatal("a refused apply wrote")
 	}
-	fresh := verify(t, s, l, claims)
-	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, fresh.DiffID); err != nil {
-		t.Fatalf("with the new diff: %v", err)
+	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, planID(t, s, l, claims)); err != nil {
+		t.Fatalf("with the new identifier: %v", err)
 	}
 	if got := describeAll(w.changes); !reflect.DeepEqual(got, []string{"update test-zone/example.org record hello,example.org,TXT comment"}) {
 		t.Fatalf("changes %q", got)
 	}
 }
 
-func TestApplyRefusesAStaleDiffAfterADeclarationEdit(t *testing.T) {
+func TestApplyRefusesAStalePlanAfterADeclarationEdit(t *testing.T) {
 	p := siteProject(t)
 	l := siteLive()
 	s := load(t, p)
 	claims := claimAll(t, s)
-	old := verify(t, s, l, claims)
+	old := planID(t, s, l, claims)
 	declare(t, p, "test-server", "web1", "# edited\n"+serverBody)
-	_, err := declarations.Apply(load(t, p), l, claims, &fakeWriter{live: l}, &fakeGit{}, old.DiffID)
-	mustContain(t, err, "changed since verify printed "+old.DiffID)
+	_, err := declarations.Apply(load(t, p), l, claims, &fakeWriter{live: l}, &fakeGit{}, old)
+	mustContain(t, err, "changed since the dry run that printed "+old)
 }
 
 func TestApplyRefusesWhileMisclaimedAndFixingTheClaimsClearsIt(t *testing.T) {
@@ -223,13 +238,11 @@ func TestApplyRefusesWhileMisclaimedAndFixingTheClaimsClearsIt(t *testing.T) {
 	s := load(t, p)
 	l := siteLive()
 	claims := declarations.Claims{Root: t.TempDir(), Claims: []declarations.Claim{{ResourceType: "test-server", Name: "web1", Project: "example"}, {ResourceType: "test-zone", Name: "example.org", Project: "other"}}}
-	r := verify(t, s, l, claims)
 	w := &fakeWriter{live: l}
-	_, err := declarations.Apply(s, l, claims, w, &fakeGit{}, r.DiffID)
-	mustContain(t, err, "misclaimed", "test-zone/example.org", "claims.toml")
+	_, err := declarations.Apply(s, l, claims, w, &fakeGit{}, noPlan)
+	mustContain(t, err, "misclaimed", "test-zone/example.org", "claims.toml", "run infratool manifest apply --dry-run again")
 	claims.Claims[1].Project = "example"
-	r = verify(t, s, l, claims)
-	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, r.DiffID); err != nil {
+	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, planID(t, s, l, claims)); err != nil {
 		t.Fatalf("after fixing the claims: %v", err)
 	}
 }
@@ -240,13 +253,11 @@ func TestApplyRefusesWhileAReadFailsAndARetryClearsIt(t *testing.T) {
 	claims := claimAll(t, s)
 	l := siteLive()
 	l.readErr["test-server/web1"] = errors.New("429 rate limited")
-	r := verify(t, s, l, claims)
 	w := &fakeWriter{live: l}
-	_, err := declarations.Apply(s, l, claims, w, &fakeGit{}, r.DiffID)
-	mustContain(t, err, "test-server/web1", "429 rate limited", "run verify again")
+	_, err := declarations.Apply(s, l, claims, w, &fakeGit{}, noPlan)
+	mustContain(t, err, "test-server/web1", "429 rate limited", "run infratool manifest apply --dry-run again")
 	delete(l.readErr, "test-server/web1")
-	r = verify(t, s, l, claims)
-	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, r.DiffID); err != nil {
+	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, planID(t, s, l, claims)); err != nil {
 		t.Fatalf("once the read succeeds: %v", err)
 	}
 }
@@ -257,10 +268,9 @@ func TestApplyStopsAtTheFirstWriterFailure(t *testing.T) {
 	claims := claimAll(t, s)
 	l := siteLive()
 	delete(l.resources, "test-zone/example.org")
-	r := verify(t, s, l, claims)
 	w := &fakeWriter{live: l, failOn: 2}
-	_, err := declarations.Apply(s, l, claims, w, &fakeGit{}, r.DiffID)
-	mustContain(t, err, "the provider refused", "test-zone/example.org", "1 change", "run verify again")
+	_, err := declarations.Apply(s, l, claims, w, &fakeGit{}, planID(t, s, l, claims))
+	mustContain(t, err, "the provider refused", "test-zone/example.org", "1 change", "run infratool manifest apply --dry-run again")
 	if len(w.changes) != 2 {
 		t.Fatalf("apply went on after a failure: %q", describeAll(w.changes))
 	}
@@ -289,9 +299,8 @@ project = "example"
 	l.put(liveServer("old"))
 	l.put(liveServer("stray"))
 	l.put(declarations.Resource{Type: "test-mail", Name: "other.org", Fields: M{"plan": "mini"}})
-	r := verify(t, s, l, claims)
 	w := &fakeWriter{live: l}
-	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, r.DiffID); err != nil {
+	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, planID(t, s, l, claims)); err != nil {
 		t.Fatal(err)
 	}
 	want := []string{
@@ -322,9 +331,8 @@ func TestApplyInAProjectNeverDeletesAResource(t *testing.T) {
 	l := siteLive()
 	l.put(liveServer("stray"))
 	delete(l.resources, "test-zone/example.org")
-	r := verify(t, s, l, claims)
 	w := &fakeWriter{live: l}
-	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, r.DiffID); err != nil {
+	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, planID(t, s, l, claims)); err != nil {
 		t.Fatal(err)
 	}
 	for _, c := range w.changes {
@@ -350,8 +358,7 @@ func TestApplyUpdateOfAChildWithAnUnresolvedFieldCarriesTheLiveValue(t *testing.
 	l := newLive()
 	l.put(declarations.Resource{Type: "test-firewall", Name: "edge", Children: map[string][]declarations.Item{"rule": {{Fields: M{"port": int64(22), "source": "198.51.100.1", "description": "old"}}}}})
 	w := &fakeWriter{live: l}
-	r := verify(t, s, l, claims)
-	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, r.DiffID); err != nil {
+	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, planID(t, s, l, claims)); err != nil {
 		t.Fatal(err)
 	}
 	want := []string{
@@ -466,9 +473,8 @@ func TestApplyOrdersAResourcesChildrenByItsCollections(t *testing.T) {
 		"mailbox":    {{Fields: M{"local_part": "old"}}},
 		"forwarding": {{Fields: M{"mailbox": "old", "address": "old@elsewhere.test"}}},
 	}})
-	r := verify(t, s, l, claims)
 	w := &fakeWriter{live: l}
-	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, r.DiffID); err != nil {
+	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, planID(t, s, l, claims)); err != nil {
 		t.Fatal(err)
 	}
 	want := []string{
@@ -479,5 +485,42 @@ func TestApplyOrdersAResourcesChildrenByItsCollections(t *testing.T) {
 	}
 	if got := describeAll(w.changes); !reflect.DeepEqual(got, want) {
 		t.Fatalf("apply:\n got  %q\n want %q", got, want)
+	}
+}
+
+// The plan lists every change Execute passes to the writer, in the same
+// order, without writing anything itself; its identifier is the one Apply
+// accepts.
+func TestPlanListsTheChangesExecuteRuns(t *testing.T) {
+	p := siteProject(t)
+	s := load(t, p)
+	claims := claimAll(t, s)
+	l := siteLive()
+	delete(l.resources, "test-zone/example.org")
+	plan, err := declarations.PlanApply(s, l, claims, &fakeGit{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(plan.Changes) == 0 || plan.Report.Matching {
+		t.Fatalf("a missing zone planned nothing: %+v", plan)
+	}
+	w := &fakeWriter{live: l}
+	if err := plan.Accept(plan.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := plan.Accept(noPlan); err == nil {
+		t.Fatal("a plan accepted another identifier")
+	}
+	if len(w.changes) != 0 {
+		t.Fatal("planning wrote")
+	}
+	if _, err := plan.Execute(w); err != nil {
+		t.Fatal(err)
+	}
+	if got, want := describeAll(w.changes), describeAll(plan.Changes); !reflect.DeepEqual(got, want) {
+		t.Fatalf("executed %q; planned %q", got, want)
+	}
+	if !verify(t, s, l, claims).Matching {
+		t.Fatal("not matching after executing the plan")
 	}
 }

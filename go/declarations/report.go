@@ -30,7 +30,6 @@ type Report struct {
 	Project     string
 	Root        string
 	Directory   string
-	DiffID      string
 	Matching    bool
 	Differences []Difference
 	Unmanaged   []UnmanagedMatch

@@ -8,7 +8,7 @@ import (
 
 // recorder is the LiveReader the engine reads through: it caches every read
 // and exposed value of one comparison, so a resource read twice (once by a
-// derivation) reads the same, records every read for the diff identifier,
+// derivation) reads the same, records every read for the plan identifier,
 // and collects what the tool's reader got wrong.
 type recorder struct {
 	live    LiveReader
@@ -112,7 +112,7 @@ type comparison struct {
 
 // Compare reads every declared resource live, resolves references and
 // derivations, and reports the differences, the live children unmanaged
-// entries leave alone, the reads that failed, and the diff identifier. In
+// entries leave alone, and the reads that failed. In
 // the account repository (the project's root is the claims' root) it also
 // lists every live resource of every resource type and reports each one
 // neither declared there, claimed, nor unmanaged; in a project it reports
@@ -724,7 +724,6 @@ func (c *comparison) report() Report {
 		Unreadable:  append([]Unreadable{}, c.unread...),
 	}
 	rep.Matching = len(rep.Differences) == 0 && len(rep.Unreadable) == 0
-	rep.DiffID = c.diffID(rep)
 	return rep
 }
 
@@ -744,10 +743,10 @@ func lessStrings(a, b []string) bool {
 	return false
 }
 
-// diffID is the hex SHA-256 of the canonical JSON of every declaration
+// planID is the hex SHA-256 of the canonical JSON of every declaration
 // file's hash, every live resource read (exposed values excluded), sorted by
 // resource type then name, and the differences.
-func (c *comparison) diffID(rep Report) string {
+func (c *comparison) planID(rep Report) string {
 	decl := map[string]any{}
 	for p, h := range c.set.files {
 		decl[p] = h
@@ -848,7 +847,6 @@ func (r Report) MarshalJSON() ([]byte, error) {
 		"project":        r.Project,
 		"root":           r.Root,
 		"directory":      r.Directory,
-		"diff_id":        r.DiffID,
 		"matching":       r.Matching,
 		"differences":    diffs,
 		"unmanaged":      managed,

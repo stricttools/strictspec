@@ -56,6 +56,9 @@ func checkTool(tool Tool) error {
 	if strings.TrimSpace(tool.InitCommand) == "" {
 		return errors.New("declarations: Tool.InitCommand is empty")
 	}
+	if strings.TrimSpace(tool.DryRunCommand) == "" {
+		return errors.New("declarations: Tool.DryRunCommand is empty")
+	}
 	seen := map[string]bool{}
 	for _, rt := range tool.ResourceTypes {
 		n := rt.Name()

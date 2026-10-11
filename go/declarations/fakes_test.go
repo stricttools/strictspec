@@ -557,6 +557,7 @@ func testTool() declarations.Tool {
 		Name:          "infratool",
 		Directory:     "infrastructure",
 		InitCommand:   "infratool manifest init",
+		DryRunCommand: "infratool manifest apply --dry-run",
 		ResourceTypes: []declarations.ResourceType{zoneType{}, serverType{}, mailType{}, domainType{}, forwardType{}, firewallType{}},
 	}
 }
