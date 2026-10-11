@@ -10,7 +10,10 @@ import (
 // in order: while the declaration directory has an uncommitted or untracked
 // file; unless comparing again gives diffID; while a resource is misclaimed;
 // while a live read fails. It then executes creates and updates in ascending
-// Stage, then deletes in descending Stage, and never executes an unresolved
+// Stage (within one resource, the resource-level change first, then its
+// children in the order of its resource type's collections), then deletes
+// in descending Stage (children in the reverse order of the collections),
+// and never executes an unresolved
 // or misclaimed difference. In the account repository each unclaimed
 // resource is deleted whole, with the deletes; in a project apply never
 // deletes a resource, only children (a live resource a project stops
@@ -150,8 +153,40 @@ func (c *comparison) changes(rep Report) []Change {
 			upserts = append(upserts, ch)
 		}
 	}
-	sort.SliceStable(upserts, func(i, j int) bool { return upserts[i].Stage < upserts[j].Stage })
-	sort.SliceStable(deletes, func(i, j int) bool { return deletes[i].Stage > deletes[j].Stage })
+	// Creates and updates run by ascending stage, and within one resource
+	// the resource-level change first, then its children in the order of
+	// the resource type's collections; deletes the other way around, so a
+	// child that names another (a forwarding naming its mailbox) is created
+	// after it and deleted before it.
+	rank := func(ch Change) int {
+		if ch.Collection == "" {
+			return -1
+		}
+		for i, col := range c.types[ch.ResourceType].Descriptor().Collections {
+			if col.Name == ch.Collection {
+				return i
+			}
+		}
+		return len(c.types[ch.ResourceType].Descriptor().Collections)
+	}
+	less := func(a, b Change, descending bool) bool {
+		if a.Stage != b.Stage {
+			return (a.Stage < b.Stage) != descending
+		}
+		if a.ResourceType != b.ResourceType {
+			return a.ResourceType < b.ResourceType
+		}
+		if a.Name != b.Name {
+			return a.Name < b.Name
+		}
+		ra, rb := rank(a), rank(b)
+		if descending {
+			return ra > rb
+		}
+		return ra < rb
+	}
+	sort.SliceStable(upserts, func(i, j int) bool { return less(upserts[i], upserts[j], false) })
+	sort.SliceStable(deletes, func(i, j int) bool { return less(deletes[i], deletes[j], true) })
 	return append(upserts, deletes...)
 }
 

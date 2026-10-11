@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stricttools/strictspec/go/declarations"
+	"github.com/stricttools/strictspec/go/strictspec"
 )
 
 func verify(t *testing.T, s declarations.Set, live declarations.LiveReader, claims declarations.Claims) declarations.Report {
@@ -366,5 +367,117 @@ func TestApplyUpdateOfAChildWithAnUnresolvedFieldCarriesTheLiveValue(t *testing.
 	}
 	if got := w.changes[1].Resource.Children["rule"]; !reflect.DeepEqual(got, []declarations.Item{wantItem}) {
 		t.Fatalf("the expected resource's rules are %+v; want %+v", got, []declarations.Item{wantItem})
+	}
+}
+
+const boxesSchema = `name = "test-boxes"
+meta_version = 1
+format_version = 1
+document_syntax = "toml"
+role = "schema"
+root = "Boxes"
+imports = [{ file = "declarations.types.toml", types = ["UnmanagedEntry"] }]
+
+[types.Boxes]
+type = "record"
+[types.Boxes.fields.mailbox]
+type = "array"
+required = true
+[types.Boxes.fields.mailbox.item]
+type = "Mailbox"
+[types.Boxes.fields.forwarding]
+type = "array"
+required = true
+[types.Boxes.fields.forwarding.item]
+type = "Forwarding"
+[types.Boxes.fields.unmanaged]
+type = "array"
+required = true
+[types.Boxes.fields.unmanaged.item]
+type = "UnmanagedEntry"
+
+[types.Mailbox]
+type = "record"
+[types.Mailbox.fields.local_part]
+type = "string"
+required = true
+
+[types.Forwarding]
+type = "record"
+[types.Forwarding.fields.mailbox]
+type = "string"
+required = true
+[types.Forwarding.fields.address]
+type = "string"
+required = true
+`
+
+// boxesType holds mailboxes and their forwardings, a forwarding naming its
+// mailbox: its collections are listed in the order a mailbox must exist
+// before its forwardings, which is not their names' order.
+type boxesType struct{}
+
+func (boxesType) Name() string { return "test-boxes" }
+func (boxesType) Schema() (map[string]string, string) {
+	return map[string]string{"test-boxes.schema.toml": boxesSchema}, "test-boxes.schema.toml"
+}
+func (boxesType) Descriptor() declarations.Descriptor {
+	return declarations.Descriptor{
+		Collections: []declarations.Collection{{Name: "mailbox", Key: []string{"local_part"}}, {Name: "forwarding", Key: []string{"mailbox", "address"}}},
+		Stage:       30,
+	}
+}
+func (boxesType) Decode(name string, doc strictspec.Value) (declarations.Resource, error) {
+	r := declarations.Resource{Type: "test-boxes", Name: name, Fields: map[string]declarations.Value{}, Children: map[string][]declarations.Item{}}
+	for _, col := range []string{"mailbox", "forwarding"} {
+		items, _ := field(doc, col)
+		r.Children[col] = []declarations.Item{}
+		for _, it := range items.Items() {
+			item := declarations.Item{Fields: map[string]declarations.Value{}}
+			for _, kv := range it.Entries() {
+				item.Fields[kv.Key] = valueOf(kv.Value)
+			}
+			r.Children[col] = append(r.Children[col], item)
+		}
+	}
+	return r, nil
+}
+func (boxesType) Slots(declarations.Resource) []declarations.Slot { return nil }
+func (boxesType) Derive(declarations.Resource, declarations.LiveReader) ([]declarations.Derived, error) {
+	return nil, nil
+}
+
+// Within one resource, apply creates and updates children in the order of
+// its resource type's collections, and deletes them in the reverse order:
+// a mailbox is created before its forwarding and deleted after its
+// forwarding.
+func TestApplyOrdersAResourcesChildrenByItsCollections(t *testing.T) {
+	tool := testTool()
+	tool.ResourceTypes = []declarations.ResourceType{boxesType{}}
+	p := newProject(t, "example")
+	declare(t, p, "test-boxes", "example.org", "unmanaged = []\n[[mailbox]]\nlocal_part = \"new\"\n[[forwarding]]\nmailbox = \"new\"\naddress = \"me@elsewhere.test\"\n")
+	s, err := declarations.Load(tool, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	claims := claimAll(t, s)
+	l := newLive()
+	l.put(declarations.Resource{Type: "test-boxes", Name: "example.org", Children: map[string][]declarations.Item{
+		"mailbox":    {{Fields: M{"local_part": "old"}}},
+		"forwarding": {{Fields: M{"mailbox": "old", "address": "old@elsewhere.test"}}},
+	}})
+	r := verify(t, s, l, claims)
+	w := &fakeWriter{live: l}
+	if _, err := declarations.Apply(s, l, claims, w, &fakeGit{}, r.DiffID); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{
+		"create test-boxes/example.org mailbox new",
+		"create test-boxes/example.org forwarding me@elsewhere.test,new",
+		"delete test-boxes/example.org forwarding old@elsewhere.test,old",
+		"delete test-boxes/example.org mailbox old",
+	}
+	if got := describeAll(w.changes); !reflect.DeepEqual(got, want) {
+		t.Fatalf("apply:\n got  %q\n want %q", got, want)
 	}
 }
