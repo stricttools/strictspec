@@ -443,7 +443,13 @@ func (forwardType) Slots(r declarations.Resource) []declarations.Slot {
 	}
 	return out
 }
+
+// Derive reads the relay server, declared or not, as a derivation reads
+// what it needs.
 func (forwardType) Derive(r declarations.Resource, live declarations.LiveReader) ([]declarations.Derived, error) {
+	if _, _, err := live.Read("test-server", "relay"); err != nil {
+		return nil, err
+	}
 	slots := forwardType{}.Slots(r)
 	zone := r.Fields["zone"].(string)
 	out := []declarations.Derived{{Slot: slots[0], Items: []declarations.Item{record(r.Fields["record_type"].(string), zone, r.Fields["prefix"].(string)+" forward", "automatic", "")}}}
