@@ -253,6 +253,17 @@ func sameMatchers(a, b map[string]Matcher) bool {
 	return true
 }
 
+// yieldedSlot reports whether the resource at index source caused sl, a
+// slot dropped because it yields to another.
+func (s Set) yieldedSlot(source int, sl Slot) bool {
+	for _, c := range s.yielded {
+		if c.source == source && sameSlot(c.slot, sl) {
+			return true
+		}
+	}
+	return false
+}
+
 func sameSlot(a, b Slot) bool {
 	return a.ResourceType == b.ResourceType && a.Name == b.Name && a.Field == b.Field && a.Collection == b.Collection && sameMatchers(a.Match, b.Match)
 }
@@ -311,7 +322,7 @@ func (c *comparison) derive() error {
 			file(st)
 		}
 		for j, u := range used {
-			if !u {
+			if !u && !c.set.yieldedSlot(si, ds[j].Slot) {
 				bugs = append(bugs, fmt.Sprintf("%s: Derive returned a value for %s of %s/%s, which is not one of its slots, a bug in the tool", r.File, describeSlot(ds[j].Slot), ds[j].Slot.ResourceType, ds[j].Slot.Name))
 			}
 		}

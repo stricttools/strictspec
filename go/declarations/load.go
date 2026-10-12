@@ -24,6 +24,9 @@ type Set struct {
 	files     map[string]string
 	hasClaims bool
 	causes    []cause
+	// yielded are the slots dropped because they yield to another
+	// resource's slot covering the same field or child.
+	yielded []cause
 	// importing is the resource LoadForImport loaded the set for; such a set
 	// serves RenderImport only.
 	importing *importTarget
@@ -411,6 +414,29 @@ func (s *Set) check(types map[string]ResourceType) []string {
 			s.causes = append(s.causes, cause{slot: sl, source: i})
 		}
 	}
+
+	// A slot yielding to the resource type of another slot covering the
+	// same field or child is dropped.
+	drop := make([]bool, len(s.causes))
+	for i, a := range s.causes {
+		for j, b := range s.causes {
+			if i == j || a.slot.ResourceType != b.slot.ResourceType || a.slot.Name != b.slot.Name || !overlap(a.slot, b.slot) {
+				continue
+			}
+			if contains(a.slot.YieldsTo, s.Resources[b.source].Type) && !contains(b.slot.YieldsTo, s.Resources[a.source].Type) {
+				drop[i] = true
+			}
+		}
+	}
+	kept := s.causes[:0:0]
+	for i, c := range s.causes {
+		if drop[i] {
+			s.yielded = append(s.yielded, c)
+			continue
+		}
+		kept = append(kept, c)
+	}
+	s.causes = kept
 
 	for i, a := range s.causes {
 		for _, b := range s.causes[i+1:] {

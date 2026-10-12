@@ -162,6 +162,11 @@ type Slot struct {
 	Field        string
 	Collection   string
 	Match        map[string]Matcher
+	// YieldsTo names the resource types this slot gives way to: when a
+	// slot of a declared resource of one of them covers a field or child
+	// this slot covers, this slot is dropped (its Derived is ignored)
+	// instead of both being refused as deriving the same thing.
+	YieldsTo []string
 }
 
 // Matcher matches one field of a child: an exact value, or a string prefix.
