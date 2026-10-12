@@ -37,13 +37,18 @@ type UnmanagedResource struct {
 }
 
 // LoadClaims reads and checks the account repository's claims.toml, at the top
-// of its declaration directory. accountRoot is an absolute path.
+// of its declaration directory, whose manifest.toml must name the tool as
+// owner, as every declaration directory's must. accountRoot is an absolute
+// path.
 func LoadClaims(tool Tool, accountRoot string) (Claims, error) {
 	if err := checkTool(tool); err != nil {
 		return Claims{}, err
 	}
 	if !filepath.IsAbs(accountRoot) {
 		return Claims{}, fmt.Errorf("the account repository's path %q is not absolute", accountRoot)
+	}
+	if err := requireManifest(tool, accountRoot, " in "+accountRoot); err != nil {
+		return Claims{}, err
 	}
 	file := filepath.Join(dirAbs(tool, accountRoot), claimsFile)
 	src, err := os.ReadFile(file)

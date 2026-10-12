@@ -159,28 +159,11 @@ func FindProject(tool Tool, cwd string) (Project, error) {
 	if err != nil {
 		return Project{}, err
 	}
-	manifest := filepath.Join(dirAbs(tool, root), manifestFile)
-	src, err := os.ReadFile(manifest)
-	if errors.Is(err, fs.ErrNotExist) {
-		// A directory without its manifest is refused, never read as
-		// declaring nothing.
-		if _, serr := os.Lstat(dirAbs(tool, root)); serr == nil {
-			return Project{}, fmt.Errorf("%s is missing: the declaration directory %s holds no manifest.toml, so its declarations are not read; run %s --project <name> to write it", manifest, dirAbs(tool, root), tool.InitCommand)
-		}
-		return Project{}, fmt.Errorf("%s is missing: %s has no %s/ declaration directory; run %s --project <name> to create it", manifest, root, dirRel(tool), tool.InitCommand)
-	}
-	if err != nil {
+	if err := requireManifest(tool, root, ""); err != nil {
 		return Project{}, err
-	}
-	owner, err := readManifest(manifest, src)
-	if err != nil {
-		return Project{}, err
-	}
-	if owner != tool.Name {
-		return Project{}, fmt.Errorf("%s names the owner %q: the directory belongs to %s, not %s", manifest, owner, owner, tool.Name)
 	}
 	pf := filepath.Join(dirAbs(tool, root), projectFile)
-	src, err = os.ReadFile(pf)
+	src, err := os.ReadFile(pf)
 	if errors.Is(err, fs.ErrNotExist) {
 		return Project{}, fmt.Errorf("%s is missing: write it holding format_version = 1 and name = \"<project>\" (the project's name, matching %s)", pf, projectNamePattern)
 	}
@@ -192,6 +175,32 @@ func FindProject(tool Tool, cwd string) (Project, error) {
 		return Project{}, err
 	}
 	return Project{Root: root, Name: name}, nil
+}
+
+// requireManifest refuses the declaration directory under root unless its
+// manifest.toml names the tool as owner: a directory without its manifest is
+// refused, never read as declaring nothing. where follows the init command
+// the refusal names (" in <root>" when the caller does not run in root).
+func requireManifest(tool Tool, root, where string) error {
+	manifest := filepath.Join(dirAbs(tool, root), manifestFile)
+	src, err := os.ReadFile(manifest)
+	if errors.Is(err, fs.ErrNotExist) {
+		if _, serr := os.Lstat(dirAbs(tool, root)); serr == nil {
+			return fmt.Errorf("%s is missing: the declaration directory %s holds no manifest.toml, so its declarations are not read; run %s --project <name>%s to write it", manifest, dirAbs(tool, root), tool.InitCommand, where)
+		}
+		return fmt.Errorf("%s is missing: %s has no %s/ declaration directory; run %s --project <name>%s to create it", manifest, root, dirRel(tool), tool.InitCommand, where)
+	}
+	if err != nil {
+		return err
+	}
+	owner, err := readManifest(manifest, src)
+	if err != nil {
+		return err
+	}
+	if owner != tool.Name {
+		return fmt.Errorf("%s names the owner %q: the directory belongs to %s, not %s", manifest, owner, owner, tool.Name)
+	}
+	return nil
 }
 
 // readManifest validates a manifest.toml. The file holds the one key owner;

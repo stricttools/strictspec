@@ -127,3 +127,33 @@ func TestCompareRefusesClaimsWithoutAnAccountPathAndLoadClaimsClearsIt(t *testin
 		t.Fatalf("after the fix: %v", err)
 	}
 }
+
+// An account repository's declaration directory without manifest.toml is
+// refused like any declaration directory, never read as holding claims of
+// nobody's; writing it with the init command the refusal names clears it.
+func TestLoadClaimsRefusesAnAccountWithoutItsManifestAndInitClearsIt(t *testing.T) {
+	root := t.TempDir()
+	writeFile(t, root, claimsPath, "format_version = 1\nclaim = []\nunmanaged = []\n")
+	_, err := declarations.LoadClaims(testTool(), root)
+	mustContain(t, err, filepath.Join(root, declDir, "manifest.toml")+" is missing", "infratool manifest init --project <name> in "+root)
+	files, err := declarations.Init(testTool(), root, "account")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for p, b := range files {
+		if err := os.WriteFile(p, b, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := declarations.LoadClaims(testTool(), root); err != nil {
+		t.Fatalf("after the fix: %v", err)
+	}
+}
+
+// An account repository whose manifest.toml names another owner is refused.
+func TestLoadClaimsRefusesAnAccountAnotherToolOwns(t *testing.T) {
+	a := newAccount(t, "claim = []\nunmanaged = []\n")
+	writeFile(t, a.Root, declDir+"/manifest.toml", "owner = \"othertool\"\n")
+	_, err := declarations.LoadClaims(testTool(), a.Root)
+	mustContain(t, err, `names the owner "othertool"`)
+}
