@@ -218,8 +218,8 @@
         },
         {
           "level": 2,
-          "text": "6. Worked examples (pgdesign, the first consumer's set)",
-          "anchor": "6-worked-examples-pgdesign-the-first-consumers-set"
+          "text": "6. Worked examples (strictsql, the first consumer's set)",
+          "anchor": "6-worked-examples-strictsql-the-first-consumers-set"
         },
         {
           "level": 3,
@@ -1303,7 +1303,7 @@
     }
   ],
   "posts": [],
-  "last_gen": "2026-10-08T11:59:26.916069+00:00",
+  "last_gen": "2026-10-12T20:33:35.558103+00:00",
   "theme": "minimal",
   "vocabulary": {
     "accepted": [
@@ -1336,7 +1336,7 @@
         "aliases": []
       },
       {
-        "word": "pgdesign",
+        "word": "strictsql",
         "aliases": []
       },
       {
