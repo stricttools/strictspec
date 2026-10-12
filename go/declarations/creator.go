@@ -165,7 +165,7 @@ func creatorClaims(tool Tool, accountRoot string, src []byte, resourceType, crea
 		return Claims{}, err
 	}
 	if typesByName(tool)[resourceType] == nil {
-		return Claims{}, fmt.Errorf("%s is not a resource type %s supplies (%s)", resourceType, tool.Name, typeNames(tool))
+		return Claims{}, fmt.Errorf("%s is not a resource type %s supplies (%s)", resourceType, tool.Command, typeNames(tool))
 	}
 	return c, nil
 }

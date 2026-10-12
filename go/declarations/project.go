@@ -50,6 +50,9 @@ func checkTool(tool Tool) error {
 	if tool.Name == "" {
 		return errors.New("declarations: Tool.Name is empty")
 	}
+	if strings.TrimSpace(tool.Command) == "" {
+		return errors.New("declarations: Tool.Command is empty")
+	}
 	if !kebabRE.MatchString(tool.Directory) {
 		return fmt.Errorf("declarations: Tool.Directory %q is not one kebab-case directory name", tool.Directory)
 	}
@@ -143,7 +146,7 @@ func FindRoot(tool Tool, cwd string) (string, error) {
 			return "", err
 		}
 		if filepath.Dir(dir) == dir {
-			return "", fmt.Errorf("%w in %s or any directory above it: run %s from inside a project repository", ErrNoRoot, start, tool.Name)
+			return "", fmt.Errorf("%w in %s or any directory above it: run %s from inside a project repository", ErrNoRoot, start, tool.Command)
 		}
 	}
 }

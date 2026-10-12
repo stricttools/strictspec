@@ -556,6 +556,7 @@ func (firewallType) Derive(declarations.Resource, declarations.LiveReader) ([]de
 func testTool() declarations.Tool {
 	return declarations.Tool{
 		Name:          "infratool",
+		Command:       "infra",
 		Directory:     "infrastructure",
 		InitCommand:   "infratool manifest init",
 		DryRunCommand: "infratool manifest apply --dry-run",

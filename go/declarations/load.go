@@ -135,7 +135,7 @@ func LoadForImport(tool Tool, project Project, resourceType, name string) (Set, 
 		return Set{}, err
 	}
 	if typesByName(tool)[resourceType] == nil {
-		return Set{}, fmt.Errorf("%s is not a resource type %s supplies (%s)", resourceType, tool.Name, typeNames(tool))
+		return Set{}, fmt.Errorf("%s is not a resource type %s supplies (%s)", resourceType, tool.Command, typeNames(tool))
 	}
 	return load(tool, project, &importTarget{resourceType: resourceType, name: name})
 }
@@ -195,7 +195,7 @@ func load(tool Tool, project Project, importing *importTarget) (Set, error) {
 				docs = append(docs, document{rt: types[n], rel: rel, src: src})
 			}
 		case e.IsDir():
-			problems = append(problems, fmt.Sprintf("%s/ is not a resource type %s supplies (%s)", n, tool.Name, typeNames(tool)))
+			problems = append(problems, fmt.Sprintf("%s/ is not a resource type %s supplies (%s)", n, tool.Command, typeNames(tool)))
 		default:
 			problems = append(problems, fmt.Sprintf("%s: the top of the declaration directory holds only manifest.toml, project.toml, claims.toml, and resource type directories (%s)", n, typeNames(tool)))
 		}

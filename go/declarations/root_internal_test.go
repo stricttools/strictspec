@@ -20,9 +20,11 @@ func TestFindRootRefusesOutsideAProjectAndTheFixClearsIt(t *testing.T) {
 		return os.Stat(p)
 	}
 	t.Cleanup(func() { stat = os.Stat })
-	tool := Tool{Name: "infratool", Directory: "infrastructure", InitCommand: "infratool manifest init", DryRunCommand: "infratool manifest apply --dry-run"}
+	// The refusal names the program the user runs, not the tool's owner
+	// name.
+	tool := Tool{Name: "infratool", Command: "infra", Directory: "infrastructure", InitCommand: "infra manifest init", DryRunCommand: "infra manifest apply --dry-run"}
 	_, err := FindRoot(tool, dir)
-	if err == nil || !strings.Contains(err.Error(), "run infratool from inside a project repository") || !errors.Is(err, ErrNoRoot) {
+	if err == nil || !strings.Contains(err.Error(), "run infra from inside a project repository") || !errors.Is(err, ErrNoRoot) {
 		t.Fatalf("FindRoot outside a project: %v", err)
 	}
 	if err := os.Mkdir(filepath.Join(dir, ".strictmetadata"), 0o755); err != nil {
@@ -30,5 +32,17 @@ func TestFindRootRefusesOutsideAProjectAndTheFixClearsIt(t *testing.T) {
 	}
 	if got, err := FindRoot(tool, dir); err != nil || got != dir {
 		t.Fatalf("FindRoot after the fix = %q, %v", got, err)
+	}
+}
+
+// A tool names the program its users run, which the engine's messages name.
+func TestCheckToolRefusesAToolNamingNoCommand(t *testing.T) {
+	tool := Tool{Name: "infratool", Directory: "infrastructure", InitCommand: "infra manifest init", DryRunCommand: "infra manifest apply --dry-run"}
+	if err := checkTool(tool); err == nil || !strings.Contains(err.Error(), "Tool.Command is empty") {
+		t.Fatalf("err = %v", err)
+	}
+	tool.Command = "infra"
+	if err := checkTool(tool); err != nil {
+		t.Fatalf("after the fix: %v", err)
 	}
 }

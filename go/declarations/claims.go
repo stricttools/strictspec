@@ -78,7 +78,7 @@ func parseClaims(tool Tool, accountRoot, file string, src []byte) (Claims, error
 	var order []string
 	note := func(resourceType, name, place string) {
 		if types[resourceType] == nil {
-			problems = append(problems, fmt.Sprintf("%s names the resource type %s, which %s does not supply (%s)", place, resourceType, tool.Name, typeNames(tool)))
+			problems = append(problems, fmt.Sprintf("%s names the resource type %s, which %s does not supply (%s)", place, resourceType, tool.Command, typeNames(tool)))
 		}
 		k := resourceType + "/" + name
 		if places[k] == nil {

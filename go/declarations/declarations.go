@@ -32,13 +32,16 @@ const (
 )
 
 // Tool is what a tool hands the engine: its name (the owner its manifests
-// name), its declaration directory under .strictmetadata/, the command line
+// name), the program its users run, which the engine's messages name (it
+// may differ from the owner name), its declaration directory under
+// .strictmetadata/, the command line
 // that creates one (the engine appends --project <name> in the refusal that
 // names it), the command line of its apply's dry run, which prints the plan
 // and the identifier apply requires (the refusals of apply name it), and its
 // resource types.
 type Tool struct {
 	Name          string
+	Command       string
 	Directory     string
 	InitCommand   string
 	DryRunCommand string

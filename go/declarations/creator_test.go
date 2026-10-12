@@ -173,7 +173,7 @@ func TestClaimCreatedRefusesAResourceListedOtherwise(t *testing.T) {
 	_, _, err = declarations.UnclaimCreated(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", "web1", "infratool backup")
 	mustContain(t, err, "claim[0]", "the project example")
 	_, _, err = declarations.ClaimCreated(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-volume", "data", "infratool backup")
-	mustContain(t, err, "test-volume is not a resource type")
+	mustContain(t, err, "test-volume is not a resource type infra supplies")
 	// The fix of the unmanaged refusal: removing the entry lets the creator
 	// claim the resource.
 	_, _, err = declarations.ClaimCreated(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", "old", "infratool backup")
