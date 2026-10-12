@@ -65,6 +65,9 @@ func RenderImport(set Set, live Resource) ([]byte, error) {
 		if !ok || derivedField(f) {
 			continue
 		}
+		if c, ok := companionOf(desc, f); ok {
+			v, f = live.Name+c.Suffix, c.FileKey
+		}
 		if err := line(f, v); err != nil {
 			return nil, err
 		}
@@ -98,4 +101,37 @@ func RenderImport(set Set, live Resource) ([]byte, error) {
 		}
 	}
 	return []byte(b.String()), nil
+}
+
+func companionOf(desc Descriptor, field string) (Companion, bool) {
+	for _, c := range desc.Companions {
+		if c.Field == field {
+			return c, true
+		}
+	}
+	return Companion{}, false
+}
+
+// RenderImportCompanions are the files RenderImport's declaration names
+// beside it, each its companion field's live content, by their path
+// relative to the declaration directory (<resource type>/<name><suffix>).
+// The tool refuses an existing file before reading anything, and writes
+// the bytes.
+func RenderImportCompanions(set Set, live Resource) (map[string][]byte, error) {
+	if err := checkTool(set.Tool); err != nil {
+		return nil, err
+	}
+	rt := typesByName(set.Tool)[live.Type]
+	if rt == nil {
+		return nil, fmt.Errorf("%s is not a resource type %s supplies (%s)", live.Type, set.Tool.Name, typeNames(set.Tool))
+	}
+	out := map[string][]byte{}
+	for _, c := range rt.Descriptor().Companions {
+		content, ok := live.Fields[c.Field].(string)
+		if !ok {
+			return nil, fmt.Errorf("the live resource %s holds no string %s, a bug in the tool", source(live), c.Field)
+		}
+		out[live.Type+"/"+live.Name+c.Suffix] = []byte(content)
+	}
+	return out, nil
 }

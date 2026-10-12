@@ -158,6 +158,10 @@ func load(tool Tool, project Project, importing *importTarget) (Set, error) {
 	}
 	var docs []document
 	var problems []string
+	// companionFiles are the files of resource type directories that are
+	// not declarations, by their path relative to the declaration
+	// directory: each must be a companion a declaration names.
+	companionFiles := map[string]string{}
 	for _, e := range top {
 		n := e.Name()
 		switch {
@@ -175,6 +179,10 @@ func load(tool Tool, project Project, importing *importTarget) (Set, error) {
 			}
 			for _, f := range entries {
 				rel := n + "/" + f.Name()
+				if f.Type().IsRegular() && !strings.HasSuffix(f.Name(), ".toml") && len(types[n].Descriptor().Companions) > 0 {
+					companionFiles[rel] = filepath.Join(dir, n, f.Name())
+					continue
+				}
 				if !f.Type().IsRegular() || !strings.HasSuffix(f.Name(), ".toml") || f.Name() == ".toml" {
 					problems = append(problems, fmt.Sprintf("%s: a resource type directory holds only <name>.toml files, one per resource", rel))
 					continue
@@ -235,8 +243,38 @@ func load(tool Tool, project Project, importing *importTarget) (Set, error) {
 		}
 		r.File = d.rel
 		r.Unmanaged = unmanaged
+		for _, c := range desc.Companions {
+			if _, set := r.Fields[c.Field]; set {
+				problems = append(problems, fmt.Sprintf("%s: Decode set the companion field %s, which the engine sets from its file: a bug in the tool", d.rel, c.Field))
+				continue
+			}
+			fv, _ := v.Field(c.FileKey)
+			named, _ := fv.AsString()
+			want := stem + c.Suffix
+			if named != want {
+				problems = append(problems, fmt.Sprintf("%s: %s is %q: write %s = %q, the file beside it holding its %s", d.rel, c.FileKey, named, c.FileKey, want, c.Field))
+				continue
+			}
+			rel := r.Type + "/" + want
+			path, ok := companionFiles[rel]
+			if !ok {
+				problems = append(problems, fmt.Sprintf("%s names %s, which does not exist: write the %s there", d.rel, rel, c.Field))
+				continue
+			}
+			content, err := os.ReadFile(path)
+			if err != nil {
+				return Set{}, err
+			}
+			set.files[rel] = hashHex(content)
+			r.Fields[c.Field] = string(content)
+		}
 		problems = append(problems, checkResource(r, desc, true)...)
 		set.Resources = append(set.Resources, r)
+	}
+	for _, rel := range sortedKeys(companionFiles) {
+		if _, named := set.files[rel]; !named {
+			problems = append(problems, fmt.Sprintf("%s: a resource type directory holds <name>.toml files, one per resource, and the files they name; no declaration names this one", rel))
+		}
 	}
 	if len(problems) > 0 {
 		return Set{}, refusal(dirRel(tool), problems)

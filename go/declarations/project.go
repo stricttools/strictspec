@@ -90,6 +90,16 @@ func checkDescriptor(name string, d Descriptor) error {
 			return bug("CreateOnly names %s, which is one of its Fields", f)
 		}
 	}
+	for _, c := range d.Companions {
+		switch {
+		case !contains(d.Fields, c.Field):
+			return bug("the companion field %s is not one of its Fields", c.Field)
+		case c.FileKey == "" || contains(d.Fields, c.FileKey) || contains(d.CreateOnly, c.FileKey):
+			return bug("the companion field %s is named by %q, which must be a key of its own, neither a Field nor CreateOnly", c.Field, c.FileKey)
+		case c.Suffix == "" || c.Suffix == ".toml" || strings.ContainsAny(c.Suffix, `/\`):
+			return bug("the companion field %s has the suffix %q: name a file kind other than .toml", c.Field, c.Suffix)
+		}
+	}
 	seen := map[string]bool{}
 	for _, c := range d.Collections {
 		if len(c.Key) == 0 {

@@ -97,6 +97,21 @@ type Descriptor struct {
 	// DerivableFields are Fields that must be declared unless a derivation
 	// supplies them, and must not be declared when one does.
 	DerivableFields []string
+	// Companions are Fields whose declared value is kept in a file beside
+	// the declaration (an HTML body), which the declaration names.
+	Companions []Companion
+}
+
+// Companion is a field whose declared value is the content of a file in the
+// resource type's directory, named <name><Suffix>, which the declaration
+// names under FileKey (a string its schema requires, never a Field). The
+// engine reads the file at load, sets Field to its content (Decode leaves
+// Field unset), and counts it in the plan's identifier; RenderImport writes
+// FileKey in its place, and RenderImportCompanions the file's content.
+type Companion struct {
+	Field   string
+	FileKey string
+	Suffix  string
 }
 
 // Collection is one child collection: its name, the fields that identify a
