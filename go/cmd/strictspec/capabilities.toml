@@ -1,0 +1,344 @@
+format = 1
+
+# --- schemas -----------------------------------------------------------------
+
+[[capability]]
+name     = "schema-sources"
+purpose  = "Load the schema a command works against, with its imported type files and the custom scalars its sibling manifests register."
+commands = ["validate", "export", "migrate", "document diff"]
+
+  [[capability.resource]]
+  name    = "schema-file"
+  class   = "file"
+  scope   = "arg:schema"
+  match   = "exact"
+  modes   = ["read"]
+  purpose = "Parse the schema whose types and constraints drive validation, export, migration, or comparison."
+
+  [[capability.resource]]
+  name    = "schema-repository"
+  class   = "directory"
+  scope   = "repo:arg:schema"
+  match   = "subtree"
+  modes   = ["read", "list"]
+  purpose = "Resolve the schema's imports relative to its directory and discover sibling TOML files that register custom scalars."
+
+[[capability]]
+name     = "schema-version-pair"
+purpose  = "Load the two versions of a schema whose compatibility a certificate speaks for."
+commands = ["diff"]
+
+  [[capability.resource]]
+  name    = "old-schema-file"
+  class   = "file"
+  scope   = "arg:old-schema"
+  match   = "exact"
+  modes   = ["read"]
+  purpose = "Parse the older schema version that corpus documents are first validated against."
+
+  [[capability.resource]]
+  name    = "old-schema-repository"
+  class   = "directory"
+  scope   = "repo:arg:old-schema"
+  match   = "subtree"
+  modes   = ["read", "list"]
+  purpose = "Resolve the older schema's imports and sibling custom-scalar registrations."
+
+  [[capability.resource]]
+  name    = "new-schema-file"
+  class   = "file"
+  scope   = "arg:new-schema"
+  match   = "exact"
+  modes   = ["read"]
+  purpose = "Parse the newer schema version whose name and format version the certificate records."
+
+  [[capability.resource]]
+  name    = "new-schema-repository"
+  class   = "directory"
+  scope   = "repo:arg:new-schema"
+  match   = "subtree"
+  modes   = ["read", "list"]
+  purpose = "Resolve the newer schema's imports and sibling custom-scalar registrations."
+
+# --- code generation ---------------------------------------------------------
+
+[[capability]]
+name     = "generated-code"
+purpose  = "Regenerate the committed validator files a manifest declares so they match their schemas byte for byte."
+commands = ["gen"]
+
+  [[capability.resource]]
+  name    = "manifest-file"
+  class   = "file"
+  scope   = "arg:manifest"
+  match   = "exact"
+  modes   = ["read"]
+  purpose = "Learn which schemas exist and which language targets and output paths each one declares."
+
+  [[capability.resource]]
+  name    = "project-tree"
+  class   = "directory"
+  scope   = "repo:arg:manifest"
+  match   = "subtree"
+  modes   = ["read", "list", "stat", "mkdir", "chmod", "create", "overwrite"]
+  purpose = "Load each schema relative to the manifest, then lay down its generated validator read-only with line-ending rules in .gitattributes so byte comparison holds under autocrlf."
+
+[[capability]]
+name     = "freshness-inputs"
+purpose  = "Compare committed generated files and migration files against what the manifest's schemas would produce, without changing anything."
+commands = ["check"]
+
+  [[capability.resource]]
+  name    = "manifest-file"
+  class   = "file"
+  scope   = "arg:manifest"
+  match   = "exact"
+  modes   = ["read"]
+  purpose = "Learn which schemas and generation targets the named manifest declares."
+
+  [[capability.resource]]
+  name    = "project-tree"
+  class   = "directory"
+  scope   = "repo:arg:manifest"
+  match   = "subtree"
+  modes   = ["read", "list"]
+  purpose = "Load schemas, committed generated files, and migration files relative to the named manifest to detect drift and authoring errors."
+
+  [[capability.resource]]
+  name    = "working-directory-manifest"
+  class   = "file"
+  scope   = "cwd/strictspec.toml"
+  match   = "exact"
+  modes   = ["read"]
+  purpose = "Learn which schemas and generation targets the working directory's manifest declares when no manifest is named."
+
+  [[capability.resource]]
+  name    = "working-directory-project-tree"
+  class   = "directory"
+  scope   = "repo:cwd"
+  match   = "subtree"
+  modes   = ["read", "list"]
+  purpose = "Load schemas, committed generated files, and migration files relative to the working directory's manifest to detect drift and authoring errors."
+
+[[capability]]
+name     = "manifest-scaffold"
+purpose  = "Start a new strictspec project with a commented manifest skeleton and line-ending rules for generated files."
+commands = ["init"]
+
+  [[capability.resource]]
+  name    = "new-manifest"
+  class   = "file"
+  scope   = "arg:manifest"
+  match   = "exact"
+  modes   = ["stat", "create"]
+  purpose = "Lay down the skeleton manifest only where none exists yet, so an existing project is never overwritten."
+
+  [[capability.resource]]
+  name    = "gitattributes-directory"
+  class   = "directory"
+  scope   = "repo:arg:manifest"
+  match   = "subtree"
+  modes   = ["read", "create", "overwrite"]
+  purpose = "Keep the .gitattributes beside the manifest so generated files are checked out with LF endings and marked as generated."
+
+# --- validation evidence -----------------------------------------------------
+
+[[capability]]
+name     = "validated-documents"
+purpose  = "Read the documents whose conformance to the schema is reported."
+commands = ["validate"]
+
+  [[capability.resource]]
+  name    = "document-files"
+  class   = "file"
+  scope   = "arg:documents"
+  match   = "exact"
+  modes   = ["read"]
+  purpose = "Parse each named document as JSON, JSON Lines, or TOML so its diagnostics can be rendered."
+
+[[capability]]
+name     = "evidence-collection"
+purpose  = "Host documents-in resolvers in-process so cross-document constraints such as count and sum limits can be judged."
+commands = ["validate"]
+
+  [[capability.resource]]
+  name    = "collection-tree"
+  class   = "directory"
+  scope   = "arg:collection-root"
+  match   = "subtree"
+  modes   = ["read", "list"]
+  purpose = "Resolve the collection globs under the named root and lift each matching document's top-level scalars into the evidence set."
+
+  [[capability.resource]]
+  name    = "working-directory-collection-tree"
+  class   = "directory"
+  scope   = "cwd"
+  match   = "subtree"
+  modes   = ["read", "list"]
+  purpose = "Resolve the collection globs under the working directory when no root is named and lift each match's top-level scalars into the evidence set."
+
+# --- migration ---------------------------------------------------------------
+
+[[capability]]
+name     = "migration-chain"
+purpose  = "Assemble the chain of migration files that carries a document from its format version to the target."
+commands = ["migrate"]
+
+  [[capability.resource]]
+  name    = "migrations-directory"
+  class   = "directory"
+  scope   = "arg:migrations"
+  match   = "subtree"
+  modes   = ["read", "list"]
+  purpose = "Find every migration file in the directory and parse it so a chain between versions can be selected."
+
+[[capability]]
+name     = "migrated-documents"
+purpose  = "Move documents to the schema's current format version in place, all computed before any is written."
+commands = ["migrate"]
+
+  [[capability.resource]]
+  name    = "document-files"
+  class   = "file"
+  scope   = "arg:documents"
+  match   = "exact"
+  modes   = ["read", "replace"]
+  purpose = "Read each document's current format version and content, then swap in its migrated content atomically so a reader never sees half a document."
+
+# --- certificates and deltas -------------------------------------------------
+
+[[capability]]
+name     = "diff-corpus"
+purpose  = "Gather the corpus, migration, and adjudication a compatibility certificate is computed from and acknowledged against."
+commands = ["diff"]
+
+  [[capability.resource]]
+  name    = "corpus-tree"
+  class   = "directory"
+  scope   = "arg:corpus-root"
+  match   = "subtree"
+  modes   = ["read", "list"]
+  purpose = "Resolve the corpus glob under its root and hash and validate every matching document so the certificate pins the corpus it speaks for."
+
+  [[capability.resource]]
+  name    = "migration-file"
+  class   = "file"
+  scope   = "arg:migration"
+  match   = "exact"
+  modes   = ["read"]
+  purpose = "Parse the migration whose round-trip soundness and down taxonomy the certificate grades."
+
+  [[capability.resource]]
+  name    = "adjudication-file"
+  class   = "file"
+  scope   = "arg:adjudication"
+  match   = "exact"
+  modes   = ["read"]
+  purpose = "Parse the committed adjudication whose entries discharge claims the corpus does not support."
+
+[[capability]]
+name     = "certificate-output"
+purpose  = "Hand the compatibility certificate to the caller in its pinned JSON format."
+commands = ["diff"]
+
+  [[capability.resource]]
+  name    = "certificate-stream"
+  class   = "stdout"
+  modes   = ["stream"]
+  purpose = "Print the certificate document byte for byte so release checks can store and re-verify it."
+
+[[capability]]
+name     = "compared-documents"
+purpose  = "Read the two documents whose structural delta is reported."
+commands = ["document diff"]
+
+  [[capability.resource]]
+  name    = "old-document-file"
+  class   = "file"
+  scope   = "arg:old-document"
+  match   = "exact"
+  modes   = ["read"]
+  purpose = "Parse the older document that each delta path starts from."
+
+  [[capability.resource]]
+  name    = "new-document-file"
+  class   = "file"
+  scope   = "arg:new-document"
+  match   = "exact"
+  modes   = ["read"]
+  purpose = "Parse the newer document that each delta path ends at."
+
+[[capability]]
+name     = "delta-output"
+purpose  = "Hand the document delta to the caller in its pinned JSON format."
+commands = ["document diff"]
+
+  [[capability.resource]]
+  name    = "delta-stream"
+  class   = "stdout"
+  modes   = ["stream"]
+  purpose = "Print the per-path delta document byte for byte as the certificates appendix pins it."
+
+# --- export ------------------------------------------------------------------
+
+[[capability]]
+name     = "json-schema-output"
+purpose  = "Deliver the advisory JSON Schema rendering of a schema to a file or to the caller."
+commands = ["export"]
+
+  [[capability.resource]]
+  name    = "output-file"
+  class   = "file"
+  scope   = "arg:output"
+  match   = "exact"
+  modes   = ["create", "overwrite"]
+  purpose = "Store the exported JSON Schema where the caller named, replacing an earlier export."
+
+  [[capability.resource]]
+  name    = "output-stream"
+  class   = "stdout"
+  modes   = ["stream"]
+  purpose = "Print the exported JSON Schema when no output file is named so it can be piped onward."
+
+# --- budgets -----------------------------------------------------------------
+
+[[budget]]
+command   = "gen"
+allocated = "256MiB"
+effects   = 512
+
+[[budget]]
+command   = "validate"
+allocated = "256MiB"
+effects   = 4
+
+[[budget]]
+command   = "check"
+allocated = "256MiB"
+effects   = 4
+
+[[budget]]
+command   = "init"
+allocated = "256MiB"
+effects   = 8
+
+[[budget]]
+command   = "export"
+allocated = "256MiB"
+effects   = 8
+
+[[budget]]
+command   = "migrate"
+allocated = "256MiB"
+effects   = 4
+scale     = { by = "arg:documents", per = 1 }
+
+[[budget]]
+command   = "diff"
+allocated = "256MiB"
+effects   = 8
+
+[[budget]]
+command   = "document diff"
+allocated = "256MiB"
+effects   = 8

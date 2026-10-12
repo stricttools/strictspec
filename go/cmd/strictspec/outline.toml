@@ -1,0 +1,265 @@
+format = 1
+help   = "Validates documents against strict schemas byte for byte and generates validator code from them."
+
+[[noun]]
+path = "document"
+help = "Documents of one schema, compared with each other."
+
+# --- gen ---------------------------------------------------------------------
+
+[[command]]
+path          = "gen"
+help          = "Generate validator code for every schema target the manifest declares."
+consequential = false
+
+  [[command.flag]]
+  name = "manifest"
+  type = "string"
+  role = "file"
+  help = "Path to the strictspec.toml manifest whose schemas and targets are generated."
+
+  [[command.exit]]
+  code    = 1
+  name    = "failed"
+  meaning = "The manifest, a schema, or a generation target failed to load or emit, or a generated file could not be written."
+
+# --- validate ----------------------------------------------------------------
+
+[[command]]
+path          = "validate"
+help          = "Validate documents against a schema and render their diagnostics."
+consequential = false
+
+  [[command.arg]]
+  name = "schema"
+  type = "string"
+  role = "file"
+  help = "Path to the schema file the documents are validated against."
+
+  [[command.arg]]
+  name = "documents"
+  type = "string"
+  role = "file"
+  list = true
+  help = "One or more document files to validate."
+
+  [[command.flag]]
+  name    = "mode"
+  type    = "string"
+  choices = ["structural-only", "with-domain-checks"]
+  help    = "Which check phases run: structural-only runs the structural checks, with-domain-checks also runs the constraint vocabulary checks."
+
+  [[command.flag]]
+  name = "collection"
+  type = "string"
+  list = true
+  help = "Glob, anchored at the collection root, whose matching documents are the evidence for documents-in resolvers; valid only with the with-domain-checks mode."
+
+  [[command.flag]]
+  name     = "collection-root"
+  type     = "string"
+  role     = "directory"
+  optional = true
+  help     = "Directory the collection globs are anchored at; absent means the working directory, and valid only with the with-domain-checks mode."
+
+  [[command.exit]]
+  code    = 1
+  name    = "failed"
+  meaning = "The schema failed to load or fails the meta-schema, a cross-document resolver could not be hosted, the evidence could not be loaded, or a document failed to read or validate."
+
+  [[command.exit]]
+  code    = 2
+  name    = "invalid-input"
+  meaning = "A collection flag was given with the structural-only mode."
+
+# --- check -------------------------------------------------------------------
+
+[[command]]
+path          = "check"
+help          = "Check schema authoring validity, migration files, and generated-code freshness for a manifest."
+consequential = false
+
+  [[command.flag]]
+  name     = "manifest"
+  type     = "string"
+  role     = "file"
+  optional = true
+  help     = "Path to the strictspec.toml manifest to check; absent means strictspec.toml in the working directory."
+
+  [[command.exit]]
+  code    = 1
+  name    = "failed"
+  meaning = "The manifest failed to load, a schema or migration file fails authoring validation, or a generated file is missing or stale."
+
+# --- init --------------------------------------------------------------------
+
+[[command]]
+path          = "init"
+help          = "Scaffold a minimal strictspec.toml manifest and its .gitattributes rules."
+consequential = false
+
+  [[command.flag]]
+  name = "manifest"
+  type = "string"
+  role = "file"
+  help = "Path to the strictspec.toml manifest to create, which must not exist yet."
+
+  [[command.exit]]
+  code    = 1
+  name    = "failed"
+  meaning = "The manifest already exists, or the manifest or .gitattributes could not be written."
+
+# --- export ------------------------------------------------------------------
+
+[[command]]
+path          = "export"
+help          = "Export a schema to JSON Schema, which is advisory and loses what JSON Schema cannot state."
+consequential = false
+
+  [[command.arg]]
+  name = "schema"
+  type = "string"
+  role = "file"
+  help = "Path to the schema file to export."
+
+  [[command.flag]]
+  name     = "output"
+  type     = "string"
+  role     = "file"
+  optional = true
+  help     = "Path the JSON Schema is written to; absent means standard output."
+
+  [[command.exit]]
+  code    = 1
+  name    = "failed"
+  meaning = "The schema failed to load, fails the meta-schema, or could not be exported, or the output file could not be written."
+
+  [[command.exit]]
+  code    = 2
+  name    = "invalid-input"
+  meaning = "The output flag was given an empty path."
+
+# --- migrate -----------------------------------------------------------------
+
+[[command]]
+path          = "migrate"
+help          = "Migrate documents up to the schema's current format version through a chain of migration files."
+consequential = false
+
+  [[command.arg]]
+  name = "schema"
+  type = "string"
+  role = "file"
+  help = "Path to the target schema file at its current format version."
+
+  [[command.arg]]
+  name = "documents"
+  type = "string"
+  role = "file"
+  list = true
+  help = "One or more document files to migrate in place."
+
+  [[command.flag]]
+  name = "to"
+  type = "integer"
+  help = "Target format version, which must equal the schema's current format version."
+
+  [[command.flag]]
+  name = "migrations"
+  type = "string"
+  role = "directory"
+  help = "Directory of migration files forming the chain, such as . for the working directory."
+
+  [[command.exit]]
+  code    = 1
+  name    = "failed"
+  meaning = "The schema or a migration file failed to load, a document could not be read or has no integer format version, is already current, has no migration chain to the target, or failed to migrate, or a document could not be written."
+
+  [[command.exit]]
+  code    = 2
+  name    = "invalid-input"
+  meaning = "The target format version does not match the schema's current format version."
+
+# --- diff --------------------------------------------------------------------
+
+[[command]]
+path          = "diff"
+help          = "Compare a schema at two format versions over a corpus and print the resulting certificate."
+consequential = false
+
+  [[command.arg]]
+  name = "old-schema"
+  type = "string"
+  role = "file"
+  help = "Path to the schema at the older format version."
+
+  [[command.arg]]
+  name = "new-schema"
+  type = "string"
+  role = "file"
+  help = "Path to the schema at the newer format version."
+
+  [[command.flag]]
+  name = "corpus"
+  type = "string"
+  help = "Corpus glob, anchored at the corpus root and resolved in lexicographic order."
+
+  [[command.flag]]
+  name = "corpus-root"
+  type = "string"
+  role = "directory"
+  help = "Directory the corpus glob is anchored at, such as . for the working directory."
+
+  [[command.flag]]
+  name     = "migration"
+  type     = "string"
+  role     = "file"
+  optional = true
+  help     = "Path to the migration file between the two versions; absent means no migration is checked."
+
+  [[command.flag]]
+  name     = "adjudication"
+  type     = "string"
+  role     = "file"
+  optional = true
+  help     = "Path to a committed adjudication file whose entries discharge unsupported claims; absent means none is acknowledged."
+
+  [[command.flag]]
+  name = "same-version"
+  type = "boolean"
+  help = "Force the same-version narrowing scan with no migration, which also runs when no migration is given and both schemas share a format version."
+
+  [[command.exit]]
+  code    = 1
+  name    = "failed"
+  meaning = "A schema, the migration, the corpus, or the adjudication failed to load or validate, the certificate failed its own schema, or a claim is violated or not discharged."
+
+# --- document diff -----------------------------------------------------------
+
+[[command]]
+path          = "document diff"
+help          = "Print the structural per-path delta between two documents of one schema."
+consequential = false
+
+  [[command.arg]]
+  name = "schema"
+  type = "string"
+  role = "file"
+  help = "Path to the schema file both documents follow."
+
+  [[command.arg]]
+  name = "old-document"
+  type = "string"
+  role = "file"
+  help = "Path to the older document."
+
+  [[command.arg]]
+  name = "new-document"
+  type = "string"
+  role = "file"
+  help = "Path to the newer document."
+
+  [[command.exit]]
+  code    = 1
+  name    = "failed"
+  meaning = "The schema failed to load, a document could not be read or parsed, or the documents could not be compared."
