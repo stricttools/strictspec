@@ -139,6 +139,28 @@ func TestClaimCreatedAndUnclaimCreatedEditClaimsInPlace(t *testing.T) {
 	}
 }
 
+// Removing the last claim of a claims.toml writing its claims as [[claim]]
+// tables leaves claim = [], which the file requires, instead of no claim
+// key; claiming again adds the claim to it.
+func TestUnclaimCreatedOfTheLastClaimTableLeavesAnEmptyClaimArray(t *testing.T) {
+	a := newAccount(t, "# the account's claims\nunmanaged = []\n\n[[claim]] # the snapshot\nresource_type = \"test-server\"\nname = \"4242\"\ncreator = \"infratool backup\"\n")
+	out, changed, err := declarations.UnclaimCreated(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", "4242", "infratool backup")
+	writeClaims(t, a, out, changed, err)
+	claims, err := declarations.LoadClaims(testTool(), a.Root)
+	if err != nil {
+		t.Fatalf("after removing the last claim: %v\n%s", err, readClaimsFile(t, a))
+	}
+	if len(claims.Claims) != 0 || !strings.Contains(readClaimsFile(t, a), "# the account's claims") {
+		t.Fatalf("claims %+v\n%s", claims.Claims, readClaimsFile(t, a))
+	}
+	out, changed, err = declarations.ClaimCreated(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", "4243", "infratool backup")
+	writeClaims(t, a, out, changed, err)
+	claims, err = declarations.LoadClaims(testTool(), a.Root)
+	if err != nil || len(claims.Claims) != 1 || claims.Claims[0].Name != "4243" {
+		t.Fatalf("claiming again: %+v, %v", claims.Claims, err)
+	}
+}
+
 // A resource listed otherwise is not the creator's to claim or unclaim.
 func TestClaimCreatedRefusesAResourceListedOtherwise(t *testing.T) {
 	a := newAccount(t, "unmanaged = [{ resource_type = \"test-server\", name = \"old\", reason = \"a manual experiment\" }]\nclaim = [{ resource_type = \"test-server\", name = \"web1\", project = \"example\" }, { resource_type = \"test-server\", name = \"snap\", creator = \"infratool park\" }]\n")

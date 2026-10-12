@@ -91,6 +91,15 @@ func UnclaimCreated(tool Tool, accountRoot string, src []byte, resourceType, nam
 		if err := doc.Delete(fmt.Sprintf("claim[%d]", i)); err != nil {
 			return nil, false, fmt.Errorf("%s: %w", file, err)
 		}
+		// Deleting the only [[claim]] table deletes the key, which the file
+		// requires (claim = [] when empty); an inline claim = [...] keeps
+		// it. Has answers false for an array of tables, so it is asked only
+		// once no claim remains.
+		if len(c.Claims) == 1 && !doc.Has("claim") {
+			if err := doc.Set("claim", []any{}); err != nil {
+				return nil, false, fmt.Errorf("%s: %w", file, err)
+			}
+		}
 		return checkedClaims(tool, accountRoot, file, doc.Bytes())
 	}
 	return src, false, nil
