@@ -93,6 +93,11 @@ func PlanApply(set Set, live LiveReader, claims Claims, w Writer, g Git) (Plan, 
 	if err != nil {
 		return Plan{}, err
 	}
+	if u, ok := w.(UsageReader); ok {
+		if changes, err = orderDeletesByUses(changes, u); err != nil {
+			return Plan{}, err
+		}
+	}
 	for _, ch := range changes {
 		if ch.Deferred != nil {
 			continue
@@ -359,4 +364,70 @@ func itemFor(col Collection, d Difference, expected Resource) Item {
 		}
 	}
 	return Item{}
+}
+
+// orderDeletesByUses moves each resource-level delete after the
+// resource-level deletes of the resources using it (u.Users), keeping the
+// order otherwise: the deletes take the same places in the plan, filled in
+// that order.
+func orderDeletesByUses(changes []Change, u UsageReader) ([]Change, error) {
+	var at []int
+	deleted := map[string]bool{}
+	for i, ch := range changes {
+		if ch.Action == ActionDelete && ch.Collection == "" && ch.Field == "" {
+			at = append(at, i)
+			deleted[ch.ResourceType+"/"+ch.Name] = true
+		}
+	}
+	users := map[string][]string{}
+	for _, i := range at {
+		ch := changes[i]
+		k := ch.ResourceType + "/" + ch.Name
+		list, err := u.Users(ch.ResourceType, ch.Name)
+		if err != nil {
+			return nil, fmt.Errorf("apply refuses while a live read fails, rather than guess the order of its deletes: reading what uses %s: %w", k, err)
+		}
+		for _, user := range list {
+			if deleted[user] && user != k {
+				users[k] = append(users[k], user)
+			}
+		}
+	}
+	placed := map[string]bool{}
+	taken := make([]bool, len(at))
+	out := append([]Change(nil), changes...)
+	for n := range at {
+		next := -1
+		for j, i := range at {
+			if taken[j] {
+				continue
+			}
+			ready := true
+			for _, user := range users[changes[i].ResourceType+"/"+changes[i].Name] {
+				if !placed[user] {
+					ready = false
+					break
+				}
+			}
+			if ready {
+				next = j
+				break
+			}
+		}
+		if next < 0 {
+			var stuck []string
+			for j, i := range at {
+				if !taken[j] {
+					k := changes[i].ResourceType + "/" + changes[i].Name
+					stuck = append(stuck, fmt.Sprintf("%s, used by %s", k, strings.Join(users[k], " and ")))
+				}
+			}
+			return nil, refusal("the plan, deleting resources that use each other, which apply cannot order,", stuck)
+		}
+		taken[next] = true
+		ch := changes[at[next]]
+		placed[ch.ResourceType+"/"+ch.Name] = true
+		out[at[n]] = ch
+	}
+	return out, nil
 }

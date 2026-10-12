@@ -272,6 +272,18 @@ type Writer interface {
 	Apply(Change) error
 }
 
+// UsageReader is a Writer that reads which live resources use a resource,
+// as its provider reports them (a script binding a bucket). PlanApply then
+// deletes each resource after every resource the plan deletes that uses
+// it, whatever their stages and names, and refuses resources the plan
+// deletes that use each other.
+type UsageReader interface {
+	Writer
+	// Users names the live resources using the resource, each as
+	// "<resource type>/<name>".
+	Users(resourceType, name string) ([]string, error)
+}
+
 // Git runs git for the engine through the tool's own effects. Status runs
 // git -C <root> status --porcelain=v1 --untracked-files=all -- <dir> and
 // returns its output.
