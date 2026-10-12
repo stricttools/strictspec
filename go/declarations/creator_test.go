@@ -152,3 +152,29 @@ func TestClaimCreatedRefusesAResourceListedOtherwise(t *testing.T) {
 	_, _, err = declarations.ClaimCreated(testTool(), a.Root, "test-volume", "data", "infratool backup")
 	mustContain(t, err, "test-volume is not a resource type")
 }
+
+// Renaming a resource renames its claim or unmanaged entry in place; a
+// resource the file does not list changes nothing, and a name the file
+// lists already is refused.
+func TestRenameClaimRenamesAClaimOrAnUnmanagedEntry(t *testing.T) {
+	a := newAccount(t, "# kept\nunmanaged = [{ resource_type = \"test-server\", name = \"old\", reason = \"by hand\" }]\n\n[[claim]]\nresource_type = \"test-server\"\nname = \"web1\"\nproject = \"example\"\n")
+	for _, c := range [][2]string{{"web1", "web2"}, {"old", "older"}} {
+		out, changed, err := declarations.RenameClaim(testTool(), a.Root, "test-server", c[0], c[1])
+		writeClaims(t, a, out, changed, err)
+		if !changed {
+			t.Fatalf("renaming %s changed nothing", c[0])
+		}
+	}
+	claims, err := declarations.LoadClaims(testTool(), a.Root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if claims.Claims[0].Name != "web2" || claims.Unmanaged[0].Name != "older" || !strings.Contains(readClaimsFile(t, a), "# kept") {
+		t.Fatalf("claims %+v\n%s", claims, readClaimsFile(t, a))
+	}
+	if _, changed, err := declarations.RenameClaim(testTool(), a.Root, "test-server", "absent", "other"); err != nil || changed {
+		t.Fatalf("an absent resource: changed %v, %v", changed, err)
+	}
+	_, _, err = declarations.RenameClaim(testTool(), a.Root, "test-server", "web2", "older")
+	mustContain(t, err, "unmanaged[0] already lists test-server/older")
+}

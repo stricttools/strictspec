@@ -139,3 +139,50 @@ func claimOwner(cl Claim) string {
 	}
 	return "the project " + cl.Project
 }
+
+// RenameClaim returns the bytes of the account repository's claims.toml with
+// the claim or unmanaged entry of a resource renamed from oldName to
+// newName (a command renaming the live resource keeps its name, the
+// resource's key, the same everywhere), and whether they differ from the
+// file's: a resource the file does not list changes nothing. A newName the
+// file lists already is refused. The file is edited in place: its comments
+// and layout are kept.
+func RenameClaim(tool Tool, accountRoot, resourceType, oldName, newName string) ([]byte, bool, error) {
+	c, err := LoadClaims(tool, accountRoot)
+	if err != nil {
+		return nil, false, err
+	}
+	file := ClaimFile(tool, accountRoot)
+	src, err := os.ReadFile(file)
+	if err != nil {
+		return nil, false, err
+	}
+	path := ""
+	for i, cl := range c.Claims {
+		switch {
+		case cl.ResourceType == resourceType && cl.Name == newName:
+			return nil, false, fmt.Errorf("%s: claim[%d] already lists %s/%s: a resource has one name", file, i, resourceType, newName)
+		case cl.ResourceType == resourceType && cl.Name == oldName:
+			path = fmt.Sprintf("claim[%d].name", i)
+		}
+	}
+	for i, u := range c.Unmanaged {
+		switch {
+		case u.ResourceType == resourceType && u.Name == newName:
+			return nil, false, fmt.Errorf("%s: unmanaged[%d] already lists %s/%s: a resource has one name", file, i, resourceType, newName)
+		case u.ResourceType == resourceType && u.Name == oldName:
+			path = fmt.Sprintf("unmanaged[%d].name", i)
+		}
+	}
+	if path == "" {
+		return src, false, nil
+	}
+	doc, err := tomledit.Parse(src)
+	if err != nil {
+		return nil, false, fmt.Errorf("%s: %w", file, err)
+	}
+	if err := doc.Set(path, newName); err != nil {
+		return nil, false, fmt.Errorf("%s: %w", file, err)
+	}
+	return checkedClaims(tool, accountRoot, file, doc.Bytes())
+}
