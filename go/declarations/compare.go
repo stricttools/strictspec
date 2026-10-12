@@ -121,6 +121,10 @@ type comparison struct {
 	slots   map[int][]slotState
 	// deferred are the pending collection slots, in comparison order.
 	deferred []deferredSlot
+	// owned are the live resources each live resource ("<type>/<name>")
+	// owns that nothing declares, claims, or lists unmanaged, in the
+	// account repository.
+	owned map[string][]Resource
 }
 
 // Compare reads every declared resource live, resolves references and
@@ -709,7 +713,9 @@ func (c *comparison) compareCollection(r Resource, col Collection, expected []ex
 }
 
 // unclaimed lists every live resource of every resource type, in the account
-// repository.
+// repository, and reads each one neither declared there, claimed, nor
+// unmanaged: it is unclaimed, unless its owner (Owning) is live, when it goes
+// with its owner (in owned, under the owner, when the owner is unclaimed).
 func (c *comparison) unclaimed(claims Claims) {
 	claimed := map[string]bool{}
 	for _, cl := range claims.Claims {
@@ -719,6 +725,13 @@ func (c *comparison) unclaimed(claims Claims) {
 	for _, u := range claims.Unmanaged {
 		unmanaged[u.ResourceType+"/"+u.Name] = u.Reason
 	}
+	type candidate struct {
+		resourceType, name string
+		owner              string
+		live               Resource
+	}
+	var candidates []candidate
+	listed := map[string]bool{}
 	for _, rt := range c.set.Tool.ResourceTypes {
 		names, err := c.rc.List(rt.Name())
 		if err != nil {
@@ -727,6 +740,7 @@ func (c *comparison) unclaimed(claims Claims) {
 		}
 		for _, n := range names {
 			k := rt.Name() + "/" + n
+			listed[k] = true
 			if _, declared := c.set.index(rt.Name(), n); declared || claimed[k] {
 				continue
 			}
@@ -734,8 +748,31 @@ func (c *comparison) unclaimed(claims Claims) {
 				c.managed = append(c.managed, UnmanagedMatch{ResourceType: rt.Name(), Name: n, Reason: reason})
 				continue
 			}
-			c.add(Difference{Status: StatusUnclaimed, ResourceType: rt.Name(), Name: n})
+			r, ok, err := c.rc.Read(rt.Name(), n)
+			if err != nil {
+				c.unreadable(rt.Name(), n, err)
+				continue
+			}
+			if !ok {
+				// Listed, then gone before it was read.
+				continue
+			}
+			cand := candidate{resourceType: rt.Name(), name: n, live: r}
+			if o, ok := rt.(Owning); ok {
+				if ot, on, owned := o.Owner(r); owned {
+					cand.owner = ot + "/" + on
+				}
+			}
+			candidates = append(candidates, cand)
 		}
+	}
+	c.owned = map[string][]Resource{}
+	for _, cand := range candidates {
+		if cand.owner != "" && listed[cand.owner] {
+			c.owned[cand.owner] = append(c.owned[cand.owner], cand.live)
+			continue
+		}
+		c.add(Difference{Status: StatusUnclaimed, ResourceType: cand.resourceType, Name: cand.name})
 	}
 }
 

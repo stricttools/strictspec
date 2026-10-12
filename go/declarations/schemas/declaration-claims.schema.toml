@@ -1,7 +1,8 @@
 # Built-in schema of the declarations engine: claims.toml at the top of the
 # account repository's declaration directory, assigning every account-level
-# resource a project declares to that project, and listing the live
-# account-level resources nobody declares.
+# resource a project declares to that project, every resource a command
+# created and owns to that command, and listing the live account-level
+# resources nobody declares.
 name = "declaration-claims"
 meta_version = 1
 format_version = 1
@@ -16,7 +17,7 @@ type = "record"
 [types.DeclarationClaims.fields.claim]
 type = "array"
 required = true
-description = "The account-level resources projects declare; written claim = [] when there are none."
+description = "The account-level resources projects declare, and those a command created and owns; written claim = [] when there are none."
 [types.DeclarationClaims.fields.claim.item]
 type = "Claim"
 
@@ -44,9 +45,15 @@ description = "The resource's name."
 
 [types.Claim.fields.project]
 type = "string"
-required = true
+required = false
 regex = "^[a-z0-9][a-z0-9-]*$"
-description = "The project.toml name of the repository declaring the resource."
+description = "The project.toml name of the repository declaring the resource; a claim names either project or creator, never both."
+
+[types.Claim.fields.creator]
+type = "string"
+required = false
+non_empty = true
+description = "The command that created the resource and owns it, nothing declaring it (a snapshot a backup command takes); a claim names either project or creator, never both. The creator adds and removes its claims itself."
 
 [types.UnmanagedResource]
 type = "record"

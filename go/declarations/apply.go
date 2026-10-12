@@ -73,7 +73,7 @@ func PlanApply(set Set, live LiveReader, claims Claims, w Writer, g Git) (Plan, 
 	var problems []string
 	for _, d := range rep.Differences {
 		if d.Status == StatusMisclaimed {
-			problems = append(problems, fmt.Sprintf("%s/%s (misclaimed: the claims assign it to another project or to none)", d.ResourceType, d.Name))
+			problems = append(problems, fmt.Sprintf("%s/%s (misclaimed: the claims assign it to another project, to the command that created it, or to none)", d.ResourceType, d.Name))
 		}
 	}
 	if len(problems) > 0 {
@@ -244,10 +244,12 @@ func (c *comparison) changes(rep Report) []Change {
 			action = ActionDelete
 		case StatusUnclaimed:
 			// Only the account repository's comparison reports unclaimed
-			// resources: each is deleted whole. The resource is declared
-			// nowhere, so the change carries only its type and name.
+			// resources: each is deleted whole, with what it owns. The
+			// resource is declared nowhere, so the change carries it as
+			// read (the comparison read it; this is the cached result).
 			rt := c.types[d.ResourceType]
-			deletes = append(deletes, Change{Action: ActionDelete, ResourceType: d.ResourceType, Name: d.Name, Resource: Resource{Type: d.ResourceType, Name: d.Name, Fields: map[string]Value{}, Children: map[string][]Item{}}, Stage: rt.Descriptor().Stage})
+			lr, _, _ := c.rc.Read(d.ResourceType, d.Name)
+			deletes = append(deletes, Change{Action: ActionDelete, ResourceType: d.ResourceType, Name: d.Name, Resource: lr, Stage: rt.Descriptor().Stage, Owned: c.owned[d.ResourceType+"/"+d.Name]})
 			continue
 		default:
 			continue

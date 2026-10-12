@@ -68,6 +68,19 @@ type ResourceType interface {
 	Derive(r Resource, live LiveReader) ([]Derived, error)
 }
 
+// Owning is a ResourceType whose live resources a provider may create with
+// another live resource, which owns them (the addresses a cloud provider
+// creates with a server). In the account repository a live resource whose
+// owner is declared there, claimed, or listed unmanaged is not unclaimed: it
+// goes with its owner; one whose owner is unclaimed goes with the owner's
+// deletion, in the owner's Change.Owned, and is never deleted on its own.
+type Owning interface {
+	ResourceType
+	// Owner names the live resource owning r, a live resource of this type
+	// as the live reader read it, or false when nothing owns it.
+	Owner(r Resource) (resourceType, name string, ok bool)
+}
+
 // Descriptor describes a resource type to the engine.
 type Descriptor struct {
 	// Fields are the top-level compared fields, in rendering order.
@@ -215,8 +228,10 @@ const (
 // live set and keep every child the change does not name.
 //
 // A resource-level delete is the deletion of an unclaimed resource in the
-// account repository; its Resource holds only Type and Name, since nothing
-// declares the resource.
+// account repository; its Resource is the live resource as read, since
+// nothing declares it, and Owned are the live resources it owns (Owning),
+// which go with it: the writer deletes each the provider does not delete
+// with the owner.
 //
 // Item is the expected child as Resource.Children holds it, or the live child
 // for a delete.
@@ -239,6 +254,7 @@ type Change struct {
 	Item         Item
 	Stage        int
 	Deferred     *Deferred
+	Owned        []Resource
 }
 
 // Writer executes changes; the tool supplies it. It supports a resource-level

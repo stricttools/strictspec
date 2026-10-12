@@ -18,11 +18,14 @@ type Claims struct {
 }
 
 // Claim assigns an account-level resource a project declares to that
-// project, by its project.toml name.
+// project, by its project.toml name, or a resource a command created and owns
+// (nothing declares it) to that command, Creator. A claim holds one of
+// Project and Creator.
 type Claim struct {
 	ResourceType string
 	Name         string
 	Project      string
+	Creator      string
 }
 
 // UnmanagedResource is a live account-level resource nobody declares, and
@@ -50,6 +53,11 @@ func LoadClaims(tool Tool, accountRoot string) (Claims, error) {
 	if err != nil {
 		return Claims{}, err
 	}
+	return parseClaims(tool, accountRoot, file, src)
+}
+
+// parseClaims validates and checks the bytes of claims.toml, read from file.
+func parseClaims(tool Tool, accountRoot, file string, src []byte) (Claims, error) {
 	builtins()
 	v, err := validated(claimsProgram, file, src, "toml")
 	if err != nil {
@@ -58,7 +66,7 @@ func LoadClaims(tool Tool, accountRoot string) (Claims, error) {
 	c := Claims{Root: accountRoot, Claims: []Claim{}, Unmanaged: []UnmanagedResource{}}
 	cl, _ := v.Field("claim")
 	for _, e := range cl.Items() {
-		c.Claims = append(c.Claims, Claim{ResourceType: fieldString(e, "resource_type"), Name: fieldString(e, "name"), Project: fieldString(e, "project")})
+		c.Claims = append(c.Claims, Claim{ResourceType: fieldString(e, "resource_type"), Name: fieldString(e, "name"), Project: fieldString(e, "project"), Creator: fieldString(e, "creator")})
 	}
 	un, _ := v.Field("unmanaged")
 	for _, e := range un.Items() {
@@ -79,7 +87,14 @@ func LoadClaims(tool Tool, accountRoot string) (Claims, error) {
 		places[k] = append(places[k], place)
 	}
 	for i, e := range c.Claims {
-		note(e.ResourceType, e.Name, fmt.Sprintf("claim[%d]", i))
+		place := fmt.Sprintf("claim[%d]", i)
+		switch {
+		case e.Project == "" && e.Creator == "":
+			problems = append(problems, place+" names neither project nor creator: write project = \"<the project.toml name of the repository declaring it>\", or creator for a resource a command created and owns")
+		case e.Project != "" && e.Creator != "":
+			problems = append(problems, place+" names both project and creator: a resource a project declares is the project's; remove one")
+		}
+		note(e.ResourceType, e.Name, place)
 	}
 	for i, e := range c.Unmanaged {
 		note(e.ResourceType, e.Name, fmt.Sprintf("unmanaged[%d]", i))
