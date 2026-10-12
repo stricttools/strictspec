@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"strconv"
 
 	tomledit "github.com/stricttools/go-toml-edit"
 )
@@ -125,14 +126,33 @@ func CreatorClaim(tool Tool, accountRoot string, src []byte, resourceType, name,
 		if cl.Creator == creator {
 			return true, nil
 		}
-		return false, fmt.Errorf("%s: claim[%d] assigns %s/%s to %s, not to %s, so %s does not delete it", file, i, resourceType, name, claimOwner(cl), creator, creator)
+		return false, fmt.Errorf("%s: claim[%d] assigns %s/%s to %s, not to %s, so %s does not delete it: if %s owns it, make claim[%d] %s and commit the change", file, i, resourceType, name, claimOwner(cl), creator, creator, creator, i, creatorEntry(resourceType, name, creator))
 	}
 	for i, u := range c.Unmanaged {
 		if u.ResourceType == resourceType && u.Name == name {
-			return false, fmt.Errorf("%s: unmanaged[%d] lists %s/%s as nobody's (%s), so %s does not delete it", file, i, resourceType, name, u.Reason, creator)
+			return false, fmt.Errorf("%s: unmanaged[%d] lists %s/%s as nobody's (%s), so %s does not delete it: if %s owns it, move it from unmanaged[%d] to the claim array as %s and commit the change", file, i, resourceType, name, u.Reason, creator, creator, i, creatorEntry(resourceType, name, creator))
 		}
 	}
 	return false, nil
+}
+
+// CreatorDeletes refuses unless src, the bytes of the account repository's
+// claims.toml as the tool holds them, claims the resource for creator: a
+// creator deletes only what its own claim covers. A resource src lists
+// nowhere is refused like one CreatorClaim refuses, each refusal naming the
+// claim to write when the creator owns the resource.
+func CreatorDeletes(tool Tool, accountRoot string, src []byte, resourceType, name, creator string) error {
+	owned, err := CreatorClaim(tool, accountRoot, src, resourceType, name, creator)
+	if err != nil || owned {
+		return err
+	}
+	return fmt.Errorf("%s claims %s/%s for nobody, so %s does not delete it: %s deletes only what its own claim covers; if %s created it, add %s to the claim array and commit the change", ClaimFile(tool, accountRoot), resourceType, name, creator, creator, creator, creatorEntry(resourceType, name, creator))
+}
+
+// creatorEntry is the claim of a resource for creator, as claims.toml
+// writes it inline.
+func creatorEntry(resourceType, name, creator string) string {
+	return fmt.Sprintf("{ resource_type = %s, name = %s, creator = %s }", strconv.Quote(resourceType), strconv.Quote(name), strconv.Quote(creator))
 }
 
 // creatorClaims checks src, claims.toml's bytes, for a creator's edit.

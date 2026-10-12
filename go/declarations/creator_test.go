@@ -265,6 +265,34 @@ func TestCreatorClaimTellsWhetherTheCreatorOwnsAResource(t *testing.T) {
 	mustContain(t, err, "unmanaged[0]", "a manual experiment")
 }
 
+// A creator deletes only what its own claim covers: a resource claimed for
+// nobody, for another owner, or listed unmanaged is refused, each refusal
+// naming the claim to write, and writing it lets the creator delete it.
+func TestCreatorDeletesOnlyWhatItsOwnClaimCovers(t *testing.T) {
+	const own = `{ resource_type = "test-server", name = "snap", creator = "infratool backup" }`
+	for _, c := range []struct {
+		body, fixed string
+		want        []string
+	}{
+		{"unmanaged = []\nclaim = []\n", "unmanaged = []\nclaim = [" + own + "]\n",
+			[]string{"claims test-server/snap for nobody, so infratool backup does not delete it", "add " + own + " to the claim array"}},
+		{"unmanaged = []\nclaim = [{ resource_type = \"test-server\", name = \"snap\", project = \"example\" }]\n", "unmanaged = []\nclaim = [" + own + "]\n",
+			[]string{"claim[0] assigns test-server/snap to the project example", "make claim[0] " + own}},
+		{"unmanaged = []\nclaim = [{ resource_type = \"test-server\", name = \"snap\", creator = \"infratool park\" }]\n", "unmanaged = []\nclaim = [" + own + "]\n",
+			[]string{"its creator infratool park", "make claim[0] " + own}},
+		{"claim = []\nunmanaged = [{ resource_type = \"test-server\", name = \"snap\", reason = \"kept by hand\" }]\n", "unmanaged = []\nclaim = [" + own + "]\n",
+			[]string{"unmanaged[0] lists test-server/snap as nobody's (kept by hand)", "move it from unmanaged[0] to the claim array as " + own}},
+	} {
+		a := newAccount(t, c.body)
+		err := declarations.CreatorDeletes(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", "snap", "infratool backup")
+		mustContain(t, err, append(c.want, "and commit the change")...)
+		writeFile(t, a.Root, claimsPath, "format_version = 1\n"+c.fixed)
+		if err := declarations.CreatorDeletes(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", "snap", "infratool backup"); err != nil {
+			t.Fatalf("after the fix: %v", err)
+		}
+	}
+}
+
 // In the account repository, a creator's claim naming a resource that is not
 // live is a stale claim: verify shows it, and apply removes it through the
 // writer, an unclaim change carrying the claim, after which the comparison
