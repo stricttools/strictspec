@@ -118,6 +118,12 @@ func checkDescriptor(name string, d Descriptor) error {
 	return nil
 }
 
+// ErrNoRoot is FindRoot's error, wrapped, when neither cwd nor any directory
+// above it holds .strictmetadata/: a caller to which a working directory
+// outside every project is not an error tells it from FindRoot's other
+// errors with errors.Is.
+var ErrNoRoot = errors.New("no " + metadataDir + "/ directory")
+
 // FindRoot walks up from cwd to the nearest directory holding .strictmetadata/,
 // the project's repository root, and returns its absolute path.
 func FindRoot(tool Tool, cwd string) (string, error) {
@@ -137,7 +143,7 @@ func FindRoot(tool Tool, cwd string) (string, error) {
 			return "", err
 		}
 		if filepath.Dir(dir) == dir {
-			return "", fmt.Errorf("no %s/ directory in %s or any directory above it: run %s from inside a project repository", metadataDir, start, tool.Name)
+			return "", fmt.Errorf("%w in %s or any directory above it: run %s from inside a project repository", ErrNoRoot, start, tool.Name)
 		}
 	}
 }

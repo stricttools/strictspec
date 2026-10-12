@@ -1,6 +1,7 @@
 package declarations
 
 import (
+	"errors"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -21,7 +22,7 @@ func TestFindRootRefusesOutsideAProjectAndTheFixClearsIt(t *testing.T) {
 	t.Cleanup(func() { stat = os.Stat })
 	tool := Tool{Name: "infratool", Directory: "infrastructure", InitCommand: "infratool manifest init", DryRunCommand: "infratool manifest apply --dry-run"}
 	_, err := FindRoot(tool, dir)
-	if err == nil || !strings.Contains(err.Error(), "run infratool from inside a project repository") {
+	if err == nil || !strings.Contains(err.Error(), "run infratool from inside a project repository") || !errors.Is(err, ErrNoRoot) {
 		t.Fatalf("FindRoot outside a project: %v", err)
 	}
 	if err := os.Mkdir(filepath.Join(dir, ".strictmetadata"), 0o755); err != nil {
