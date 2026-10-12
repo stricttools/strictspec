@@ -103,7 +103,7 @@ identically across all four targets as part of full message-text identity (see E
    is emission order; renderers may not reorder.
    - INTERLEAVING AMENDMENT (2026-07-27): item 6 pinned the order WITHIN each of
      the present-key and missing-required groups but not the relative order BETWEEN them. Pinned
-     reading (the one the corpus already implied — `pgdesign-account-invalid` emits a missing
+     reading (the one the corpus already implied — `strictsql-account-invalid` emits a missing
      required field between the two present fields that bracket it in declaration order): within a
      record, each missing-required diagnostic is emitted immediately before the present-key
      diagnostic of the first field, in schema-declaration order, that is BOTH declared after it and
@@ -282,7 +282,7 @@ This SUPERSEDES the former demobl/F/step paper-schema precondition — those don
   diagnostic.
 - Per-field descriptions (feed the exported metadata and scaffold comments).
 - Custom scalar registration: part of the language design (a named scalar with a toolchain-
-  registered lexeme rule, binding, and rendering entry — pgdesign is the first consumer);
+  registered lexeme rule, binding, and rendering entry — strictsql is the first consumer);
   build-sequenced after the acceptance test, not a design exclusion. The registration surface
   (lexeme rule, binding, and rendering-entry format) is pinned in appendix-custom-scalars.md.
 
@@ -314,7 +314,7 @@ Intra-document forms (decidable from document + schema alone):
 | conditional-value (gate holds ⇒ target equals a literal) | wavescript Pin (unison == 1 when source ∈ {noise,pink,brown}); rlsbl preid=="stable" ⇒ bump=="prerelease" |
 | exactly-one-of / at-least-one-of | orxtra routing; predraw placeStep |
 | co-presence (A iff B) | orxtra provider iff model |
-| mutual exclusion | pgdesign body XOR file (field-level: at most one of a field set present) |
+| mutual exclusion | strictsql body XOR file (field-level: at most one of a field set present) |
 | collections-disjoint (two sibling arrays share no element; normalization case-fold/trim) | rlsbl include/exclude (element-level set disjointness) |
 | forbidden-when | tunebox drums forbid params |
 | unique-by (normalization: case-fold, trim) | the sprite tool's x-unique-field; tunebox track names |
@@ -378,7 +378,7 @@ unique-by). This is distinct from `mutual exclusion`, which is FIELD-level ("at 
 field set present"). Evidence: rlsbl's `include`/`exclude` rule (`set(include) ∩ set(exclude) =
 ∅`). The former cross-field table MIS-CITED rlsbl include/exclude as the origin of `mutual
 exclusion`; that citation is corrected — `mutual exclusion`'s origin is now the field-level
-pgdesign body-XOR-file rule, and rlsbl include/exclude is the origin of `collections-disjoint`.
+strictsql body-XOR-file rule, and rlsbl include/exclude is the origin of `collections-disjoint`.
 Semantics in appendix-semantics.md; code `STRICTSPEC_INTRA_COLLECTIONS_DISJOINT`.
 
 `ranges-disjoint` (clarified): each declared range must FIRST be well-formed per ordered-pair
@@ -453,7 +453,7 @@ do not exist. `strictspec validate` requires an explicit mode — `--structural-
 constraint engine and the resolvers); no default.
 
 What remains outside strictspec: the consumer-native tail above, and bespoke analysis that is
-not document validation at all (pgdesign's normal-form analysis). Such code consumes
+not document validation at all (strictsql's normal-form analysis). Such code consumes
 strictspec-validated typed values.
 
 ## Unknown-key policy

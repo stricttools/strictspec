@@ -59,7 +59,7 @@ func TestValidSchemaReadsClean(t *testing.T) {
 		"conformance/fixtures/_schemas/wavescript-score.schema.toml",
 		"conformance/fixtures/_schemas/predraw-scene.toml",
 		"conformance/fixtures/_schemas/types-geometry.toml",
-		"conformance/fixtures/_schemas/pgdesign-table.toml",
+		"conformance/fixtures/_schemas/strictsql-table.toml",
 	} {
 		_, diags := loadRoot(t, rel)
 		if len(diags) != 0 {

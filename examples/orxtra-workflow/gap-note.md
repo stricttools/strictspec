@@ -54,7 +54,7 @@ finding 4.
 
 ### Finding 1 — presence-implied unions are decomposable but the pattern should be documented
 
-orxtra's task, imagine's ops, and pgdesign columns all use PRESENCE (not a literal discriminator)
+orxtra's task, imagine's ops, and strictsql columns all use PRESENCE (not a literal discriminator)
 to select a shape. Each decomposes into `co-presence` + `exactly-one-of`/`mutual-exclusion` +
 `conditional-required`, as shown. This is expressible TODAY, but the decomposition is non-obvious
 and easy to get subtly wrong (a consumer might reach for a discriminated union and fail because

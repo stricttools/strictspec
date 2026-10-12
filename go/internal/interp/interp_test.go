@@ -143,7 +143,7 @@ func TestEnumSourced(t *testing.T) {
 }
 
 func TestCustomScalars(t *testing.T) {
-	got := runFixture(t, "_schemas/pgdesign-table.toml", "_inputs/pgdesign/account.invalid.toml", "toml", nil)
+	got := runFixture(t, "_schemas/strictsql-table.toml", "_inputs/strictsql/account.invalid.toml", "toml", nil)
 	assertDiags(t, got, []want{
 		{"STRICTSPEC_SCALAR_LEXEME", "$.name"},
 		{"STRICTSPEC_TYPE_MISSING_REQUIRED", "$"},

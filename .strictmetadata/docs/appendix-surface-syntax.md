@@ -31,7 +31,7 @@ The three invented notations were:
 |---|---|---|
 | 1 | sprite-tool, claudestream, predraw | `[schema]` header block; `[root]` (`kind = "record"`); `[root.fields.<f>]`; `[types.<Name>]` (`kind = …`); array items `.items`; map values `.values`; constraints `[[root.constraints]]` / `[[types.<N>.constraints]]` |
 | 2 | wavescript-score, rlsbl-release-file, rlsbl-config, rlsbl-changelog-entry | bare header keys (`schema =`, `syntax =`); records `[record.<Name>.<field>]` (root is `[record.ROOT.*]`); constraints `[[constraint]]` carrying a `scope` PATH string |
-| 3 | betterclaude-contracts, imagine, shared-types, aggregates, enum-baking, orxtra, pgdesign | bare header keys (`name =`, `document_syntax =`, `imports =`); root `[fields.<f>]` (implicit, unnamed); KIND-TYPED named types `[types.<Name>]` (`kind = "record"|"enum"|"scalar"|…`); constraints `[[constraints]]` / `[[types.<N>.constraints]]` |
+| 3 | betterclaude-contracts, imagine, shared-types, aggregates, enum-baking, orxtra, strictsql | bare header keys (`name =`, `document_syntax =`, `imports =`); root `[fields.<f>]` (implicit, unnamed); KIND-TYPED named types `[types.<Name>]` (`kind = "record"|"enum"|"scalar"|…`); constraints `[[constraints]]` / `[[types.<N>.constraints]]` |
 
 ### 1.1 Selection (in the priority order `DESIGN.md` fixed for this decision)
 

@@ -1,8 +1,8 @@
-# Gap note — pgdesign-scalars (custom scalar registration; appendix-custom-scalars.md)
+# Gap note — strictsql-scalars (custom scalar registration; appendix-custom-scalars.md)
 
-Paper registration of pgdesign's three custom scalars — `identifier`, `pgtype`,
+Paper registration of strictsql's three custom scalars — `identifier`, `pgtype`,
 `sql-expression` — plus a small table-definition schema fragment using them. Source material:
-`pgdesign/internal/parse/types.go` (`RawTable`, `RawColumn`, `RawCheck` field types). pgdesign
+`strictsql/internal/parse/types.go` (`RawTable`, `RawColumn`, `RawCheck` field types). strictsql
 is the first custom-scalar consumer (DESIGN.md donor inventory; decision 3).
 
 ## Files
@@ -62,7 +62,7 @@ CORRECT rather than a pretense:
   introduces `length` specifically "for effectively-opaque refinements where the regex cannot
   express the real grammar (e.g. sql-expression)".
 - **Grammaticality and semantic validity are consumer-native, downstream, by declaration**
-  (DESIGN.md — Domain checks; the consumer-native tail). pgdesign ALREADY owns exactly this: its
+  (DESIGN.md — Domain checks; the consumer-native tail). strictsql ALREADY owns exactly this: its
   `sqlexpr` package (recursive-descent parser, 9 precedence levels) and `sqlparse`
   (WASM go-pgquery) validate expression grammar and deparse — that is consumer code over the
   strictspec-validated typed values, NOT a scalar refinement. Registering `sql-expression` as a
@@ -84,7 +84,7 @@ length) and cede — visibly, at a named boundary — what is not.
 - **What it does NOT capture, by design:**
   - EXISTENCE — `pg_catalog.frobnicate` matches the shape but is not a real type. This is a
     domain fact (does the type exist in the target DB / declared extensions), a consumer-native
-    check; pgdesign's `typeinfo`/`semtype`/`extregistry` already own it.
+    check; strictsql's `typeinfo`/`semtype`/`extregistry` already own it.
   - RICHER surface forms — multi-dimensional arrays (`int[][]`), array size hints (`int[3]`),
     `time(3) with time zone`, `character varying`. My regex accepts single `[]` and a single
     parenthesised numeric param group only. Extending the regex to cover more surface forms is
@@ -102,7 +102,7 @@ subset and its exact coverage is a consumer decision.
 - **Nothing the custom-scalar surface should express is missing.** The three scalars, their
   length bounds, their per-target bindings, and their five `STRICTSPEC_SCALAR_*` codes cover the
   fragment. The genuinely non-regular parts (SQL grammar, type existence) are correctly OUTSIDE
-  the scalar surface and inside pgdesign's existing consumer-native packages.
+  the scalar surface and inside strictsql's existing consumer-native packages.
 
 ## Verdict
 

@@ -29,12 +29,12 @@ word = "orxtra"
 meaning = "A consumer project whose workflow schema was translated into strictspec (examples/orxtra-workflow) as survey evidence."
 
 [[accepted]]
-word = "pgdesign"
-meaning = "A consumer project (a PostgreSQL schema tool), the first consumer of custom scalars, whose scalars are registered in examples/pgdesign-scalars."
+word = "strictsql"
+meaning = "A consumer project (a PostgreSQL schema tool), the first consumer of custom scalars, whose scalars are registered in examples/strictsql-scalars."
 
 [[accepted]]
 word = "pgtype"
-meaning = "A custom scalar from the pgdesign example: a PostgreSQL type name, refining string with an anchored regex."
+meaning = "A custom scalar from the strictsql example: a PostgreSQL type name, refining string with an anchored regex."
 
 [[accepted]]
 word = "predraw"

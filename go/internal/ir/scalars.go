@@ -189,7 +189,7 @@ func (v *exec) validateCustomScalar(cs *schema.Scalar, n doc.Node, path diag.Pat
 	val := v.decodeString(n)
 	length := len([]rune(val))
 	// Length refinement is checked BEFORE the lexeme rule (an empty value violates
-	// length.min before it fails an `^.+$` rule — matches the pgdesign fixture).
+	// length.min before it fails an `^.+$` rule — matches the strictsql fixture).
 	if cs.LenMin != nil && length < *cs.LenMin {
 		v.emitScalarLength(cs, n, path, length, *cs.LenMin)
 		return

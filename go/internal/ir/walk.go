@@ -161,7 +161,7 @@ func (v *exec) walkRecord(t *schema.Type, n doc.Node, path diag.Path) {
 
 	// Anchor each missing-required field (declaration order) immediately before
 	// the first present field declared after it, matching the pre-existing corpus
-	// (pgdesign-account-invalid, where a missing field sits between two present
+	// (strictsql-account-invalid, where a missing field sits between two present
 	// fields) and item 6's dated interleaving pin. Missing fields declared after
 	// every present field are trailing. `present` is still in declaration order
 	// here (declIdx and missingIdx both ascending), so a single merge suffices.

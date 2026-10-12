@@ -11,7 +11,7 @@ description = "Normative surface for registering custom scalars in strictspec: n
 > refinements are normal and expected, recorded per-release through the existing discipline, with
 > released-surface compatibility governed by semver at release boundaries. Build-sequencing note
 > (decision 3): custom scalars are built AFTER the acceptance test — that is an implementation
-> ordering, never a design exclusion. pgdesign is the first consumer.
+> ordering, never a design exclusion. strictsql is the first consumer.
 
 A custom scalar is a NAMED refinement of a built-in base lexeme class, with a toolchain-
 registered lexeme rule, per-target bindings, and rendering entries. Registration is DECLARATIVE
@@ -87,7 +87,7 @@ custom scalar's diagnostics are FIRST-CLASS toolchain diagnostics, not consumer-
   evidence resolver; their verdict is a function of (lexeme, rule) alone and is therefore
   trivially identical across targets.
 
-## 6. Worked examples (pgdesign, the first consumer's set)
+## 6. Worked examples (strictsql, the first consumer's set)
 
 These are PAPER examples — declarations, not code — illustrating the honest range of regex
 refinement, from a precise grammar to an effectively-opaque blob.

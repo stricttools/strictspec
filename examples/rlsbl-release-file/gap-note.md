@@ -96,7 +96,7 @@ FINDINGS: 3 — RESOLVED (Phase 3.3).
   element-level, with case-fold/trim normalization; code
   `STRICTSPEC_INTRA_COLLECTIONS_DISJOINT`). The cross-field table's origin citation is CORRECTED:
   rlsbl include/exclude is now the origin of `collections-disjoint`, and `mutual exclusion`'s
-  origin is the field-level pgdesign body-XOR-file rule (`.strictmetadata/docs/DESIGN.md` — Cross-field vocabulary;
+  origin is the field-level strictsql body-XOR-file rule (`.strictmetadata/docs/DESIGN.md` — Cross-field vocabulary;
   `appendix-semantics.md` 3.24).
 - **F2 (conditional value-equality)** — ADOPTED. The `conditional-value` form is added
   (`preid=="stable" ⇒ bump=="prerelease"`; code `STRICTSPEC_INTRA_CONDITIONAL_VALUE`).

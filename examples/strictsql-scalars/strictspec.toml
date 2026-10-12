@@ -2,7 +2,7 @@
 # Registration lives in the manifest, NOT in schemas, and TRAVELS WITH the schema: a schema
 # using `identifier`/`pgtype`/`sql-expression` is only meaningful alongside this manifest.
 # `strictspec gen` reads both; a schema referencing an unregistered scalar is
-# STRICTSPEC_SCALAR_UNKNOWN. pgdesign is the first consumer (decision 3; DESIGN.md donor list).
+# STRICTSPEC_SCALAR_UNKNOWN. strictsql is the first consumer (decision 3; DESIGN.md donor list).
 
 meta_version = 1
 format_version = 1
