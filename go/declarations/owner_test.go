@@ -1,6 +1,7 @@
 package declarations_test
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 
@@ -105,4 +106,33 @@ func TestAnOwnedResourceGoesWithItsOwner(t *testing.T) {
 	if del.Resource.Fields["location"] != "fsn1" {
 		t.Fatalf("a resource-level delete carries the live resource as read: %+v", del.Resource)
 	}
+}
+
+// When listing the owners' resource type fails, an address a server owns
+// is not taken for unclaimed: the report names the failed list and the
+// address it leaves unjudged, and once the list reads, the address stays
+// with its claimed server.
+func TestAnOwnedResourceWhoseOwnersCannotBeListedIsUnreadableNotUnclaimed(t *testing.T) {
+	a := newAccount(t, "unmanaged = []\nclaim = [{ resource_type = \"test-server\", name = \"web1\", project = \"example\" }]\n")
+	claims, err := declarations.LoadClaims(ownerTool(), a.Root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, err := declarations.Load(ownerTool(), a)
+	if err != nil {
+		t.Fatal(err)
+	}
+	l := newLive()
+	l.put(liveServer("web1"))
+	l.put(liveAddress("ip-web1", "web1"))
+	l.listErr["test-server"] = errors.New("the provider refused")
+	r := verify(t, s, l, claims)
+	wantLines(t, r, "differences")
+	wantLines(t, r, "unreadable",
+		`{"error":"its owner test-server/web1 is of a resource type whose list failed, so whether it goes with its owner is not known","name":"ip-web1","resource_type":"test-address"}`,
+		`{"error":"the provider refused","resource_type":"test-server"}`)
+	delete(l.listErr, "test-server")
+	r = verify(t, s, l, claims)
+	wantLines(t, r, "differences")
+	wantLines(t, r, "unreadable")
 }

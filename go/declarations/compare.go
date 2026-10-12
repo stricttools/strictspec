@@ -789,6 +789,12 @@ func (c *comparison) unclaimed(claims Claims) {
 			c.owned[cand.owner] = append(c.owned[cand.owner], cand.live)
 			continue
 		}
+		if ownerType, _, _ := strings.Cut(cand.owner, "/"); cand.owner != "" && !read[ownerType] {
+			// The owner's list failed (reported unreadable): whether the
+			// owner is live is not known, so neither is where this goes.
+			c.unreadable(cand.resourceType, cand.name, fmt.Errorf("its owner %s is of a resource type whose list failed, so whether it goes with its owner is not known", cand.owner))
+			continue
+		}
 		c.add(Difference{Status: StatusUnclaimed, ResourceType: cand.resourceType, Name: cand.name})
 	}
 	// A creator's claim of a resource that is not live is stale; a type
