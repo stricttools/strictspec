@@ -77,10 +77,63 @@ func TestInitRefusesABadProjectName(t *testing.T) {
 	}
 }
 
-func TestInitRefusesAnExistingDirectory(t *testing.T) {
+func TestInitRefusesADirectoryHoldingAManifest(t *testing.T) {
 	p := newProject(t, "example")
 	_, err := declarations.Init(testTool(), p.Root, "example")
-	mustContain(t, err, filepath.Join(p.Root, ".strictmetadata", "infrastructure"), "exists")
+	mustContain(t, err, filepath.Join(p.Root, ".strictmetadata", "infrastructure", "manifest.toml"), "exists")
+}
+
+// A declaration directory without manifest.toml is refused, naming init,
+// never read as declaring nothing; init writes the files it lacks, keeping
+// a project.toml naming the same project, and the declarations then load.
+func TestADeclarationDirectoryWithoutAManifestIsRefusedNamingInitAndInitClearsIt(t *testing.T) {
+	for _, c := range []struct {
+		name    string
+		project string
+		want    []string
+	}{
+		{"no project.toml", "", []string{"manifest.toml", "project.toml"}},
+		{"its project.toml", "format_version = 1\nname = \"example\"\n", []string{"manifest.toml"}},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			root := t.TempDir()
+			writeFile(t, root, declDir+"/test-server/web1.toml", "format_version = 1\n"+serverBody)
+			if c.project != "" {
+				writeFile(t, root, declDir+"/project.toml", c.project)
+			}
+			_, err := declarations.FindProject(testTool(), root)
+			mustContain(t, err, declDir+"/manifest.toml is missing", "holds no manifest.toml", "infratool manifest init --project <name>")
+			files, err := declarations.Init(testTool(), root, "example")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(files) != len(c.want) {
+				t.Fatalf("init writes %v, want %v", files, c.want)
+			}
+			for p, b := range files {
+				writeFile(t, "/", p, string(b))
+			}
+			p, err := declarations.FindProject(testTool(), root)
+			if err != nil {
+				t.Fatalf("after init: %v", err)
+			}
+			if s := load(t, p); len(s.Resources) != 1 {
+				t.Fatalf("loaded %+v", s.Resources)
+			}
+		})
+	}
+}
+
+// Init into a directory whose project.toml names another project refuses,
+// naming the file, instead of replacing the name claims refer to.
+func TestInitRefusesAProjectFileNamingAnotherProject(t *testing.T) {
+	root := t.TempDir()
+	writeFile(t, root, declDir+"/project.toml", "format_version = 1\nname = \"other\"\n")
+	_, err := declarations.Init(testTool(), root, "example")
+	mustContain(t, err, declDir+"/project.toml", "names the project other", "--project other")
+	if _, err := declarations.Init(testTool(), root, "other"); err != nil {
+		t.Fatalf("after the fix: %v", err)
+	}
 }
 
 func TestFindProjectRefusesAnotherOwner(t *testing.T) {

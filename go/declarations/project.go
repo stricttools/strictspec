@@ -159,6 +159,11 @@ func FindProject(tool Tool, cwd string) (Project, error) {
 	manifest := filepath.Join(dirAbs(tool, root), manifestFile)
 	src, err := os.ReadFile(manifest)
 	if errors.Is(err, fs.ErrNotExist) {
+		// A directory without its manifest is refused, never read as
+		// declaring nothing.
+		if _, serr := os.Lstat(dirAbs(tool, root)); serr == nil {
+			return Project{}, fmt.Errorf("%s is missing: the declaration directory %s holds no manifest.toml, so its declarations are not read; run %s --project <name> to write it", manifest, dirAbs(tool, root), tool.InitCommand)
+		}
 		return Project{}, fmt.Errorf("%s is missing: %s has no %s/ declaration directory; run %s --project <name> to create it", manifest, root, dirRel(tool), tool.InitCommand)
 	}
 	if err != nil {
@@ -248,9 +253,11 @@ func renderDiagnostics(file string, diags []strictspec.Diagnostic) string {
 	return b.String()
 }
 
-// Init returns the bytes of a new declaration directory's manifest.toml and
+// Init returns the bytes of a declaration directory's manifest.toml and
 // project.toml, keyed by their absolute paths under root, for the tool to
-// write. It refuses when the directory exists.
+// write. It refuses when manifest.toml exists. A directory holding
+// declarations but no manifest.toml gets the files it lacks: a project.toml
+// naming project is kept, and one naming another project is refused.
 func Init(tool Tool, root, project string) (map[string][]byte, error) {
 	if err := checkTool(tool); err != nil {
 		return nil, err
@@ -262,8 +269,9 @@ func Init(tool Tool, root, project string) (map[string][]byte, error) {
 		return nil, fmt.Errorf("the project name %q does not match %s", project, projectNamePattern)
 	}
 	dir := dirAbs(tool, root)
-	if _, err := os.Lstat(dir); err == nil {
-		return nil, fmt.Errorf("%s exists: a declaration directory is created once", dir)
+	manifestPath := filepath.Join(dir, manifestFile)
+	if _, err := os.Lstat(manifestPath); err == nil {
+		return nil, fmt.Errorf("%s exists: a declaration directory is created once", manifestPath)
 	} else if !errors.Is(err, fs.ErrNotExist) {
 		return nil, err
 	}
@@ -275,8 +283,22 @@ func Init(tool Tool, root, project string) (map[string][]byte, error) {
 	if _, err := readProject(projectFile, proj); err != nil {
 		return nil, err
 	}
-	return map[string][]byte{
-		filepath.Join(dir, manifestFile): manifest,
-		filepath.Join(dir, projectFile):  proj,
-	}, nil
+	files := map[string][]byte{manifestPath: manifest}
+	projectPath := filepath.Join(dir, projectFile)
+	src, err := os.ReadFile(projectPath)
+	switch {
+	case errors.Is(err, fs.ErrNotExist):
+		files[projectPath] = proj
+	case err != nil:
+		return nil, err
+	default:
+		name, err := readProject(projectPath, src)
+		if err != nil {
+			return nil, err
+		}
+		if name != project {
+			return nil, fmt.Errorf("%s names the project %s, not %s: the account repository's claims refer to a project by that name; run %s --project %s to keep it, or change the name in %s first", projectPath, name, project, tool.InitCommand, name, projectPath)
+		}
+	}
+	return files, nil
 }
