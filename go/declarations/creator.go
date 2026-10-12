@@ -106,6 +106,36 @@ func UnclaimCreated(tool Tool, accountRoot string, src []byte, resourceType, nam
 	return src, false, nil
 }
 
+// CreatorClaim reports whether src, the bytes of the account repository's
+// claims.toml as the tool holds them, claims the resource for creator: true
+// for a claim for creator, false when src lists the resource nowhere. A
+// claim for a project or another creator, or an unmanaged entry, is
+// refused, naming the entry: a creator checks this before deleting what it
+// created, so it never deletes a resource the claims assign to another
+// owner or leave alone.
+func CreatorClaim(tool Tool, accountRoot string, src []byte, resourceType, name, creator string) (bool, error) {
+	c, err := creatorClaims(tool, accountRoot, src, resourceType, creator)
+	if err != nil {
+		return false, err
+	}
+	file := ClaimFile(tool, accountRoot)
+	for i, cl := range c.Claims {
+		if cl.ResourceType != resourceType || cl.Name != name {
+			continue
+		}
+		if cl.Creator == creator {
+			return true, nil
+		}
+		return false, fmt.Errorf("%s: claim[%d] assigns %s/%s to %s, not to %s, so %s does not delete it", file, i, resourceType, name, claimOwner(cl), creator, creator)
+	}
+	for i, u := range c.Unmanaged {
+		if u.ResourceType == resourceType && u.Name == name {
+			return false, fmt.Errorf("%s: unmanaged[%d] lists %s/%s as nobody's (%s), so %s does not delete it", file, i, resourceType, name, u.Reason, creator)
+		}
+	}
+	return false, nil
+}
+
 // creatorClaims checks src, claims.toml's bytes, for a creator's edit.
 func creatorClaims(tool Tool, accountRoot string, src []byte, resourceType, creator string) (Claims, error) {
 	if creator == "" {

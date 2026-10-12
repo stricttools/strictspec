@@ -211,3 +211,23 @@ func TestClaimEditsWorkOnTheGivenBytes(t *testing.T) {
 	_, _, err = declarations.ClaimCreated(testTool(), a.Root, []byte("format_version = 1\n"), "test-server", "4", "infratool backup")
 	mustContain(t, err, "claims.toml")
 }
+
+// Before deleting a resource, a creator asks whether the claims assign it to
+// the creator: a claim for the creator is true, no entry false, and a claim
+// for another owner or an unmanaged entry is refused, naming the entry.
+func TestCreatorClaimTellsWhetherTheCreatorOwnsAResource(t *testing.T) {
+	a := newAccount(t, "unmanaged = [{ resource_type = \"test-server\", name = \"old\", reason = \"a manual experiment\" }]\nclaim = [{ resource_type = \"test-server\", name = \"web1\", project = \"example\" }, { resource_type = \"test-server\", name = \"snap\", creator = \"infratool backup\" }]\n")
+	src := []byte(readClaimsFile(t, a))
+	if owned, err := declarations.CreatorClaim(testTool(), a.Root, src, "test-server", "snap", "infratool backup"); err != nil || !owned {
+		t.Fatalf("its own claim: %v, %v", owned, err)
+	}
+	if owned, err := declarations.CreatorClaim(testTool(), a.Root, src, "test-server", "absent", "infratool backup"); err != nil || owned {
+		t.Fatalf("no entry: %v, %v", owned, err)
+	}
+	_, err := declarations.CreatorClaim(testTool(), a.Root, src, "test-server", "web1", "infratool backup")
+	mustContain(t, err, "claim[0]", "the project example", "not to infratool backup")
+	_, err = declarations.CreatorClaim(testTool(), a.Root, src, "test-server", "snap", "infratool park")
+	mustContain(t, err, "claim[1]", "its creator infratool backup")
+	_, err = declarations.CreatorClaim(testTool(), a.Root, src, "test-server", "old", "infratool backup")
+	mustContain(t, err, "unmanaged[0]", "a manual experiment")
+}
