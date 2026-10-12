@@ -168,7 +168,7 @@ consequential = false
   name = "migrations"
   type = "string"
   role = "directory"
-  help = "Directory of migration files forming the chain, such as . for the working directory."
+  help = "Directory of migration files forming the chain, such as `.` for the working directory."
 
   [[command.exit]]
   code    = 1
@@ -208,7 +208,7 @@ consequential = false
   name = "corpus-root"
   type = "string"
   role = "directory"
-  help = "Directory the corpus glob is anchored at, such as . for the working directory."
+  help = "Directory the corpus glob is anchored at, such as `.` for the working directory."
 
   [[command.flag]]
   name     = "migration"
