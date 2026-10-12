@@ -3,29 +3,29 @@ package declarations
 import (
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	tomledit "github.com/stricttools/go-toml-edit"
 )
 
 // ClaimFile is the path of the account repository's claims.toml, which
-// ClaimCreated and UnclaimCreated return the new bytes of.
+// ClaimCreated, UnclaimCreated, and RenameClaim return the new bytes of.
 func ClaimFile(tool Tool, accountRoot string) string {
 	return filepath.Join(dirAbs(tool, accountRoot), claimsFile)
 }
 
-// ClaimCreated returns the bytes of the account repository's claims.toml
-// with a claim of the resource for creator, the command that created it and
-// owns it (nothing declares it), and whether they differ from the file's: a
+// ClaimCreated returns src, the bytes of the account repository's
+// claims.toml as the tool holds them (read under its lock, or as a dry run
+// left them), with a claim of the resource for creator, the command that
+// created it and owns it (nothing declares it), and whether they differ: a
 // resource already claimed for creator changes nothing, so a creator resuming
-// its work may claim again. A resource the file lists otherwise (claimed for
+// its work may claim again. A resource src lists otherwise (claimed for
 // a project or another creator, or listed unmanaged) is refused, naming the
-// entry. The file is edited in place: its comments and layout are kept. The
+// entry. The edit keeps the comments and layout of src. The
 // tool writes the bytes, which the account repository's apply needs
 // committed.
-func ClaimCreated(tool Tool, accountRoot, resourceType, name, creator string) ([]byte, bool, error) {
-	c, src, err := readClaims(tool, accountRoot, resourceType, creator)
+func ClaimCreated(tool Tool, accountRoot string, src []byte, resourceType, name, creator string) ([]byte, bool, error) {
+	c, err := creatorClaims(tool, accountRoot, src, resourceType, creator)
 	if err != nil {
 		return nil, false, err
 	}
@@ -74,14 +74,15 @@ func ClaimCreated(tool Tool, accountRoot, resourceType, name, creator string) ([
 	return checkedClaims(tool, accountRoot, file, doc.Bytes())
 }
 
-// UnclaimCreated returns the bytes of the account repository's claims.toml
-// without the claim of the resource for creator, and whether they differ
-// from the file's: a resource the file does not claim changes nothing (the
+// UnclaimCreated returns src, the bytes of the account repository's
+// claims.toml as the tool holds them, without the claim of the resource for
+// creator, and whether they differ: a resource src does not claim changes
+// nothing (the
 // creator deleting what it created removes its claim, and may run again). A
 // claim of the resource for a project or another creator is refused, naming
-// it. The file is edited in place: its comments and layout are kept.
-func UnclaimCreated(tool Tool, accountRoot, resourceType, name, creator string) ([]byte, bool, error) {
-	c, src, err := readClaims(tool, accountRoot, resourceType, creator)
+// it. The edit keeps the comments and layout of src.
+func UnclaimCreated(tool Tool, accountRoot string, src []byte, resourceType, name, creator string) ([]byte, bool, error) {
+	c, err := creatorClaims(tool, accountRoot, src, resourceType, creator)
 	if err != nil {
 		return nil, false, err
 	}
@@ -105,23 +106,30 @@ func UnclaimCreated(tool Tool, accountRoot, resourceType, name, creator string) 
 	return src, false, nil
 }
 
-// readClaims reads and checks claims.toml for a creator's edit.
-func readClaims(tool Tool, accountRoot, resourceType, creator string) (Claims, []byte, error) {
+// creatorClaims checks src, claims.toml's bytes, for a creator's edit.
+func creatorClaims(tool Tool, accountRoot string, src []byte, resourceType, creator string) (Claims, error) {
 	if creator == "" {
-		return Claims{}, nil, errors.New("a creator's claim names its creator: the creator is empty")
+		return Claims{}, errors.New("a creator's claim names its creator: the creator is empty")
 	}
-	c, err := LoadClaims(tool, accountRoot)
+	c, err := givenClaims(tool, accountRoot, src)
 	if err != nil {
-		return Claims{}, nil, err
+		return Claims{}, err
 	}
 	if typesByName(tool)[resourceType] == nil {
-		return Claims{}, nil, fmt.Errorf("%s is not a resource type %s supplies (%s)", resourceType, tool.Name, typeNames(tool))
+		return Claims{}, fmt.Errorf("%s is not a resource type %s supplies (%s)", resourceType, tool.Name, typeNames(tool))
 	}
-	src, err := os.ReadFile(ClaimFile(tool, accountRoot))
-	if err != nil {
-		return Claims{}, nil, err
+	return c, nil
+}
+
+// givenClaims checks src as LoadClaims checks the file.
+func givenClaims(tool Tool, accountRoot string, src []byte) (Claims, error) {
+	if err := checkTool(tool); err != nil {
+		return Claims{}, err
 	}
-	return c, src, nil
+	if !filepath.IsAbs(accountRoot) {
+		return Claims{}, fmt.Errorf("the account repository's path %q is not absolute", accountRoot)
+	}
+	return parseClaims(tool, accountRoot, ClaimFile(tool, accountRoot), src)
 }
 
 // checkedClaims checks the edited bytes as LoadClaims checks the file.
@@ -140,23 +148,19 @@ func claimOwner(cl Claim) string {
 	return "the project " + cl.Project
 }
 
-// RenameClaim returns the bytes of the account repository's claims.toml with
-// the claim or unmanaged entry of a resource renamed from oldName to
-// newName (a command renaming the live resource keeps its name, the
-// resource's key, the same everywhere), and whether they differ from the
-// file's: a resource the file does not list changes nothing. A newName the
-// file lists already is refused. The file is edited in place: its comments
-// and layout are kept.
-func RenameClaim(tool Tool, accountRoot, resourceType, oldName, newName string) ([]byte, bool, error) {
-	c, err := LoadClaims(tool, accountRoot)
+// RenameClaim returns src, the bytes of the account repository's
+// claims.toml as the tool holds them, with the claim or unmanaged entry of a
+// resource renamed from oldName to newName (a command renaming the live
+// resource keeps its name, the resource's key, the same everywhere), and
+// whether they differ: a resource src does not list changes nothing. A
+// newName src lists already is refused. The edit keeps the comments and
+// layout of src.
+func RenameClaim(tool Tool, accountRoot string, src []byte, resourceType, oldName, newName string) ([]byte, bool, error) {
+	c, err := givenClaims(tool, accountRoot, src)
 	if err != nil {
 		return nil, false, err
 	}
 	file := ClaimFile(tool, accountRoot)
-	src, err := os.ReadFile(file)
-	if err != nil {
-		return nil, false, err
-	}
 	path := ""
 	for i, cl := range c.Claims {
 		switch {

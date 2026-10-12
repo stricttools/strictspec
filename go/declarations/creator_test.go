@@ -93,7 +93,7 @@ func TestClaimCreatedAndUnclaimCreatedEditClaimsInPlace(t *testing.T) {
 		"# the account's claims\nunmanaged = []\n\n[[claim]] # the site\nresource_type = \"test-zone\"\nname = \"example.org\"\nproject = \"example\"\n",
 	} {
 		a := newAccount(t, body)
-		out, changed, err := declarations.ClaimCreated(testTool(), a.Root, "test-server", "4242", "infratool backup")
+		out, changed, err := declarations.ClaimCreated(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", "4242", "infratool backup")
 		writeClaims(t, a, out, changed, err)
 		if !changed {
 			t.Fatal("the first claim changed nothing")
@@ -109,12 +109,12 @@ func TestClaimCreatedAndUnclaimCreatedEditClaimsInPlace(t *testing.T) {
 		if got := readClaimsFile(t, a); !strings.Contains(got, "# the account's claims") {
 			t.Fatalf("the comment is gone:\n%s", got)
 		}
-		_, changed, err = declarations.ClaimCreated(testTool(), a.Root, "test-server", "4242", "infratool backup")
+		_, changed, err = declarations.ClaimCreated(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", "4242", "infratool backup")
 		if err != nil || changed {
 			t.Fatalf("claiming again: changed %v, %v", changed, err)
 		}
 
-		out, changed, err = declarations.UnclaimCreated(testTool(), a.Root, "test-server", "4242", "infratool backup")
+		out, changed, err = declarations.UnclaimCreated(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", "4242", "infratool backup")
 		writeClaims(t, a, out, changed, err)
 		if !changed {
 			t.Fatal("removing the claim changed nothing")
@@ -131,7 +131,7 @@ func TestClaimCreatedAndUnclaimCreatedEditClaimsInPlace(t *testing.T) {
 		if got := readClaimsFile(t, a); !strings.Contains(got, "# the account's claims") {
 			t.Fatalf("the comment is gone:\n%s", got)
 		}
-		_, changed, err = declarations.UnclaimCreated(testTool(), a.Root, "test-server", "4242", "infratool backup")
+		_, changed, err = declarations.UnclaimCreated(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", "4242", "infratool backup")
 		if err != nil || changed {
 			t.Fatalf("removing again: changed %v, %v", changed, err)
 		}
@@ -141,15 +141,15 @@ func TestClaimCreatedAndUnclaimCreatedEditClaimsInPlace(t *testing.T) {
 // A resource listed otherwise is not the creator's to claim or unclaim.
 func TestClaimCreatedRefusesAResourceListedOtherwise(t *testing.T) {
 	a := newAccount(t, "unmanaged = [{ resource_type = \"test-server\", name = \"old\", reason = \"a manual experiment\" }]\nclaim = [{ resource_type = \"test-server\", name = \"web1\", project = \"example\" }, { resource_type = \"test-server\", name = \"snap\", creator = \"infratool park\" }]\n")
-	_, _, err := declarations.ClaimCreated(testTool(), a.Root, "test-server", "web1", "infratool backup")
+	_, _, err := declarations.ClaimCreated(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", "web1", "infratool backup")
 	mustContain(t, err, "claim[0]", "the project example")
-	_, _, err = declarations.ClaimCreated(testTool(), a.Root, "test-server", "snap", "infratool backup")
+	_, _, err = declarations.ClaimCreated(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", "snap", "infratool backup")
 	mustContain(t, err, "claim[1]", "its creator infratool park")
-	_, _, err = declarations.ClaimCreated(testTool(), a.Root, "test-server", "old", "infratool backup")
+	_, _, err = declarations.ClaimCreated(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", "old", "infratool backup")
 	mustContain(t, err, "unmanaged[0]", "a manual experiment")
-	_, _, err = declarations.UnclaimCreated(testTool(), a.Root, "test-server", "web1", "infratool backup")
+	_, _, err = declarations.UnclaimCreated(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", "web1", "infratool backup")
 	mustContain(t, err, "claim[0]", "the project example")
-	_, _, err = declarations.ClaimCreated(testTool(), a.Root, "test-volume", "data", "infratool backup")
+	_, _, err = declarations.ClaimCreated(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-volume", "data", "infratool backup")
 	mustContain(t, err, "test-volume is not a resource type")
 }
 
@@ -159,7 +159,7 @@ func TestClaimCreatedRefusesAResourceListedOtherwise(t *testing.T) {
 func TestRenameClaimRenamesAClaimOrAnUnmanagedEntry(t *testing.T) {
 	a := newAccount(t, "# kept\nunmanaged = [{ resource_type = \"test-server\", name = \"old\", reason = \"by hand\" }]\n\n[[claim]]\nresource_type = \"test-server\"\nname = \"web1\"\nproject = \"example\"\n")
 	for _, c := range [][2]string{{"web1", "web2"}, {"old", "older"}} {
-		out, changed, err := declarations.RenameClaim(testTool(), a.Root, "test-server", c[0], c[1])
+		out, changed, err := declarations.RenameClaim(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", c[0], c[1])
 		writeClaims(t, a, out, changed, err)
 		if !changed {
 			t.Fatalf("renaming %s changed nothing", c[0])
@@ -172,9 +172,42 @@ func TestRenameClaimRenamesAClaimOrAnUnmanagedEntry(t *testing.T) {
 	if claims.Claims[0].Name != "web2" || claims.Unmanaged[0].Name != "older" || !strings.Contains(readClaimsFile(t, a), "# kept") {
 		t.Fatalf("claims %+v\n%s", claims, readClaimsFile(t, a))
 	}
-	if _, changed, err := declarations.RenameClaim(testTool(), a.Root, "test-server", "absent", "other"); err != nil || changed {
+	if _, changed, err := declarations.RenameClaim(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", "absent", "other"); err != nil || changed {
 		t.Fatalf("an absent resource: changed %v, %v", changed, err)
 	}
-	_, _, err = declarations.RenameClaim(testTool(), a.Root, "test-server", "web2", "older")
+	_, _, err = declarations.RenameClaim(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", "web2", "older")
 	mustContain(t, err, "unmanaged[0] already lists test-server/older")
+}
+
+// The edits work on the bytes they are given, the file's content as the
+// caller holds it (read under its lock, or as a dry run left it after an
+// earlier edit it only recorded), not on what the file holds on disk; bytes
+// that are not valid claims are refused naming the file.
+func TestClaimEditsWorkOnTheGivenBytes(t *testing.T) {
+	a := newAccount(t, "unmanaged = []\nclaim = []\n")
+	src := []byte(readClaimsFile(t, a))
+	out, changed, err := declarations.ClaimCreated(testTool(), a.Root, src, "test-server", "1", "infratool backup")
+	if err != nil || !changed {
+		t.Fatalf("first claim: changed %v, %v", changed, err)
+	}
+	out, changed, err = declarations.ClaimCreated(testTool(), a.Root, out, "test-server", "2", "infratool backup")
+	if err != nil || !changed {
+		t.Fatalf("second claim: changed %v, %v", changed, err)
+	}
+	if !strings.Contains(string(out), `"1"`) || !strings.Contains(string(out), `"2"`) {
+		t.Fatalf("the second edit lost the first:\n%s", out)
+	}
+	if strings.Contains(readClaimsFile(t, a), `"1"`) {
+		t.Fatal("an edit wrote the file")
+	}
+	out, changed, err = declarations.UnclaimCreated(testTool(), a.Root, out, "test-server", "1", "infratool backup")
+	if err != nil || !changed || strings.Contains(string(out), `"1"`) || !strings.Contains(string(out), `"2"`) {
+		t.Fatalf("unclaim: changed %v, %v\n%s", changed, err, out)
+	}
+	out, changed, err = declarations.RenameClaim(testTool(), a.Root, out, "test-server", "2", "3")
+	if err != nil || !changed || !strings.Contains(string(out), `"3"`) {
+		t.Fatalf("rename: changed %v, %v\n%s", changed, err, out)
+	}
+	_, _, err = declarations.ClaimCreated(testTool(), a.Root, []byte("format_version = 1\n"), "test-server", "4", "infratool backup")
+	mustContain(t, err, "claims.toml")
 }
