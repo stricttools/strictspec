@@ -229,6 +229,9 @@ const (
 	ActionCreate Action = "create"
 	ActionUpdate Action = "update"
 	ActionDelete Action = "delete"
+	// ActionUnclaim removes a stale claim (Change.Claim) from the account
+	// repository's claims.toml.
+	ActionUnclaim Action = "unclaim"
 )
 
 // Change is one difference apply executes: the creation, update, or deletion
@@ -275,10 +278,14 @@ type Change struct {
 	Stage        int
 	Deferred     *Deferred
 	Owned        []Resource
+	// Claim is, for an unclaim, the stale claim to remove.
+	Claim *Claim
 }
 
 // Writer executes changes; the tool supplies it. It supports a resource-level
-// delete for every resource type, or refuses one naming what to do instead.
+// delete for every resource type, or refuses one naming what to do instead,
+// and an unclaim (ActionUnclaim), which removes Change.Claim from the account
+// repository's claims.toml.
 type Writer interface {
 	// Refuse says why the writer cannot make ch, naming the fix, or returns
 	// nil when it can. It decides from ch, the live state read, and plan

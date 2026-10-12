@@ -3,6 +3,7 @@ package declarations_test
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -230,4 +231,45 @@ func TestCreatorClaimTellsWhetherTheCreatorOwnsAResource(t *testing.T) {
 	mustContain(t, err, "claim[1]", "its creator infratool backup")
 	_, err = declarations.CreatorClaim(testTool(), a.Root, src, "test-server", "old", "infratool backup")
 	mustContain(t, err, "unmanaged[0]", "a manual experiment")
+}
+
+// In the account repository, a creator's claim naming a resource that is not
+// live is a stale claim: verify shows it, and apply removes it through the
+// writer, an unclaim change carrying the claim, after which the comparison
+// matches. A project's claim of a resource that is not live yet is no
+// difference: the project's apply creates the resource.
+func TestAStaleCreatorClaimIsADifferenceApplyRemoves(t *testing.T) {
+	a := newAccount(t, `unmanaged = []
+claim = [
+  { resource_type = "test-server", name = "gone", creator = "infratool backup" },
+  { resource_type = "test-server", name = "planned", project = "example" },
+  { resource_type = "test-server", name = "snap", creator = "infratool backup" },
+]
+`)
+	claims, err := declarations.LoadClaims(testTool(), a.Root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := load(t, a)
+	l := newLive()
+	l.put(liveServer("snap"))
+	r := verify(t, s, l, claims)
+	wantLines(t, r, "differences", `{"name":"gone","resource_type":"test-server","source":"claims.toml","status":"stale-claim"}`)
+	if r.ExitCode() != declarations.ExitDifferences {
+		t.Fatalf("exit %d", r.ExitCode())
+	}
+	w := &fakeWriter{live: l}
+	rep, err := declarations.Apply(s, l, claims, w, &fakeGit{}, planID(t, s, l, claims))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := describeAll(w.changes); !reflect.DeepEqual(got, []string{"unclaim test-server/gone"}) {
+		t.Fatalf("apply: %q", got)
+	}
+	if want := (declarations.Claim{ResourceType: "test-server", Name: "gone", Creator: "infratool backup"}); w.changes[0].Claim == nil || *w.changes[0].Claim != want {
+		t.Fatalf("the change carries the claim %+v", w.changes[0].Claim)
+	}
+	if !rep.Matching {
+		t.Fatalf("not matching after apply: %+v", rep.Differences)
+	}
 }

@@ -785,6 +785,7 @@ func (w *fakeWriter) Apply(c declarations.Change) error {
 		}
 	case c.Collection == "" && c.Field == "" && c.Action == declarations.ActionDelete:
 		delete(w.live.resources, k)
+	case c.Action == declarations.ActionUnclaim:
 	case c.Collection == "" && c.Field != "":
 		r.Fields[c.Field] = c.Resource.Fields[c.Field]
 	case c.Collection != "" && c.Field == "" && c.Action == declarations.ActionCreate:

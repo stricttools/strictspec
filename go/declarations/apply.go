@@ -16,7 +16,7 @@ type Plan struct {
 	// ascending Stage (within one resource, the resource-level change first,
 	// then its children in the order of its resource type's collections),
 	// then deletes in descending Stage (children in the reverse order of the
-	// collections); a change holding a value an earlier change creates (a
+	// collections), then the unclaims of stale claims; a change holding a value an earlier change creates (a
 	// Pending, or Deferred children) is moved after that creation.
 	Changes []Change
 	// ID is the lowercase hex SHA-256 of the canonical JSON of every
@@ -41,7 +41,8 @@ type Plan struct {
 // changes wait on each other. The changes never hold an unresolved or
 // misclaimed difference; a value an earlier change of the plan creates is a
 // Pending, resolved by Execute. In the account repository each
-// unclaimed resource is deleted whole, with the deletes; in a project the
+// unclaimed resource is deleted whole, with the deletes, and each stale claim
+// is removed by an unclaim change, after every other change; in a project the
 // plan never deletes a resource, only children (a live resource a project
 // stops declaring is left alone, and the account repository reports it
 // unclaimed).
@@ -155,8 +156,23 @@ func (p Plan) Execute() (Report, error) {
 		if k, ok := isCreateOf(ch); ok {
 			z.created[k] = true
 		}
+		if ch.Action == ActionUnclaim {
+			p.claims = withoutClaim(p.claims, *ch.Claim)
+		}
 	}
 	return Compare(p.set, p.live, p.claims)
+}
+
+// withoutClaim is claims without cl, which an unclaim removed.
+func withoutClaim(claims Claims, cl Claim) Claims {
+	out := claims
+	out.Claims = nil
+	for _, c := range claims.Claims {
+		if c != cl {
+			out.Claims = append(out.Claims, c)
+		}
+	}
+	return out
 }
 
 // Apply makes the plan (PlanApply), refuses unless its identifier is id
@@ -218,7 +234,7 @@ func (c *comparison) changes(rep Report) []Change {
 		resources[i] = out
 		return out
 	}
-	var upserts, deletes []Change
+	var upserts, deletes, unclaims []Change
 	for _, ds := range c.deferred {
 		st := ds.state
 		sl := st.cause.slot
@@ -247,6 +263,10 @@ func (c *comparison) changes(rep Report) []Change {
 			action = ActionUpdate
 		case StatusUnexpected:
 			action = ActionDelete
+		case StatusStaleClaim:
+			cl := c.stale[d.ResourceType+"/"+d.Name]
+			unclaims = append(unclaims, Change{Action: ActionUnclaim, ResourceType: d.ResourceType, Name: d.Name, Claim: &cl})
+			continue
 		case StatusUnclaimed:
 			// Only the account repository's comparison reports unclaimed
 			// resources: each is deleted whole, with what it owns. The
@@ -306,7 +326,7 @@ func (c *comparison) changes(rep Report) []Change {
 	}
 	sort.SliceStable(upserts, func(i, j int) bool { return less(upserts[i], upserts[j], false) })
 	sort.SliceStable(deletes, func(i, j int) bool { return less(deletes[i], deletes[j], true) })
-	return append(upserts, deletes...)
+	return append(append(upserts, deletes...), unclaims...)
 }
 
 // resolvedItem is the expected child a change carries: the expected item

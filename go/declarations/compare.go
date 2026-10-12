@@ -125,6 +125,9 @@ type comparison struct {
 	// owns that nothing declares, claims, or lists unmanaged, in the
 	// account repository.
 	owned map[string][]Resource
+	// stale are the stale claims ("<type>/<name>"), in the account
+	// repository.
+	stale map[string]Claim
 }
 
 // Compare reads every declared resource live, resolves references and
@@ -133,7 +136,8 @@ type comparison struct {
 // the account repository (the project's root is the claims' root) it also
 // lists every live resource of every resource type and reports each one
 // neither declared there, claimed, nor unmanaged; in a project it reports
-// each declared resource the claims do not assign to the project.
+// each declared resource the claims do not assign to the project, and in the
+// account repository each creator's claim naming a resource that is not live.
 func Compare(set Set, live LiveReader, claims Claims) (Report, error) {
 	_, rep, err := run(set, live, claims)
 	return rep, err
@@ -743,12 +747,14 @@ func (c *comparison) unclaimed(claims Claims) {
 	}
 	var candidates []candidate
 	listed := map[string]bool{}
+	read := map[string]bool{}
 	for _, rt := range c.set.Tool.ResourceTypes {
 		names, err := c.rc.List(rt.Name())
 		if err != nil {
 			c.unreadable(rt.Name(), "", err)
 			continue
 		}
+		read[rt.Name()] = true
 		for _, n := range names {
 			k := rt.Name() + "/" + n
 			listed[k] = true
@@ -784,6 +790,17 @@ func (c *comparison) unclaimed(claims Claims) {
 			continue
 		}
 		c.add(Difference{Status: StatusUnclaimed, ResourceType: cand.resourceType, Name: cand.name})
+	}
+	// A creator's claim of a resource that is not live is stale; a type
+	// whose list failed is unreadable, and none of its claims is judged.
+	for _, cl := range claims.Claims {
+		if cl.Creator != "" && read[cl.ResourceType] && !listed[cl.ResourceType+"/"+cl.Name] {
+			if c.stale == nil {
+				c.stale = map[string]Claim{}
+			}
+			c.stale[cl.ResourceType+"/"+cl.Name] = cl
+			c.add(Difference{Status: StatusStaleClaim, ResourceType: cl.ResourceType, Name: cl.Name, Source: claimsFile})
+		}
 	}
 }
 

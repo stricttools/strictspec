@@ -67,8 +67,8 @@ type = "record"
 [types.Difference.fields.status]
 type = "enum"
 required = true
-values = ["missing", "unexpected", "changed", "unresolved", "unclaimed", "misclaimed"]
-description = "missing: declared or derived, not live; unexpected: live, neither declared, derived, nor unmanaged; changed: one field differs; unresolved: the expected value waits on a provider-assigned value that does not exist yet and that no change of the apply creates (a value the apply creates is missing or changed, shown by its placeholder); unclaimed: a live account-level resource neither declared, claimed, nor unmanaged (apply in the account repository deletes it); misclaimed: a declared resource the claims assign to another project or to none."
+values = ["missing", "unexpected", "changed", "unresolved", "unclaimed", "misclaimed", "stale-claim"]
+description = "missing: declared or derived, not live; unexpected: live, neither declared, derived, nor unmanaged; changed: one field differs; unresolved: the expected value waits on a provider-assigned value that does not exist yet and that no change of the apply creates (a value the apply creates is missing or changed, shown by its placeholder); unclaimed: a live account-level resource neither declared, claimed, nor unmanaged (apply in the account repository deletes it); misclaimed: a declared resource the claims assign to another project or to none; stale-claim: a claim in claims.toml that a creator wrote, naming a resource that is not live (apply in the account repository removes the claim)."
 
 [types.Difference.fields.resource_type]
 type = "string"

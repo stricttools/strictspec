@@ -24,6 +24,12 @@ const (
 	// StatusMisclaimed is, in a project, a declared resource the claims
 	// assign to another project or to none: apply refuses to run.
 	StatusMisclaimed Status = "misclaimed"
+	// StatusStaleClaim is, in the account repository, a claim a creator
+	// wrote (a command that created the resource outside apply) naming a
+	// resource that is not live: apply removes the claim. A project's claim
+	// of a resource that is not live is none: the project's apply creates
+	// the resource.
+	StatusStaleClaim Status = "stale-claim"
 )
 
 // Report is the result of comparing a declaration directory with live state;
