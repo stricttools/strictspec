@@ -95,7 +95,7 @@ func PlanApply(set Set, live LiveReader, claims Claims, w Writer, g Git) (Plan, 
 		return Plan{}, err
 	}
 	if u, ok := w.(UsageReader); ok {
-		if changes, err = orderDeletesByUses(changes, u); err != nil {
+		if changes, err = orderDeletesByUses(changes, u, set.Tool.DryRunCommand); err != nil {
 			return Plan{}, err
 		}
 	}
@@ -390,7 +390,7 @@ func itemFor(col Collection, d Difference, expected Resource) Item {
 // resource-level deletes of the resources using it (u.Users), keeping the
 // order otherwise: the deletes take the same places in the plan, filled in
 // that order.
-func orderDeletesByUses(changes []Change, u UsageReader) ([]Change, error) {
+func orderDeletesByUses(changes []Change, u UsageReader, dryRun string) ([]Change, error) {
 	var at []int
 	deleted := map[string]bool{}
 	for i, ch := range changes {
@@ -442,7 +442,7 @@ func orderDeletesByUses(changes []Change, u UsageReader) ([]Change, error) {
 					stuck = append(stuck, fmt.Sprintf("%s, used by %s", k, strings.Join(users[k], " and ")))
 				}
 			}
-			return nil, refusal("the plan, deleting resources that use each other, which apply cannot order,", stuck)
+			return nil, fmt.Errorf("%w\nend one of the uses in the same apply: declare one of them in this repository without its use of the other, commit, and run %s again, so the apply changes it before deleting the other; then remove that declaration, commit, and run %s again, which deletes it", refusal("the plan, deleting resources that use each other, which apply cannot order,", stuck), dryRun, dryRun)
 		}
 		taken[next] = true
 		ch := changes[at[next]]

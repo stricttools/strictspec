@@ -152,6 +152,16 @@ func TestClaimCreatedRefusesAResourceListedOtherwise(t *testing.T) {
 	mustContain(t, err, "claim[0]", "the project example")
 	_, _, err = declarations.ClaimCreated(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-volume", "data", "infratool backup")
 	mustContain(t, err, "test-volume is not a resource type")
+	// The fix of the unmanaged refusal: removing the entry lets the creator
+	// claim the resource.
+	_, _, err = declarations.ClaimCreated(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", "old", "infratool backup")
+	mustContain(t, err, "remove that entry if infratool backup owns it")
+	writeFile(t, a.Root, claimsPath, strings.Replace(readClaimsFile(t, a), `unmanaged = [{ resource_type = "test-server", name = "old", reason = "a manual experiment" }]`, "unmanaged = []", 1))
+	out, changed, err := declarations.ClaimCreated(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", "old", "infratool backup")
+	writeClaims(t, a, out, changed, err)
+	if owned, err := declarations.CreatorClaim(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", "old", "infratool backup"); err != nil || !owned {
+		t.Fatalf("after the fix: %v, %v", owned, err)
+	}
 }
 
 // Renaming a resource renames its claim or unmanaged entry in place; a
