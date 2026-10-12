@@ -283,3 +283,29 @@ claim = [
 		t.Fatalf("not matching after apply: %+v", rep.Differences)
 	}
 }
+
+// A claim added to a claim array written inline keeps the comments inside
+// the array and the entries as written.
+func TestClaimCreatedKeepsTheCommentsInsideAnInlineClaimArray(t *testing.T) {
+	a := newAccount(t, `unmanaged = []
+claim = [
+  # the site's zone
+  { resource_type = "test-zone", name = "example.org", project = "example" }, # kept since the start
+]
+`)
+	out, changed, err := declarations.ClaimCreated(testTool(), a.Root, []byte(readClaimsFile(t, a)), "test-server", "4242", "infratool backup")
+	writeClaims(t, a, out, changed, err)
+	got := readClaimsFile(t, a)
+	for _, want := range []string{"# the site's zone", "# kept since the start", `{ resource_type = "test-zone", name = "example.org", project = "example" }`} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("%q is gone:\n%s", want, got)
+		}
+	}
+	claims, err := declarations.LoadClaims(testTool(), a.Root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(claims.Claims) != 2 || claims.Claims[1] != (declarations.Claim{ResourceType: "test-server", Name: "4242", Creator: "infratool backup"}) {
+		t.Fatalf("claims %+v", claims.Claims)
+	}
+}

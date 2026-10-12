@@ -55,21 +55,11 @@ func ClaimCreated(tool Tool, accountRoot string, src []byte, resourceType, name,
 				return nil, false, fmt.Errorf("%s: %w", file, err)
 			}
 		}
-	} else {
-		// claim is written as an inline array (claim = [] when empty): the
-		// new entry is appended to it as an inline table.
-		var list []any
-		for _, cl := range c.Claims {
-			owner := tomledit.Pair{Key: "project", Value: cl.Project}
-			if cl.Creator != "" {
-				owner = tomledit.Pair{Key: "creator", Value: cl.Creator}
-			}
-			list = append(list, []tomledit.Pair{{Key: "resource_type", Value: cl.ResourceType}, {Key: "name", Value: cl.Name}, owner})
-		}
-		list = append(list, entry)
-		if err := doc.Set("claim", list); err != nil {
-			return nil, false, fmt.Errorf("%s: %w", file, err)
-		}
+	} else if err := doc.AppendToArray("claim", entry); err != nil {
+		// Above, claim is written as an inline array (claim = [] when
+		// empty): the new entry is appended to it as an inline table, in
+		// place, so the comments and entries in the array stay as written.
+		return nil, false, fmt.Errorf("%s: %w", file, err)
 	}
 	return checkedClaims(tool, accountRoot, file, doc.Bytes())
 }
