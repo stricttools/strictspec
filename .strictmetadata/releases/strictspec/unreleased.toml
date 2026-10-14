@@ -1,11 +1,11 @@
 # The next release of strictspec. Fill in bump and description, then run `rlsbl release run --watch`.
 format_version = 2
 # How the release moves the version: patch, minor, major, or infra (moved as a patch, recorded as infra).
-bump = ""
+bump = "minor"
 # What this release is, in a sentence or two. Required.
-description = ""
+description = "The Go module gains the declarations package, the shared formats and engine for declaring a project's remote resources; the lifecycle record derives an unreleased status that refuses a never-released subject's releases and renames on-hold to non-releasing; the confidential-term list is located through the family's settings file; and the strictspec commands require their paths explicitly."
 # Why these changes were made. Optional.
-context = ""
+context = "rlsbl adopts the derived unreleased status and the settings-file location of the term list, so this release comes before its own. Only the Go module is released: the Python and TypeScript implementations are paused while the tools are rewritten in Go."
 # The targets released, and the ones left out; between them they name every target of the releasable's members.
-include = ["go", "pypi", "npm"]
-exclude = []
+include = ["go"]
+exclude = ["pypi", "npm"]
