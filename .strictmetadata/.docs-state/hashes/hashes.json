@@ -5,28 +5,28 @@
     "description": "4f6615f38b9f738a2f16b441a3e559ea9edee087ceb06409ead50057016894f2"
   },
   "en/appendix-certificates.md": {
-    "content": "06474ee66bf5eabeb45f5146a98f65958208ccc9776cd18abb2fea3c7f7f8734",
-    "description": "a3b4966853cd8d28db31d8a04258cea04c9c63203f99d96664ab920ba7d4db2a"
+    "content": "74a8b6578ac1c4684c9f0481599a0e32bc60c309c42e487747902061a4687c79",
+    "description": "21f44601ce18baeecece6cc4ab6a6ef4e59d8d018352fbe441dc61e9d4ecd224"
   },
   "en/appendix-custom-scalars.md": {
     "content": "8dbbbca7308e139d2be5e6857eca14cf522112ef1b33963b3acc45e34602b60e",
     "description": "1f4915fd9234c32bd9b9d2194ed0b0ec8ece5ac5e9e2c8aa59db91aa65c09257"
   },
   "en/appendix-emitter-ir.md": {
-    "content": "9b2394a929f3b318d851c8bb9d1d639a520084afadd8ec7ce228ae51aaaa9d59",
-    "description": "998c7b46092151502dcbecd12cda50f3535689a99215e74b763c35765c071d8f"
+    "content": "da2cd71dc4fb90721d7ac288639403d9f40639762741793f1cdb7eb58610ac50",
+    "description": "7c61798324085ef47df95d60fb1fb9129dff24cc06f5c2ebe7055260b340cddf"
   },
   "en/appendix-error-codes.md": {
-    "content": "7e9bb78f047dbc48254fda1206b17c92c49eb6d706e42a463a3cb10da03409b4",
-    "description": "bc2de6b267ea0bd57f48a8d7099e5a0fc6221597be0b174cae719f482c183e2a"
+    "content": "df26414bb213539260be193b6cfaad9782c9d1786b82ba1dbab74181797a0a80",
+    "description": "84e8de5f64bcbc051d396a6edad99576467d228a121be4c59b27f37b136776bd"
   },
   "en/appendix-options.md": {
     "content": "54dff5efc32e994ceaf8f3aede39737ce14104c56b236a38cb74fbc2d02dc0c5",
     "description": "ed52d8905d0cc127eb7ddf44931481dc6d0820603744efd76e9861a282a7b753"
   },
   "en/appendix-rendering.md": {
-    "content": "b3663ba5bb71c69887fb184a93b72d759894a501194429378a994c0fc41e0323",
-    "description": "819624592b8921114291eeeb7cf946fc2027f8cc7daa07c6a1c5380f50a894db"
+    "content": "67cbf2256f96e7dda703e3807c2363802ee5c055b94bb4376edb2382aa1be73f",
+    "description": "4417615191825cf95cf79a6c004309e20ae4068fc4e3b66080e899db766b6e76"
   },
   "en/appendix-semantics.md": {
     "content": "c8bdd9d372a09732b2f456a739d2f6c2bd477b5b111a063f7ff8f3a3a0a5872b",
@@ -47,7 +47,7 @@
     "source_docstring": "da8d0245f6bed7bfbfccb046bc48058bb57d8807d017763772958a5553a1f581"
   },
   "en/index.md": {
-    "content": "74adbb22300ecb217d8b7dbd81568eb3938da12738d54d151186ffec581ae871",
-    "description": "928c80014caad10ad5981269091ed237731944e9ffde9b0e79f88361607b5ed5"
+    "content": "23c69fd07ff1084eea3390b6a4460d4bef23347fbe8525e573684553aff59909",
+    "description": "c60d8aade298e23f4a363f2d04f016f2399360252a732b2c5f68fe118442ffed"
   }
 }

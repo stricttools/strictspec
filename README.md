@@ -2,17 +2,17 @@
 
 # strictspec
 
-Define a schema once in TOML, and generate the full toolchain in your language: validation, versioning, migrations, etc. -- First-class support for Go, Python, and TypeScript
+Define a schema once in TOML, and generate the full toolchain: validation, versioning, migrations, etc. -- for Go
 
-strictspec is a schema toolchain that turns one TOML schema into Go, Python and
-TypeScript validators reporting identical verdicts, error codes, paths and
-messages for JSON, TOML and JSONL files. It is for projects whose config and
-data files are read by more than one language — and increasingly written by AI
-agents — where a document one reader accepts must never be a document another
-reader rejects. Its distinctive property is identity rather than approximation:
-values are tagged and lexeme-retaining, and a shared conformance suite holds
-every target (Go, Python, TypeScript, and the reference interpreter) to the same
-verdict, the same error code, the same path, and the same rendered message text.
+strictspec is a schema toolchain that turns one TOML schema into a Go validator
+reporting verdicts, error codes, paths, and messages for JSON, TOML, and JSONL
+files. It is for projects whose config and data files are increasingly written
+by AI agents, where a document must be accepted or rejected for one stated
+reason, every time. Its distinctive property is exactness rather than
+approximation: values are tagged and lexeme-retaining, and the generated
+validator and the reference interpreter run one shared executor, held by the
+test suite to the same verdict, the same error code, the same path, and the
+same rendered message text.
 
 ## Install
 
@@ -27,28 +27,18 @@ to a real release. Pin an exact version (`@v0.2.5`) when you need one.
 Cross-compiled archives are attached to each
 [GitHub Release](https://github.com/stricttools/strictspec/releases).
 
-The runtime packages carry the same CLI behind a first-run launcher that
-downloads the exact-version binary from the matching GitHub Release, verifies
-its SHA-256, and caches it. Installing them performs no network access; only the
-first CLI invocation does.
-
-```
-uv add strictspec        # Python runtime + `strictspec` console script
-npm install strictspec   # TypeScript runtime + `strictspec` bin
-```
-
-Go consumers import the runtime from the same module:
+Generated validators import the runtime from the same module:
 `github.com/stricttools/strictspec/go/strictspec`.
 
 ## Usage
 
 Generation is file-driven: a `strictspec.toml` manifest names each schema and
-the targets it generates.
+the Go files it generates (`lang = "go"`, the only generation target).
 
 ```
 strictspec init --manifest strictspec.toml   # scaffold strictspec.toml
-strictspec gen --manifest strictspec.toml    # generate validators for every declared target
-strictspec check                             # schema authoring validity + generated-code freshness
+strictspec gen --manifest strictspec.toml    # generate a validator for every declared target
+strictspec check --manifest strictspec.toml  # schema authoring validity + generated-code freshness
 ```
 
 Documents are validated against a schema directly, with an explicit choice of
@@ -67,15 +57,14 @@ over a corpus and emits a certificate.
 
 ## Versioning
 
-The Go module, the `strictspec` PyPI package and the `strictspec` npm package
-are one release unit: they always carry the same version and are published
-together, so the first-run launcher can fetch the binary that pairs with the
-runtime shipped beside it. A version therefore moves for all three even when
-only one of them changed.
+The Go module is the release unit: the CLI and the runtime always carry the
+same version. strictspec 0.7.0 was the last release with Python and TypeScript
+runtimes (the `strictspec` PyPI and npm packages); their validators keep working
+against those runtimes, and they receive no further releases.
 
 Generated code is paired to its runtime by GENERATED-CODE FORMAT, not by
 release. A generated validator declares an integer `GENERATED_CODE_FORMAT` — the
-shape of the emitted code, bumped only when that shape changes — and every
+shape of the emitted code, bumped only when that shape changes — and the
 runtime declares the inclusive range of formats it reads. Pairing succeeds
 whenever the declared format is in that range, whatever release produced the
 file, so an ordinary strictspec release does not stop a runtime from reading
@@ -87,7 +76,8 @@ with `strictspec gen`, never pin.
 
 ## The language reference
 
-The constitution under `.strictmetadata/docs/` is the language-neutral definition of the schema
+The constitution under `.strictmetadata/docs/` is the definition of the schema
 language, the constraint vocabulary, the migration op set, the error model, and
-the normative appendices. Every backend and the internal interpreter implement
-it, and the conformance suite enforces it across every target.
+the normative appendices. The generated Go validators and the reference
+interpreter implement it, and the validation fixtures under
+`go/testdata/fixtures/` hold both to it.

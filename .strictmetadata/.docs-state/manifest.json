@@ -3,7 +3,7 @@
   "name": "strictspec",
   "slug": "strictspec",
   "version": "0.1.0",
-  "description": "Define a schema once in TOML, and generate the full toolchain in your language: validation, versioning, migrations, etc. -- First-class support for Go, Python, and TypeScript",
+  "description": "Define a schema once in TOML, and generate the full toolchain: validation, versioning, migrations, etc. -- for Go",
   "language": "go",
   "base_url": "https://smmh.dev/strictspec",
   "pages": [
@@ -213,8 +213,8 @@
         },
         {
           "level": 2,
-          "text": "5. Conformance obligations",
-          "anchor": "5-conformance-obligations"
+          "text": "5. Fixture obligations",
+          "anchor": "5-fixture-obligations"
         },
         {
           "level": 2,
@@ -1303,7 +1303,7 @@
     }
   ],
   "posts": [],
-  "last_gen": "2026-10-12T20:33:35.558103+00:00",
+  "last_gen": "2026-10-14T21:04:07.999480+00:00",
   "theme": "minimal",
   "vocabulary": {
     "accepted": [
