@@ -32,3 +32,8 @@ subject = "py-strictspec"
 status = "retired"
 from = 2026-10-14
 reason = "the owner ruled strictspec's Python and TypeScript implementations deleted"
+[[lifecycle]]
+subject = "ts-strictspec"
+status = "retired"
+from = 2026-10-14
+reason = "the owner ruled strictspec's Python and TypeScript implementations deleted"
