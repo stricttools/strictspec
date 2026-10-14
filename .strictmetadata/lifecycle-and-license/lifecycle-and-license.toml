@@ -27,3 +27,8 @@ registry = ""
 tag_patterns = ["strictspec@v*"]
 from = 2026-07-18
 reason = "recorded when rlsbl's records moved to the .strictmetadata layout"
+[[lifecycle]]
+subject = "py-strictspec"
+status = "retired"
+from = 2026-10-14
+reason = "the owner ruled strictspec's Python and TypeScript implementations deleted"
