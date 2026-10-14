@@ -39,8 +39,7 @@ Documents are JSON, so nullable unions (`T | null`) are legal throughout.
   stay `integer`. `const` -> `literal`; JSON Schema `enum` -> `enum`.
 
 - **`const` / bounded ints** — `alphaPolicy: const "binary"` -> `literal`; `seed` max
-  `4294967295` -> `max` (well inside int64; no `safe_integers` needed unless a TS target is
-  declared, which would then be mandatory).
+  `4294967295` -> `max` (well inside int64; no `safe_integers` needed).
 
 ## Findings
 

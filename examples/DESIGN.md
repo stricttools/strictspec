@@ -2,7 +2,7 @@
 
 Draft strictspec schemas for real ecosystem formats, ON PAPER, before implementation. If a
 schema can't be written cleanly here, the spec is wrong and gets fixed now. Drafts become
-migration starting points, conformance corpus, and (character-preview) the acceptance-test
+migration starting points, validation fixtures, and (character-preview) the acceptance-test
 source.
 
 STATUS (Phase 3.3, 2026-07-27): all fifteen drafts came back clean with their gap notes resolved;
@@ -27,7 +27,7 @@ adoption artifacts.
 Every schema header carries both fields per the versioning rules: `meta_version` (the
 schema-language version) and `format_version` (what its documents must carry). Expected
 diagnostics in every draft are written as ordered code+path lists plus template slot values
-(the cross-target conformance surface — message text renders from the spec-pinned templates,
+(the identity surface — message text renders from the spec-pinned templates,
 so every draft doubles as a message-identity fixture).
 
 ## Planned drafts
@@ -36,7 +36,7 @@ so every draft doubles as a message-identity fixture).
 |---|---|---|---|
 | 1 | agent definition + budget migration | claudestream | opaque JSON leaf (tool input_schema, declared stance: `unchecked = true` with mandatory `unchecked_reason`, or `consumer_check` — a missing-stance or missing-reason schema is the meta-schema-rejection fixture), optional extension fields — and the FLAGSHIP MIGRATION: `max_cost_usd: float` -> `cost_thresholds: [float]` as rename_field + wrap_in_array, down declared PARTIAL (unwrap of a multi-element list is the pinned hard-error case). Note: claudestream has ZERO at-rest corpus, so the deploy gate discharges via the first real adjudication file; the budget rename is a conformance FIXTURE, not a live migration |
 | 2 | constraint-manifest, part-manifest, character-preview | the sprite tool | the hard trio: nested typed maps, discriminated unions (full union-diagnostics section), nullable unions, NUMBER scalar (7 of 10 numeric fields), ordered-pair, ranges-disjoint, pairwise-distinct. The x- keyword MAPPING OBLIGATION: x-unique-field→unique-by, x-range-nonoverlap→ranges-disjoint, x-pairwise-distinct→pairwise-distinct, x-less-than-sibling→ordered-pair; x-lock/x-locks disposition is a gap note (to be determined in the draft). character-preview's hand translation IS the acceptance-test source |
-| 3 | score | wavescript | JSON, integer `format_version` 2 already live; the REGISTRY GATE / conditional-applicability system — the strongest conditional-required stress in the corpus; enum-keyed unions (per-instrument params); the 47-score corpus (conformance seed + the 158-pair golden render-hash manifest as regression oracle). Synthesis engine/specgen stay consumer-side |
+| 3 | score | wavescript | JSON, integer `format_version` 2 already live; the REGISTRY GATE / conditional-applicability system — the strongest conditional-required stress in the corpus; enum-keyed unions (per-instrument params); the 47-score corpus (fixture seed + the 158-pair golden render-hash manifest as regression oracle). Synthesis engine/specgen stay consumer-side |
 | 4 | changelog entry (JSONL) | rlsbl | per-line integer `format_version`, mixed-version stream reading, mode-parameterized shape (commit vs changeset-file — both `coverage_unit` modes), `release_type` + `packages` fields, conditional-required, the forgotten enum; the set-coverage CROSS-DOCUMENT form (every commit in range covered by an entry — evidence via the commits-in-range resolver); bootstrap-contract sketch (the one-time stamping script's shape-detection rules, as documentation) |
 | 5 | release file | rlsbl | comment-carrying TOML round-trip (within-backend fixpoint), enums, cross-field rules (include/exclude disjoint, preid/bump coupling), optional fields modeling "no value" as absence (never a nullable union — unusable in TOML), DATETIME SCALARS (TOML natives; offset/local kind declaration; lexeme retention), TOML-null hard-error case |
 | 6 | config | rlsbl | the `.rlsbl/config.json` shape: nested typed maps, enums, external-checks list (name/command/tag/depends_on/cwd records), install_paths, optional-absent fields; cross-field coupling within external-check entries |

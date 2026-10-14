@@ -63,8 +63,8 @@ one contract but genuinely shared vocabulary). `auth.toml` imports from TWO file
 - **`Instant` as a scalar-refinement over a NON-string base** (datetime, kind offset) works and
   is reused three ways — demonstrating scalar-refinement is not string-only.
 - **NUMBER scalar / safe_integers / ordered-pair / pairwise-distinct** all land: `usage.cost.
-  total_cost_usd` is `number`; `usage`/`models` declare `safe_integers = true` (mandatory —
-  both declare a TS target); each `usage` window carries `ordered-pair(start < end)`;
+  total_cost_usd` is `number`; `usage`/`models` declare `safe_integers = true` (mandatory
+  while strictspec generated TypeScript, since both declare a TS target); each `usage` window carries `ordered-pair(start < end)`;
   `models.families[].name` is `pairwise-distinct`.
 
 ### Expected diagnostics — `auth.invalid.json` (traversal order, item 6)

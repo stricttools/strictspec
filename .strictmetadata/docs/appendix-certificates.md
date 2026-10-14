@@ -1,11 +1,10 @@
 +++
-description = "Normative output shapes for the strictspec diff certificate, adjudication file, and doc-diff, conformance-tested as toolchain golden output and forward-compatible with the future analyzer."
+description = "Normative output shapes for the strictspec diff certificate, adjudication file, and doc-diff, tested as toolchain golden output and forward-compatible with the future analyzer."
 +++
 # Appendix: Diff Certificate, Adjudication File, and doc-diff Output (normative)
 
 > NORMATIVE STATUS: Part of the strictspec constitution (see `DESIGN.md`). VERSIONED: the shapes
-> pinned here are conformance-tested as toolchain GOLDEN OUTPUT (single-engine determinism, not
-> multi-target execution). Any change is a breaking-class, changelog-covered release event.
+> pinned here are tested as toolchain GOLDEN OUTPUT (the toolchain fixtures). Any change is a breaking-class, changelog-covered release event.
 >
 > META NOTE: strictspec is in its GROWTH PHASE — these shapes are STABLE BUT GROWING; field
 > additions and refinements are normal and expected, recorded per-release through the existing
@@ -118,7 +117,7 @@ adjudication (over-broad or dangling scope).
 ## Part C — doc-diff output
 
 `strictspec doc-diff` takes ONE schema and TWO documents of it (same schema, same
-format_version) and emits a structured per-path delta. Golden-output conformance (toolchain
+format_version) and emits a structured per-path delta. Tested as golden output (toolchain
 determinism). Values render per `appendix-rendering.md` Part A; the change detection is
 LEXEME-CLASS-AWARE (`1` → `1.0` IS a change, because the classification differs).
 

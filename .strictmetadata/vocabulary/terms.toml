@@ -50,7 +50,7 @@ meaning = "A StrictTools family tool that, per the options appendix, reports eve
 
 [[accepted]]
 word = "strictspec"
-meaning = "This project: define a schema once in TOML and generate validation, versioning, and migrations for Go, Python, and TypeScript."
+meaning = "This project: define a schema once in TOML and generate validation, versioning, and migrations for Go."
 
 [[accepted]]
 word = "tunebox"

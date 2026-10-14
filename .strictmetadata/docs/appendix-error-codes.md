@@ -1,11 +1,11 @@
 +++
-description = "The normative catalogue of strictspec STRICTSPEC_* error codes with their pinned message templates, slot sets, and the closed area set that drives conformance and code generation."
+description = "The normative catalogue of strictspec STRICTSPEC_* error codes with their pinned message templates, slot sets, and the closed area set that drives the fixtures and code generation."
 +++
 # Appendix: Error-Code Catalogue and Message Templates (normative)
 
 > NORMATIVE STATUS: This appendix is part of the strictspec constitution (see `DESIGN.md`).
 > It is VERSIONED. Any change to a code, template, or slot set is a breaking-class,
-> changelog-covered release event that triggers full conformance-fixture regeneration
+> changelog-covered release event that triggers a full review of the validation fixtures
 > (see `DESIGN.md` — Error model, Appendix stability policy).
 >
 > META NOTE: strictspec is in its GROWTH PHASE — this catalogue is STABLE BUT GROWING. Catalogue
@@ -22,7 +22,7 @@ every entry below is an error (`DESIGN.md` — Unknown-key policy, Error model).
 checks emit consumer-prefixed codes with consumer-owned templates; those are outside this
 appendix by declaration and are never `STRICTSPEC_*`.
 
-Each row is a diagnostic. Generators compile these templates into each target's renderer table
+Each row is a diagnostic. tools/gencodes compiles these templates into the runtime's renderer table
 at `gen` time (see `appendix-emitter-ir.md`); no message string is ever hand-translated per
 target. Slot values render per `appendix-rendering.md`; `{suggestion}` is computed per the
 did-you-mean pin in that appendix.
@@ -36,7 +36,7 @@ did-you-mean pin in that appendix.
   1. Codes are PERMANENT. A code is never renamed and never reused for a different condition.
      Consumers may assert on codes indefinitely.
   2. Message WORDING is spec-pinned. A wording change is a versioned appendix change
-     (breaking-class, changelog-covered) and forces full conformance-fixture regeneration.
+     (breaking-class, changelog-covered) and forces a full review of the validation fixtures.
      The code does not change when wording changes.
   3. Slot NAMES and TYPES are part of the pinned template. Adding, removing, or retyping a slot
      is a wording-class change under rule 2.
@@ -265,7 +265,7 @@ Phase-2 diagnostics, ordered after phase 1. Decidable from document + schema alo
 
 ## 14. Cross-document constraint violations (`STRICTSPEC_CROSS_*`)
 
-Evidence supplied by named resolvers; executed by the constraint engine; same conformance
+Evidence supplied by named resolvers; executed by the constraint engine; same identity
 guarantee as structural checks. Includes the two new aggregate forms.
 
 | Code | Template | Slots | Notes |
@@ -301,7 +301,7 @@ is no separate union code for that case.
 <!-- The two pipes in `\|n\|` are ESCAPED so this row is valid markdown (a literal `|`
      inside a table cell must be `\|`). The rendered template text is `(|n| >= 2^53)`
      unchanged. Do not "un-escape" them. (formatting amendment 2026-07-27) -->
-| `STRICTSPEC_NUM_SAFE_INTEGER` | `Integer {actual} at {path} exceeds the safe-integer range (\|n\| >= 2^53) required by `safe_integers`.` | actual: value, path: path | Schema-wide when declared; identical verdict across backends. |
+| `STRICTSPEC_NUM_SAFE_INTEGER` | `Integer {actual} at {path} exceeds the safe-integer range (\|n\| >= 2^53) required by `safe_integers`.` | actual: value, path: path | Schema-wide when declared. |
 | `STRICTSPEC_NUM_UNREPRESENTABLE` | `Lexeme {actual} at {path} cannot be represented exactly as float64; the `number` scalar refuses silent precision loss.` | actual: value, path: path | number-scalar unrepresentable lexeme. |
 | `STRICTSPEC_NUM_INT_OVERFLOW` | `Integer lexeme {actual} at {path} overflows int64.` | actual: value, path: path | Integer lexeme beyond int64. |
 | `STRICTSPEC_NUM_FLOAT_OVERFLOW` | `Float lexeme {actual} at {path} is beyond float64 range.` | actual: value, path: path | Float lexeme beyond float64. |
@@ -441,7 +441,7 @@ truncated, so the message names every one.
   `appendix-semantics.md`.
 - Custom-scalar registration behind `STRICTSPEC_SCALAR_*`: `appendix-custom-scalars.md`.
 - The options model behind `STRICTSPEC_OPTIONS_*`: `appendix-options.md`.
-- How templates become per-target renderers: `appendix-emitter-ir.md`.
+- How templates become the runtime's renderer: `appendix-emitter-ir.md`.
 - The concrete surface that produces these conditions (enum selector, migration ops, constraint
   bodies): `appendix-surface-syntax.md`.
 - The constitution: `DESIGN.md`.

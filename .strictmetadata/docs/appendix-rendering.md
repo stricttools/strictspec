@@ -1,13 +1,12 @@
 +++
-description = "Normative strictspec value rendering: canonical float and string forms, the path grammar, and the pinned did-you-mean algorithm, asserted identically across every conformance target."
+description = "Normative strictspec value rendering: canonical float and string forms, the path grammar, and the pinned did-you-mean algorithm, asserted by the validation fixtures."
 +++
 # Appendix: Value Rendering, Path Grammar, and Did-You-Mean (normative)
 
-> NORMATIVE STATUS: Part of the strictspec constitution (see `DESIGN.md`). CROSS-TARGET
-> normative — every rule here is asserted identically across all four conformance targets as
-> part of full VERDICT + CODE + PATH + MESSAGE-TEXT identity. VERSIONED: any change is a
-> breaking-class, changelog-covered release event triggering full conformance-fixture
-> regeneration.
+> NORMATIVE STATUS: Part of the strictspec constitution (see `DESIGN.md`). Normative — every
+> rule here is asserted by the validation fixtures as part of full VERDICT + CODE + PATH +
+> MESSAGE-TEXT identity. VERSIONED: any change is a breaking-class, changelog-covered release
+> event triggering a full review of the validation fixtures.
 >
 > META NOTE: strictspec is in its GROWTH PHASE — these rules are STABLE BUT GROWING; refinements
 > (truncation length, escape forms, edge outcomes) are normal and expected, recorded per-release
@@ -23,11 +22,10 @@ the canonical-serialization appendix leg of `DESIGN.md`.
 ## Part A — Value rendering
 
 Two distinct tables. The DIAGNOSTIC table (A.1–A.5) governs values embedded in message text (they
-may be truncated, always quoted for clarity) and is CROSS-TARGET normative. The WRITE-SIDE table
-(A.6) governs values serialized back into a document (never truncated, byte-exact): its
-constructed-value rules are cross-target normative, while untouched-value lexeme retention is
-within-backend (backends emit different bytes for the same migrated document). Renderers may not
-deviate from either table.
+may be truncated, always quoted for clarity) and is normative. The WRITE-SIDE table (A.6)
+governs values serialized back into a document (never truncated, byte-exact): its
+constructed-value rules are normative, and untouched values keep their retained lexemes.
+Renderers may not deviate from either table.
 
 ### A.1 Diagnostic value rendering (read side, in messages)
 
@@ -79,8 +77,8 @@ constructed values.
 - The canonical form is the SHORTEST decimal string that round-trips to the same float64 (the
   standard shortest-round-trip algorithm): a value with no fractional part gains a trailing `.0`;
   a value whose shortest round-trip requires exponent notation uses a lowercase `e` with a signed
-  exponent. The chosen shortest form is identical across Go, Python, and TS by construction (all
-  three implement shortest-round-trip IEEE-754 formatting; the conformance suite asserts identity).
+  exponent. Go's shortest-round-trip IEEE-754 formatting produces it; the validation fixtures
+  assert it.
 
 ### A.4 String truncation (diagnostic messages only)
 
@@ -110,9 +108,8 @@ constructed values.
 ### A.6 Write-side value rendering (serialization, normative)
 
 The write-side table governs values serialized BACK into a document (never truncated,
-byte-exact). It is the canonical-serialization appendix leg of `DESIGN.md` and is cross-target
-normative WITHIN A BACKEND (Go, Python, and TS emit different bytes for the same migrated TOML;
-each backend is self-consistent).
+byte-exact). It is the canonical-serialization appendix of `DESIGN.md`; the write path is
+self-consistent (a read-then-write fixpoint).
 
 | Value kind | Write-side rendering | Notes |
 |---|---|---|
@@ -130,7 +127,7 @@ each backend is self-consistent).
   `format_version` other than the schema's current one (`STRICTSPEC_SERIALIZE_NONCURRENT`) — no
   conforming producer creates staleness.
 - Key order follows document order; whitespace and comments on untouched regions are preserved
-  (within-backend round-trip fixpoint).
+  (round-trip fixpoint).
 
 ### A.7 Regex patterns render as value slots (normative)
 
@@ -153,9 +150,8 @@ quoted while every ordinary `string` slot renders bare.
 
 ## Part B — Path grammar (EBNF, normative)
 
-Diagnostic paths are part of the conformance identity guarantee. A path names the location of a
-value within a document (and, for JSONL, within a stream). Rendered per this grammar on every
-target.
+Diagnostic paths are part of the identity guarantee. A path names the location of a value
+within a document (and, for JSONL, within a stream). Rendered per this grammar.
 
 ```ebnf
 path            = root , { step } , [ jsonl-suffix ] ;
@@ -215,8 +211,8 @@ Rules and clarifications:
 
 ## Part C — Did-you-mean (normative, pinned)
 
-Five decided parameters, normative — every target implements them identically and the
-`suggestion` slot is conformance-asserted as part of message-text identity:
+Five decided parameters, normative — the `suggestion` slot is asserted by the validation
+fixtures as part of message-text identity:
 
 1. METRIC: Levenshtein edit distance (insertions, deletions, substitutions each cost 1;
    no transposition).

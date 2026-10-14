@@ -14,7 +14,7 @@ description = "Normative surface for registering custom scalars in strictspec: n
 > ordering, never a design exclusion. strictsql is the first consumer.
 
 A custom scalar is a NAMED refinement of a built-in base lexeme class, with a toolchain-
-registered lexeme rule, per-target bindings, and rendering entries. Registration is DECLARATIVE
+registered lexeme rule, a Go binding, and rendering entries. Registration is DECLARATIVE
 and lives in the consumer manifest (`strictspec.toml`), so it travels with the schema and is
 gated and migrated like any document. strictspec has NO plugin API and NO embedded expression
 language (decision 23): a custom scalar is a lexeme refinement plus bindings — never arbitrary
@@ -30,7 +30,7 @@ A custom scalar is registered by a declaration carrying exactly these parts:
 | `base` | the built-in lexeme class it REFINES | one of the scalar lexeme classes: `string`, `integer`, `float`, `number`, `boolean`, `date`, `time`, `datetime`. A value that is not a `base` lexeme is `STRICTSPEC_SCALAR_BASE_MISMATCH` |
 | `lexeme_rule` | an ANCHORED RE2 regex over the SOURCE LEXEME | must compile under the RE2 subset (vetted at schema-validation time, `STRICTSPEC_SCHEMA_REGEX_UNSUPPORTED`); must be anchored (`^…$`); a value that does not match is `STRICTSPEC_SCALAR_LEXEME` |
 | `length` (optional) | code-point length bound and/or non-empty flag | for effectively-opaque refinements where the regex cannot express the real grammar (e.g. sql-expression); violation is `STRICTSPEC_SCALAR_LENGTH` |
-| `bindings` | per-target native type each target binds | one entry per DECLARED target of the schema; a declared target without a binding is `STRICTSPEC_SCALAR_NO_BINDING` |
+| `bindings` | the Go type the generated validator binds | `go` is the only key; a binding naming `python` or `ts`, the languages strictspec no longer generates, is refused by every command and by a generated validator compiling its embedded manifest |
 | `rendering` | message-side and write-side rendering entries | see section 2 |
 
 The lexeme rule refines the SOURCE LEXEME of a `base`-classed value — it is an additional filter
@@ -40,7 +40,7 @@ on top of the base scalar's own lexeme rules, never a replacement for them. A `p
 
 ## 2. Rendering entries
 
-A custom scalar declares how its values render in two places, both cross-target normative and
+A custom scalar declares how its values render in two places, both normative and
 both inheriting the base class's rules from `appendix-rendering.md`:
 
 - MESSAGE rendering (diagnostic): a custom scalar renders exactly as its base class renders
@@ -61,7 +61,7 @@ declaration that attempted a novel form would be rejected at registration.
 All custom-scalar diagnostics live under `STRICTSPEC_SCALAR_*` (see `appendix-error-codes.md`
 section 21): `STRICTSPEC_SCALAR_LEXEME`, `STRICTSPEC_SCALAR_BASE_MISMATCH`,
 `STRICTSPEC_SCALAR_UNKNOWN`, `STRICTSPEC_SCALAR_NO_BINDING`, `STRICTSPEC_SCALAR_LENGTH`. These
-are `STRICTSPEC_*` codes with spec-pinned templates and full cross-target message identity — a
+are `STRICTSPEC_*` codes with spec-pinned templates and full message identity — a
 custom scalar's diagnostics are FIRST-CLASS toolchain diagnostics, not consumer-prefixed codes.
 (Consumer-prefixed codes belong to consumer-native checks, which are a different thing entirely.)
 
@@ -72,20 +72,19 @@ custom scalar's diagnostics are FIRST-CLASS toolchain diagnostics, not consumer-
 - The registration TRAVELS WITH THE SCHEMA: any schema using a custom scalar is only meaningful
   alongside the manifest that registers it. `strictspec gen` reads both; a schema referencing an
   unregistered scalar hard-errors at generation time.
-- Because registration is manifest-declared data (not code), the per-target renderers and
-  validators for a custom scalar are GENERATED from the declaration, so all four targets enforce
-  the identical lexeme rule and emit identical diagnostics — the same conformance guarantee as
-  every built-in scalar.
+- Because registration is manifest-declared data (not code), a generated validator embeds the
+  declaration and the reference interpreter reads the same one, so both enforce the identical
+  lexeme rule and emit identical diagnostics — the same identity guarantee as every built-in
+  scalar.
 
-## 5. Conformance obligations
+## 5. Fixture obligations
 
-- A registered scalar MUST ship conformance fixtures: positive lexemes (accepted), negative
+- A registered scalar MUST ship validation fixtures: positive lexemes (accepted), negative
   lexemes (each expected `STRICTSPEC_SCALAR_*` code + path), base-mismatch cases, and — where a
   `length` refinement is declared — length-boundary cases. Fixtures are hand-authored from this
-  appendix (fixture-authoring discipline: never regenerated from a target).
+  appendix (fixture-authoring discipline: never regenerated from the toolchain).
 - Resolver/evidence independence: custom scalars are pure lexeme refinements and require NO
-  evidence resolver; their verdict is a function of (lexeme, rule) alone and is therefore
-  trivially identical across targets.
+  evidence resolver; their verdict is a function of (lexeme, rule) alone.
 
 ## 6. Worked examples (strictsql, the first consumer's set)
 
@@ -98,8 +97,7 @@ refinement, from a precise grammar to an effectively-opaque blob.
 - lexeme_rule: `^[A-Za-z_][A-Za-z0-9_]*$` (anchored, RE2).
 - length: optional max (e.g. 63 code points, the common Postgres identifier limit) — expressible
   as a `length` bound; the regex alone does not cap length.
-- bindings: Go `string`, Python `str`, TS `string` (a nominal/branded string type in TS if the
-  consumer wants nominal typing, but the runtime binding is `string`).
+- bindings: Go `string`.
 - rendering: inherits `string` (quoted, escaped, truncated).
 - Honest note: the regex FULLY captures the identifier grammar — this is the precise-refinement
   end of the spectrum.
@@ -112,7 +110,7 @@ refinement, from a precise grammar to an effectively-opaque blob.
   optional `[]` suffix). It captures the SHAPE of a type reference, not its EXISTENCE — whether
   `pg_catalog.frobnicate` is a real type is a domain fact, outside any regex.
 - length: optional.
-- bindings: Go `string`, Python `str`, TS `string`.
+- bindings: Go `string`.
 - rendering: inherits `string`.
 - Honest note: the regex captures surface syntax; SEMANTIC validity (does the type exist in the
   target database) is a consumer-native check downstream, not a scalar refinement.
@@ -124,7 +122,7 @@ refinement, from a precise grammar to an effectively-opaque blob.
 - lexeme_rule: `^.+$` (anchored, matches any non-empty single-or-multiline string) — the regex
   can only assert NON-EMPTINESS; SQL is not a regular language and no RE2 regex validates it.
 - length: a `length` bound (non-empty; optional max) is the ONLY meaningful check.
-- bindings: Go `string`, Python `str`, TS `string`.
+- bindings: Go `string`.
 - rendering: inherits `string` (truncated in messages per the 64-code-point rule).
 - Honest note: this is the EFFECTIVELY-OPAQUE end of the spectrum. sql-expression demonstrates
   the honest LIMIT of regex refinement: strictspec validates only that the value is a non-empty

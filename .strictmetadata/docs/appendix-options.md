@@ -118,10 +118,9 @@ description = "..."
 - The registry refuses a `requires` name it does not declare, an option that
   requires itself, and a cycle of requirements.
 - The ranking parser, the entry loader, and the per-namespace validator live
-  in strictspec's runtime, identically in Go, Python, and TypeScript, so every
-  tool applies the same rules. Each refusal is a catalogued error in the
-  `OPTIONS` area of the error-code appendix. The TypeScript runtime parses
-  document text; loading files from disk is offered in Go and Python.
+  in strictspec's Go runtime, so every tool applies the same rules. Each
+  refusal is a catalogued error in the `OPTIONS` area of the error-code
+  appendix.
 
 ## Dependencies
 

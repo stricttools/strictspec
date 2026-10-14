@@ -1,17 +1,17 @@
 +++
 title = "strictspec"
-description = "strictspec is a schema toolchain that turns one TOML schema into Go, Python and TypeScript validators reporting identical verdicts, codes and messages."
+description = "strictspec is a schema toolchain that turns one TOML schema into a Go validator reporting exact verdicts, codes, and messages."
 nav_order = 0
 +++
 
 # strictspec
 
-strictspec is a schema toolchain that turns one TOML schema into Go, Python and
-TypeScript validators reporting identical verdicts, error codes, paths and
-messages for JSON, TOML and JSONL files. A project declares once, in TOML, what
-its spec files look like; strictspec generates the code that reads, validates
-and version-gates them, and a shared conformance suite holds every target to the
-same answer.
+strictspec is a schema toolchain that turns one TOML schema into a Go validator
+reporting verdicts, error codes, paths, and messages for JSON, TOML, and JSONL
+files. A project declares once, in TOML, what its spec files look like;
+strictspec generates the Go code that reads, validates, and version-gates them,
+and its validation fixtures hold the generated validators and the reference
+interpreter to the same answer.
 
 ## What is here
 
@@ -21,7 +21,7 @@ same answer.
 - **[Surface syntax](appendix-surface-syntax/)** — the concrete TOML spelling of
   every construct.
 - **[Error codes](appendix-error-codes/)** — the code catalogue and the pinned
-  message templates every backend renders from.
+  message templates the runtime renders from.
 - **[Rendering](appendix-rendering/)** — value rendering, the path grammar, and
   did-you-mean.
 - **[Semantics](appendix-semantics/)** — per-construct formal semantics and the
@@ -29,7 +29,7 @@ same answer.
 - **[Custom scalars](appendix-custom-scalars/)** — registering a scalar of your
   own.
 - **[Emitter IR](appendix-emitter-ir/)** — the shared intermediate
-  representation every backend's validator is driven by.
+  representation the generated validators and the interpreter both execute.
 - **[Certificates](appendix-certificates/)** — the diff certificate and
   `doc-diff` output shapes.
 - **[Options](appendix-options/)** — how a repository declares its deviations

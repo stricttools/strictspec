@@ -50,7 +50,7 @@ declared at-rest corpus** — which here is empty. Per decision 25, a consumer w
 discharges via a committed **adjudication file**: a strictspec-schema'd TOML document naming each
 otherwise-unsupported claim with a signed manual justification (`STRICTSPEC_DIFF_ADJUDICATION_*`
 police its validity). For claudestream's first release this is the intended path — the flagship
-budget migration (see `../migrations`) is a conformance FIXTURE, not a live migration, precisely
+budget migration (see `../migrations`) is a test FIXTURE, not a live migration, precisely
 because there are no documents to migrate. Recording the adoption sequence: ship the schema, gate
 the first `format_version` bump via an adjudication file (there is no bypass).
 

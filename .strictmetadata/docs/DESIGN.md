@@ -15,10 +15,10 @@ alongside this document and are versioned with it: the concrete TOML surface syn
 (appendix-certificates.md); the per-construct formal semantics and undecidability catalogue
 (appendix-semantics.md); custom scalar registration (appendix-custom-scalars.md); the
 shared emitter IR (appendix-emitter-ir.md); and the options model, its built-in schemas, and
-its ranking and validation rules (appendix-options.md). Every backend and the internal interpreter
-implement this document and its appendices; the conformance suite enforces it across all four
-targets: verdict, error-code, path, and message-text identity (ordered; messages render from
-the spec-pinned templates). This document, rendered by selfdoc, is also strictspec's published
+its ranking and validation rules (appendix-options.md). The generated Go validators and the
+internal interpreter implement this document and its appendices, and the validation fixtures
+(`go/testdata/fixtures/`) hold both to it: verdict, error-code, path, and message-text identity
+(ordered; messages render from the spec-pinned templates). This document, rendered by selfdoc, is also strictspec's published
 language reference (decision 27) — the canonical, citable manual, versioned with the spec.
 
 Schemas are authored in TOML (canonical, sole source syntax). JSON Schema is an export target
@@ -26,7 +26,7 @@ for editor tooling, never a source.
 
 ## Document model
 
-Format-plural: one model, three syntaxes (JSON, TOML, JSONL) in every backend, including TS.
+Format-plural: one model, three syntaxes (JSON, TOML, JSONL).
 YAML is excluded, FINAL — anchors, implicit typing, and ambiguous scalar forms are hostile to
 lexeme retention and byte-stable writes. Consumers convert once, at migration time.
 
@@ -34,29 +34,25 @@ lexeme retention and byte-stable writes. Consumers convert once, at migration ti
   float lexeme class; datetime kind) and its source lexeme. This is what makes both verdict
   identity (read side) and byte-stable writes (write side) possible.
 - Maps are ordered. A schema section declares whether order is semantic or incidental.
-  "Semantic" means: the typed binding preserves order (Go binds to `[]KV`, TS to `Map` — JS
-  objects reorder integer-like keys, so plain objects are unusable), serialization preserves
-  order, traversal follows it. Constraints do not read order.
-- Comment-preserving TOML round-trip: go-toml-edit (Go), tomlkit (Python), the runtime's own
-  lossless TOML parser (TS). Different engines: round-trip fidelity is within-backend
-  (read-then-write fixpoint), never across backends — backends emit different bytes for the
-  same migrated TOML.
+  "Semantic" means: the typed binding preserves order (Go binds to `[]KV`), serialization
+  preserves order, traversal follows it. Constraints do not read order.
+- Comment-preserving TOML round-trip: go-toml-edit. Round-trip fidelity is a read-then-write
+  fixpoint.
 - JSONL: stream of documents, one per line, each independently validated. Readers process
-  line-by-line (STREAMING) in all backends and the CLI: memory is bounded by the largest line,
+  line-by-line (STREAMING) in the generated validators and the CLI: memory is bounded by the largest line,
   not the file; all-errors-in-one-pass applies per line; positions are byte offsets. LF-only
   splitting; trailing CR invalidates the line. Blank lines and a final line without LF are
   pinned edge cases (see appendix item 9). Append is SINGLE-WRITER by declaration: one O_APPEND
   write per complete line; rewrite is temp+rename (reader-safe, not writer-safe); cross-process
   coordination is the consumer's job. Stream-level constraints use the cross-document
   constraint vocabulary (see Domain checks).
-- JSON duplicate keys are a canonical hard error in every backend (Python must read via
-  object_pairs_hook to even see them; silent last-wins is the typo'd-field failure mode in
-  disguise).
+- JSON duplicate keys are a canonical hard error (silent last-wins is the typo'd-field
+  defect in disguise).
 - Datetime values are first-class scalars (see Construct set): TOML native datetime/date/time
   lexemes bind to them; JSON carries RFC 3339 strings. A TOML datetime lexeme in a field NOT
   typed as a datetime scalar is an ordinary type-mismatch error, not a special case.
 - Scalar rules (canonical): a float lexeme is not an integer (`3` vs `3.0` — lexical,
-  preserved in every backend); booleans are not integers; non-finite numbers rejected.
+  preserved); booleans are not integers; non-finite numbers rejected.
 - Special leaf types: opaque JSON object (verbatim, never introspected) — every such leaf MUST
   declare either `consumer_check = "<name>"` (the named check is CONSUMER-NATIVE code over the
   typed values — declared here so the blind spot is on record; strictspec never executes it) or
@@ -69,22 +65,18 @@ lexeme retention and byte-stable writes. Consumers convert once, at migration ti
 
 ## Primitives appendix (read side, normative)
 
-Scope note: ALL items are CROSS-TARGET normative. Items 1–4, 6, 8, 9, 10, 11 determine
-verdicts, codes, and paths; items 5 and 7 (canonical value rendering, did-you-mean) feed the
-spec-pinned message templates — rendering and suggestions are deterministic and asserted
-identically across all four targets as part of full message-text identity (see Error model).
+Scope note: ALL items are normative. Items 1–4, 6, 8, 9, 10, 11 determine verdicts, codes,
+and paths; items 5 and 7 (canonical value rendering, did-you-mean) feed the spec-pinned message
+templates — rendering and suggestions are deterministic and asserted as part of full
+message-text identity (see Error model).
 
 1. Regex: RE2-compatible subset ONLY, vetted at generation/schema-validation time; anything
-   RE2 rejects makes the SCHEMA invalid. Identical behavior in Go regexp, Python re, JS RegExp
-   within the subset.
+   RE2 rejects makes the SCHEMA invalid. Go's regexp package implements the subset.
 2. String length: Unicode code points. Never bytes, never UTF-16 units.
 3. Integer domain: int64. The safe-integer constraint is NOT auto-applied. A schema must
-   EXPLICITLY declare `safe_integers = true` (schema-wide); when declared, every backend rejects
-   |n| >= 2^53 for that schema, preserving verdict identity across backends, so TS never meets an
-   unrepresentable integer and binds plain `number`. Declaring a TS TARGET for a schema that
-   lacks the declaration is a hard error at generation time telling the author to add it. No
-   BigInt anywhere. Schemas without the declaration keep full int64 in all backends (TS still
-   binds `number`).
+   EXPLICITLY declare `safe_integers = true` (schema-wide); when declared, |n| >= 2^53 is
+   rejected for that schema. No BigInt anywhere. Schemas without the declaration keep full
+   int64.
 4. Number-lexeme classification (all lossless parsers): a lexeme containing `.`, `e`, or `E`
    is a FLOAT (`1e3` is a float); otherwise an INTEGER parsed as int64, overflow = canonical
    hard error. Float lexemes beyond float64 range = canonical hard error. For the NUMBER
@@ -92,8 +84,8 @@ identically across all four targets as part of full message-text identity (see E
    exact-float64 range, or a decimal lexeme beyond float64 precision) = canonical hard error —
    the bound value never silently diverges from the lexeme. `-0`/`-0.0` pinned in the
    rendering table (appendix-rendering.md).
-5. Canonical value rendering (cross-target normative): the normative table for values inside
-   diagnostic messages on every target — integers, floats, datetimes, strings
+5. Canonical value rendering (normative): the normative table for values inside
+   diagnostic messages — integers, floats, datetimes, strings
    (quoting/escaping), booleans, null, negative zero, truncation — is pinned in
    appendix-rendering.md. Messages never embed platform-dependent content; positions are
    structured fields.
@@ -109,16 +101,15 @@ identically across all four targets as part of full message-text identity (see E
      diagnostic of the first field, in schema-declaration order, that is BOTH declared after it and
      present in the document; a missing-required field declared after every present field is emitted
      last. Present-key diagnostics keep document order; missing-required diagnostics keep
-     declaration order among themselves. Conformance: `order-present-keys-document-order` (pure
+     declaration order among themselves. Fixtures: `order-present-keys-document-order` (pure
      present-key reordering) and `order-mixed-present-and-missing` (a trailing missing-required
      after two reordered present violations).
-7. Did-you-mean (cross-target normative): the pinned edit-distance metric, threshold, and
-   tie-break (alphabetical) over the known-key set are in appendix-rendering.md. Every target
-   implements it identically; the `suggestion` field is conformance-asserted as part of
-   message-text identity.
+7. Did-you-mean (normative): the pinned edit-distance metric, threshold, and tie-break
+   (alphabetical) over the known-key set are in appendix-rendering.md. The `suggestion` field
+   is asserted by the validation fixtures as part of message-text identity.
 8. Path rendering: the grammar for rendering a path (segment separators, index form,
-   key-quoting, index-then-key switching) is pinned once in appendix-rendering.md. CROSS-TARGET
-   normative: paths are part of the conformance identity guarantee.
+   key-quoting, index-then-key switching) is pinned once in appendix-rendering.md. Normative:
+   paths are part of the identity guarantee.
 9. Edge inputs: empty text, whitespace-only documents, empty TOML file, JSONL blank lines and
    final-line-without-LF — each has one pinned outcome.
 10. Unicode identity: NO implicit normalization anywhere. Map keys, duplicate detection, and
@@ -152,11 +143,11 @@ The write path is the same drift surface as the read path and gets the same trea
 
 ## Generated API contract (normative)
 
-What every emitter emits, uniformly:
+What the emitter emits:
 
-- TWO entry points per schema per language:
+- TWO entry points per schema:
   1. raw text/bytes -> lossless parse -> validate;
-  2. a TAGGED document-model value -> validate. Tagged values come from the backend's lossless
+  2. a TAGGED document-model value -> validate. Tagged values come from the runtime's lossless
      parser or from GENERATED TYPED CONSTRUCTORS (where integer/float/number/datetime is
      explicit in the type). Raw untagged objects/dicts/maps are NOT accepted — ambiguity never
      enters the model. This serves in-memory mutate-then-validate consumers without
@@ -167,14 +158,11 @@ What every emitter emits, uniformly:
 - The version gate runs first, before structural validation; its diagnostics use the
   three-message pattern with the STRUCTURED remediation payload (got format_version, expected
   format_version, schema id, migration-set id, exact `strictspec migrate` invocation).
-- Typed values are immutable (frozen dataclasses / readonly TS types / Go values). Every
+- Typed values are immutable Go values. Every
   record type gets generated `with_*` copy helpers (per-field copy-on-write; list edits
   produce new values) so mutate-then-revalidate stays typed end to end.
-- Bindings: semantic-order maps -> `[]KV` (Go) / `Map` (TS) / dict-preserving wrapper (Python,
-  insertion-ordered); tuples -> fixed-size forms; `number` -> float64/`number`/`float`;
-  datetimes -> the backend's pinned datetime binding (Go the RETAINED LEXEME as a `string`, kind
-  guard retained; Python datetime/date/time; TS a tagged runtime type — never the platform Date
-  for local kinds). DATETIME-BINDING AMENDMENT (2026-07-27): the Go binding is the
+- Bindings: semantic-order maps -> `[]KV`; tuples -> fixed-size forms; `number` -> float64;
+  datetimes -> the RETAINED LEXEME as a `string`, kind guard retained. DATETIME-BINDING AMENDMENT (2026-07-27): the Go binding is the
   retained lexeme string, NOT a parsed `time.Time`. Parsing to `time.Time` would normalize on read
   (rewrite a `+00:00` offset to `Z`, drop written sub-second precision), violating the
   lexeme-retention invariant (appendix item 11: lexemes retained, no normalization on read). The
@@ -190,17 +178,14 @@ What every emitter emits, uniformly:
   checks in an environment that cannot satisfy a required resolver is a hard error naming the
   resolver. Consumer-native bespoke checks run DOWNSTREAM of validation, in consumer code,
   over the typed values — they emit diagnostics with consumer-prefixed codes via the runtime's
-  constructor and are outside the conformance guarantee by declaration.
+  constructor and are outside the identity guarantee by declaration.
 - BOUNDARY CHECKPOINT ARTIFACTS (see the version-boundary invariant): where the consumer
   manifest declares a store or a channel, the generator additionally emits the store's
   ingest write-door (migrate-then-persist, atomic) and the channel's negotiation/egress
   wrappers. Consumers that declare no boundaries get no checkpoint code — they pay nothing.
 - Generated-file hygiene: every file embeds the generator version, schema name +
   format_version, regeneration command, generated-by header, the MIT/unencumbered notice, and
-  the target ecosystem's machine-readable generated-file and lint-suppression markers
-  (Go `// Code generated by strictspec. DO NOT EDIT.`; Python `# ruff: noqa`; TS
-  `/* eslint-disable */`). Repo-level ignore files that some tools require (prettier) are
-  maintained by `strictspec gen` for the manifest-declared generated paths.
+  Go's machine-readable generated-file marker (`// Code generated by strictspec. DO NOT EDIT.`).
 
 ## Construct set
 
@@ -228,8 +213,8 @@ This SUPERSEDES the former demobl/F/step paper-schema precondition — those don
 
 - Closed records and typed maps (distinct constructs); regex on map keys.
 - Named types; recursive references; documents are trees; a pinned max validation depth with
-  its own canonical diagnostic (value chosen so the diagnostic fires before CPython stack
-  exhaustion — multiple frames per nesting level under the default 1000-frame limit).
+  its own canonical diagnostic (value chosen so the diagnostic fires before a recursive
+  validator exhausts its stack).
 - Shared type-definition files (decision 21): a schema may import named TYPES from dedicated
   type-definition files — TYPES ONLY. No cross-file constraints, no transitive imports. A
   type-definition file is itself a versioned document of the meta-schema (gated and migrated
@@ -263,10 +248,8 @@ This SUPERSEDES the former demobl/F/step paper-schema precondition — those don
   enums and literal constants. The datetime set (`date`/`time`/`datetime`) is COMPLETE for the
   corpus — there is NO `duration` scalar (decision 35); future demand for one routes through
   custom scalar registration, never a new built-in.
-- Safe integers: optional schema-wide `safe_integers = true` declaration; when set, every
-  backend rejects |n| >= 2^53 (verdict identity preserved across backends). MANDATORY whenever
-  the schema declares a TS target — a TS target without it is a hard error at generation time.
-  No BigInt; TS binds plain `number` either way.
+- Safe integers: optional schema-wide `safe_integers = true` declaration; when set,
+  |n| >= 2^53 is rejected. No BigInt.
 - Constraints: numeric ranges (inclusive/exclusive), datetime ranges (same-kind only), string
   length bounds (code points), regex on values and map keys, array length bounds, non-empty
   string.
@@ -304,7 +287,8 @@ TOML document is a canonical hard error, per the construct set).
 ## Cross-field and cross-document constraint vocabulary
 
 Attach at any nesting scope; implemented ONCE in the shared emitter IR (appendix-emitter-ir.md);
-conformance-tested for verdict+code+path+message identity like every structural check.
+tested by the validation fixtures for verdict+code+path+message identity like every structural
+check.
 
 Intra-document forms (decidable from document + schema alone):
 
@@ -325,7 +309,7 @@ Intra-document forms (decidable from document + schema alone):
 
 Cross-document forms (evidence supplied by named resolvers; see Domain checks — these are
 declared in the schema and executed by the constraint engine, so they carry the same
-conformance guarantee as everything above; they are NOT consumer code):
+identity guarantee as everything above; they are NOT consumer code):
 
 | Form | Example origin |
 |---|---|
@@ -419,26 +403,25 @@ strictspec-owned layers — the former third layer, a portable decision language
 1. EVIDENCE RESOLVERS — the only IO surface. A CLOSED, named vocabulary implemented by the
    toolchain and runtimes (e.g. `sibling-document(ref)`, `documents-in(glob)`, `file-exists(p)`,
    `commits-in-range(a,b)`, `resolve-git-object(h)`). Resolvers return DATA (tagged values,
-   fact sets), never verdicts. RESOLVER PARITY is conformance-tested: identical evidence
-   inputs yield identical resolver outputs across targets — the only thing environments may
-   legitimately disagree on is the state of the world itself. A runtime that cannot satisfy a
+   fact sets), never verdicts: identical evidence inputs yield identical resolver outputs —
+   the only thing environments may legitimately disagree on is the state of the world itself. A runtime that cannot satisfy a
    required resolver (git in a browser) hard-errors at check-execution time, naming the
    resolver. Extending the vocabulary is a versioned, changelog-covered language change.
 2. THE DECLARATIVE LAYER — the cross-document constraint vocabulary above. Most real domain
    checks (references, coverage, uniqueness, aggregate count/sum limits) are these forms and
    stop being "domain checks" in any meaningful sense: implemented once in the shared emitter
-   IR (appendix-emitter-ir.md), executed by the CONSTRAINT ENGINE ported to all four targets —
-   verdict-, code-, path-, and message-identical everywhere.
+   IR (appendix-emitter-ir.md), executed by the CONSTRAINT ENGINE — verdict-, code-, path-,
+   and message-identical in the reference interpreter and the generated validators.
 
 THE CONSUMER-NATIVE TAIL: genuinely bespoke checks are ordinary consumer code over the
 generated typed values — invoked by the consumer after validation, emitting diagnostics with
 consumer-prefixed codes via the runtime's constructor. They are outside strictspec and outside
-the conformance guarantee, BY DECLARATION: strictspec has no registration surface, no plugin
+the identity guarantee, BY DECLARATION: strictspec has no registration surface, no plugin
 API, no embedded expression language — consumer checks are not plugged in, they simply run
 downstream. Blobs owned by such a check are declared with the `consumer_check` stance on the
 opaque leaf, so the boundary is on record and inventoried by `strictspec check`. Rationale: the
-constraint vocabulary covers the portable majority; a bespoke expression DSL hand-ported to
-four targets was a perpetual drift surface serving only the tail that is bespoke anyway.
+constraint vocabulary covers the portable majority; a bespoke expression DSL was a perpetual
+drift surface serving only the tail that is bespoke anyway.
 CEL-class open computation remains expressly rejected — there is nothing left to embed it in; a
 check shape that recurs across consumers is a vocabulary-evolution conversation, not an escape
 hatch.
@@ -633,8 +616,8 @@ semantic delta — added/removed/changed with typed values, array element moves 
 unique-by. Pinned output shape (in appendix-certificates.md). For agents reviewing spec changes
 as structure, not text.
 
-Both commands are toolchain-only analyses; conformance is golden-output determinism, not
-multi-target execution.
+Both commands are toolchain-only analyses, tested by golden-output determinism (the toolchain
+fixtures).
 
 ## Error model
 
@@ -643,19 +626,18 @@ multi-target execution.
   every diagnostic is an error.
 - Codes are prefixed strings; `STRICTSPEC_*` reserved. STABILITY POLICY: codes are permanent —
   never renamed, never reused. Message text is SPEC-PINNED (below) and changes only as a
-  versioned appendix change; consumers may assert codes AND rely on message identity across
-  targets. The complete code catalogue lives in appendix-error-codes.md.
+  versioned appendix change; consumers may assert codes AND rely on message identity. The complete code catalogue lives in appendix-error-codes.md.
 - MESSAGE TEMPLATES (normative, appendix-error-codes.md): every `STRICTSPEC_*` code has a
   spec-pinned template — fixed prose plus typed slots (path, expected, got, suggestion), slot
   values rendered per the canonical value-rendering table (appendix-rendering.md) and
-  suggestions computed per the pinned did-you-mean algorithm (appendix-rendering.md). Generators
-  emit each runtime's renderer FROM the templates via the shared emitter IR
-  (appendix-emitter-ir.md); nothing is hand-translated per target. Consumer-prefixed codes (from
-  consumer-native checks) have consumer-owned templates, outside these appendices and outside
-  the conformance surface.
-- CONFORMANCE GUARANTEE: ordered verdict + code + path + message-text identity across all four
-  targets — the suite asserts exactly what consumers may rely on, and agents (the primary
-  consumers) read messages, so messages are guaranteed.
+  suggestions computed per the pinned did-you-mean algorithm (appendix-rendering.md). The
+  runtime's renderer is generated FROM the templates (tools/gencodes); nothing is
+  hand-translated. Consumer-prefixed codes (from consumer-native checks) have consumer-owned
+  templates, outside these appendices and outside the identity surface.
+- IDENTITY GUARANTEE: ordered verdict + code + path + message-text identity between the
+  reference interpreter and the generated validators — the validation fixtures assert exactly
+  what consumers may rely on, and agents (the primary consumers) read messages, so messages are
+  guaranteed.
 - APPENDIX STABILITY POLICY: the appendices (path grammar, traversal order, datetime lexeme
   rules, edge-input outcomes, canonical serialization, message templates + code catalogue in
   appendix-error-codes.md, value rendering + path grammar + did-you-mean in appendix-rendering.md,
@@ -665,7 +647,7 @@ multi-target execution.
   the shared emitter IR in appendix-emitter-ir.md, and the options model, its built-in schemas,
   and its ranking and validation rules in appendix-options.md) are VERSIONED.
   ANY change is a breaking-class, changelog-covered entry in the strictspec release that ships
-  it and triggers full conformance-fixture regeneration. Appendix-driven behavior changes are
+  it and triggers a full review of the validation fixtures. Appendix-driven behavior changes are
   always declared, never silent. The proof-object format and model-search order are NOT current
   appendices — they are deferred to the future analyzer (decision 25).
 - Paths: index-then-key switching, rendered per appendix-rendering.md.
@@ -694,8 +676,8 @@ files are documents of the meta-schema. Meta-schema rules: `default` is not a co
 presence fails the meta-schema with a dedicated diagnostic (decision 30); alias may
 not target a discriminator; tuple/length-bounds exclusive; every regex must compile under RE2;
 every opaque JSON object leaf declares `consumer_check` or `unchecked = true` with a mandatory
-`unchecked_reason`; `safe_integers` is a recognized schema-wide declaration, and declaring a
-TS target without it is a hard error at generation time; a reachable nullable union is
+`unchecked_reason`; `safe_integers` is a recognized schema-wide declaration; a reachable
+nullable union is
 rejected when the target document syntax is known to be TOML; datetime range constraints must
 compare same-kind scalars; cross-document constraint forms must reference only declared
 resolvers; named-type imports resolve only to type-definition files (types only — no cross-file
@@ -705,7 +687,7 @@ declares `role` (`"schema"` or `"type-definitions"`) — the distinction is a de
 never inferred from shape — and a `role = "schema"` file names its `root` type. All of this is
 spelled in the single pinned surface (appendix-surface-syntax.md).
 The consumer manifest (strictspec.toml) is a document of a toolchain-shipped built-in schema —
-same gating, same migrations, meta-fixtures in conformance; it additionally declares stores
+same gating, same migrations; it additionally declares stores
 and channels for boundary-checkpoint generation.
 The options documents are documents of three further toolchain-shipped built-in schemas,
 `options-entries` (a subject document under `.strictmetadata/options/`), `options-registry` (a
@@ -715,7 +697,8 @@ reader applies beyond their shape.
 
 Bootstrap order (entered by hand exactly once): document model -> hand-written meta-schema
 check -> interpreter (full language) -> generator -> thereafter the meta-schema is validated by
-the interpreter and the interpreter is pinned as the fourth conformance target.
+the interpreter, and the interpreter is held to identical outcomes with the generated
+validators.
 
 Notation core adapted from incantino: header (name, meta_version, format_version,
 description) + per-field type/required/values/description (the donated notation's `default`

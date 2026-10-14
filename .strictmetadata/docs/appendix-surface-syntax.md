@@ -9,7 +9,7 @@ description = "The single concrete TOML surface syntax for every strictspec auth
 > and migration files. It is the SINGLE PINNED SPELLING — the toolchain-shipped built-in
 > meta-schema (the schema of schemas) is authored in exactly this surface and MUST equal it.
 > VERSIONED: any change to the surface is a breaking-class, changelog-covered release event that
-> triggers full conformance-fixture regeneration.
+> triggers a full review of the validation fixtures.
 >
 > META NOTE: strictspec is in its GROWTH PHASE — this surface is STABLE BUT GROWING; refinements
 > (key spellings, site shapes) are normal and expected, recorded per-release through the existing
@@ -174,8 +174,8 @@ Every schema and type-definition file opens with BARE top-level keys (before any
 | `role` | all | `"schema"` \| `"type-definitions"` (explicit discriminator — see §11) |
 | `description` | all | prose |
 | `root` | schema files | names the `[types.<Name>]` that is the document root |
-| `targets` | schema files | codegen targets, e.g. `["python", "go", "ts"]` |
-| `safe_integers` | schema files | optional `true`; mandatory when `"ts" ∈ targets` |
+| `targets` | schema files | codegen targets, e.g. `["go"]` |
+| `safe_integers` | schema files | optional `true` |
 | `imports` | files that import | array of `{ file = "<path>", types = ["<T>", …] }` (section 6) |
 
 A `role = "type-definitions"` file declares TYPES ONLY: it carries `[types.*]` blocks, no `root`, no
@@ -292,7 +292,7 @@ name = "identifier"
 base = "string"                       # a builtin scalar lexeme class it refines
 lexeme_rule = "^[A-Za-z_][A-Za-z0-9_]*$"   # anchored RE2 over the source lexeme
 length = { max = 63 }                 # optional: { min?, max?, non_empty? }
-bindings = { go = "string", python = "str", ts = "string" }   # one per declared target
+bindings = { go = "string" }   # go is the only binding language; python and ts are refused
 rendering = { inherits = "string" }   # declares base-class rendering inheritance (§2 of custom-scalars)
 ```
 

@@ -1,6 +1,6 @@
 # strictspec migration — claudestream budget (FLAGSHIP shape-op example)
 #
-# This is a conformance FIXTURE, not a live migration. The field change
+# This is a test FIXTURE, not a live migration. The field change
 # (max_cost_usd -> cost_thresholds) happened in claudestream code long ago and
 # NO at-rest documents exist (see ../claudestream-agent gap-note #3). It exists to
 # exercise: rename_field + wrap_in_array, and a PARTIAL down-migration whose

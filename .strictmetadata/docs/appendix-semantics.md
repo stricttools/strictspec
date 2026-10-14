@@ -96,7 +96,7 @@ in `appendix-error-codes.md`.
 - Accepted-set: the least fixed point of the type's defining equation, INTERSECTED with the set
   of trees whose nesting does not exceed the pinned maximum validation depth.
 - Interaction: exceeding the depth is `STRICTSPEC_DEPTH_EXCEEDED`, a canonical diagnostic fired
-  before CPython stack exhaustion. The depth cap makes the accepted set decidable and the
+  before a recursive validator exhausts its stack. The depth cap makes the accepted set decidable and the
   automaton finite-state.
 
 ### 3.5 Discriminated union
@@ -187,11 +187,9 @@ in `appendix-error-codes.md`.
   exclusive with tuple form (`STRICTSPEC_SCHEMA_TUPLE_ARRAY_BOUNDS`). Codes `STRICTSPEC_VALUE_*`.
 
 ### 3.17 safe_integers mode
-- Informal: schema-wide `safe_integers = true`; every backend rejects |n| ≥ 2^53.
+- Informal: schema-wide `safe_integers = true`; |n| ≥ 2^53 is rejected.
 - Accepted-set: intersects every integer/number position with (−2^53, 2^53).
-- Interaction: MANDATORY when a TS target is declared (`STRICTSPEC_SCHEMA_TS_WITHOUT_SAFE_INTEGERS`);
-  TS binds plain `number` either way; verdict identity across backends preserved. Enabling it on
-  an existing schema SHRINKS the set (bump).
+- Interaction: opt-in. Enabling it on an existing schema SHRINKS the set (bump).
 
 ### 3.18 Tuples
 - Informal: a fixed-arity ordered sequence with per-position types.
@@ -237,12 +235,12 @@ in `appendix-error-codes.md`.
 
 ### 3.22 Custom scalar registration
 - Informal: a named scalar refining a base lexeme class via an anchored RE2 lexeme rule, with
-  per-target bindings and rendering (see `appendix-custom-scalars.md`).
+  a Go binding and rendering (see `appendix-custom-scalars.md`).
 - Accepted-set: intersects the base lexeme class's set with the anchored-regex language (plus any
   declared length/non-empty refinement for effectively-opaque scalars).
 - Interaction: registration lives in the manifest and travels with the schema; an unregistered
-  reference is `STRICTSPEC_SCALAR_UNKNOWN`; a missing per-target binding is
-  `STRICTSPEC_SCALAR_NO_BINDING`. Regex refinement is honest about its limit — a scalar like
+  reference is `STRICTSPEC_SCALAR_UNKNOWN`; a binding naming a language strictspec no longer
+  generates (`python`, `ts`) is refused. Regex refinement is honest about its limit — a scalar like
   `sql-expression` refines only length/non-empty, not grammaticality.
 
 ### 3.23 Per-field descriptions
@@ -279,7 +277,7 @@ the set (rejected — see `DESIGN.md` vocabulary rejection rationale).
 
 ### 3.25 Cross-document constraint forms
 Evidence supplied by named resolvers (the closed IO vocabulary); executed by the constraint
-engine; SAME conformance guarantee as structural checks. Each intersects the accepted set with
+engine; SAME identity guarantee as structural checks. Each intersects the accepted set with
 trees satisfying the predicate GIVEN THE RESOLVER EVIDENCE — so the accepted set is relative to
 the evidence (a fact recorded in the undecidability catalogue, section 4).
 

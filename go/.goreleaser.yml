@@ -2,15 +2,11 @@
 #
 # This ships the `strictspec` command as per-OS/arch archives plus a
 # checksums.txt on the go-strictspec GitHub Release. Those archives are the
-# SINGLE binary source of truth: the PyPI and npm packages carry first-run
-# launcher shims that download the exact-version archive from this Release and
-# SHA-256-verify it against checksums.txt (root DESIGN.md decision 31).
+# SINGLE binary source of truth.
 #
 # Asset naming is goreleaser's DEFAULT (`<ProjectName>_<Version>_<Os>_<Arch>`)
 # with `project_name: strictspec`, so assets are e.g.
-# `strictspec_0.1.0_linux_amd64.tar.gz`. The launcher shims reconstruct exactly
-# these names -- a custom name_template would silently break them, so it is
-# deliberately left default.
+# `strictspec_0.1.0_linux_amd64.tar.gz`.
 #
 # MONOREPO TAG HANDLING: this is an rlsbl monorepo releasable. Release tags are
 # `go-strictspec@vX.Y.Z`, which is NOT bare semver. OSS goreleaser has no
