@@ -26,16 +26,3 @@ target = "go"
 local = false
 artifact = "binary"
 install_paths = ["./cmd/strictspec"]
-
-[[members]]
-path = "python"
-name = "py-strictspec"
-releasable = "strictspec"
-import_name = "strictspec"
-targets = [{ name = "pypi" }]
-
-[[members]]
-path = "ts"
-name = "ts-strictspec"
-releasable = "strictspec"
-targets = [{ name = "npm" }]
