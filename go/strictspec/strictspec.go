@@ -1,10 +1,9 @@
 // Package strictspec: Define a schema once in TOML, and generate the full
-// toolchain in your language: validation, versioning, migrations, etc. --
-// First-class support for Go, Python, and TypeScript.
+// toolchain: validation, versioning, migrations, etc.
 //
 // This package is the public Go runtime: the schema toolchain turns one TOML
-// schema into Go, Python and TypeScript validators reporting identical verdicts,
-// error codes, paths and messages for JSON, TOML and JSONL files.
+// schema into a Go validator reporting verdicts, error codes, paths, and
+// messages for JSON, TOML, and JSONL files.
 //
 // This is the PUBLIC surface that generated strictspec validator code imports
 // (go/DESIGN.md, "Runtime subpackage"). It is deliberately minimal and
@@ -52,9 +51,8 @@ const (
 	MaxGeneratedCodeFormat = 2
 )
 
-// pairingMessage renders the one refusal text, shared by every entry point below
-// and held byte-identical with the Python and TypeScript runtimes by the
-// conformance suite.
+// pairingMessage renders the one refusal text, shared by every entry point
+// below.
 func pairingMessage(format, generatedBy string) string {
 	return fmt.Sprintf(
 		"strictspec generated-code format mismatch:\n"+

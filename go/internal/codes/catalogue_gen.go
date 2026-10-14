@@ -1093,14 +1093,6 @@ var catalogue = map[string]Entry{
 			{Name: "path", Type: SlotTypePath},
 		},
 	},
-	"STRICTSPEC_SCHEMA_TS_WITHOUT_SAFE_INTEGERS": {
-		Code:     "STRICTSPEC_SCHEMA_TS_WITHOUT_SAFE_INTEGERS",
-		Area:     "SCHEMA",
-		Template: "Schema {schema} declares a TypeScript target but omits `safe_integers = true`; a TS target requires it.",
-		Slots: []SlotSpec{
-			{Name: "schema", Type: SlotTypeIdentifier},
-		},
-	},
 	"STRICTSPEC_SCHEMA_TUPLE_ARRAY_BOUNDS": {
 		Code:     "STRICTSPEC_SCHEMA_TUPLE_ARRAY_BOUNDS",
 		Area:     "SCHEMA",

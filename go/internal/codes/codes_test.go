@@ -7,8 +7,8 @@ import (
 
 func TestCatalogueLoaded(t *testing.T) {
 	all := All()
-	if len(all) != 150 {
-		t.Errorf("catalogue has %d codes, want 150 (must match the appendix)", len(all))
+	if len(all) != 149 {
+		t.Errorf("catalogue has %d codes, want 149 (must match the appendix)", len(all))
 	}
 }
 

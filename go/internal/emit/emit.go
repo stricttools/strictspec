@@ -18,8 +18,8 @@
 //
 // Messages are rendered by the runtime's catalogue-driven renderer (generated
 // once from the spec templates by tools/gencodes): there are NO hand-written
-// message strings anywhere in generated code — the single-renderer design is the
-// strongest form of the four-target message-identity guarantee.
+// message strings anywhere in generated code, so a generated validator and the
+// reference interpreter render identical messages.
 //
 // Determinism: emission walks the schema in declaration order; regenerating
 // twice is byte-identical (the emitter is strictspec's own canonical formatter —
@@ -39,9 +39,9 @@ import (
 )
 
 // GeneratedCodeFormat is the generated-code format this generator writes into
-// every file it emits, in every target language. It is the paired runtime's own
-// upper bound: generator and runtimes ship as one release, so what this
-// generator emits is by construction the newest shape the runtimes read. Bumping
+// every file it emits. It is the paired runtime's own upper bound: generator
+// and runtime ship as one release, so what this generator emits is by
+// construction the newest shape the runtime reads. Bumping
 // it is the discipline the emitted-shape pin (cmd/strictspec's
 // TestEmittedShapeIsPinned) enforces: any change to what the emitter writes
 // requires this number to move, together with the runtime's accepted range.

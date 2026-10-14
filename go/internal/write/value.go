@@ -17,9 +17,7 @@
 //     (STRICTSPEC_SERIALIZE_NONCURRENT) when asked to serialize a document at any
 //     format_version other than the schema's current one.
 //
-// Within-backend fidelity: the Go, Python, and TS backends emit different bytes
-// for the same migrated document; each backend is self-consistent (a read-then-
-// write fixpoint). This package is the Go backend.
+// Fidelity: the write path is self-consistent (a read-then-write fixpoint).
 package write
 
 import (

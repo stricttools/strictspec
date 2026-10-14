@@ -6,8 +6,7 @@ package strictspec
 // it offers), and upstream (.strictmetadata/upstream/upstream.toml) — plus the
 // readers that validate a document's SHAPE against them and bind it to typed
 // values. Shape diagnostics are ordinary catalogued STRICTSPEC_* diagnostics from
-// the shared executor, so they are identical across the Go, Python, and
-// TypeScript runtimes.
+// the shared executor.
 
 import (
 	_ "embed"

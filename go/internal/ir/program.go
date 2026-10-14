@@ -1,12 +1,11 @@
 // Package ir is the strictspec SHARED EMITTER IR and its executor
 // (.strictmetadata/docs/appendix-emitter-ir.md). It is the single intermediate representation
-// from which every target's validator is driven: the reference interpreter
+// from which every validator is driven: the reference interpreter
 // (internal/interp) and the generated Go validators (via the public runtime,
 // go/strictspec) both compile a schema into an ir.Program and run the SAME
-// ir.Execute over it. That shared execution is the mechanism behind the
-// four-target verdict+code+path+message identity guarantee — the identity
-// argument is real (one executor), not aspirational (four hand-written checks
-// that merely agree).
+// ir.Execute over it. That shared execution is the mechanism behind their
+// verdict+code+path+message identity: one executor, not two hand-written checks
+// that merely agree.
 //
 // # The IR node set (appendix-emitter-ir.md §2), mapped to this executor
 //
@@ -31,14 +30,14 @@
 //	  path-push / path-pop           the diag.Path threaded through walk (append*)
 //	  one-pass-accumulate            diag.Diagnostics (emission order; no reorder)
 //
-// Ordering is a property of the IR, not of any target: the executor fixes the
-// traversal and emission order once, so every target that runs it accumulates
+// Ordering is a property of the IR, not of any caller: the executor fixes the
+// traversal and emission order once, so everything that runs it accumulates
 // diagnostics in the identical order.
 //
 // What is NOT in the IR (appendix §4): no expressions (constraint forms are a
 // closed named vocabulary, conditions are the closed six-kind set), no consumer
 // hooks, no target-specific nodes, no severity. Those exclusions keep the
-// four-target identity tractable.
+// IR small and its execution identical wherever it runs.
 package ir
 
 import (
@@ -76,10 +75,10 @@ func (p *Program) FormatVersion() int64 { return p.Schema.FormatVersion }
 // Compile lowers a resolved schema plus its custom-scalar registry into an
 // executable Program. The schema's imports MUST already be resolved into
 // s.Types (the caller runs schema.ResolveImports, or the runtime's in-memory
-// equivalent, first) — Compile performs no IO. This is the single lowering used
-// by every target: the interpreter compiles the on-disk schema; the generator
-// compiles the same schema at gen time and the runtime compiles the embedded
-// schema at load time, so all targets execute the identical Program.
+// equivalent, first) — Compile performs no IO. This is the single lowering: the
+// interpreter compiles the on-disk schema; the generator compiles the same
+// schema at gen time and the runtime compiles the embedded schema at load time,
+// so both execute the identical Program.
 func Compile(s *schema.Schema, scalars map[string]*schema.Scalar) *Program {
 	if scalars == nil {
 		scalars = map[string]*schema.Scalar{}

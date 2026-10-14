@@ -73,60 +73,23 @@ func genHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strictcli
 	return strictcli.Exit(0)
 }
 
-// emitTarget dispatches one generation target to its language emitter. The
-// manifest's target list drives which emitters run; a non-configured target is
-// simply absent (never touched); an UNKNOWN target lang is a hard error. This is
-// the single point where `strictspec gen` and `strictspec check` agree on what a
-// target produces, so the freshness (drift) gate compares against the exact bytes
-// gen would write.
+// emitTarget generates one target's source. manifest.Load refuses every
+// target language but go, so every target reaching here is a Go target. This is
+// the single point where `strictspec gen` and `strictspec check` agree on what
+// a target produces, so the freshness (drift) check compares against the exact
+// bytes gen would write.
 func emitTarget(loaded *emit.Loaded, tgt manifest.TargetEntry, regenCmd string) (string, error) {
-	switch tgt.Lang {
-	case "go":
-		pkg := tgt.Package
-		if pkg == "" {
-			pkg = emitPackageDefault(loaded.Schema.Name)
-		}
-		return emit.GenerateGo(loaded.Schema, loaded.Scalars, emit.GoParams{
-			Package:          pkg,
-			MainFile:         loaded.MainFile,
-			Files:            loaded.Files,
-			GeneratorVersion: strictspec.Version,
-			RegenCommand:     regenCmd,
-		})
-	case "python":
-		return emit.GeneratePython(loaded.Schema, emit.PyParams{
-			MainFile:         loaded.MainFile,
-			Files:            loaded.Files,
-			GeneratorVersion: strictspec.Version,
-			RegenCommand:     regenCmd,
-		})
-	case "ts":
-		// A TS target REQUIRES a schema-wide `safe_integers = true` declaration
-		// (ts/DESIGN.md — Numbers in TS): a TS target without it is a hard error at
-		// generation time, telling the author to add it. This is enforced here (gen
-		// orchestration), not in the emitter, so direct emitter callers stay free.
-		if !loaded.Schema.SafeIntegers {
-			return "", diagError(diag.Diagnostic{
-				Code:  "STRICTSPEC_SCHEMA_TS_WITHOUT_SAFE_INTEGERS",
-				Path:  diag.NewPath(),
-				Slots: map[string]diag.Slot{"schema": diag.SlotIdentifier{Name: loaded.Schema.Name}},
-			})
-		}
-		return emit.GenerateTypeScript(loaded.Schema, emit.TSParams{
-			MainFile:         loaded.MainFile,
-			Files:            loaded.Files,
-			GeneratorVersion: strictspec.Version,
-			RegenCommand:     regenCmd,
-		})
-	default:
-		return "", fmt.Errorf("unknown generation target lang %q (known: go, python, ts)", tgt.Lang)
+	pkg := tgt.Package
+	if pkg == "" {
+		pkg = emitPackageDefault(loaded.Schema.Name)
 	}
-}
-
-// diagError renders a catalogued diagnostic as a CLI hard error, so orchestration
-// errors carry the pinned message text rather than an ad-hoc string.
-func diagError(d diag.Diagnostic) error {
-	return fmt.Errorf("%s", render.Render(d))
+	return emit.GenerateGo(loaded.Schema, loaded.Scalars, emit.GoParams{
+		Package:          pkg,
+		MainFile:         loaded.MainFile,
+		Files:            loaded.Files,
+		GeneratorVersion: strictspec.Version,
+		RegenCommand:     regenCmd,
+	})
 }
 
 // --- validate ---------------------------------------------------------------

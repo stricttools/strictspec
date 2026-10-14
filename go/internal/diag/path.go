@@ -4,8 +4,8 @@ import "strconv"
 
 // Path is a diagnostic path: an ordered sequence of steps rooted at the document
 // root, optionally anchored to a JSONL stream position. It renders per the path
-// grammar (appendix-rendering.md Part B) and is part of the conformance identity
-// guarantee (byte-identical across all four targets).
+// grammar (appendix-rendering.md Part B), byte-identical whether the reference
+// interpreter or a generated validator produced the diagnostic.
 //
 // The first step of a well-formed path is Root; Render simply concatenates the
 // rendering of each step in order, then appends the JSONL anchor if present.

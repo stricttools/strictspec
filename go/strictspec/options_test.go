@@ -9,9 +9,8 @@ import (
 	"testing"
 )
 
-// The shape cases are shared with the Python and TypeScript runtimes' tests
-// (they read this same file), so every runtime asserts the identical bound
-// values and the identical ordered code + path + message diagnostics.
+// The shape cases hold the expected bound values and the expected ordered
+// code + path + message diagnostics.
 const shapeCasesFile = "testdata/options/shape-cases.json"
 
 type shapeCase struct {

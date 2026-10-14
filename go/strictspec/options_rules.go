@@ -6,9 +6,7 @@ package strictspec
 // settled / debt / waiting-on-the-tool classification.
 //
 // Every refusal is a catalogued STRICTSPEC_OPTIONS_* diagnostic
-// (appendix-error-codes.md, section 21a) rendered from its pinned template, so
-// the codes, paths, and messages are identical to the Python and TypeScript
-// runtimes', which apply the same rules over the same shared test cases.
+// (appendix-error-codes.md, section 21a) rendered from its pinned template.
 
 import (
 	"regexp"

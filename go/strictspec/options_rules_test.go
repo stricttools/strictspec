@@ -9,8 +9,7 @@ import (
 	"testing"
 )
 
-// The rules cases are shared with the Python and TypeScript runtimes' tests,
-// so every runtime asserts the identical diagnostics (code, path, and rendered
+// The rules cases hold the expected diagnostics (code, path, and rendered
 // message) and classifications.
 const rulesCasesFile = "testdata/options/rules-cases.json"
 

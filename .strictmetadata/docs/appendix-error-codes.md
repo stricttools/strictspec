@@ -110,7 +110,7 @@ position (line + byte offset, per `appendix-rendering.md`). All are per-format.
 | `STRICTSPEC_PARSE_JSON_SYNTAX` | `JSON parse error at {path}: {detail}.` | detail: string | Malformed JSON token/structure. `{path}` is the byte position. |
 | `STRICTSPEC_PARSE_JSON_TRAILING` | `Trailing content after the JSON document at {path}.` | — | Bytes after the top-level value. |
 | `STRICTSPEC_PARSE_JSON_EMPTY` | `Empty input: expected a JSON document, found none.` | — | Empty or whitespace-only (see rendering appendix edge inputs). |
-| `STRICTSPEC_PARSE_JSON_DUPLICATE_KEY` | `Duplicate key {key} in JSON object at {path}.` | key: string, path: path | Hard error in every backend (Python via object_pairs_hook). |
+| `STRICTSPEC_PARSE_JSON_DUPLICATE_KEY` | `Duplicate key {key} in JSON object at {path}.` | key: string, path: path | Hard error. |
 | `STRICTSPEC_PARSE_JSONL_LINE_SYNTAX` | `JSONL parse error on line {line} at {path}: {detail}.` | line: int, path: path, detail: string | Per-line; other lines still processed (one-pass per line). |
 | `STRICTSPEC_PARSE_JSONL_TRAILING_CR` | `Line {line} ends with a carriage return; JSONL is LF-only.` | line: int | Trailing CR invalidates the line. |
 | `STRICTSPEC_PARSE_JSONL_BLANK_LINE` | `Blank line {line} is not a valid JSONL document.` | line: int | Pinned edge case (rendering appendix item 9). |
@@ -134,7 +134,6 @@ Emitted while validating a schema (a document of the meta-schema) or the manifes
 | `STRICTSPEC_SCHEMA_DATETIME_KIND_MISMATCH` | `Datetime range at {path} compares an offset scalar with a local scalar; comparisons must be same-kind.` | path: path | Cross-kind comparison ban. |
 | `STRICTSPEC_SCHEMA_OPAQUE_NO_STANCE` | `Opaque JSON leaf {path} declares neither `consumer_check` nor `unchecked`; one is required.` | path: path | Decision 29. |
 | `STRICTSPEC_SCHEMA_UNCHECKED_NO_REASON` | `Leaf {path} declares `unchecked = true` without the mandatory `unchecked_reason`.` | path: path | Decision 29. |
-| `STRICTSPEC_SCHEMA_TS_WITHOUT_SAFE_INTEGERS` | `Schema {schema} declares a TypeScript target but omits `safe_integers = true`; a TS target requires it.` | schema: identifier | Hard error at `gen` time. |
 | `STRICTSPEC_SCHEMA_UNKNOWN_META_KEY` | `Unknown meta-schema key {key} at {path}.{suggestion}` | key: string, path: path, suggestion: string | Unknown-key invariant applied to schemas; suggestion appended when within did-you-mean threshold. |
 | `STRICTSPEC_SCHEMA_UNKNOWN_TYPE_REF` | `Field {path} references named type {name}, which is not declared or imported.` | path: path, name: identifier | Dangling type reference. |
 | `STRICTSPEC_SCHEMA_NODE_KIND_UNION_AMBIGUOUS` | `Undiscriminated union at {path} has two arms of the same node kind ({kind}); same-kind arms require a discriminator.` | path: path, kind: string | Node-kind union rule (decision 15). |
@@ -298,7 +297,7 @@ is no separate union code for that case.
 | Code | Template | Slots | Notes |
 |---|---|---|---|
 | `STRICTSPEC_ALIAS_BOTH_PRESENT` | `Both {alias} and canonical {canonical} are present at {path}; provide exactly one.` | alias: identifier, canonical: identifier, path: path | Aliases are exempt from unknown-key errors but both-present is an error. |
-| `STRICTSPEC_DEPTH_EXCEEDED` | `Document nesting at {path} exceeds the maximum validation depth of {limit}.` | path: path, limit: int | Fires before CPython stack exhaustion; canonical diagnostic. |
+| `STRICTSPEC_DEPTH_EXCEEDED` | `Document nesting at {path} exceeds the maximum validation depth of {limit}.` | path: path, limit: int | Fires before stack exhaustion; canonical diagnostic. |
 <!-- The two pipes in `\|n\|` are ESCAPED so this row is valid markdown (a literal `|`
      inside a table cell must be `\|`). The rendered template text is `(|n| >= 2^53)`
      unchanged. Do not "un-escape" them. (formatting amendment 2026-07-27) -->

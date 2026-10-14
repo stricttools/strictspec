@@ -1,13 +1,7 @@
-node_modules/
 dist/
-dist-test/
 __pycache__/
 *.pyc
-*.egg-info/
-.pytest_cache/
 .ruff_cache/
-.mypy_cache/
-.venv/
 *.log
 .DS_Store
 .rlsbl-notes-*.tmp

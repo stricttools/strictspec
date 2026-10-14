@@ -1,7 +1,7 @@
 // Package manifest reads the consumer manifest (strictspec.toml): the
 // file-driven input to `strictspec gen` and `strictspec check`. The manifest
 // declares the consumer's schema files and, per schema, the generation targets
-// (language + output path + package/module name). It carries a format_version
+// (language + output path + package name). go is the only generation target. It carries a format_version
 // and is itself a document of a toolchain-shipped built-in schema (.strictmetadata/docs/DESIGN.md
 // — Meta-schema); this reader parses the pinned surface into typed structs.
 package manifest
@@ -42,9 +42,9 @@ type SchemaEntry struct {
 
 // TargetEntry declares one generation target for a schema.
 type TargetEntry struct {
-	Lang    string // "go" | "python" | "ts"
+	Lang    string // always "go": Load refuses every other language
 	Output  string // output path, relative to the manifest directory
-	Package string // Go package / Python module / TS module name
+	Package string // Go package name
 }
 
 // Load reads and parses a manifest file. A parse error or a structurally
@@ -139,6 +139,9 @@ func Load(path string) (*Manifest, error) {
 						Slots: map[string]diag.Slot{"key": diag.SlotString{S: "lang"}},
 					})
 				}
+				if err := checkTargetLang(path, i, j, te.Lang); err != nil {
+					return nil, err
+				}
 				if te.Output == "" {
 					return nil, diagErr(path, diag.Diagnostic{
 						Code:  "STRICTSPEC_TYPE_MISSING_REQUIRED",
@@ -159,6 +162,23 @@ func Load(path string) (*Manifest, error) {
 		})
 	}
 	return m, nil
+}
+
+// removedTargets are the generation targets strictspec had and removed; a
+// manifest naming one is refused with a message saying so.
+var removedTargets = map[string]bool{"python": true, "ts": true}
+
+// checkTargetLang refuses a target language other than go.
+func checkTargetLang(manifestPath string, schema, target int, lang string) error {
+	if lang == "go" {
+		return nil
+	}
+	if removedTargets[lang] {
+		return fmt.Errorf("manifest %s: schemas[%d].targets[%d].lang = %q: the %s generation target was removed; the only generation target is \"go\"",
+			manifestPath, schema, target, lang, lang)
+	}
+	return fmt.Errorf("manifest %s: schemas[%d].targets[%d].lang = %q is not a generation target; the only generation target is \"go\"",
+		manifestPath, schema, target, lang)
 }
 
 func entryOf(rec doc.Node, key string) (doc.Node, bool) {
