@@ -18,7 +18,7 @@ import (
 func fixturesDir(t *testing.T) string {
 	t.Helper()
 	_, file, _, _ := runtime.Caller(0)
-	return filepath.Clean(filepath.Join(filepath.Dir(file), "..", "..", "..", "conformance", "fixtures"))
+	return filepath.Clean(filepath.Join(filepath.Dir(file), "..", "..", "testdata", "fixtures"))
 }
 
 type want struct {
@@ -26,7 +26,7 @@ type want struct {
 	path string
 }
 
-// runFixture loads a fixture schema + input like the harness adapter does and
+// runFixture loads a fixture schema + input and
 // returns the observed diagnostics.
 func runFixture(t *testing.T, schemaRel, inputRel, syntax string, evidence map[string][]map[string]any) []diag.Diagnostic {
 	t.Helper()
@@ -95,8 +95,9 @@ func assertDiags(t *testing.T, got []diag.Diagnostic, wants []want) {
 		if got[i].Path.Render() != w.path {
 			t.Errorf("diag[%d] path = %s, want %s", i, got[i].Path.Render(), w.path)
 		}
-		// Rendering must not panic (message identity is asserted end-to-end by the
-		// harness; here we assert code+path and that the message renders).
+		// Rendering must not panic (message identity is asserted end-to-end by
+		// the validation fixtures; here we assert code+path and that the message
+		// renders).
 		_ = render.Render(got[i])
 	}
 }

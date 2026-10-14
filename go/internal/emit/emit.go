@@ -42,9 +42,9 @@ import (
 // every file it emits, in every target language. It is the paired runtime's own
 // upper bound: generator and runtimes ship as one release, so what this
 // generator emits is by construction the newest shape the runtimes read. Bumping
-// it is the discipline the conformance suite's emitted-shape pin enforces — any
-// change to what the emitters write requires this number to move, in lockstep
-// with every runtime's accepted range.
+// it is the discipline the emitted-shape pin (cmd/strictspec's
+// TestEmittedShapeIsPinned) enforces: any change to what the emitter writes
+// requires this number to move, together with the runtime's accepted range.
 const GeneratedCodeFormat = strictspec.MaxGeneratedCodeFormat
 
 // GoParams configures one Go emission.

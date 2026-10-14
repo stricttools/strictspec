@@ -328,9 +328,9 @@ func parseCollectionResolver(resolver string) (string, bool) {
 
 // loadCollectionEvidence resolves the --collection globs (anchored at root,
 // lexicographic) and loads each matching document into an evidence record. This
-// is the CLI's in-process host for documents-in(...) resolvers; it mirrors the
-// evidence set the conformance fixtures pass to the adapter (a resolver name ->
-// list of document field maps).
+// is the CLI's in-process host for documents-in(...) resolvers; it builds the
+// same evidence shape the validation fixtures declare (a resolver name -> list
+// of document field maps).
 func loadCollectionEvidence(root string, globs []string) ([]map[string]any, error) {
 	var out []map[string]any
 	seen := map[string]bool{}

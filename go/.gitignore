@@ -23,12 +23,6 @@ target/
 .env
 .env.local
 *.local-only
-.conformance-adapter
-.gen-adapter
-.gen-cache/
-.strictspec-cli
 # NOTE: no `/strictspec` rule — it would ignore the go/strictspec/ runtime
 # PACKAGE directory. The dev CLI binary is ignored as /strictspec-bin (above).
-/gen-adapter
-/conformance-adapter
 /gencodes

@@ -29,13 +29,13 @@ func TestMetaSchemaAuthoringDiagnostics(t *testing.T) {
 		code string
 		path string
 	}{
-		{"conformance/fixtures/_inputs/meta/opaque-no-stance.toml",
+		{"go/testdata/fixtures/_inputs/meta/opaque-no-stance.toml",
 			"STRICTSPEC_SCHEMA_OPAQUE_NO_STANCE", "$.types.ToolSchema.fields.input_schema"},
-		{"conformance/fixtures/_inputs/meta/unchecked-no-reason.toml",
+		{"go/testdata/fixtures/_inputs/meta/unchecked-no-reason.toml",
 			"STRICTSPEC_SCHEMA_UNCHECKED_NO_REASON", "$.types.ToolSchema.fields.input_schema"},
-		{"conformance/fixtures/_inputs/meta/types-with-constraint.toml",
+		{"go/testdata/fixtures/_inputs/meta/types-with-constraint.toml",
 			"STRICTSPEC_IMPORT_CROSS_FILE_CONSTRAINT", "$"},
-		{"conformance/fixtures/_inputs/meta/types-transitive.toml",
+		{"go/testdata/fixtures/_inputs/meta/types-transitive.toml",
 			"STRICTSPEC_IMPORT_TRANSITIVE", "$"},
 	}
 	for _, c := range cases {
@@ -56,10 +56,10 @@ func TestMetaSchemaAuthoringDiagnostics(t *testing.T) {
 
 func TestValidSchemaReadsClean(t *testing.T) {
 	for _, rel := range []string{
-		"conformance/fixtures/_schemas/wavescript-score.schema.toml",
-		"conformance/fixtures/_schemas/predraw-scene.toml",
-		"conformance/fixtures/_schemas/types-geometry.toml",
-		"conformance/fixtures/_schemas/strictsql-table.toml",
+		"go/testdata/fixtures/_schemas/wavescript-score.schema.toml",
+		"go/testdata/fixtures/_schemas/predraw-scene.toml",
+		"go/testdata/fixtures/_schemas/types-geometry.toml",
+		"go/testdata/fixtures/_schemas/strictsql-table.toml",
 	} {
 		_, diags := loadRoot(t, rel)
 		if len(diags) != 0 {
@@ -69,7 +69,7 @@ func TestValidSchemaReadsClean(t *testing.T) {
 }
 
 func TestManifestScalars(t *testing.T) {
-	dir := filepath.Join(repoRoot(t), "conformance/fixtures/_schemas")
+	dir := filepath.Join(repoRoot(t), "go/testdata/fixtures/_schemas")
 	scalars := LoadManifestScalars(dir)
 	for _, name := range []string{"identifier", "pgtype", "sql-expression"} {
 		if _, ok := scalars[name]; !ok {

@@ -96,7 +96,7 @@ type ExecOptions struct {
 
 	// StructuralOnly runs the structural pass only, skipping the constraint
 	// pass. It backs `strictspec validate --structural-only`.
-	// The generated API and the conformance targets always run both passes.
+	// The generated API and the reference interpreter always run both passes.
 	StructuralOnly bool
 
 	// JSONL per-line anchor context.

@@ -1,11 +1,9 @@
-// Package interp is the strictspec REFERENCE INTERPRETER: the fourth conformance
-// target. It is now a THIN WRAPPER over the shared emitter IR (internal/ir): it
-// compiles a typed Schema plus its custom scalars into an ir.Program and runs
-// ir.Execute over a parsed document. The validation logic lives once, in the IR
-// executor, so the interpreter and the generated Go validators (via the public
-// runtime) run the identical checks in the identical order — the four-target
-// identity argument is realized by shared execution, not by parallel
-// hand-written implementations.
+// Package interp is the strictspec REFERENCE INTERPRETER: a THIN WRAPPER over
+// the shared emitter IR (internal/ir). It compiles a typed Schema plus its
+// custom scalars into an ir.Program and runs ir.Execute over a parsed document.
+// The validation logic lives once, in the IR executor, so the interpreter and
+// the generated Go validators (via the public runtime) run the identical checks
+// in the identical order; the tests hold the two to identical outcomes.
 package interp
 
 import (
@@ -34,7 +32,7 @@ type Options struct {
 // Validate validates one document (root node) against schema s and returns the
 // ordered diagnostics. For JSONL it is called once per line with the line's
 // anchor context in opts. It compiles s into an ir.Program and delegates to
-// ir.Execute — the same executor the generated Go target runs.
+// ir.Execute — the same executor the generated Go validators run.
 func Validate(s *schema.Schema, root doc.Node, opts Options) []diag.Diagnostic {
 	prog := ir.Compile(s, opts.Scalars)
 	return ir.Execute(prog, root, ir.ExecOptions{

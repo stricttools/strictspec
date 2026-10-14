@@ -1,9 +1,0 @@
-{
-  "generated_code_format": 2,
-  "schema": "shared-canvas.toml",
-  "shapes": {
-    "go": "56bd47443daf7d182284a72446f11ee005707c9ae2abb0f0b5368abad25a4a77",
-    "python": "136dd59b83244c4af9b40b230c815dd2e81d95b4d38729935df1656ab9b619ac",
-    "ts": "e3e0e3dd417f01b2aa2c9660c1f8416b99c53d774fcb10dbf5a19f2ee8a4c154"
-  }
-}

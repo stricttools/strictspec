@@ -8,11 +8,11 @@ import (
 	"testing"
 )
 
-// fixturesSchemas returns the conformance _schemas directory.
+// fixturesSchemas returns the fixtures _schemas directory.
 func fixturesSchemas(t *testing.T) string {
 	t.Helper()
 	_, file, _, _ := runtime.Caller(0)
-	return filepath.Clean(filepath.Join(filepath.Dir(file), "..", "..", "..", "conformance", "fixtures", "_schemas"))
+	return filepath.Clean(filepath.Join(filepath.Dir(file), "..", "..", "testdata", "fixtures", "_schemas"))
 }
 
 // TestRegistration builds the app: strictcli validates every command, flag, and

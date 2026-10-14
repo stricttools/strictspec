@@ -5,8 +5,8 @@
 // traversal order (document order). Change detection is LEXEME-CLASS-AWARE — `1`
 // (integer) vs `1.0` (float) at the same path is a `changed` delta because the
 // A.1 rendered form differs. Array element MOVES are detected only when the
-// array's schema declares a `unique-by`. It is a toolchain-only analysis;
-// conformance is golden-output determinism, not multi-target execution.
+// array's schema declares a `unique-by`. It is a toolchain-only analysis,
+// tested by golden-output determinism (the toolchain fixtures).
 package docdiff
 
 import (

@@ -17,13 +17,13 @@ import (
 	"github.com/stricttools/strictspec/go/internal/tomldoc"
 )
 
-// dirs resolves the go/ runtime module root and the conformance fixtures root
+// dirs resolves the go/ runtime module root and the fixtures root
 // from the test file location.
 func dirs(t *testing.T) (runtimeDir, fixturesRoot string) {
 	t.Helper()
 	_, file, _, _ := runtime.Caller(0)
 	runtimeDir = filepath.Clean(filepath.Join(filepath.Dir(file), "..", ".."))
-	fixturesRoot = filepath.Clean(filepath.Join(runtimeDir, "..", "conformance", "fixtures"))
+	fixturesRoot = filepath.Clean(filepath.Join(runtimeDir, "testdata", "fixtures"))
 	return
 }
 

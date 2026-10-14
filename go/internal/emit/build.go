@@ -17,7 +17,7 @@ import (
 type BuiltValidator struct {
 	// BinPath is a runner binary reading a JSON request {input, syntax, evidence}
 	// on stdin and writing the outcome {valid, diagnostics:[{code,path,message}]}
-	// on stdout — the same shape the conformance harness consumes.
+	// on stdout.
 	BinPath string
 	// Package is the generated Go source (for golden inspection).
 	Source string
@@ -28,9 +28,8 @@ type BuiltValidator struct {
 // embedded file set), and go-builds a runner binary. Results are CACHED per
 // schema: an identical file set reuses the built binary. runtimeDir is the
 // absolute path to the go/ runtime module (used by the temp module's replace
-// directive). This is the machinery behind the conformance `go` target and the
-// emitter golden tests: prove the emitted code compiles against the runtime and
-// runs.
+// directive). This is the machinery behind the emitter golden tests: prove the
+// emitted code compiles against the runtime and runs.
 func Build(schemaPath, cacheDir, runtimeDir, generatorVersion string) (*BuiltValidator, error) {
 	loaded, err := LoadForEmit(schemaPath)
 	if err != nil {
