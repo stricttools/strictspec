@@ -9,3 +9,6 @@ context = "rlsbl adopts the derived unreleased status and the settings-file loca
 # The targets released, and the ones left out; between them they name every target of the releasable's members.
 include = ["go"]
 exclude = ["pypi", "npm"]
+release_commit = "c3e340c55e3a17aa81acb3cbb0e147f6989c5b35"
+[released_trees]
+go = "e832625582eee3c603dcc4588cbda998d31a9760"
