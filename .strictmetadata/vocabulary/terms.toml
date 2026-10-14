@@ -29,10 +29,6 @@ word = "orxtra"
 meaning = "A consumer project whose workflow schema was translated into strictspec (examples/orxtra-workflow) as survey evidence."
 
 [[accepted]]
-word = "strictsql"
-meaning = "A consumer project (a PostgreSQL schema tool), the first consumer of custom scalars, whose scalars are registered in examples/strictsql-scalars."
-
-[[accepted]]
 word = "pgtype"
 meaning = "A custom scalar from the strictsql example: a PostgreSQL type name, refining string with an anchored regex."
 
@@ -51,6 +47,10 @@ meaning = "A StrictTools family tool that, per the options appendix, reports eve
 [[accepted]]
 word = "strictspec"
 meaning = "This project: define a schema once in TOML and generate validation, versioning, and migrations for Go."
+
+[[accepted]]
+word = "strictsql"
+meaning = "A consumer project (a PostgreSQL schema tool), the first consumer of custom scalars, whose scalars are registered in examples/strictsql-scalars."
 
 [[accepted]]
 word = "tunebox"
