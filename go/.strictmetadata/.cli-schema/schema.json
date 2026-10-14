@@ -84,7 +84,7 @@
   },
   "project_id": "github.com/stricttools/strictspec/go",
   "name": "strictspec",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "help": "strictspec: strict, byte-identical schema validation and code generation",
   "commands": {
     "gen": {
@@ -94,11 +94,11 @@
       "flags": [
         {
           "name": "manifest",
-          "help": "Path to the strictspec.toml manifest; omitted means strictspec.toml",
+          "help": "Path to the strictspec.toml manifest, such as strictspec.toml",
           "value_schema": {
             "type": "string"
           },
-          "presence": "optional"
+          "presence": "required"
         }
       ]
     },
@@ -192,11 +192,11 @@
       "flags": [
         {
           "name": "manifest",
-          "help": "Path to the strictspec.toml manifest to create; omitted means strictspec.toml",
+          "help": "Path to the strictspec.toml manifest to create, such as strictspec.toml",
           "value_schema": {
             "type": "string"
           },
-          "presence": "optional"
+          "presence": "required"
         }
       ]
     },
@@ -240,11 +240,11 @@
         },
         {
           "name": "migrations",
-          "help": "Directory of *.migration.toml files forming the chain; omitted means the current directory",
+          "help": "Directory of *.migration.toml files forming the chain (. for the current directory)",
           "value_schema": {
             "type": "string"
           },
-          "presence": "optional"
+          "presence": "required"
         }
       ],
       "args": [
@@ -285,12 +285,11 @@
         },
         {
           "name": "corpus-root",
-          "help": "Root the corpus glob is anchored at",
+          "help": "Root the corpus glob is anchored at (. for the current directory)",
           "value_schema": {
             "type": "string"
           },
-          "presence": "default",
-          "default": "."
+          "presence": "required"
         },
         {
           "name": "migration",
