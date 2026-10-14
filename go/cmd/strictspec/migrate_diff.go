@@ -293,7 +293,11 @@ func loadProgram(ctx *strictcli.Context, schemaPath string) (*ir.Program, error)
 		printDiags(ctx, sdiags)
 		return nil, fmt.Errorf("schema invalid")
 	}
-	scalars := schema.LoadManifestScalars(s.Dir)
+	scalars, err := schema.LoadManifestScalars(s.Dir)
+	if err != nil {
+		ctx.Error(err.Error())
+		return nil, err
+	}
 	return ir.Compile(s, scalars), nil
 }
 

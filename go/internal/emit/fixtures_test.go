@@ -313,7 +313,10 @@ func interpreterOutcome(t *testing.T, c fixtureCase) []observedDiag {
 	if len(sdiags) > 0 {
 		return toObserved(sdiags)
 	}
-	scalars := schema.LoadManifestScalars(s.Dir)
+	scalars, err := schema.LoadManifestScalars(s.Dir)
+	if err != nil {
+		t.Fatal(err)
+	}
 	src := c.input(t)
 	switch c.syntax {
 	case "jsonl":

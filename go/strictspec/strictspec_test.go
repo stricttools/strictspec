@@ -238,3 +238,40 @@ func TestValidateTOMLParseErrorRenders(t *testing.T) {
 		t.Fatalf("parse diagnostic message must render, got empty")
 	}
 }
+
+// TestCompileEmbeddedRefusesRemovedBindingLanguage asserts that a generated
+// validator whose embedded scalar manifest binds a language strictspec no
+// longer has is refused at compile, naming go as the only binding language,
+// and that the same files without that binding compile.
+func TestCompileEmbeddedRefusesRemovedBindingLanguage(t *testing.T) {
+	schemaSrc := `name = "Named"
+meta_version = 1
+format_version = 1
+document_syntax = "json"
+role = "schema"
+root = "Named"
+
+[types.Named]
+type = "record"
+
+[types.Named.fields.id]
+type = "ident"
+required = true
+`
+	manifest := func(bindings string) string {
+		return "[[scalars]]\nname = \"ident\"\nbase = \"string\"\nlexeme_rule = \"^[a-z]+$\"\nbindings = " + bindings + "\n"
+	}
+	files := map[string]string{"named.schema.toml": schemaSrc, "strictspec.toml": manifest(`{ go = "string", python = "str" }`)}
+	_, err := CompileEmbedded(files, "named.schema.toml")
+	if err == nil {
+		t.Fatal("an embedded python binding must be refused")
+	}
+	want := `strictspec.toml: scalars[0] (ident) declares a python binding: the python binding was removed; the only binding language is "go"`
+	if !strings.Contains(err.Error(), want) {
+		t.Errorf("error = %q, want it to contain %q", err.Error(), want)
+	}
+	files["strictspec.toml"] = manifest(`{ go = "string" }`)
+	if _, err := CompileEmbedded(files, "named.schema.toml"); err != nil {
+		t.Fatalf("without the python binding: %v", err)
+	}
+}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/stricttools/strictspec/go/internal/diag"
 	"github.com/stricttools/strictspec/go/internal/doc"
@@ -75,17 +76,25 @@ func ResolveImportsFrom(s *Schema, files FileSet) []diag.Diagnostic {
 }
 
 // LoadManifestScalarsFrom scans a FileSet for `[[scalars]]` declarations (the
-// in-memory analogue of LoadManifestScalars) and returns the merged registry.
-func LoadManifestScalarsFrom(files FileSet) map[string]*Scalar {
+// in-memory analogue of LoadManifestScalars) and returns the merged registry. A
+// registration binding a language strictspec no longer has is an error.
+func LoadManifestScalarsFrom(files FileSet) (map[string]*Scalar, error) {
+	names := make([]string, 0, len(files))
+	for name := range files {
+		names = append(names, name)
+	}
+	sort.Strings(names)
 	out := map[string]*Scalar{}
-	for _, src := range files {
-		d, perr := tomldoc.Parse([]byte(src))
+	for _, name := range names {
+		d, perr := tomldoc.Parse([]byte(files[name]))
 		if perr != nil {
 			continue
 		}
-		mergeScalars(out, d.Root)
+		if err := mergeScalars(out, name, d.Root); err != nil {
+			return nil, err
+		}
 	}
-	return out
+	return out, nil
 }
 
 // LoadFile reads and parses a schema/type-definition file from disk into a
@@ -155,12 +164,13 @@ func ResolveImports(s *Schema) []diag.Diagnostic {
 // LoadManifestScalars scans dir for TOML files declaring `[[scalars]]` (the
 // consumer manifest's custom-scalar registrations, appendix-custom-scalars.md)
 // and returns the merged registry keyed by scalar name. A custom scalar travels
-// with the schema via the sibling manifest; this discovers it by convention.
-func LoadManifestScalars(dir string) map[string]*Scalar {
+// with the schema via the sibling manifest; this discovers it by convention. A
+// registration binding a language strictspec no longer has is an error.
+func LoadManifestScalars(dir string) (map[string]*Scalar, error) {
 	out := map[string]*Scalar{}
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return out
+		return out, nil
 	}
 	for _, e := range entries {
 		if e.IsDir() || filepath.Ext(e.Name()) != ".toml" {
@@ -174,23 +184,38 @@ func LoadManifestScalars(dir string) map[string]*Scalar {
 		if perr != nil {
 			continue
 		}
-		mergeScalars(out, d.Root)
+		if err := mergeScalars(out, filepath.Join(dir, e.Name()), d.Root); err != nil {
+			return nil, err
+		}
 	}
-	return out
+	return out, nil
 }
+
+// removedBindingLanguages are the languages strictspec generated for and no
+// longer does; a scalar binding one is refused.
+var removedBindingLanguages = map[string]bool{"python": true, "ts": true}
 
 // mergeScalars reads any `[[scalars]]` registrations from a parsed TOML root and
 // merges them into out (shared by the on-disk and in-memory scalar loaders).
-func mergeScalars(out map[string]*Scalar, root doc.Node) {
+// file names the source in the error a removed binding language raises.
+func mergeScalars(out map[string]*Scalar, file string, root doc.Node) error {
 	sc, ok := entryOf(root, "scalars")
 	if !ok {
-		return
+		return nil
 	}
-	for _, s := range items(sc) {
+	for i, s := range items(sc) {
 		cs := &Scalar{
 			Name:       strOr(s, "name"),
 			Base:       strOr(s, "base"),
 			LexemeRule: strOr(s, "lexeme_rule"),
+		}
+		if b, ok := entryOf(s, "bindings"); ok && b.Kind() == doc.Record {
+			for _, e := range b.Entries() {
+				if removedBindingLanguages[e.Key] {
+					return fmt.Errorf("%s: scalars[%d] (%s) declares a %s binding: the %s binding was removed; the only binding language is \"go\"",
+						file, i, cs.Name, e.Key, e.Key)
+				}
+			}
 		}
 		if length, ok := entryOf(s, "length"); ok {
 			if mn, ok := entryOf(length, "min"); ok {
@@ -207,4 +232,5 @@ func mergeScalars(out map[string]*Scalar, root doc.Node) {
 			out[cs.Name] = cs
 		}
 	}
+	return nil
 }

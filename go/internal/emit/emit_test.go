@@ -131,7 +131,10 @@ func interpOutcome(t *testing.T, schemaPath, inputPath, syntax string) []observe
 	if len(sdiags) != 0 {
 		t.Fatalf("schema authoring diagnostics: %v", sdiags)
 	}
-	scalars := schema.LoadManifestScalars(s.Dir)
+	scalars, err := schema.LoadManifestScalars(s.Dir)
+	if err != nil {
+		t.Fatal(err)
+	}
 	src, err := osReadFile(inputPath)
 	if err != nil {
 		t.Fatal(err)

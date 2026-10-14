@@ -70,7 +70,10 @@ func TestValidSchemaReadsClean(t *testing.T) {
 
 func TestManifestScalars(t *testing.T) {
 	dir := filepath.Join(repoRoot(t), "go/testdata/fixtures/_schemas")
-	scalars := LoadManifestScalars(dir)
+	scalars, err := LoadManifestScalars(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, name := range []string{"identifier", "pgtype", "sql-expression"} {
 		if _, ok := scalars[name]; !ok {
 			t.Errorf("custom scalar %s not registered from manifest", name)

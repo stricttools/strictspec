@@ -74,9 +74,13 @@ func LoadForEmit(schemaPath string) (*Loaded, error) {
 		}
 	}
 
+	scalars, err := schema.LoadManifestScalars(dir)
+	if err != nil {
+		return nil, err
+	}
 	return &Loaded{
 		Schema:   s,
-		Scalars:  schema.LoadManifestScalars(dir),
+		Scalars:  scalars,
 		Files:    files,
 		MainFile: mainFile,
 		Diags:    sdiags,

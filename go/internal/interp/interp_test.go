@@ -39,7 +39,10 @@ func runFixture(t *testing.T, schemaRel, inputRel, syntax string, evidence map[s
 	if len(sdiags) != 0 {
 		t.Fatalf("schema %s has authoring diagnostics: %v", schemaRel, codes(sdiags))
 	}
-	scalars := schema.LoadManifestScalars(s.Dir)
+	scalars, err := schema.LoadManifestScalars(s.Dir)
+	if err != nil {
+		t.Fatal(err)
+	}
 	src, err := readFile(filepath.Join(root, inputRel))
 	if err != nil {
 		t.Fatal(err)

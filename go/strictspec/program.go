@@ -53,7 +53,10 @@ func CompileEmbedded(files map[string]string, mainFile string) (*Program, error)
 	if len(sdiags) > 0 {
 		return nil, embeddedSchemaError(sdiags)
 	}
-	scalars := schema.LoadManifestScalarsFrom(fs)
+	scalars, err := schema.LoadManifestScalarsFrom(fs)
+	if err != nil {
+		return nil, err
+	}
 	return &Program{prog: ir.Compile(s, scalars)}, nil
 }
 

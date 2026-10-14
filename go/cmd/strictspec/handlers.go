@@ -173,7 +173,11 @@ func validateHandler(ctx *strictcli.Context, kwargs map[string]interface{}) stri
 			}
 		}
 	}
-	scalars := schema.LoadManifestScalars(s.Dir)
+	scalars, serr := schema.LoadManifestScalars(s.Dir)
+	if serr != nil {
+		ctx.Error(serr.Error())
+		return strictcli.Exit(1)
+	}
 	prog := ir.Compile(s, scalars)
 
 	anyBad := false
@@ -540,7 +544,11 @@ func exportHandler(ctx *strictcli.Context, kwargs map[string]interface{}) strict
 		printDiags(ctx, sdiags)
 		return strictcli.Exit(1)
 	}
-	scalars := schema.LoadManifestScalars(s.Dir)
+	scalars, serr := schema.LoadManifestScalars(s.Dir)
+	if serr != nil {
+		ctx.Error(serr.Error())
+		return strictcli.Exit(1)
+	}
 	out, eerr := export.ToJSONSchema(s, scalars)
 	if eerr != nil {
 		ctx.Error(eerr.Error())

@@ -15,7 +15,7 @@ name = "identifier"
 base = "string"
 lexeme_rule = "^[A-Za-z_][A-Za-z0-9_]*$"
 length = { max = 63 }
-bindings = { go = "string", python = "str", ts = "string" }
+bindings = { go = "string" }
 rendering = { inherits = "string" }
 description = "A SQL/programming identifier; anchored, RE2, fully captured by the regex."
 
@@ -27,7 +27,7 @@ name = "pgtype"
 base = "string"
 lexeme_rule = "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)?(\\([0-9]+(,[0-9]+)?\\))?(\\[\\])?$"
 length = { max = 128 }
-bindings = { go = "string", python = "str", ts = "string" }
+bindings = { go = "string" }
 rendering = { inherits = "string" }
 description = "A Postgres type reference by SURFACE SYNTAX: int4, pg_catalog.numeric, numeric(10,2), text[]."
 
@@ -39,6 +39,6 @@ name = "sql-expression"
 base = "string"
 lexeme_rule = "^.+$"
 length = { min = 1, max = 8192 }
-bindings = { go = "string", python = "str", ts = "string" }
+bindings = { go = "string" }
 rendering = { inherits = "string" }
 description = "An arbitrary SQL expression fragment (CHECK body, default expr). Only non-emptiness/length checked."
